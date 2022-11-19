@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+    ],
+    "settings": {
+
+        "psi-header.variables": [
+
+            ["projectCreationYear", "2022"],
+            ["url", "https://github.com/john-james-ai/Recommender-Systems"],
+            ["projectname", "Recommender Systems: Towards Deep Learning State-of-the-Art"],
+            ["version", "0.1.0"],
+            ["pythonversion","3.10.6"]
+        ],
+
+    }
+}
