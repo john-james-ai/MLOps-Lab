@@ -4,125 +4,36 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /workflow.py                                                                        #
+# Filename   : /pipeline.py                                                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday November 17th 2022 02:51:27 am                                             #
-# Modified   : Friday November 18th 2022 08:54:13 pm                                               #
+# Created    : Saturday November 19th 2022 01:30:09 pm                                             #
+# Modified   : Saturday November 19th 2022 03:50:44 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-from typing import Any, Union, List, Dict
 from dataclasses import dataclass
-import pandas as pd
-from datetime import datetime
 from abc import ABC, abstractmethod
+from typing import Any
+import logging
+import importlib
+from datetime import datetime
+from tqdm import tqdm
 import wandb
 
-
-from recsys.core.services.logger import logger
-from recsys.core.base.config import PROJECT, ENTITY
 from recsys.core.services.io import IOService
-from recsys.core.base.workflow import Context
-from recsys.core.dal.dataset import DatasetParams, Dataset
+from recsys.core.services.profiler import profiler
+from recsys.core.base.config import PROJECT, ENTITY
 
+# ------------------------------------------------------------------------------------------------ #
+logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-class Operator(ABC):
-    """Abstract base class for pipeline operators.
-
-    Note: All operator parameters in kwargs are added to the class as attributes.
-
-    Args:
-        name (str): The name for the operator that distinguishes it in the pipeline.
-        description (str): A description for the operator instance. Optional
-    """
-
-    def __init__(self, **kwargs) -> None:
-        self.name = None
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        if not self.name:
-            self.name = self.__class__.__name__.lower()
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}\n\tAttributes: {self.__dict__.items()}"
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}\n\tAttributes: {self.__dict__.items()}"
-
-    @logger
-    @abstractmethod
-    def execute(self, data: pd.DataFrame = None, context: Context = None, **kwargs) -> Any:
-        pass
-
-
-# ------------------------------------------------------------------------------------------------ #
-class DatasetOperator(ABC):
-    """Base class for operators that interact with Dataset objects in the Dataset Repository.
-
-    Input dataset parameters are queried by the repository decorator and the input dataset(s) are
-    injected into the instance through the property setter. W.r.t the instance parameters,
-    they are added to the class as attributes using setattr. Yeah, I know. Just got tired
-    of typing get('param', None) from some parameters dictionary.
-
-    Args:
-        name (str): The name for the operator that distinguishes it in the pipeline.
-        description (str): A description for the operator instance. Optional
-        input_dataset_params (Union[DatasetParams], List[DatasetParams]) DatasetParams or a list
-            thereof.
-        output_dataset_params (Union[DatasetParams], List[DatasetParams]) DatasetParams or a list
-            thereof.
-
-    Attributes:
-        input_dataset (Union[Dataset], List[Dataset]). The input dataset is injected by the
-            repository decorator.
-
-    Returns: Output Dataset Object
-    """
-
-    def __init__(
-        self,
-        input_dataset_params: Union[DatasetParams, List[DatasetParams]],
-        output_dataset_params: Union[DatasetParams, List[DatasetParams]],
-        **kwargs,
-    ) -> None:
-        self.name = None
-
-        self.input_data = None
-        self.output_data = None
-
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        if not self.name:
-            self.name = self.__class__.__name__.lower()
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}\n\tAttributes: {self.__dict__.items()}"
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}\n\tAttributes: {self.__dict__.items()}"
-
-    @property
-    def input_data(self) -> Union[Dataset, Dict[Dataset], List[Dataset]]:
-        return self._input_data
-
-    @input_data.setter
-    def input_data(self, input_data: Union[Dataset, Dict[Dataset], List[Dataset]]) -> None:
-        self._input_data = input_data
-
-    @logger
-    @abstractmethod
-    def execute(self, context: Context, **kwargs) -> Any:
-        pass
-
-
-# ------------------------------------------------------------------------------------------------ #
 @dataclass
 class Context:
     """Context objects required throughout the pipeline
@@ -195,7 +106,7 @@ class Pipeline(ABC):
     def context(self, context: Context) -> None:
         self._context = context
 
-    def add_step(self, step: Operator) -> None:
+    def add_step(self, step) -> None:
         """Adds a step to the Pipeline object.
 
         Args:
@@ -204,7 +115,7 @@ class Pipeline(ABC):
         """
         self._steps[step.name] = step
 
-    @logger
+    @profiler
     @abstractmethod
     def run(self) -> None:
         pass
@@ -227,6 +138,44 @@ class Pipeline(ABC):
             }
         )
         self._wandb_run.finish()
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+class Pipeline(Pipeline):
+    """Pipeline class
+
+    Executes Extract-Transform-Load pipelines
+
+    Args:
+        name (str): Human readable name for the pipeline run.
+        description (str): Optional.
+    """
+
+    def __init__(self, name: str, description: str = None) -> None:
+        super().__init__(name=name, description=description)
+
+    def run(self) -> None:
+        """Runs the pipeline"""
+        self._setup()
+        for name, step in tqdm(self._steps.items()):
+            started = datetime.now()
+
+            step.execute(context=self._context)
+
+            ended = datetime.now()
+            duration = (ended - started).total_seconds()
+            wandb.log(
+                {
+                    "pipeline": self._context.name,
+                    "step": name,
+                    "started": started,
+                    "ended": ended,
+                    "duration": duration,
+                }
+            )
+        self._teardown()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -260,6 +209,58 @@ class PipelineBuilder(ABC):
 
 
 # ------------------------------------------------------------------------------------------------ #
+class PipelineBuilder(PipelineBuilder):
+    """Constructs an  processing pipeline."""
+
+    def __init__(self) -> None:
+        self.reset()
+        self._config = None
+        self._context = None
+        self._steps = {}
+
+    def build_config(self, config: dict) -> None:
+        self._config = config
+
+    def build_context(self) -> None:
+        try:
+            module = importlib.import_module(name=self._config["io_module"])
+            io = getattr(module, self._config["io_service"])
+            self._context = Context(
+                name=self._config["name"], description=self._config["description"], io=io
+            )
+        except KeyError as e:
+            logger.error(e)
+            raise
+
+    def build_steps(self) -> None:
+        steps = self._config["steps"]
+        for _, step_config in steps.items():
+            try:
+                module = importlib.import_module(name=step_config["module"])
+                step = getattr(module, step_config["operator"])
+
+                operator = step(**step_config["params"])
+
+                self._steps[operator.name] = operator
+
+            except KeyError as e:
+                logging.error("Configuration File is missing operator configuration data")
+                raise (e)
+
+    def build_pipeline(self) -> None:
+        logger.debug(
+            f"Config name: {self._config['name']}, Config description: {self._config['description']}"
+        )
+        self._pipeline = Pipeline(
+            name=self._config["name"], description=self._config["description"]
+        )
+        logger.debug(self._pipeline)
+        self._pipeline.context = self._context
+        for _, step in self._steps.items():
+            self._pipeline.add_step(step)
+
+
+# ------------------------------------------------------------------------------------------------ #
 
 
 class PipelineDirector(ABC):
@@ -281,3 +282,23 @@ class PipelineDirector(ABC):
     @builder.setter
     def builder(self, builder: PipelineBuilder) -> None:
         self._builder = builder
+
+
+# ------------------------------------------------------------------------------------------------ #
+class PipelineDirector(PipelineDirector):
+    """Pipelne director responsible for executing the steps of the PipelineBuilder in a sequence.
+
+    Args:
+        config_filepath (str): The path to the pipeline configuration file
+        builder (PipelineBuilder): The concrete builder class
+    """
+
+    def __init__(self, config_filepath: str, builder: PipelineBuilder) -> None:
+        super().__init__(config_filepath=config_filepath, builder=builder)
+
+    def build_etl_pipeline(self) -> None:
+        """Constructs the  Pipeline"""
+        self._builder.build_config(config=self._config)
+        self._builder.build_context()
+        self._builder.build_steps()
+        self._builder.build_pipeline()

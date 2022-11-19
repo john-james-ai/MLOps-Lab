@@ -11,58 +11,175 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 17th 2022 03:18:06 am                                             #
-# Modified   : Friday November 18th 2022 11:11:31 pm                                               #
+# Modified   : Saturday November 19th 2022 01:09:45 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 ---
 # ================================================================================================ #
-#                                         ETL                                                      #
+#                                      PREPROCESS                                                  #
 # ================================================================================================ #
 
 name: movielens20m_preprocess
 description: Prepares the Rating Data for Collaborative Filtering Recommendation
+io_module: recsys.core.services.io
+io_service: IOService
 
 # ------------------------------------------------------------------------------------------------ #
 #                                  PREPROCESSING STEPS                                             #
 # ------------------------------------------------------------------------------------------------ #
 steps:
   1:
-    name: download_movielens20m
-    description: Downloads MovieLens20M data from Kaggle website.
-    module: recsys.core.dpl.etl
-    operator: KaggleDownloader
+    name: create_rating_dataset
+    description: Creates rating dataset
+    module: recsys.collaborative.data.process
+    operator: CreateDataset
     params:
-      kaggle_filepath: grouplens/movielens-20m-dataset
-      destination: data/movielens20m/ext
-      force: False
+      input_file_params: tests/data/etl/movielens20m/raw/rating.pkl
+      input_dataset_params: None
+      output_dataset_params:
+        name: rating
+        env: test
+        stage: interim
+        version: !!int "1"
+        description: Rating Dataset
+        versioning: !!bool "true"
 
   2:
-    name: dezip_movielens20m
-    description: UnZips MovieLens20M Dataset
-    module: recsys.core.dpl.etl
-    operator: DeZipper
+    name: train_test_split
+    description: Train Test Split (Clustered on UserId)
+    module: recsys.collaborative.data.process
+    operator: TrainTestSplit
     params:
-      zipfilepath: data/movielens20m/ext/movielens-20m-dataset.zip
-      destination: data/movielens20m/raw
-      members:
-        - rating.csv
-      force: False
+      input_dataset_params:
+        name: rating
+        env: test
+        stage: interim
+        version: !!int "1"
+        description: Rating Dataset
+      output_dataset_params:
+        train:
+          name: train
+          env: test
+          stage: interim
+          version: !!int "1"
+          description: MovieLens20M Training Set (for Test Env)
+        test:
+          name: test
+          env: test
+          stage: interim
+          version: !!int "1"
+          description: MovieLens20M Test Set (for Test Env)
+        clustered: !!bool "true"
+        clustered_by: userId
+        train_proportion: !!float "0.8"
+        random_state: !!int "20"
+        versioning: !!bool "true"
 
   3:
-    name: pickle_dataset
-    description: Pickles ratings dataset
-    module: recsys.core.dpl.etl
-    operator: Pickler
+    name: ratings_adjuster
+    description: Ratings Adjuster - Centers the Ratings
+    module: recsys.collaborative.data.process
+    operator: RatingsAdjuster
     params:
-      infilepath: data/movielens20m/raw/rating.csv
-      outfilepath: data/movielens20m/raw/rating.pkl
-      infile_format: csv
-      index_col: False
-      encoding: utf-8
-      low_memory: False
-      usecols:
-        - userId
-        - movieId
-        - rating
+      input_dataset_params:
+        name: train
+        env: test
+        stage: interim
+        version: !!int "1"
+        description: MovieLens20M Training Set (for Test Env)
+      output_dataset_params:
+        name: train_ratings_centered
+        env: test
+        stage: interim
+        version: !!int "1"
+        description: MovieLens20M Training Set w/ Ratings Centered (for Test Env)
+
+  4:
+    name: average_rating
+    description: Average Ratings by User
+    module: recsys.collaborative.data.process
+    operator: User
+    params:
+      input_dataset_params:
+        name: train
+        env: test
+        stage: interim
+        version: !!int "1"
+        description: MovieLens20M Training Set (for Test Env)
+      output_dataset_params:
+        name: train_average_ratings
+        env: test
+        stage: interim
+        version: !!int "1"
+
+  5:
+    name: phi
+    description: User Neighbor Dataset = Contains Every Combination of Users in the Dataset
+    module: recsys.collaborative.data.process
+    operator: Phi
+    params:
+      input_dataset_params:
+        name: train
+        env: test
+        stage: interim
+        version: !!int "1"
+        description: MovieLens20M Training Set (for Test Env)
+      output_dataset_params:
+        name: train_phi
+        env: test
+        stage: interim
+        version: !!int "1"
+        description: User Neighbor Dataset = Contains Every Combination of Users in the Dataset
+
+  6:
+    name: weights
+    description: User - User Weights
+    module: recsys.collaborative.data.process
+    operator: UserWeights
+    params:
+      input_dataset_params:
+        name: train_user_neighbor
+        env: test
+        stage: interim
+        version: !!int "1"
+        description: User Neighbor Dataset = Contains Every Combination of Users in the Dataset
+      output_dataset_params:
+        name: train_weights
+        env: test
+        stage: interim
+        version: !!int "1"
+        description: User - User Weights
+
+  7:
+    name: data_integrator
+    description: Integrates weight, rating, and user data
+    module: recsys.collaborative.data.process
+    operator: DataIntegrator
+    params:
+      input_dataset_params:
+        phi:
+          name: train_phi
+          env: test
+          stage: interim
+          version: !!int "1"
+          description: User Neighbor Dataset = Contains Every Combination of Users in the Dataset
+        weights:
+          name: train_weights
+          env: test
+          stage: interim
+          version: !!int "1"
+          description: User - User Weights
+        ratings:
+          name: train_ratings_centered
+          env: test
+          stage: interim
+          version: !!int "1"
+          description: MovieLens20M Training Set w/ Ratings Centered (for Test Env)
+      output_dataset_params:
+        name: train_master
+        env: test
+        stage: interim
+        version: !!int "1"
+        description: Master Train File

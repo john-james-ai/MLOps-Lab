@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 15th 2022 01:35:58 am                                              #
-# Modified   : Friday November 18th 2022 08:19:19 am                                               #
+# Modified   : Saturday November 19th 2022 04:24:52 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -38,9 +38,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 CONFIG = DatasetRepoConfigFR(test=True)
-REGISTRY = FileBasedRegistry(directory=CONFIG.directory, io=IOService)
+REGISTRY = FileBasedRegistry(directory=CONFIG.directory, io=CONFIG.io)
 
-REPO = DatasetRepo(directory=CONFIG.directory, file_format=CONFIG.file_format)
+REPO = DatasetRepo()
+REPO.directory = CONFIG.directory
+REPO.file_format = CONFIG.file_format
 REPO.registry = REGISTRY
 REPO.io = IOService
 
@@ -222,7 +224,7 @@ class TestRepo:
         )
 
     # ============================================================================================ #
-    def test_print_list_names(self, caplog):
+    def test_print_list_datasets(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -233,9 +235,9 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        names = REPO.list_names()
+        names = REPO.list_datasets()
         assert len(names) == len(REPO)
-        logger.info(REPO.print_names())
+        logger.info(REPO.print_datasets())
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

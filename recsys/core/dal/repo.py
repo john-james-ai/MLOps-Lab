@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Friday November 18th 2022 09:56:08 pm                                               #
+# Modified   : Saturday November 19th 2022 07:34:04 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -20,15 +20,16 @@
 import logging
 import os
 from abc import abstractmethod
-from typing import Any, List, Union
+from typing import Any, List, Union, Dict
 from functools import wraps
+import pandas as pd
 from atelier.utils.datetimes import Timer
 
 from recsys.core.base.registry import Registry
 from recsys.core.dal.config import DatasetRepoConfigFR, DatasetRepoConfig
 from recsys.core.base.repo import Repo, RepoBuilder, RepoDirector
 from recsys.core.dal.registry import FileBasedRegistry
-from recsys.core.dal.dataset import Dataset
+from recsys.core.dal.dataset import Dataset, DatasetParams
 from recsys.core.services.io import IOService
 from recsys.core.base.config import FILE_FORMATS, DATA_REPO_FILE_FORMAT
 
@@ -87,17 +88,13 @@ class DatasetRepo(Repo):
     def registry(self, registry: Registry) -> None:
         self._registry = registry
 
-    def add(self, dataset: Dataset, versioning: bool = False) -> None:
+    def add(self, dataset: Dataset) -> None:
         """Adds a Dataset to the repo and saves the data to file.
-
-        If versioning is True, the version is bumped if the file exists and returned.
-        Otherwise, attempting to add a duplicate file (one with the same, name, env, stage,
-        and version) will raise an exception.
 
         Args:
             dataset (Dataset): The Dataset object
         """
-        dataset = self._register_dataset(dataset, versioning)
+        dataset = self._register_dataset(dataset)
         self._io.write(filepath=dataset.filepath, data=dataset)
         return dataset
 
@@ -151,17 +148,18 @@ class DatasetRepo(Repo):
             logger.error(msg)
             raise ValueError(msg)
 
-    def _register_dataset(self, dataset: Dataset, versioning: bool = False) -> Dataset:
+    def _register_dataset(self, dataset: Dataset) -> Dataset:
         """Register's the dataset and handles exceptions.
 
         Args:
             dataset (Dataset): The Dataset object
         """
-        filename = dataset.name + "." + self._file_format
-        dataset.filepath = os.path.join(
-            self._directory, dataset.env, dataset.version, dataset.stage, filename
+        dataset.filepath = (
+            os.path.join(self._directory, dataset.env, dataset.stage, dataset.id)
+            + "."
+            + self._file_format
         )
-        self._registry.add(dataset, versioning)
+        self._registry.add(dataset)
         return dataset
 
 
@@ -242,29 +240,69 @@ def repository(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
 
-        input_dataset_params = kwargs.get("input_dataset_params", None)
+        repo = DatasetRepo()
 
-        if input_dataset_params is not None:
+        if kwargs.get("input_file_params") is not None:
+            datasets = dataframe_from_file(kwargs.get("input_file_params"))
 
-            repo = DatasetRepo()
+        elif kwargs.get("input_dataset_params") is not None:
 
-            if isinstance(input_dataset_params, list):
-                datasets = []
-                for dataset_params in input_dataset_params:
-                    datasets.append(repo.get(id=dataset_params.id))
-            else:
-                datasets = repo.get(id=input_dataset_params.id)
+            datasets = datasets_from_repo(kwargs.get("input_dataset_params"), repo)
 
-            setattr(
-                func, "input_data", datasets
-            )  # Apparently dot notation assignment accomplishes the same thing.
+        setattr(
+            func, "input_data", datasets
+        )  # Apparently dot notation assignment accomplishes the same thing.
 
         execute_intercept_and_update(func, repo)
 
     return wrapper
 
+    def dataframe_from_file(filepath: str) -> pd.DataFrame:
+        return IOService.read(filepath)
+
+    def datasets_from_repo(
+        input_dataset_params, repo: DatasetRepo
+    ) -> Union[Dataset, List[Dataset], Dict[Dataset]]:
+        """Traverses the yaml input and obtains the datasets from the repo.
+
+        Args:
+            input_dataset_params (DatasetParams): Dataset Params object with name, environment, stage, and version.
+
+        Returns Dataset or a dictionary of Dataset objects.
+        """
+
+        temp_datasets = {}
+        input_datasets = {}
+        datasets = {}
+
+        def traverse(input_dataset_params):
+            for k, v in input_dataset_params.items():
+                if isinstance(v, dict):
+                    if "input_dataset_params" == k:
+                        temp_datasets[k] = v
+                else:
+                    temp_datasets[k] = v
+
+        traverse(input_dataset_params=input_dataset_params)
+
+        d = {}
+        for k, v in temp_datasets.items():
+            if isinstance(k, int):
+                for k, v in v.items():
+                    d[k] = v
+                dp = DatasetParams(**d)
+                input_datasets[dp.id] = dp
+            else:
+                d[k] = v
+        dp = DatasetParams(**d)
+        input_datasets[dp.id] = dp
+
+        for k, v in input_datasets.items():
+            datasets[k] = repo.get(id=id)
+        return datasets
+
     def execute_intercept_and_update(repo, args, kwargs) -> Union[List[Dataset], Dataset]:
-        """Wraps the decorated method in a timer, then updates the output with the cost (duration).
+        """Wraps the decorated method in a timer, then updates the output with the cost (duration) to create the dataset.
 
         Args:
             func (Callable): The decorated method

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 07:10:12 pm                                               #
-# Modified   : Friday November 18th 2022 08:43:29 am                                               #
+# Modified   : Saturday November 19th 2022 04:27:47 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -25,6 +25,7 @@ import shutil
 from recsys.core.dal.registry import FileBasedRegistry
 from recsys.core.dal.config import DatasetRepoConfigFR
 from recsys.core.services.io import IOService
+from recsys.core.dal.dataset import get_id
 
 # ------------------------------------------------------------------------------------------------ #
 logging.basicConfig(
@@ -113,7 +114,7 @@ class TestDataRegistry:
         REGISTRY = FileBasedRegistry(directory=CONFIG.directory, io=CONFIG.io)
         for dataset in datasets:
             REGISTRY.add(dataset)
-            meta = REGISTRY.get(dataset.name)
+            meta = REGISTRY.get(dataset.id)
             assert dataset.is_equal(meta)
 
         # ---------------------------------------------------------------------------------------- #
@@ -144,8 +145,8 @@ class TestDataRegistry:
         # ---------------------------------------------------------------------------------------- #
         CONFIG = DatasetRepoConfigFR(test=True)
         REGISTRY = FileBasedRegistry(directory=CONFIG.directory, io=CONFIG.io)
-        assert REGISTRY.exists(name="users")
-        assert not REGISTRY.exists(name="ratings")
+        assert REGISTRY.exists(id=get_id(name="ds1", stage="raw", version=1, env="dev"))
+        assert not REGISTRY.exists(id=get_id(name="ds1", stage="raw", version=1, env="prod"))
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -161,7 +162,7 @@ class TestDataRegistry:
         )
 
     # ============================================================================================ #
-    def test_list_and_print_names_and_datasets(self, caplog):
+    def test_list_and_print_datasets_and_datasets(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -174,11 +175,10 @@ class TestDataRegistry:
         # ---------------------------------------------------------------------------------------- #
         CONFIG = DatasetRepoConfigFR(test=True)
         REGISTRY = FileBasedRegistry(directory=CONFIG.directory, io=CONFIG.io)
-        names = REGISTRY.list_names()
-        logger.info(REGISTRY.print_names())
-        logger.info(REGISTRY.print_registry())
-        assert len(names) == len(REGISTRY)
-        logger.info("The names of the registered datasets:\n\t\t{}".format(names))
+        ds = REGISTRY.list_datasets()
+        logger.info(REGISTRY.print_datasets())
+        assert len(ds) == len(REGISTRY)
+        logger.info("The names of the registered datasets:\n\t\t{}".format(ds))
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -208,8 +208,9 @@ class TestDataRegistry:
         # ---------------------------------------------------------------------------------------- #
         CONFIG = DatasetRepoConfigFR(test=True)
         REGISTRY = FileBasedRegistry(directory=CONFIG.directory, io=CONFIG.io)
+
         for dataset in datasets:
-            REGISTRY.remove(dataset.name)
+            REGISTRY.remove(dataset.id)
         assert len(REGISTRY) == 0
 
         # ---------------------------------------------------------------------------------------- #

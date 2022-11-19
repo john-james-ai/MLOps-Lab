@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Friday November 18th 2022 10:11:36 pm                                               #
+# Modified   : Saturday November 19th 2022 04:29:37 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -43,7 +43,7 @@ def get_id(name: str, env: str, version: int, stage: str) -> str:
         version (int): One of the currently used data versions
         stage (str): One of 'raw', 'interim' or 'cooked'
     """
-    return name + "_" + env + "_" + stage + "_" + version
+    return env + "_" + stage + "_" + name + "_" + str(version)
 
 
 @dataclass
@@ -54,6 +54,7 @@ class DatasetMeta:
     stage: str
     env: str
     version: str
+    versioning: bool
     nrows: int
     ncols: int
     null_counts: int
@@ -105,6 +106,7 @@ class Dataset:
         stage: str = "interim",
         env: str = "dev",
         version: int = 1,
+        versioning: bool = True,
         data: pd.DataFrame = None,
         cost: int = None,
     ) -> None:
@@ -113,6 +115,7 @@ class Dataset:
         self._stage = stage
         self._env = env
         self._version = version
+        self._versioning = versioning
         self._description = description
         self._cost = cost
 
@@ -156,6 +159,10 @@ class Dataset:
     def id(self) -> str:
         return self._id
 
+    @id.setter
+    def id(self, id: str) -> None:
+        self._id = id
+
     @property
     def name(self) -> str:
         return self._name
@@ -169,8 +176,8 @@ class Dataset:
         return self._env
 
     @property
-    def version(self) -> str:
-        return self._version
+    def versioning(self) -> str:
+        return self._versioning
 
     # ------------------------------------------------------------------------------------------------ #
     # Variables assigned automatically
@@ -247,6 +254,14 @@ class Dataset:
     def filepath(self, filepath: str) -> None:
         self._filepath = filepath
         self._set_file_metadata()
+
+    @property
+    def version(self) -> str:
+        return self._version
+
+    @version.setter
+    def version(self, version) -> None:
+        self._version = version
 
     # ------------------------------------------------------------------------------------------------ #
     # Variables automatically set after filepath is set
@@ -371,6 +386,7 @@ class Dataset:
             stage=self._stage,
             env=self._env,
             version=self._version,
+            versioning=self._versioning,
             nrows=self._nrows,
             ncols=self._ncols,
             null_counts=self._null_counts,
@@ -405,11 +421,11 @@ class Dataset:
 
 @dataclass
 class DatasetParams:
-    id: str
     name: str
     stage: str
     env: str
     version: int = 1
+    id: str = None
     description: str = None
 
     def __post_init__(self) -> None:

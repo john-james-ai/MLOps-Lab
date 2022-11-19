@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 10th 2022 06:19:23 pm                                             #
-# Modified   : Tuesday November 15th 2022 11:56:00 pm                                              #
+# Modified   : Saturday November 19th 2022 02:01:56 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -25,7 +25,6 @@ from recsys.core.services.io import IOService
 from config import DatasetConfig, VisualConfig
 
 # ------------------------------------------------------------------------------------------------ #
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 

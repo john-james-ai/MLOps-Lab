@@ -1,0 +1,18 @@
+{
+  "template": "https://github.com/woltapp/wolt-python-package-cookiecutter",
+  "commit": "55a5dfae5bb4fe6488d4ce3718056e393ff0f61b",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "author_name": "John James",
+      "author_email": "john.james.ai.studio@gmail.com",
+      "github_username": "john-james-ai",
+      "project_name": "Recommender Systems",
+      "project_slug": "recsys",
+      "package_name": "recsys",
+      "project_short_description": "Recommender Systems from recsys.collaborative Filtering to Deep Learning State-of-the-Art",
+      "_template": "https://github.com/woltapp/wolt-python-package-cookiecutter"
+    }
+  },
+  "directory": null
+}

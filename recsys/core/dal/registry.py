@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 15th 2022 03:18:48 pm                                              #
-# Modified   : Friday November 18th 2022 09:50:47 pm                                               #
+# Modified   : Saturday November 19th 2022 01:30:54 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -60,7 +60,7 @@ class FileBasedRegistry(Registry):
     def directory(self) -> None:
         return self._directory
 
-    def add(self, dataset: Dataset, versioning: bool = True) -> None:
+    def add(self, dataset: Dataset) -> None:
         """Registers a Dataset object.
 
         Args:
@@ -69,12 +69,12 @@ class FileBasedRegistry(Registry):
         meta = dataset.as_meta()
         self._load()  # Load the registry dictionary if not already loaded
         if self.exists(meta.id):
-            if versioning:
+            if dataset.versioning:
                 dataset.version += 1
                 dataset.id = get_id(
                     name=dataset.name, env=dataset.env, version=dataset.version, stage=dataset.stage
                 )
-                self.add(dataset=dataset, versioning=versioning)
+                self.add(dataset=dataset)
             else:
                 msg = "Dataset named {} is already registered.".format(meta.name)
                 logger.error(msg)

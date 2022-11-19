@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 18th 2022 09:10:34 am                                               #
-# Modified   : Friday November 18th 2022 12:31:31 pm                                               #
+# Modified   : Saturday November 19th 2022 04:28:27 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,15 +24,9 @@ import logging
 
 # import shutil
 
-from recsys.collaborative.data.etl import (
-    ETLPipelineDirector,
-    ETLPipelineBuilder,
-    KaggleDownloader,
-    DeZipper,
-    Pickler,
-)
+from recsys.core.workflow.operators import KaggleDownloader, DeZipper, Pickler
 from recsys.core.services.io import IOService
-from recsys.core.base.workflow import Context
+from recsys.core.workflow.pipeline import Context
 
 # ------------------------------------------------------------------------------------------------ #
 logging.basicConfig(
@@ -219,7 +213,7 @@ class TestPipeline:
         )
         # ---------------------------------------------------------------------------------------- #
         outfile = CONFIG["steps"][3]["params"]["outfilepath"]
-        d = ETLPipelineDirector(config_filepath=CONFIG_FILEPATH, builder=ETLPipelineBuilder())
+        d = PipelineDirector(config_filepath=CONFIG_FILEPATH, builder=PipelineBuilder())
         d.build_etl_pipeline()
         pipeline = d.builder.pipeline
         pipeline.run()
