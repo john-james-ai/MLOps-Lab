@@ -11,15 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 15th 2022 03:53:27 pm                                              #
-# Modified   : Thursday November 17th 2022 04:46:30 pm                                             #
+# Modified   : Sunday November 20th 2022 10:14:23 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Repository registry base module."""
-from abc import ABC, abstractmethod
+from abc import ABC, abstractclassmethod
 from typing import Any
-from recsys.core.services.io import IOService
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -28,22 +27,22 @@ class Registry(ABC):
     """Repository base class"""
 
     @property
-    @abstractmethod
-    def io(self, io: IOService) -> None:
+    @abstractclassmethod
+    def count(clf) -> int:
         pass
 
-    @abstractmethod
-    def add(self, **kwargs) -> None:
+    @abstractclassmethod
+    def add(clf, **kwargs) -> None:
         pass
 
-    @abstractmethod
-    def get(self, filename: str) -> Any:
+    @abstractclassmethod
+    def get(clf, filename: str) -> Any:
         pass
 
-    @abstractmethod
-    def remove(self, filename: str) -> None:
+    @abstractclassmethod
+    def remove(clf, filename: str) -> None:
         pass
 
-    @abstractmethod
-    def exists(self, filename: str) -> bool:
+    @abstractclassmethod
+    def exists(clf, filename: str) -> bool:
         pass

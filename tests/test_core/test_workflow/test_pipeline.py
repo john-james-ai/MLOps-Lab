@@ -4,29 +4,31 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /test_etl.py                                                                        #
+# Filename   : /test_pipeline.py                                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday November 18th 2022 09:10:34 am                                               #
-# Modified   : Saturday November 19th 2022 04:31:15 pm                                             #
+# Created    : Saturday November 19th 2022 07:42:55 pm                                             #
+# Modified   : Sunday November 20th 2022 12:45:40 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-import os
 import inspect
 from datetime import datetime
+import pandas as pd
 import pytest
 import logging
+import shutil
 
-# import shutil
-
-from recsys.core.workflow.operators import KaggleDownloader, DeZipper, Pickler
+from recsys.core.dal.dataset import get_id, Dataset
+from recsys.core.dal.repo import DatasetRepo
 from recsys.core.services.io import IOService
-from recsys.core.workflow.pipeline import Context, PipelineBuilder, PipelineDirector
+from recsys.core.dal.registry import FileBasedRegistry
+from recsys.core.workflow.pipeline import PipelineBuilder, PipelineDirector, Pipeline, Context
+
 
 # ------------------------------------------------------------------------------------------------ #
 logging.basicConfig(
@@ -37,21 +39,48 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
-CONFIG_FILEPATH = "tests/config/etl.yaml"
-CONFIG = IOService.read(CONFIG_FILEPATH)
-TEST_FILEPATH = "tests/data/etl"
+CONFIG_FILEPATH = "tests/config/process.yaml"
+DIRECTORY = "tests/data/workflow"
+BUILDER = PipelineBuilder()
+DIRECTOR = PipelineDirector(config_filepath=CONFIG_FILEPATH, builder=BUILDER)
+PIPELINE = BUILDER.pipeline
+REGISTRY = FileBasedRegistry(directory=DIRECTORY, io=IOService)
+REPO = DatasetRepo()
+REPO.registry = REGISTRY
+REPO.io = IOService
 
 
-@pytest.mark.etl
-class TestOperators:
-    # ================================================================================================ #
+@pytest.mark.pipe
+class TestPipeDirectorBuilder:
+    # ============================================================================================ #
     def test_setup(self, caplog):
-        # Enter setup activities here
-        # shutil.rmtree(TEST_FILEPATH, ignore_errors=True)
-        pass
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        shutil.rmtree(DIRECTORY, ignore_errors=True)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
 
     # ================================================================================================ #
-    def test_downloader(self, caplog):
+    def test_director(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -62,93 +91,17 @@ class TestOperators:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        config = CONFIG["steps"][1]["params"]
-        dl = KaggleDownloader(
-            kaggle_filepath=config["kaggle_filepath"],
-            destination=config["destination"],
-            force=False,
-        )
-        dl.execute()
-        assert os.path.exists(
-            os.path.join(config["destination"], os.path.basename(config["kaggle_filepath"]))
-            + ".zip"
-        )
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        DIRECTOR.build_pipeline()
+        assert isinstance(BUILDER.config, dict)
+        assert isinstance(BUILDER.context, Context)
+        assert isinstance(BUILDER.steps, dict)
 
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
+        PIPELINE = BUILDER.pipeline
+        assert isinstance(PIPELINE, Pipeline)
+        assert PIPELINE.steps == DIRECTOR.builder.steps
+        assert PIPELINE.context == DIRECTOR.builder.context
+        assert len(PIPELINE.steps) == 1
 
-    # ============================================================================================ #
-    def test_dezip(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        config = CONFIG["steps"][2]["params"]
-        dz = DeZipper(
-            zipfilepath=config["zipfilepath"],
-            destination=config["destination"],
-            members=config["members"],
-            force=False,
-        )
-        dz.execute()
-        assert os.path.exists(os.path.join(config["destination"], config["members"][0]))
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_pickler(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        context = Context(name="test_pickler", description="testing pickler", io=IOService)
-
-        config = CONFIG["steps"][3]["params"]
-        p = Pickler(
-            infilepath=config["infilepath"],
-            outfilepath=config["outfilepath"],
-            infile_format=config["infile_format"],
-            index_col=config["index_col"],
-            encoding=config["encoding"],
-            low_memory=config["low_memory"],
-            usecols=config["usecols"],
-            force=True,
-        )
-        p.execute(context=context)
-        assert os.path.exists(config["outfilepath"])
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -166,14 +119,19 @@ class TestOperators:
     # ================================================================================================ #
     def test_teardown(self, caplog):
         # Enter teardown activities here
-        # shutil.rmtree(TEST_FILEPATH, ignore_errors=True)
         pass
 
 
-@pytest.mark.etl
+@pytest.mark.pipe
 class TestPipeline:
+    DIRECTORY = "tests/data/workflow"
+    REGISTRY = FileBasedRegistry(directory=DIRECTORY, io=IOService)
+    REPO = DatasetRepo()
+    REPO.registry = REGISTRY
+    REPO.io = IOService
+
     # ================================================================================================ #
-    def test_setup(self, caplog):
+    def test_create_rating_dataset(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -184,7 +142,14 @@ class TestPipeline:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        # shutil.rmtree(TEST_FILEPATH, ignore_errors=True)
+        builder = DIRECTOR.builder
+        pipeline = builder.pipeline
+        pipeline.run()
+        data = pipeline.data
+        assert isinstance(data, Dataset)
+        assert isinstance(data.data, pd.DataFrame)
+        id = get_id(name="rating", env="test", version=1, stage="interim")
+        assert REPO.exists(id)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -201,36 +166,34 @@ class TestPipeline:
         )
 
     # ============================================================================================ #
-    def test_director(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        outfile = CONFIG["steps"][3]["params"]["outfilepath"]
-        d = PipelineDirector(config_filepath=CONFIG_FILEPATH, builder=PipelineBuilder())
-        d.build_etl_pipeline()
-        pipeline = d.builder.pipeline
-        pipeline.run()
-        assert os.path.exists(outfile)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+    # def test_split(self, caplog):
+    #     start = datetime.now()
+    #     logger.info(
+    #         "\n\tStarted {} {} at {} on {}".format(
+    #             self.__class__.__name__,
+    #             inspect.stack()[0][3],
+    #             start.strftime("%H:%M:%S"),
+    #             start.strftime("%m/%d/%Y"),
+    #         )
+    #     )
+    #     # ---------------------------------------------------------------------------------------- #
+    #     id1 = get_id(name="train", env="test", stage="interim", version=1)
+    #     id2 = get_id(name="test", env="test", stage="interim", version=1)
+    #     assert REPO.exists(id1)
+    #     assert REPO.exists(id2)
+    #     # ---------------------------------------------------------------------------------------- #
+    #     end = datetime.now()
+    #     duration = round((end - start).total_seconds(), 1)
 
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
+    #     logger.info(
+    #         "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+    #             self.__class__.__name__,
+    #             inspect.stack()[0][3],
+    #             duration,
+    #             end.strftime("%H:%M:%S"),
+    #             end.strftime("%m/%d/%Y"),
+    #         )
+    #     )
 
     # ================================================================================================ #
     def test_teardown(self, caplog):
@@ -244,7 +207,6 @@ class TestPipeline:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        # shutil.rmtree(TEST_FILEPATH, ignore_errors=True)
         pass
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

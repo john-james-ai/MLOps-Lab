@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:22:05 am                                               #
-# Modified   : Friday November 18th 2022 11:10:30 pm                                               #
+# Modified   : Saturday November 19th 2022 11:36:22 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -40,13 +40,16 @@ DATA_REPO_FILE_FORMAT = "pkl"
 ENVS = ["dev", "prod", "test"]
 STAGES = ["raw", "interim", "cooked"]
 # ------------------------------------------------------------------------------------------------ #
-#                                       DIRECTORIES                                                #
+#                                       DATA DIRECTORIES                                           #
 # ------------------------------------------------------------------------------------------------ #
-BASE_DATA_DIR = "data"
-DATA_REPO_DIR = os.path.join(BASE_DATA_DIR, "dataset/repo")
-
-BASE_MODEL_DIR = "models"
-MODEL_REPO_DIR = os.path.join(BASE_MODEL_DIR, "repo")
+PROD_BASE_DATA_DIR = "data/prod/movielens20m"
+PROD_REPO_DIR = os.path.join(PROD_BASE_DATA_DIR, "repo")
+# ------------------------------------------------------------------------------------------------ #
+DEV_BASE_DATA_DIR = "data/dev/movielens20m"
+DEV_REPO_DIR = os.path.join(DEV_BASE_DATA_DIR, "repo")
+# ------------------------------------------------------------------------------------------------ #
+TEST_BASE_DATA_DIR = "tests/data/movielens20m"
+TEST_REPO_DIR = os.path.join(TEST_BASE_DATA_DIR, "repo")
 # ------------------------------------------------------------------------------------------------ #
 #                                      WANDB CONFIG                                                #
 # ------------------------------------------------------------------------------------------------ #

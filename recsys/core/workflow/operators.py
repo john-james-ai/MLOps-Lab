@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 17th 2022 02:51:27 am                                             #
-# Modified   : Saturday November 19th 2022 03:53:26 pm                                             #
+# Modified   : Sunday November 20th 2022 09:15:13 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -90,12 +90,7 @@ class DatasetOperator(ABC):
     Returns: Output Dataset Object
     """
 
-    def __init__(
-        self,
-        input_dataset_params: Union[DatasetParams, List[DatasetParams]],
-        output_dataset_params: Union[DatasetParams, List[DatasetParams]],
-        **kwargs,
-    ) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         self.name = None
 
         self.input_data = None
@@ -121,6 +116,7 @@ class DatasetOperator(ABC):
         self._input_data = input_data
 
     @profiler
+    @repository
     @abstractmethod
     def execute(self, context: Context, **kwargs) -> Any:
         pass
@@ -295,59 +291,62 @@ class Pickler(Operator):
             return True
 
 
+# ------------------------------------------------------------------------------------------------ #
+#                                     CREATE DATASET                                               #
+# ------------------------------------------------------------------------------------------------ #
+
+
 class CreateDataset(DatasetOperator):
     """Reads a DataFrame, creates a Dataset and commits it to the repository.
 
     Args:
         name (str): The name of the Dataset
-        env (str): The environment, either 'test', 'prod', or 'dev'.
-        stage (str): Either 'raw', 'interim', or 'cooked'.
-        version (int): Usually starts with the number one (1).
         description (str): The description for the Dataset.
-        filepath (str): The filepath to the DataFrame.
-        versioning (bool): If True, bump the version if the file exists.
+        infilepath (str): Path to the input file
+        dataset_out_po (dict): Dictionary of Dataset parameters, including:
+            - name (str): Name of the Dataset object
+            - description (str): Brief description for the object.
+            - env (str): One of 'dev', 'prod', or 'test'
+            - stage (str): One of 'raw', 'interim', or 'cooked'
+            - version (int): Version. Default = 1
+            - version_control (bool): If True, saving an existing document will
+                not throw an exception. Rather, the version will be bumped,
+                and the id and filepath will be changed accordingly.
 
     Returns Dataset
     """
 
     def __init__(
-        self,
-        name: str,
-        env: str,
-        stage: str,
-        version,
-        int,
-        description: str,
-        filepath: str,
-        versioning: bool = True,
+        self, name: str, infilepath: str, dataset_out_po: dict, description: str = None
     ) -> None:
         super().__init__(
             self,
             name=name,
-            env=env,
-            stage=stage,
-            version=version,
             description=description,
-            filepath=filepath,
-            versioning=versioning,
+            infilepath=infilepath,
+            dataset_out_po=dataset_out_po,
         )
 
     @repository
-    def execute(self, context: Context, *args, **kwargs) -> Dict[str, Dataset]:
+    def execute(self, context: Context = None, *args, **kwargs) -> Dict[str, Dataset]:
         """Creates the dataset."""
         io = context.io
-        data = io.read(self._filepath)
+        data = io.read(self.infilepath)
         dataset = Dataset(
-            name=self.name,
-            description=self.description,
-            stage=self.stage,
-            env=self.env,
-            version=self.version,
+            name=self.dataset_out_po["name"],
+            description=self.dataset_out_po["description"],
+            stage=self.dataset_out_po["stage"],
+            env=self.dataset_out_po["env"],
+            version=self.dataset_out_po["version"],
+            version_control=self.dataset_out_po["version_control"],
             data=data,
         )
         return dataset
 
 
+# ------------------------------------------------------------------------------------------------ #
+#                                   TRAIN TEST SPLIT                                               #
+# ------------------------------------------------------------------------------------------------ #
 class TrainTestSplit(DatasetOperator):
     """Splits the dataset into to training and test sets by user
 
@@ -360,7 +359,7 @@ class TrainTestSplit(DatasetOperator):
         clustered_by (str): The column by which to cluster.
         train_proportion (float): The proportion of the dataset to allocate to training.
         random_state (int): PseudoRandom generator seed
-        versioning (bool): If True, bump the version if the file exists.
+        version_control (bool): If True, bump the version if the file exists.
 
     Returns: Dictionary of Dataset objects containing train and test Dataset objects.
 
@@ -368,26 +367,26 @@ class TrainTestSplit(DatasetOperator):
 
     def __init__(
         self,
-        input_dataset_params: DatasetParams,
-        output_dataset_params: Dict[str, DatasetParams],
+        dataset_in_po: dict,
+        dataset_out_po: dict,
         clustered_by: str = None,
         clustered: bool = False,
         train_proportion: float = 0.8,
         random_state: int = None,
         name: str = None,
         description: str = None,
-        versioning: bool = True,
+        version_control: bool = True,
     ) -> None:
         super().__init__(
-            input_dataset_params=input_dataset_params,
-            output_dataset_params=output_dataset_params,
+            dataset_in_po=dataset_in_po,
+            dataset_out_po=dataset_out_po,
             clustered=clustered,
             clustered_by=clustered_by,
             train_proportion=train_proportion,
             random_state=random_state,
             name=name,
             description=description,
-            versioning=versioning,
+            version_control=version_control,
         )
 
     @repository
@@ -445,7 +444,7 @@ class RatingsAdjuster(DatasetOperator):
         description (str): Description assigned to this instance of the operator
         input_dataset_params (str): A dataset parameter object or list of objects, defining the input.
         output_dataset_params (dict): Dictionary of parameter objects for the train and test datasets.
-        versioning (bool): If True, bump the version if the file exists.
+        version_control (bool): If True, bump the version if the file exists.
 
     Returns Dataset
     """
@@ -456,7 +455,7 @@ class RatingsAdjuster(DatasetOperator):
         output_dataset_params: DatasetParams,
         name: str = None,
         description: str = None,
-        versioning: bool = True,
+        version_control: bool = True,
     ) -> None:
         name = self.__class__.__name__.lower() if name is None else name
         super().__init__(
@@ -464,7 +463,7 @@ class RatingsAdjuster(DatasetOperator):
             description=description,
             input_dataset_params=input_dataset_params,
             output_dataset_params=output_dataset_params,
-            versioning=versioning,
+            version_control=version_control,
         )
 
     def execute(self, *args, **kwargs) -> Dataset:
@@ -487,7 +486,7 @@ class User(DatasetOperator):
         description (str): Description assigned to this instance of the operator
         input_dataset_params (str): A dataset parameter object or list of objects, defining the input.
         output_dataset_params (dict): Dictionary of parameter objects for the train and test datasets.
-        versioning (bool): If True, bump the version if the file exists.
+        version_control (bool): If True, bump the version if the file exists.
 
     Returns Dataset
     """
@@ -498,7 +497,7 @@ class User(DatasetOperator):
         output_dataset_params: DatasetParams,
         name: str = None,
         description: str = None,
-        versioning: bool = True,
+        version_control: bool = True,
     ) -> None:
         name = self.__class__.__name__.lower() if name is None else name
         super().__init__(
@@ -506,7 +505,7 @@ class User(DatasetOperator):
             description=description,
             input_dataset_params=input_dataset_params,
             output_dataset_params=output_dataset_params,
-            versioning=versioning,
+            version_control=version_control,
         )
 
     def execute(self, *args, **kwargs) -> Dataset:
@@ -536,7 +535,7 @@ class Phi(DatasetOperator):
         description (str): Description assigned to this instance of the operator
         input_dataset_params (str): A dataset parameter object or list of objects, defining the input.
         output_dataset_params (dict): Dictionary of parameter objects for the train and test datasets.
-        versioning (bool): If True, bump the version if the file exists.
+        version_control (bool): If True, bump the version if the file exists.
 
     Returns Dataset
     """
@@ -547,7 +546,7 @@ class Phi(DatasetOperator):
         output_dataset_params: DatasetParams,
         name: str = None,
         description: str = None,
-        versioning: bool = True,
+        version_control: bool = True,
     ) -> None:
         name = self.__class__.__name__.lower() if name is None else name
         super().__init__(
@@ -555,7 +554,7 @@ class Phi(DatasetOperator):
             description=description,
             input_dataset_params=input_dataset_params,
             output_dataset_params=output_dataset_params,
-            versioning=versioning,
+            version_control=version_control,
         )
 
     def execute(self, *args, **kwargs) -> Dataset:
@@ -581,7 +580,7 @@ class UserWeights(DatasetOperator):
         description (str): Description assigned to this instance of the operator
         input_dataset_params (str): A dataset parameter object or list of objects, defining the input.
         output_dataset_params (dict): Dictionary of parameter objects for the train and test datasets.
-        versioning (bool): If True, bump the version if the file exists.
+        version_control (bool): If True, bump the version if the file exists.
 
     Returns Dataset
     """
@@ -592,7 +591,7 @@ class UserWeights(DatasetOperator):
         output_dataset_params: DatasetParams,
         name: str = None,
         description: str = None,
-        versioning: bool = True,
+        version_control: bool = True,
     ) -> None:
         name = self.__class__.__name__.lower() if name is None else name
         super().__init__(
@@ -600,7 +599,7 @@ class UserWeights(DatasetOperator):
             description=description,
             input_dataset_params=input_dataset_params,
             output_dataset_params=output_dataset_params,
-            versioning=versioning,
+            version_control=version_control,
         )
 
     def execute(self, *args, **kwargs) -> Dataset:
@@ -660,7 +659,7 @@ class DataIntegrator(DatasetOperator):
         description (str): Description assigned to this instance of the operator
         input_dataset_params (str): A dataset parameter object or list of objects, defining the input.
         output_dataset_params (dict): Dictionary of parameter objects for the train and test datasets.
-        versioning (bool): If True, bump the version if the file exists.
+        version_control (bool): If True, bump the version if the file exists.
 
     Returns Dataset
     """
@@ -671,7 +670,7 @@ class DataIntegrator(DatasetOperator):
         output_dataset_params: DatasetParams,
         name: str = None,
         description: str = None,
-        versioning: bool = True,
+        version_control: bool = True,
     ) -> None:
         name = self.__class__.__name__.lower() if name is None else name
         super().__init__(
@@ -679,7 +678,7 @@ class DataIntegrator(DatasetOperator):
             description=description,
             input_dataset_params=input_dataset_params,
             output_dataset_params=output_dataset_params,
-            versioning=versioning,
+            version_control=version_control,
         )
         self._users = None
         self._ratings = None

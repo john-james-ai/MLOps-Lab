@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday November 19th 2022 01:30:09 pm                                             #
-# Modified   : Saturday November 19th 2022 03:50:44 pm                                             #
+# Modified   : Sunday November 20th 2022 03:09:58 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,13 +21,11 @@ from abc import ABC, abstractmethod
 from typing import Any
 import logging
 import importlib
-from datetime import datetime
 from tqdm import tqdm
-import wandb
 
 from recsys.core.services.io import IOService
 from recsys.core.services.profiler import profiler
-from recsys.core.base.config import PROJECT, ENTITY
+
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -54,7 +52,7 @@ class Context:
 
 
 # ------------------------------------------------------------------------------------------------ #
-class Pipeline(ABC):
+class PipelineABC(ABC):
     """Base class for Pipelines
     Args:
         name (str): Human readable name for the pipeline run.
@@ -65,13 +63,6 @@ class Pipeline(ABC):
         self._name = name
         self._description = description
         self._steps = {}
-
-        self._created = datetime.now()
-        self._started = None
-        self._ended = None
-        self._duration = None
-        self._wandb_run = None
-
         self._context = None
 
     @property
@@ -79,24 +70,16 @@ class Pipeline(ABC):
         return self._name
 
     @property
-    def created(self) -> datetime:
-        return self._created
-
-    @property
-    def started(self) -> datetime:
-        return self._started
-
-    @property
-    def ended(self) -> datetime:
-        return self._ended
-
-    @property
-    def duration(self) -> datetime:
-        return self._duration
+    def description(self) -> str:
+        return self._description
 
     @property
     def steps(self) -> list:
         return self._steps
+
+    @property
+    def data(self) -> list:
+        return self._data
 
     @property
     def context(self) -> Context:
@@ -122,28 +105,17 @@ class Pipeline(ABC):
 
     def _setup(self) -> None:
         """Executes setup for pipeline."""
-        self._wandb_run = wandb.init(project=PROJECT, entity=ENTITY, name=self._name, reinit=True)
-        self._started = datetime.now()
+        pass
 
     def _teardown(self) -> None:
         """Completes the pipeline process."""
-        self._ended = datetime.now()
-        self._duration = (self._ended - self._started).total_seconds()
-        wandb.log(
-            {
-                "pipeline": self._name,
-                "started": self._started,
-                "ended": self._ended,
-                "duration": self._duration,
-            }
-        )
-        self._wandb_run.finish()
+        pass
 
 
 # ------------------------------------------------------------------------------------------------ #
 
 
-class Pipeline(Pipeline):
+class Pipeline(PipelineABC):
     """Pipeline class
 
     Executes Extract-Transform-Load pipelines
@@ -158,30 +130,20 @@ class Pipeline(Pipeline):
 
     def run(self) -> None:
         """Runs the pipeline"""
+        self._data = None
         self._setup()
         for name, step in tqdm(self._steps.items()):
-            started = datetime.now()
 
-            step.execute(context=self._context)
+            result = step.execute(data=self._data, context=self._context)
+            self._data = result if result is not None else self._data
 
-            ended = datetime.now()
-            duration = (ended - started).total_seconds()
-            wandb.log(
-                {
-                    "pipeline": self._context.name,
-                    "step": name,
-                    "started": started,
-                    "ended": ended,
-                    "duration": duration,
-                }
-            )
         self._teardown()
 
 
 # ------------------------------------------------------------------------------------------------ #
 
 
-class PipelineBuilder(ABC):
+class PipelineBuilderABC(ABC):
     """Base class for Pipeline objects"""
 
     def reset(self) -> None:
@@ -209,7 +171,7 @@ class PipelineBuilder(ABC):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class PipelineBuilder(PipelineBuilder):
+class PipelineBuilder(PipelineBuilderABC):
     """Constructs an  processing pipeline."""
 
     def __init__(self) -> None:
@@ -217,6 +179,18 @@ class PipelineBuilder(PipelineBuilder):
         self._config = None
         self._context = None
         self._steps = {}
+
+    @property
+    def config(self) -> dict:
+        return self._config
+
+    @property
+    def context(self) -> Context:
+        return self._context
+
+    @property
+    def steps(self) -> dict:
+        return self._steps
 
     def build_config(self, config: dict) -> None:
         self._config = config
@@ -239,7 +213,13 @@ class PipelineBuilder(PipelineBuilder):
                 module = importlib.import_module(name=step_config["module"])
                 step = getattr(module, step_config["operator"])
 
-                operator = step(**step_config["params"])
+                operator = step(
+                    name=step_config["name"],
+                    description=step_config["description"],
+                    **step_config["params"],
+                )
+
+                logger.debug(operator)
 
                 self._steps[operator.name] = operator
 
@@ -263,7 +243,7 @@ class PipelineBuilder(PipelineBuilder):
 # ------------------------------------------------------------------------------------------------ #
 
 
-class PipelineDirector(ABC):
+class PipelineDirectorABC(ABC):
     """Pipelne director responsible for executing the steps of the PipelineBuilder in a sequence.
 
     Args:
@@ -285,7 +265,7 @@ class PipelineDirector(ABC):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class PipelineDirector(PipelineDirector):
+class PipelineDirector(PipelineDirectorABC):
     """Pipelne director responsible for executing the steps of the PipelineBuilder in a sequence.
 
     Args:
@@ -296,7 +276,7 @@ class PipelineDirector(PipelineDirector):
     def __init__(self, config_filepath: str, builder: PipelineBuilder) -> None:
         super().__init__(config_filepath=config_filepath, builder=builder)
 
-    def build_etl_pipeline(self) -> None:
+    def build_pipeline(self) -> None:
         """Constructs the  Pipeline"""
         self._builder.build_config(config=self._config)
         self._builder.build_context()

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:22:05 am                                               #
-# Modified   : Friday November 18th 2022 08:34:40 am                                               #
+# Modified   : Sunday November 20th 2022 12:07:47 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ import os
 import logging
 from dataclasses import dataclass
 
-from recsys.core.base.config import Config, DATA_REPO_DIR, DATA_REPO_FILE_FORMAT
+from recsys.core.base.config import Config, TEST_REPO_DIR, DATA_REPO_FILE_FORMAT
 from recsys.core.services.io import IOService
 
 # ------------------------------------------------------------------------------------------------ #
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class DatasetRepoConfig(Config):
-    directory: str = DATA_REPO_DIR
+    directory: str = TEST_REPO_DIR
 
 
 @dataclass

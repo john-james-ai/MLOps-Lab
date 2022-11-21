@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 15th 2022 01:35:58 am                                              #
-# Modified   : Saturday November 19th 2022 04:24:52 pm                                             #
+# Modified   : Sunday November 20th 2022 09:15:13 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,12 +21,14 @@ import logging
 import os
 from datetime import datetime
 import shutil
+import copy
 
 import pytest
 from recsys.core.dal.config import DatasetRepoConfigFR
 from recsys.core.dal.repo import DatasetRepo
 from recsys.core.dal.registry import FileBasedRegistry
 from recsys.core.services.io import IOService
+from recsys.core.dal.dataset import get_id
 
 # ------------------------------------------------------------------------------------------------ #
 logging.basicConfig(
@@ -119,11 +121,14 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
+        assert REPO.count == 0
         for dataset in datasets:
             REPO.add(dataset)
-            dataset2 = REPO.get(dataset.name)
+            dataset2 = REPO.get(dataset.id)
             assert dataset.is_equal(dataset2)
 
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -139,7 +144,7 @@ class TestRepo:
         )
 
     # ============================================================================================ #
-    def test_add_exists(self, datasets, caplog):
+    def test_add_exists_no_version_control(self, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -150,9 +155,53 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
         for dataset in datasets:
-            with pytest.raises(FileExistsError):
-                REPO.add(dataset)
+            dataset.version_control = False
+            if REPO.exists(dataset.id):
+                logger.debug("\n\n\t\t\tTHIS SHOULD FAIL\n\n")
+                logger.debug(dataset)
+                with pytest.raises(FileExistsError):
+                    REPO.add(dataset)
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_add_exists_version_control(self, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
+        before = copy.copy(REPO.count)
+        for dataset in datasets:
+            if REPO.exists(dataset.id):
+                old = copy.deepcopy(dataset)
+                dataset.version_control = True
+                new = REPO.add(dataset)
+                assert new.id != old.id
+                assert new.filepath != old.filepath
+                assert new.version != old.version
+                assert REPO.count != before
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -180,8 +229,10 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
         for dataset in datasets:
-            assert REPO.exists(dataset.name)
+            assert REPO.exists(id=get_id(name="ds1", stage="raw", version=1, env="dev"))
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -208,7 +259,9 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        assert not REPO.exists("ratings_dataset")
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
+        assert not REPO.exists(id=get_id(name="dsx", stage="raw", version=1, env="dev"))
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -235,10 +288,11 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        names = REPO.list_datasets()
-        assert len(names) == len(REPO)
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
+        ds = REPO.list_datasets()
+        assert len(ds) == len(REPO)
         logger.info(REPO.print_datasets())
-
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -265,6 +319,7 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
+        logger.debug(f"\n\tCurrent Count in Repo is {REPO.count}")
         shutil.rmtree(CONFIG.directory, ignore_errors=True)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

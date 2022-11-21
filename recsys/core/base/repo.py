@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 13th 2022 09:55:54 pm                                               #
-# Modified   : Thursday November 17th 2022 04:50:13 pm                                             #
+# Modified   : Sunday November 20th 2022 09:07:33 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -57,58 +57,3 @@ class Repo(ABC):
     @abstractmethod
     def exists(self, filename: str) -> bool:
         pass
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
-class RepoConfig(Config):
-    name: str = "repo_config"
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
-class RepoBuilder(ABC):
-    """Repository builder base class."""
-
-    @property
-    def repo(self) -> Repo:
-        pass
-
-    @abstractmethod
-    def build_config(self, config: RepoConfig) -> None:
-        pass
-
-    @abstractmethod
-    def build_registry(self) -> None:
-        pass
-
-    @abstractmethod
-    def build_repo(self) -> None:
-        pass
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
-class RepoDirector(ABC):
-    """Repository director responsible for executing the steps of the RepoBuilder in a sequence.
-
-    Args:
-        config_filepath (str): The path to the builder configuration file
-        builder (RepoBuilder): The concrete builder class
-    """
-
-    def __init__(self, config: RepoConfig, builder: RepoBuilder) -> None:
-        self._config = config
-        self._builder = builder
-
-    @property
-    def builder(self) -> RepoBuilder:
-        return self._builder
-
-    @builder.setter
-    def builder(self, builder: RepoBuilder) -> None:
-        self._builder = builder
