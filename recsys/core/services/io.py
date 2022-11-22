@@ -11,14 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 10th 2022 04:03:40 pm                                             #
-# Modified   : Friday November 18th 2022 12:12:35 pm                                               #
+# Modified   : Tuesday November 22nd 2022 01:58:15 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """IO Utils"""
 import os
-import sys
 import yaml
 import pickle
 import logging
@@ -34,10 +33,7 @@ logger = logging.getLogger(__name__)
 class IO(ABC):
     @classmethod
     def read(cls, filepath: str, *args, **kwargs) -> Any:
-        logger.debug("Reading from {}".format(filepath))
-
         data = cls._read(filepath, **kwargs)
-        logger.debug("Read {} bytes.".format(sys.getsizeof(data)))
         return data
 
     @classmethod
@@ -47,11 +43,8 @@ class IO(ABC):
 
     @classmethod
     def write(cls, filepath: str, data: Any, *args, **kwargs) -> None:
-        logger.debug("Writing to {}".format(filepath))
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
-
         cls._write(filepath, data, **kwargs)
-        logger.debug("Writing complete.")
 
     @classmethod
     @abstractmethod
@@ -169,6 +162,10 @@ class IOService:
 
     __io = {"csv": CSVIO, "yaml": YamlIO, "yml": YamlIO, "pkl": PickleIO, "pickle": PickleIO}
 
+    @property
+    def file_formats(self) -> list:
+        return IOService.__io.keys()
+
     @classmethod
     def read(cls, filepath: str, **kwargs) -> Any:
         io = cls._get_io(filepath)
@@ -183,7 +180,6 @@ class IOService:
     def _get_io(cls, filepath: str) -> IO:
         file_format = os.path.splitext(filepath)[1].replace(".", "")
         try:
-            logger.debug("Getting io for {} files".format(file_format))
             return IOService.__io[file_format]
         except TypeError:
             if filepath is None:

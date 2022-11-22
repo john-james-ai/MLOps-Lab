@@ -11,13 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 17th 2022 02:51:27 am                                             #
-# Modified   : Sunday November 20th 2022 09:15:13 pm                                               #
+# Modified   : Monday November 21st 2022 08:44:03 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import os
-from typing import Any, Union, List, Dict
+from typing import Any, Union, Dict
 import numpy as np
 from numpy.random import default_rng
 import pandas as pd
@@ -29,8 +29,8 @@ from zipfile import ZipFile
 
 from recsys.core.services.profiler import profiler
 from recsys.core.workflow.pipeline import Context
-from recsys.core.dal.dataset import DatasetParams, Dataset
-from recsys.core.dal.repo import repository
+from recsys.core.dal.dataset import Dataset
+from recsys.core.services.repo import repository
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -51,8 +51,8 @@ class Operator(ABC):
         self.name = None
         for k, v in kwargs.items():
             setattr(self, k, v)
-        if not self.name:
-            self.name = self.__class__.__name__.lower()
+
+        self.name = self.__class__.__name__.lower() if not self.name else self.name
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}\n\tAttributes: {self.__dict__.items()}"
@@ -62,7 +62,7 @@ class Operator(ABC):
 
     @profiler
     @abstractmethod
-    def execute(self, data: pd.DataFrame = None, context: Context = None, **kwargs) -> Any:
+    def run(self, data: pd.DataFrame = None, context: Context = None, **kwargs) -> Any:
         pass
 
 
@@ -70,55 +70,38 @@ class Operator(ABC):
 class DatasetOperator(ABC):
     """Base class for operators that interact with Dataset objects in the Dataset Repository.
 
-    Input dataset parameters are queried by the repository decorator and the input dataset(s) are
-    injected into the instance through the property setter. W.r.t the instance parameters,
-    they are added to the class as attributes using setattr. Yeah, I know. Just got tired
-    of typing get('param', None) from some parameters dictionary.
-
     Args:
         name (str): The name for the operator that distinguishes it in the pipeline.
         description (str): A description for the operator instance. Optional
-        input_dataset_params (Union[DatasetParams], List[DatasetParams]) DatasetParams or a list
-            thereof.
-        output_dataset_params (Union[DatasetParams], List[DatasetParams]) DatasetParams or a list
-            thereof.
+        dataset_in_params (Union[int, List[int]]): Int or list of ints representing Dataset ids.
+        dataset_out_params (dict): Parameters for output Dataset object.
 
     Attributes:
-        input_dataset (Union[Dataset], List[Dataset]). The input dataset is injected by the
-            repository decorator.
+        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
+            injected by the repository decorator.
 
     Returns: Output Dataset Object
     """
 
     def __init__(self, *args, **kwargs) -> None:
-        self.name = None
+        super().__init__(kwargs)
 
-        self.input_data = None
-        self.output_data = None
-
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        if not self.name:
-            self.name = self.__class__.__name__.lower()
-
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}\n\tAttributes: {self.__dict__.items()}"
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}\n\tAttributes: {self.__dict__.items()}"
+        self._input_dataset = None
 
     @property
-    def input_data(self) -> Union[Dataset, Dict[str, Dataset], List[Dataset]]:
-        return self._input_data
+    def input_dataset(self) -> Union[Dataset, Dict[str, Dataset]]:
+        return self._input_dataset
 
-    @input_data.setter
-    def input_data(self, input_data: Union[Dataset, Dict[str, Dataset], List[Dataset]]) -> None:
-        self._input_data = input_data
+    @input_dataset.setter
+    def input_dataset(self, input_dataset: Union[Dataset, Dict[str, Dataset]]) -> None:
+        self._input_dataset = input_dataset
 
     @profiler
     @repository
     @abstractmethod
-    def execute(self, context: Context, **kwargs) -> Any:
+    def execute(
+        self, context: Context = None, *args, **kwargs
+    ) -> Union[Dataset, Dict[str, Dataset]]:
         pass
 
 
@@ -300,45 +283,40 @@ class CreateDataset(DatasetOperator):
     """Reads a DataFrame, creates a Dataset and commits it to the repository.
 
     Args:
-        name (str): The name of the Dataset
-        description (str): The description for the Dataset.
-        infilepath (str): Path to the input file
-        dataset_out_po (dict): Dictionary of Dataset parameters, including:
-            - name (str): Name of the Dataset object
-            - description (str): Brief description for the object.
-            - env (str): One of 'dev', 'prod', or 'test'
-            - stage (str): One of 'raw', 'interim', or 'cooked'
-            - version (int): Version. Default = 1
-            - version_control (bool): If True, saving an existing document will
-                not throw an exception. Rather, the version will be bumped,
-                and the id and filepath will be changed accordingly.
+        name (str): The name for the operator that distinguishes it in the pipeline.
+        description (str): A description for the operator instance. Optional
+        filepath (str): The filepath to the input object.
+        dataset_in_params (Union[int, List[int]]): Not used by this Operator
+        dataset_out_params (dict): Parameters for output Dataset object.
 
-    Returns Dataset
+    Attributes:
+        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
+            injected by the repository decorator.
+
+    Returns: Output Dataset Object
     """
 
     def __init__(
-        self, name: str, infilepath: str, dataset_out_po: dict, description: str = None
+        self, name: str, infilepath: str, dataset_out_params: dict, description: str = None
     ) -> None:
         super().__init__(
             self,
             name=name,
             description=description,
             infilepath=infilepath,
-            dataset_out_po=dataset_out_po,
+            dataset_out_params=dataset_out_params,
         )
 
     @repository
-    def execute(self, context: Context = None, *args, **kwargs) -> Dict[str, Dataset]:
+    def execute(self, context: Context = None, *args, **kwargs) -> Dataset:
         """Creates the dataset."""
         io = context.io
         data = io.read(self.infilepath)
         dataset = Dataset(
-            name=self.dataset_out_po["name"],
-            description=self.dataset_out_po["description"],
-            stage=self.dataset_out_po["stage"],
-            env=self.dataset_out_po["env"],
-            version=self.dataset_out_po["version"],
-            version_control=self.dataset_out_po["version_control"],
+            name=self.dataset_out_params["name"],
+            description=self.dataset_out_params["description"],
+            stage=self.dataset_out_params["stage"],
+            env=self.dataset_out_params["env"],
             data=data,
         )
         return dataset
@@ -351,15 +329,18 @@ class TrainTestSplit(DatasetOperator):
     """Splits the dataset into to training and test sets by user
 
     Args:
-        name (str): Name given to this instance of the operator.
-        description (str): Description assigned to this instance of the operator
-        input_dataset_params (str): A dataset parameter object or list of objects, defining the input.
-        output_dataset_params (dict): Dictionary of parameter objects for the train and test datasets.
+        name (str): The name for the operator that distinguishes it in the pipeline.
+        description (str): A description for the operator instance. Optional
+        dataset_in_params (Union[int, List[int]]): Int or list of ints representing Dataset ids.
+        dataset_out_params (dict): Parameters for output Dataset object.
         clustered (bool): Whether to cluster sampling.
         clustered_by (str): The column by which to cluster.
         train_proportion (float): The proportion of the dataset to allocate to training.
         random_state (int): PseudoRandom generator seed
-        version_control (bool): If True, bump the version if the file exists.
+
+    Attributes:
+        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
+            injected by the repository decorator.
 
     Returns: Dictionary of Dataset objects containing train and test Dataset objects.
 
@@ -367,26 +348,24 @@ class TrainTestSplit(DatasetOperator):
 
     def __init__(
         self,
-        dataset_in_po: dict,
-        dataset_out_po: dict,
+        dataset_in_params: dict,
+        dataset_out_params: dict,
         clustered_by: str = None,
         clustered: bool = False,
         train_proportion: float = 0.8,
         random_state: int = None,
         name: str = None,
         description: str = None,
-        version_control: bool = True,
     ) -> None:
         super().__init__(
-            dataset_in_po=dataset_in_po,
-            dataset_out_po=dataset_out_po,
+            dataset_in_params=dataset_in_params,
+            dataset_out_params=dataset_out_params,
             clustered=clustered,
             clustered_by=clustered_by,
             train_proportion=train_proportion,
             random_state=random_state,
             name=name,
             description=description,
-            version_control=version_control,
         )
 
     @repository
@@ -422,11 +401,8 @@ class TrainTestSplit(DatasetOperator):
             test_set = data.loc[test_idx]
 
         # Create train and test Dataset objects.
-        train = self._output_dataset_params["train"].to_dataset()
-        train.data = train_set
-
-        test = self._output_dataset_params["test"].to_dataset()
-        test.data = test_set
+        train = Dataset(**self._output_dataset_params["train"], data=train_set)
+        test = Dataset(**self._output_dataset_params["test"], data=test_set)
 
         outputs = {"train": train, "test": test}
 
@@ -440,30 +416,28 @@ class RatingsAdjuster(DatasetOperator):
     """Centers the ratings by subtracting the users average rating from each of the users ratings.
 
     Args:
-        name (str): Name given to this instance of the operator.
-        description (str): Description assigned to this instance of the operator
-        input_dataset_params (str): A dataset parameter object or list of objects, defining the input.
-        output_dataset_params (dict): Dictionary of parameter objects for the train and test datasets.
-        version_control (bool): If True, bump the version if the file exists.
+        name (str): The name for the operator that distinguishes it in the pipeline.
+        description (str): A description for the operator instance. Optional
+        dataset_in_params (Union[int, List[int]]): Int or list of ints representing Dataset ids.
+        dataset_out_params (dict): Parameters for output Dataset object.
 
-    Returns Dataset
+    Attributes:
+        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
+            injected by the repository decorator.
+
+    Returns: Output Dataset Object
     """
 
     def __init__(
         self,
-        input_dataset_params: DatasetParams,
-        output_dataset_params: DatasetParams,
+        dataset_in: int,
+        dataset_out: dict,
         name: str = None,
         description: str = None,
-        version_control: bool = True,
     ) -> None:
         name = self.__class__.__name__.lower() if name is None else name
         super().__init__(
-            name=name,
-            description=description,
-            input_dataset_params=input_dataset_params,
-            output_dataset_params=output_dataset_params,
-            version_control=version_control,
+            name=name, description=description, dataset_in=dataset_in, dataset_out=dataset_out
         )
 
     def execute(self, *args, **kwargs) -> Dataset:
@@ -472,8 +446,7 @@ class RatingsAdjuster(DatasetOperator):
 
         data["adj_rating"] = data["rating"].sub(data.groupby("userId")["rating"].transform("mean"))
 
-        dataset = self._output_dataset_params.to_dataset()
-        dataset.data = data
+        dataset = Dataset(**self._output_dataset_params, data=data)
 
         return dataset
 
@@ -482,30 +455,30 @@ class User(DatasetOperator):
     """Computes and stores average rating for each user.
 
     Args:
-        name (str): Name given to this instance of the operator.
-        description (str): Description assigned to this instance of the operator
-        input_dataset_params (str): A dataset parameter object or list of objects, defining the input.
-        output_dataset_params (dict): Dictionary of parameter objects for the train and test datasets.
-        version_control (bool): If True, bump the version if the file exists.
+        name (str): The name for the operator that distinguishes it in the pipeline.
+        description (str): A description for the operator instance. Optional
+        dataset_in_params (Union[int, List[int]]): Int or list of ints representing Dataset ids.
+        dataset_out_params (dict): Parameters for output Dataset object.
+
+    Attributes:
+        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
+            injected by the repository decorator.
+
+    Returns: Output Dataset Object
 
     Returns Dataset
     """
 
     def __init__(
         self,
-        input_dataset_params: DatasetParams,
-        output_dataset_params: DatasetParams,
+        dataset_in: int,
+        dataset_out: dict,
         name: str = None,
         description: str = None,
-        version_control: bool = True,
     ) -> None:
         name = self.__class__.__name__.lower() if name is None else name
         super().__init__(
-            name=name,
-            description=description,
-            input_dataset_params=input_dataset_params,
-            output_dataset_params=output_dataset_params,
-            version_control=version_control,
+            name=name, description=description, dataset_in=dataset_in, dataset_out=dataset_out
         )
 
     def execute(self, *args, **kwargs) -> Dataset:
@@ -515,8 +488,7 @@ class User(DatasetOperator):
         user_average_ratings = data.groupby("userId")["rating"].mean().reset_index()
         user_average_ratings.columns = ["userId", "mean_rating"]
 
-        dataset = self._output_dataset_params.to_dataset()
-        dataset.data = user_average_ratings
+        dataset = Dataset(**self._output_dataset_params, data=user_average_ratings)
 
         return dataset
 
@@ -531,30 +503,30 @@ class Phi(DatasetOperator):
     - neighbor (int): A user who also rated movieId
 
     Args:
-        name (str): Name given to this instance of the operator.
-        description (str): Description assigned to this instance of the operator
-        input_dataset_params (str): A dataset parameter object or list of objects, defining the input.
-        output_dataset_params (dict): Dictionary of parameter objects for the train and test datasets.
-        version_control (bool): If True, bump the version if the file exists.
+        name (str): The name for the operator that distinguishes it in the pipeline.
+        description (str): A description for the operator instance. Optional
+        dataset_in_params (Union[int, List[int]]): Int or list of ints representing Dataset ids.
+        dataset_out_params (dict): Parameters for output Dataset object.
+
+    Attributes:
+        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
+            injected by the repository decorator.
+
+    Returns: Output Dataset Object
 
     Returns Dataset
     """
 
     def __init__(
         self,
-        input_dataset_params: DatasetParams,
-        output_dataset_params: DatasetParams,
+        dataset_in: int,
+        dataset_out: dict,
         name: str = None,
         description: str = None,
-        version_control: bool = True,
     ) -> None:
         name = self.__class__.__name__.lower() if name is None else name
         super().__init__(
-            name=name,
-            description=description,
-            input_dataset_params=input_dataset_params,
-            output_dataset_params=output_dataset_params,
-            version_control=version_control,
+            name=name, description=description, dataset_in=dataset_in, dataset_out=dataset_out
         )
 
     def execute(self, *args, **kwargs) -> Dataset:
@@ -565,8 +537,7 @@ class Phi(DatasetOperator):
         # Remove rows where userId_x and userId_y are equal
         phi = phi.loc[phi["userId_x"] != phi["userId_y"]]
 
-        dataset = self._output_dataset_params.to_dataset()
-        dataset.data = phi
+        dataset = Dataset(**self._output_dataset_params, data=phi)
 
         return dataset
 
@@ -576,30 +547,28 @@ class UserWeights(DatasetOperator):
     """Computes user-user pearson correlation coefficients representing similarity between users.
 
     Args:
-        name (str): Name given to this instance of the operator.
-        description (str): Description assigned to this instance of the operator
-        input_dataset_params (str): A dataset parameter object or list of objects, defining the input.
-        output_dataset_params (dict): Dictionary of parameter objects for the train and test datasets.
-        version_control (bool): If True, bump the version if the file exists.
+        name (str): The name for the operator that distinguishes it in the pipeline.
+        description (str): A description for the operator instance. Optional
+        dataset_in_params (Union[int, List[int]]): Int or list of ints representing Dataset ids.
+        dataset_out_params (dict): Parameters for output Dataset object.
 
-    Returns Dataset
+    Attributes:
+        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
+            injected by the repository decorator.
+
+    Returns: Output Dataset Object
     """
 
     def __init__(
         self,
-        input_dataset_params: DatasetParams,
-        output_dataset_params: DatasetParams,
+        dataset_in: int,
+        dataset_out: dict,
         name: str = None,
         description: str = None,
-        version_control: bool = True,
     ) -> None:
         name = self.__class__.__name__.lower() if name is None else name
         super().__init__(
-            name=name,
-            description=description,
-            input_dataset_params=input_dataset_params,
-            output_dataset_params=output_dataset_params,
-            version_control=version_control,
+            name=name, description=description, dataset_in=dataset_in, dataset_out=dataset_out
         )
 
     def execute(self, *args, **kwargs) -> Dataset:
@@ -613,8 +582,9 @@ class UserWeights(DatasetOperator):
 
         weights = self._compute_weights(data=data)
 
-        dataset = self._output_dataset_params.to_dataset()
-        dataset.data = weights
+        dataset = Dataset(**self._output_dataset_params, data=weights)
+
+        return dataset
 
     def _compute_weights(self, data: pd.DataFrame) -> pd.DataFrame:
         """Computes the pearson's correlation for each user and her neighbors
@@ -655,30 +625,28 @@ class DataIntegrator(DatasetOperator):
     """Integrates user, rating, and weight data
 
     Args:
-        name (str): Name given to this instance of the operator.
-        description (str): Description assigned to this instance of the operator
-        input_dataset_params (str): A dataset parameter object or list of objects, defining the input.
-        output_dataset_params (dict): Dictionary of parameter objects for the train and test datasets.
-        version_control (bool): If True, bump the version if the file exists.
+        name (str): The name for the operator that distinguishes it in the pipeline.
+        description (str): A description for the operator instance. Optional
+        dataset_in_params (Union[int, List[int]]): Int or list of ints representing Dataset ids.
+        dataset_out_params (dict): Parameters for output Dataset object.
 
-    Returns Dataset
+    Attributes:
+        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
+            injected by the repository decorator.
+
+    Returns: Output Dataset Object
     """
 
     def __init__(
         self,
-        input_dataset_params: DatasetParams,
-        output_dataset_params: DatasetParams,
+        dataset_in: list,
+        dataset_out: dict,
         name: str = None,
         description: str = None,
-        version_control: bool = True,
     ) -> None:
         name = self.__class__.__name__.lower() if name is None else name
         super().__init__(
-            name=name,
-            description=description,
-            input_dataset_params=input_dataset_params,
-            output_dataset_params=output_dataset_params,
-            version_control=version_control,
+            name=name, description=description, dataset_in=dataset_in, dataset_out=dataset_out
         )
         self._users = None
         self._ratings = None
@@ -697,8 +665,7 @@ class DataIntegrator(DatasetOperator):
         # Merge in ratings for the neighbors into the dataframe
         data = data.merge(self._ratings, how="left", left_on="neighbor", right_on="userId")
 
-        dataset = self._output_dataset_params.to_dataset()
-        dataset.data = data
+        dataset = Dataset(**self._output_dataset_params, data=data)
 
         return dataset
 

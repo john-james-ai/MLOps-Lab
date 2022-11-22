@@ -11,21 +11,20 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Sunday November 20th 2022 09:15:13 pm                                               #
+# Modified   : Tuesday November 22nd 2022 03:22:51 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Data Repository Module"""
-import os
 import inspect
+import copy
 import logging
 from datetime import datetime
-from dataclasses import dataclass
 import pandas as pd
 from typing import Union
 
-from recsys.core.base.config import IMMUTABLE_TYPES, SEQUENCE_TYPES, ENVS, STAGES
+from recsys.core import IMMUTABLE_TYPES, SEQUENCE_TYPES, ENVS, STAGES
 from recsys.core.utils.data import clustered_sample
 
 
@@ -34,83 +33,52 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-@dataclass
-class DatasetMeta:
-    id: str
-    name: str
-    description: str
-    stage: str
-    env: str
-    version: str
-    version_control: bool
-    nrows: int
-    ncols: int
-    null_counts: int
-    memory_size: int
-    cost: float
-    filename: str
-    filepath: str
-    created: datetime
-    creator: str
-    saved: datetime
-
-    def as_dict(self) -> dict:
-        """Returns a dictionary representation of the the Config object."""
-        return {k: self._export_config(v) for k, v in self.__dict__.items()}
-
-    @classmethod
-    def _export_config(cls, v):
-        """Returns v with Configs converted to dicts, recursively."""
-        if isinstance(v, IMMUTABLE_TYPES):
-            return v
-        elif isinstance(v, SEQUENCE_TYPES):
-            return type(v)(map(cls._export_config, v))
-        elif isinstance(v, datetime):
-            return v.strftime("%H:%M:%S on %m/%d/%Y")
-        elif isinstance(v, dict):
-            return {kk: cls._export_config(vv) for kk, vv in v}
-        else:
-            pass
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
 class Dataset:
     """Dataset encapsulates tabular data, metadata, and access behaviors for data used in this package.
 
     Args:
-        name (str): Short lowercase alphabetic label for the dataset
-        data (pd.Dataframe): The data payload
-        stage (str): One of 'raw', 'interim', 'cooked'. Defaults to 'interim'.
-        env (str): Either 'prod', 'test', or 'dev'. Default is 'dev'.
-        version (int): Version of Dataset. Defaults to one (1).
+        id (int): Only set during reconstruction of the Dataset by the repo.
+        name (str): Required. Short lowercase alphabetic label for the dataset.
+        description (str): Optional. Describes the Dataset
+        env (str): Required. One of ['prod', 'dev', 'test'].
+        stage (str): Required. One of ['raw', 'interim', 'cooked']
+        data (pd.DataFrame): Required. The data payload.
+        cost (int): Required. The number of seconds the Operator took to create the Dataset.
+        version (int): Required. Initializes at 1 by default, but may be incremented by Repo.
+        creator (str): Required. Class name for the operator that is creating the Dataset.
+        created (datetime): Required. Datetime the Dataset was created.
 
     """
 
+    __seq = {"prod": 1, "dev": 1, "test": 1}
+
     def __init__(
         self,
-        name: str,
+        id: int = None,
+        name: str = None,
+        description: str = None,
         env: str = "dev",
         stage: str = "interim",
-        version: int = 1,
-        version_control: bool = True,
-        description: str = None,
         data: pd.DataFrame = None,
         cost: Union[int, float] = None,
-        id: str = None,
+        version: int = 1,
+        creator: str = None,
+        created: datetime = None,
+        *args,
+        **kwargs,
     ) -> None:
+        self._id = id
         self._name = name
+        self._description = description
         self._env = env
         self._stage = stage
-        self._version = version
-        self._version_control = version_control
-        self._description = description
         self._data = data
         self._cost = cost
-        self._id = id
+        self._version = version
+        self._created = created if created is not None else datetime.now()
+        self._creator = creator
 
-        self._validate(name=self._name, env=self._env, stage=self._stage, version=self._version)
+        self._validate()
 
         # Variables assigned automatically
 
@@ -120,34 +88,62 @@ class Dataset:
         self._null_counts = None
         self._memory_size = None
 
-        # Variables assigned by operator base class
-        self._created = None
-        self._creator = None
-        self._saved = None
-
-        # Variables set by user
-        self._features = None
-        self._classes = None
-        self._target = None
-
-        # Variables assigned automatically by repo.
-        self._filepath = None
-        self._filename = None
-
         # Set metadata
         self._set_metadata()
 
     def __str__(self) -> str:
-        return f"\n\nDataset ID: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tEnv: {self._env}\n\tStage: {self._stage}\n\tVersion: {self._version}\n\tVersioning: {self._version_control}"
+        return f"\n\nDataset ID: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tEnv: {self._env}\n\tStage: {self._stage}"
 
     def __repr__(self) -> str:
-        return f"\n\nDataset ID: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tEnv: {self._env}\n\tStage: {self._stage}\n\tVersion: {self._version}\n\tVersioning: {self._version_control}"
+        return f"\n\nDataset ID: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tEnv: {self._env}\n\tStage: {self._stage}"
+
+    def __eq__(self, other) -> bool:
+        """Compares two Datasets for equality.
+
+        Equality is defined by the extent to which the data and metadata are equal. Operational
+        metadata, such as creator, created, and version.
+
+        Args:
+            other (Dataset): The Dataset object to compare.
+        """
+
+        if isinstance(other, Dataset):
+            if (
+                self._id == other.id
+                and self._name == other.name
+                and self._description == other.description
+                and self._env == other.env
+                and self._stage == other.stage
+                and self._nrows == other.nrows
+                and self._ncols == other.ncols
+                and self._null_counts == other.null_counts
+                and self._memory_size == other.memory_size
+                and self._cost == other.cost
+            ):
+                if isinstance(self._data, pd.DataFrame) and isinstance(other.data, pd.DataFrame):
+                    return self._data.equals(other.data)
+                elif self._data == other.data:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else:
+            return False
 
     # ------------------------------------------------------------------------------------------------ #
     # Id var and variables assigned at instantiation
     @property
+    def id(self) -> int:
+        return self._id
+
+    @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def description(self) -> str:
+        return self._description
 
     @property
     def stage(self) -> str:
@@ -157,20 +153,15 @@ class Dataset:
     def env(self) -> str:
         return self._env
 
-    @property
-    def version_control(self) -> bool:
-        return self._version_control
-
-    @version_control.setter
-    def version_control(self, version_control: bool) -> None:
-        self._version_control = version_control
-
     # ------------------------------------------------------------------------------------------------ #
     # Variables assigned automatically
 
     @property
     def columns(self) -> list:
-        return self._columns
+        if self._data is not None:
+            return self._data.columns
+        else:
+            return None
 
     @property
     def nrows(self) -> int:
@@ -194,76 +185,12 @@ class Dataset:
     def created(self) -> datetime:
         return self._created
 
-    @created.setter
-    def created(self, created: datetime) -> None:
-        self._created = created
-
     @property
     def creator(self) -> str:
         return self._creator
 
-    @creator.setter
-    def creator(self, creator: str) -> None:
-        self._creator = creator
-
-    @property
-    def saved(self) -> datetime:
-        return self._saved
-
-    # ------------------------------------------------------------------------------------------------ #
-    # Variables set by user
-    @property
-    def description(self) -> str:
-        return self._description
-
-    @description.setter
-    def description(self, description: str) -> None:
-        self._description = description
-
-    @property
-    def features(self) -> int:
-        return self._features
-
-    @features.setter
-    def features(self, features: int) -> None:
-        self._features = features
-
-    @property
-    def classes(self) -> int:
-        return self._classes
-
-    @classes.setter
-    def classes(self, classes: int) -> None:
-        self._classes = classes
-
-    @property
-    def target(self) -> int:
-        return self._target
-
-    @target.setter
-    def target(self, target: int) -> None:
-        self._target = target
-
     # ------------------------------------------------------------------------------------------------ #
     # Variables assigned or updated by the repo
-    @property
-    def id(self) -> str:
-        return self._id
-
-    @id.setter
-    def id(self, id: str) -> None:
-        self._id = id
-        self._saved = datetime.now()
-
-    @property
-    def filepath(self) -> str:
-        return self._filepath
-
-    @filepath.setter
-    def filepath(self, filepath: str) -> None:
-        self._filepath = filepath
-        self._set_file_metadata()
-
     @property
     def version(self) -> str:
         return self._version
@@ -273,12 +200,6 @@ class Dataset:
         self._version = version
 
     # ------------------------------------------------------------------------------------------------ #
-    # Variables automatically set after filepath is set
-    @property
-    def filename(self) -> str:
-        return self._filename
-
-    # ------------------------------------------------------------------------------------------------ #
     # Variables set by the creator
     @property
     def data(self) -> pd.DataFrame:
@@ -286,7 +207,15 @@ class Dataset:
 
     @data.setter
     def data(self, data: pd.DataFrame) -> None:
-        self._data = data
+        if self._data is None:
+            self._data = data
+            self._set_data_metadata()
+        else:
+            msg = (
+                f"The 'data' attribute on  Dataset {self._id} does not support item re-assignment."
+            )
+            logger.error(msg)
+            raise TypeError(msg)
 
     @property
     def cost(self) -> str:
@@ -297,28 +226,45 @@ class Dataset:
         self._cost = cost
 
     # ------------------------------------------------------------------------------------------------ #
-    # Validation logic
+    # Exports object as dictionary sans the DataFrame.
+    def as_dict(self) -> dict:
+        """Returns a dictionary representation of the the Config object."""
+        return {k.lstrip("_"): self._export_config(v) for k, v in self.__dict__.items()}
 
-    def _validate(self, name: str, env: str, stage: str, version: [int, float]) -> None:
-        if name is None:
-            msg = "Name is a required value for Dataset objects."
-            self._announce_and_raise(msg)
-        if stage not in STAGES:
-            msg = f"Stage {stage} is invalid. Use one of {STAGES}."
-            self._announce_and_raise(msg)
-        if env not in ENVS:
-            msg = f"Environment {env} is invalid. Use one of {ENVS}."
-            self._announce_and_raise(msg)
-        if not isinstance(version, (int, float)):
-            msg = "Version must be numeric (int,flKoat)."
-            self._announce_and_raise(msg)
-
-    def _announce_and_raise(self, msg: str) -> None:
-        logger.error(msg)
-        raise ValueError(msg)
+    @classmethod
+    def _export_config(cls, v):
+        """Returns v with Configs converted to dicts, recursively."""
+        if isinstance(v, IMMUTABLE_TYPES):
+            return v
+        elif isinstance(v, SEQUENCE_TYPES):
+            return type(v)(map(cls._export_config, v))
+        elif isinstance(v, datetime):
+            return v.strftime("%H:%M:%S on %m/%d/%Y")
+        elif isinstance(v, dict):
+            return {kk.lstrip("_"): cls._export_config(vv) for kk, vv in v}
+        else:
+            pass
 
     # ------------------------------------------------------------------------------------------------ #
-    # Access methods
+    # Validation logic
+
+    def _validate(self) -> None:
+        def announce_and_raise(msg: str) -> None:
+            logger.error(msg)
+            raise ValueError(msg)
+
+        if self._name is None:
+            msg = "Name is a required value for Dataset objects."
+            announce_and_raise(msg)
+        if self._stage not in STAGES:
+            msg = f"Stage {self._stage} is invalid. Use one of {STAGES}."
+            announce_and_raise(msg)
+        if self._env not in ENVS:
+            msg = f"Environment {self._env} is invalid. Use one of {ENVS}."
+            announce_and_raise(msg)
+
+    # ------------------------------------------------------------------------------------------------ #
+    # Data Access methods
 
     def info(self) -> None:
         self._data.info(verbose=True, memory_usage=True, show_counts=True)
@@ -361,11 +307,16 @@ class Dataset:
         self._set_data_metadata()
 
     def _set_operational_metadata(self) -> None:
+        self._id = self._id if self._id is not None else self._get_id(self._env)
         self._description = self._description or f"{self.__class__.__name__}.{self._name}"
-        self._created = datetime.now()
+        self._created = self._created if self._created is not None else datetime.now()
         stack = inspect.stack()
         try:
-            self._creator = stack[3][0].f_locals["self"].__class__.__name__
+            self._creator = (
+                self._creator
+                if self._creator is not None
+                else stack[4][0].f_locals["self"].__class__.__name__
+            )
         except KeyError:
             self._creator = None
 
@@ -377,88 +328,9 @@ class Dataset:
             self._columns = self._data.columns
             self._null_counts = self._data.isnull().sum().sum()
 
-    def _set_file_metadata(self) -> None:
-        if self._filepath is not None:
-            self._filename = os.path.basename(self._filepath)
-            self._saved = datetime.now()
-
-    def as_meta(self) -> DatasetMeta:
-        m = DatasetMeta(
-            id=self._id,
-            name=self._name,
-            description=self._description,
-            stage=self._stage,
-            env=self._env,
-            version=self._version,
-            version_control=self._version_control,
-            nrows=self._nrows,
-            ncols=self._ncols,
-            null_counts=self._null_counts,
-            memory_size=self._memory_size,
-            cost=self._cost,
-            filename=self._filename,
-            filepath=self._filepath,
-            created=self._created,
-            creator=self._creator,
-            saved=self._saved,
-        )
-        return m
-
-    def is_equal(self, other) -> bool:
-        return (
-            self._id == other.id
-            and self._name == other.name
-            and self._description == other.description
-            and self._stage == other.stage
-            and self._env == other.env
-            and self._version == other.version
-            and self._version_control == other.version_control
-            and self._nrows == other.nrows
-            and self._ncols == other.ncols
-            and self._null_counts == other.null_counts
-            and self._memory_size == other.memory_size
-            and self._cost == other.cost
-            and self._filename == other.filename
-            and self._filepath == other.filepath
-        )
-
-
-@dataclass
-class DatasetParams:
-    name: str
-    env: str
-    stage: str
-    version: int = 1
-    version_control: bool = True
-    description: str = None
-
-    def __post_init__(self) -> None:
-        self._validate(name=self.name, env=self.env, stage=self.stage, version=self.version)
-
-    def to_dataset(self) -> Dataset:
-        return Dataset(
-            name=self.name,
-            stage=self.stage,
-            env=self.env,
-            version=self.version,
-            version_control=self.version_control,
-            description=self.description,
-        )
-
-    def _validate(self, name: str, env: str, stage: str, version: [int, float]) -> None:
-        if name is None:
-            msg = "Name is a required value for Dataset objects."
-            self._announce_and_raise(msg)
-        if stage not in STAGES:
-            msg = f"Stage {stage} is invalid. Use one of {STAGES}."
-            self._announce_and_raise(msg)
-        if env not in ENVS:
-            msg = f"Environment {env} is invalid. Use one of {ENVS}."
-            self._announce_and_raise(msg)
-        if not isinstance(version, (int, float)):
-            msg = "Version must be numeric (int,float)."
-            self._announce_and_raise(msg)
-
-    def _announce_and_raise(self, msg: str) -> None:
-        logger.error(msg)
-        raise ValueError(msg)
+    @classmethod
+    def _get_id(cls, env: str) -> str:
+        """Creates an id of the form <name>_<seq> where seq is an autoincremented integer"""
+        id = copy.copy(cls.__seq[env])
+        cls.__seq[env] = id + 1
+        return id

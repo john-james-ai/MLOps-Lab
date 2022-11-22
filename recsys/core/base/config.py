@@ -11,53 +11,18 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:22:05 am                                               #
-# Modified   : Saturday November 19th 2022 11:36:22 pm                                             #
+# Modified   : Sunday November 20th 2022 10:59:54 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Application-Wide and BaseConfiguration Module"""
-import os
 from datetime import datetime
 from dataclasses import dataclass
 from abc import ABC
 
-# ------------------------------------------------------------------------------------------------ #
-#                                      DATA TYPES                                                  #
-# ------------------------------------------------------------------------------------------------ #
-IMMUTABLE_TYPES: tuple = (str, int, float, bool, type(None))
-SEQUENCE_TYPES: tuple = (list, tuple)
-# ------------------------------------------------------------------------------------------------ #
-#                                       FILE FORMATS                                               #
-# ------------------------------------------------------------------------------------------------ #
-FILE_FORMATS = ("csv", "yml", "yaml", "pickle", "pkl", "nii", "nib", "dcm", "h5")
-COMPRESSED_FILE_FORMATS = ("tar.gz", "zip", "7z")
-DATA_REPO_FILE_FORMAT = "pkl"
+from recsys.core import IMMUTABLE_TYPES, SEQUENCE_TYPES
 
-# ------------------------------------------------------------------------------------------------ #
-#                                    DATASET VARIABLES                                             #
-# ------------------------------------------------------------------------------------------------ #
-ENVS = ["dev", "prod", "test"]
-STAGES = ["raw", "interim", "cooked"]
-# ------------------------------------------------------------------------------------------------ #
-#                                       DATA DIRECTORIES                                           #
-# ------------------------------------------------------------------------------------------------ #
-PROD_BASE_DATA_DIR = "data/prod/movielens20m"
-PROD_REPO_DIR = os.path.join(PROD_BASE_DATA_DIR, "repo")
-# ------------------------------------------------------------------------------------------------ #
-DEV_BASE_DATA_DIR = "data/dev/movielens20m"
-DEV_REPO_DIR = os.path.join(DEV_BASE_DATA_DIR, "repo")
-# ------------------------------------------------------------------------------------------------ #
-TEST_BASE_DATA_DIR = "tests/data/movielens20m"
-TEST_REPO_DIR = os.path.join(TEST_BASE_DATA_DIR, "repo")
-# ------------------------------------------------------------------------------------------------ #
-#                                      WANDB CONFIG                                                #
-# ------------------------------------------------------------------------------------------------ #
-PROJECT = "recsys"
-ENTITY = "aistudio"
-
-# ------------------------------------------------------------------------------------------------ #
-#                                   BASE CONFIG CLASS                                              #
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -83,17 +48,3 @@ class Config(ABC):
             return {kk: cls._export_config(vv) for kk, vv in v}
         else:
             pass
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                    VISUALIZATION CONFIG                                          #
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
-class VisualConfig(Config):
-    figsize: tuple = (12, 6)
-    darkblue: str = "#1C3879"
-    lightblue: str = "steelblue"
-    palette: str = "Blues_r"
-    style: str = "whitegrid"

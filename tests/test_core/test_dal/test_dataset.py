@@ -11,13 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 05:45:09 pm                                               #
-# Modified   : Friday November 18th 2022 11:10:25 pm                                               #
+# Modified   : Monday November 21st 2022 06:37:30 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import inspect
 import logging
+import copy
 from datetime import datetime
 
 import pandas as pd
@@ -97,10 +98,40 @@ class TestDataset:
         assert DATASET.memory_size > 0
         assert isinstance(DATASET.created, datetime)
         assert DATASET.description == f"Dataset.{NAME}"
-        assert DATASET.filepath is None
-        assert DATASET.filename is None
         assert DATASET.cost == COST
+        assert isinstance(DATASET.id, int)
 
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_reconstitution(self, ratings, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        DATASET = Dataset(name=NAME, data=ratings, cost=COST)
+        metadata = DATASET.as_dict()
+        new_dataset = copy.deepcopy(Dataset(**metadata))
+        new_dataset.data = DATASET.data
+        assert DATASET == new_dataset
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -127,11 +158,7 @@ class TestDataset:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        DATASET = Dataset(name=NAME, data=ratings, cost=COST)
-        DATASET.filepath = FILEPATH
-        assert DATASET.filename == "ratings.pkl"
-        assert isinstance(DATASET.saved, datetime)
-
+        pass
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -165,6 +192,9 @@ class TestDataset:
         assert isinstance(DATASET.sample(n=10), pd.DataFrame)
         assert isinstance(DATASET.cluster_sample(n=10, by="userId"), pd.DataFrame)
         assert DATASET.sample(n=10).shape[0] == 10
+
+        with pytest.raises(TypeError):
+            DATASET.data = ratings
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

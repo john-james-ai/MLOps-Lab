@@ -11,14 +11,17 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 11th 2022 06:38:26 am                                               #
-# Modified   : Saturday November 19th 2022 04:22:26 pm                                             #
+# Modified   : Tuesday November 22nd 2022 04:30:06 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import pytest
+
+from recsys.core.dal.dataset import Dataset
 from recsys.core.services.io import IOService
-from recsys.core.dal.dataset import DatasetParams, get_id
+from recsys.core.services.repo import DatasetRepo
+from recsys.core import REPO_FILE_FORMAT
 
 # ------------------------------------------------------------------------------------------------ #
 RATINGS_FILEPATH = "tests/data/ratings.pkl"
@@ -28,40 +31,24 @@ dp = [
         "name": "ds1",
         "stage": "raw",
         "env": "dev",
-        "version": 1,
-        "id": get_id(name="ds1", stage="raw", version=1, env="dev"),
-        "description": "Desc1",
-    },
-    {
-        "name": "ds1",
-        "stage": "raw",
-        "env": "dev",
-        "version": 1,
-        "id": get_id(name="ds1", stage="raw", version=1, env="dev"),
         "description": "Desc1",
     },
     {
         "name": "ds2",
         "stage": "interim",
         "env": "test",
-        "version": 2,
-        "id": get_id(name="ds2", stage="interim", version=2, env="test"),
         "description": "Desc2",
     },
     {
         "name": "ds3",
         "stage": "raw",
         "env": "prod",
-        "version": 3,
-        "id": get_id(name="ds3", stage="raw", version=3, env="prod"),
         "description": "Desc3",
     },
     {
         "name": "ds4",
         "stage": "cooked",
         "env": "dev",
-        "version": 4,
-        "id": get_id(name="ds4", stage="cooked", version=4, env="dev"),
         "description": "Desc4",
     },
 ]
@@ -81,17 +68,15 @@ def ratings():
 
 
 @pytest.fixture(scope="module")
-def ratings_dataset():
-    dp = DatasetParams(
+def dataset(ratings):
+    dataset = Dataset(
         name="ratings",
         stage="interim",
         env="dev",
-        version=5,
-        id=get_id("ds1", "interim", 5, "dev"),
+        data=ratings,
         description="Desc5",
     )
 
-    dataset = dp.to_dataset()
     return dataset
 
 
@@ -102,8 +87,14 @@ def ratings_dataset():
 def datasets(ratings):
     # Phi dataset was removed b.c. it was accidentally deleted.
     datasets = []
-    for dataset in dp:
-        ds = DatasetParams(**dataset)
-        ds = ds.to_dataset()
+    for params in dp:
+        ds = Dataset(**params)
+        ds.data = ratings
         datasets.append(ds)
     return datasets
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def repo():
+    return DatasetRepo(io=IOService, file_format=REPO_FILE_FORMAT, version_control=True)

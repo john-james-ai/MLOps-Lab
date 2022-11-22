@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /test_registry.py                                                                   #
+# Filename   : /test_database.py                                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Monday November 14th 2022 07:10:12 pm                                               #
-# Modified   : Saturday November 19th 2022 04:27:47 pm                                             #
+# Created    : Tuesday November 22nd 2022 04:13:32 am                                              #
+# Modified   : Tuesday November 22nd 2022 04:37:51 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,10 +22,17 @@ import pytest
 import logging
 import shutil
 
-from recsys.core.dal.registry import FileBasedRegistry
-from recsys.core.dal.config import DatasetRepoConfigFR
-from recsys.core.services.io import IOService
-from recsys.core.dal.dataset import get_id
+from recsys.core.dal.database import Database
+from recsys.core import DB_LOCATIONS
+from recsys.core.dal.sequel import (
+    CreateDatasetRegistryTable,
+    DropDatasetRegistryTable,
+    DatabaseRegistryTableExists,
+    DatasetExists,
+    SelectDatasetRegistration,
+    InsertDatasetRegistration,
+    RemoveDatasetRegistration,
+)
 
 # ------------------------------------------------------------------------------------------------ #
 logging.basicConfig(
@@ -38,10 +45,10 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-@pytest.mark.registry
-class TestDataRegistry:
+@pytest.mark.db
+class TestDB:
     # ============================================================================================ #
-    def test_setup(self, caplog) -> None:
+    def test_setup(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -52,8 +59,7 @@ class TestDataRegistry:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        CONFIG = DatasetRepoConfigFR(test=True)
-        shutil.rmtree(CONFIG.directory, ignore_errors=True)
+        shutil.rmtree(DB_LOCATIONS["test"], ignore_errors=True)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -69,7 +75,7 @@ class TestDataRegistry:
         )
 
     # ============================================================================================ #
-    def test_service(self, caplog):
+    def test_create_table(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -80,42 +86,12 @@ class TestDataRegistry:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        CONFIG = DatasetRepoConfigFR(test=True)
-        REGISTRY = FileBasedRegistry(directory=CONFIG.directory, io=CONFIG.io)
-        assert isinstance(REGISTRY.io, type(IOService))
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
+        with Database as db:
+            db.create(CreateDatasetRegistryTable().sql)
+            assert db.exists(
+                DatabaseRegistryTableExists().sql,
+                DatabaseRegistryTableExists().args,
             )
-        )
-
-    # ============================================================================================ #
-    def test_add_get_dataset(self, datasets, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        CONFIG = DatasetRepoConfigFR(test=True)
-        REGISTRY = FileBasedRegistry(directory=CONFIG.directory, io=CONFIG.io)
-        for dataset in datasets:
-            REGISTRY.add(dataset)
-            meta = REGISTRY.get(dataset.id)
-            assert dataset.is_equal(meta)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -132,7 +108,7 @@ class TestDataRegistry:
         )
 
     # ============================================================================================ #
-    def test_exists(self, caplog):
+    def test_insert_select(self, dataset, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -143,10 +119,16 @@ class TestDataRegistry:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        CONFIG = DatasetRepoConfigFR(test=True)
-        REGISTRY = FileBasedRegistry(directory=CONFIG.directory, io=CONFIG.io)
-        assert REGISTRY.exists(id=get_id(name="ds1", stage="raw", version=1, env="dev"))
-        assert not REGISTRY.exists(id=get_id(name="ds1", stage="raw", version=1, env="prod"))
+        registration = dataset.as_dict()
+        result = None
+        command = InsertDatasetRegistration(**registration)
+        with Database as db:
+            db.insert(sql=command.sql, args=command.args)
+            result = db.select(
+                sql=SelectDatasetRegistration(id=1).sql,
+                args=SelectDatasetRegistration(id=1).args,
+            )
+            assert result is not None
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -162,7 +144,7 @@ class TestDataRegistry:
         )
 
     # ============================================================================================ #
-    def test_list_and_print_datasets_and_datasets(self, caplog):
+    def test_remove(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -173,45 +155,15 @@ class TestDataRegistry:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        CONFIG = DatasetRepoConfigFR(test=True)
-        REGISTRY = FileBasedRegistry(directory=CONFIG.directory, io=CONFIG.io)
-        ds = REGISTRY.list_datasets()
-        logger.info(REGISTRY.print_datasets())
-        assert len(ds) == len(REGISTRY)
-        logger.info("The names of the registered datasets:\n\t\t{}".format(ds))
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
+        with Database as db:
+            db.remove(
+                RemoveDatasetRegistration(id=1).sql,
+                RemoveDatasetRegistration(id=1).args,
             )
-        )
-
-    # ============================================================================================ #
-    def test_remove(self, datasets, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
+            assert not db.exists(
+                DatabaseRegistryTableExists().sql,
+                DatabaseRegistryTableExists().args,
             )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        CONFIG = DatasetRepoConfigFR(test=True)
-        REGISTRY = FileBasedRegistry(directory=CONFIG.directory, io=CONFIG.io)
-
-        for dataset in datasets:
-            REGISTRY.remove(dataset.id)
-        assert len(REGISTRY) == 0
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -228,7 +180,7 @@ class TestDataRegistry:
         )
 
     # ============================================================================================ #
-    def test_teardown(self, caplog) -> None:
+    def test_teardown(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -239,8 +191,7 @@ class TestDataRegistry:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        CONFIG = DatasetRepoConfigFR(test=True)
-        shutil.rmtree(CONFIG.directory, ignore_errors=True)
+        shutil.rmtree(DB_LOCATIONS["test"], ignore_errors=True)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

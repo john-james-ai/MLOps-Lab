@@ -11,19 +11,20 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 13th 2022 03:21:56 pm                                               #
-# Modified   : Saturday November 19th 2022 02:59:01 pm                                             #
+# Modified   : Tuesday November 22nd 2022 12:15:49 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import os
+from dotenv import load_dotenv
 import psutil
 import functools
 import logging
 import wandb
 
+
 from atelier.utils.datetimes import Timer
-from recsys.core.base.config import PROJECT, ENTITY
 
 # ------------------------------------------------------------------------------------------------ #
 logging.basicConfig(
@@ -43,6 +44,10 @@ def profiler(func):
 
         module = func.__module__
         classname = func.__qualname__
+
+        load_dotenv()
+        PROJECT = os.getenv("PROJECT")
+        ENTITY = os.getenv("ENTITY")
 
         try:
             wandb_run = wandb.init(

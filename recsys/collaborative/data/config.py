@@ -11,14 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 10th 2022 06:53:48 pm                                             #
-# Modified   : Thursday November 17th 2022 07:04:32 am                                             #
+# Modified   : Monday November 21st 2022 06:21:03 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 from dataclasses import dataclass, field
 from recsys.core.services.io import IOService
-from recsys.core.base.config import Config
+from recsys.core import Config
 
 # ------------------------------------------------------------------------------------------------ #
 #                                        ETL CONFIG                                                #
