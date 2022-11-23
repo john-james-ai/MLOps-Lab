@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 20th 2022 10:55:22 pm                                               #
-# Modified   : Tuesday November 22nd 2022 06:48:29 pm                                              #
+# Modified   : Wednesday November 23rd 2022 07:51:36 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -42,6 +42,7 @@ DATASET_FEATURES = [
     "ncols",
     "null_counts",
     "memory_size",
+    "filepath",
     "creator",
     "created",
 ]

@@ -11,19 +11,17 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 11th 2022 06:38:26 am                                               #
-# Modified   : Wednesday November 23rd 2022 03:48:42 am                                            #
+# Modified   : Wednesday November 23rd 2022 07:48:31 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import pytest
 
+from recsys.core.services.repo import Container
 from recsys.core.dal.dataset import Dataset
 from recsys.core.dal.database import Database
 from recsys.core.services.io import IOService
-from recsys.core.services.repo import DatasetRepo
-from recsys.core import REPO_FILE_FORMAT
-
 
 # ------------------------------------------------------------------------------------------------ #
 RATINGS_FILEPATH = "tests/data/ratings.pkl"
@@ -72,7 +70,8 @@ def datasets(ratings):
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
 def repo():
-    return DatasetRepo(io=IOService, file_format=REPO_FILE_FORMAT, version_control=True)
+    container = Container()
+    return container.repo()
 
 
 # ------------------------------------------------------------------------------------------------ #

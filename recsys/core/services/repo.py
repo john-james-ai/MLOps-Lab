@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Tuesday November 22nd 2022 01:56:58 am                                              #
+# Modified   : Wednesday November 23rd 2022 09:18:45 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -20,20 +20,20 @@
 import logging
 import os
 from dotenv import load_dotenv
-import pandas as pd
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
 from functools import wraps
-from pprint import pprint
 import shutil
 
 from dependency_injector import containers, providers
 from dependency_injector.wiring import inject
 
 from recsys.core.dal.dataset import Dataset
+from recsys.core.dal.database import Database
+from recsys.core.dal.registry import DatasetRegistry
 from recsys.core.services.io import IOService
-from recsys.core import REPO_FILE_FORMAT, REPO_DIRS
+from recsys.core import REPO_DIRS
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -68,23 +68,27 @@ class DatasetRepo(Repo):
 
     def __init__(
         self,
+        file_format: str,
         io: IOService,
-        file_format: str = REPO_FILE_FORMAT,
-        version_control: bool = True,
+        registry: DatasetRegistry,
     ) -> None:
-        self._io = io
         self._file_format = file_format
+        self._io = io
+        DatasetRepo.__registry = registry
 
         self._directory = self._get_directory()
-        self._version_control = version_control
 
         self._validate()
 
     def __len__(self) -> int:
         return len(DatasetRepo.__registry)
 
+    @property
+    def directory(self) -> str:
+        return self._directory
+
     def reset(self) -> None:
-        DatasetRepo.__registry = {}
+        DatasetRepo.__registry.reset()
         shutil.rmtree(self._directory, ignore_errors=True)
 
     def add(self, dataset: Dataset) -> None:
@@ -94,23 +98,10 @@ class DatasetRepo(Repo):
             dataset (Dataset): The Dataset object
         """
 
-        if self.exists(dataset):
-            if self._version_control:
-                dataset.version += 1
-                msg = f"The version of Dataset {dataset.id}:{dataset.name} has been bumped to {dataset.version}"
-                logger.info(msg)
-                self.add(dataset)
-            else:
-                msg = "A Dataset with same name, environment, stage, and version exists. For version control, reinstantiate the Repo with version_control = True"
-                logger.error(msg)
-                raise FileNotFoundError(msg)
-        else:
-            filepath = self._get_filepath(dataset)
-            registration = dataset.as_dict()
-            registration["filepath"] = filepath
-            DatasetRepo.__registry[str(dataset.id)] = registration
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            self._io.write(filepath=filepath, data=dataset)
+        dataset.filepath = self._get_filepath(dataset)
+        dataset = DatasetRepo.__registry.add(dataset)
+        os.makedirs(os.path.dirname(dataset.filepath), exist_ok=True)
+        self._io.write(filepath=dataset.filepath, data=dataset)
         return dataset
 
     def get(self, id: int) -> Any:
@@ -120,9 +111,10 @@ class DatasetRepo(Repo):
             id (int): ID of the dataset object
         """
         try:
-            registration = DatasetRepo.__registry[str(id)]
-            return Dataset(**registration)
-        except KeyError:
+            registration = DatasetRepo.__registry.get(id)
+            dataset = self._io.read(registration["filepath"])
+            return Dataset(**registration, data=dataset.data)
+        except FileNotFoundError:
             msg = f"No Dataset with id = {id} exists."
             logger.error(msg)
             raise FileNotFoundError(msg)
@@ -137,8 +129,11 @@ class DatasetRepo(Repo):
         Raises: FileNotFoundError (if ignore_errors = False)
         """
         try:
-            del DatasetRepo.__registry[str(id)]
-        except KeyError:
+            registration = DatasetRepo.__registry.get(id)
+            shutil.rmtree(registration["filepath"], ignore_errors=True)
+            DatasetRepo.__registry.remove(id)
+
+        except FileNotFoundError:
             if ignore_errors:
                 pass
             else:
@@ -151,21 +146,7 @@ class DatasetRepo(Repo):
         Args:
             dataset (Dataset): The dataset to check.
         """
-        registrations = self._registry_as_df()
-
-        if registrations is None:
-            return False
-        else:
-            logger.debug("\n\nRegistrations")
-            logger.debug(f"\n{registrations}")
-            logger.debug(f"\n{registrations.columns}")
-            item = registrations.loc[
-                (registrations["name"] == dataset.name)
-                & (registrations["env"] == dataset.env)
-                & (registrations["stage"] == dataset.stage)
-                & (registrations["version"] == dataset.version)
-            ]
-        return len(item) > 0
+        return DatasetRepo.__registry.exists(dataset)
 
     def print(self, id: int) -> None:
         """Prints a Dataset by id.
@@ -175,11 +156,9 @@ class DatasetRepo(Repo):
 
         """
         try:
-            registration = self.get(str(id))
+            registration = DatasetRepo.__registry.get(id=id)
             dataset = Dataset(**registration)
-            dataset.data = self._io.read(registration["filepath"])
-            d = dataset.as_dict()
-            pprint(d)
+            print(dataset)
         except FileNotFoundError:
             msg = f"Dataset id: {id} does not exist."
             logger.error(msg)
@@ -187,11 +166,15 @@ class DatasetRepo(Repo):
 
     def print_registry(self) -> None:
         """Prints list of dataset names in repository."""
-        print(self._registry_as_df())
+        print(DatasetRepo.__registry.get_all())
 
     def _validate(self) -> None:
-        if self._file_format not in self._io().file_formats:
-            msg = f"File format {self._file_format} is not supported. Valid file formats are {self._io.file_formats}."
+        if not isinstance(self._io, (type(IOService), IOService)):
+            msg = f"{type(self._io)} is not a valid io service."
+            logger.error(msg)
+            raise ValueError(msg)
+        if not isinstance(DatasetRepo.__registry, DatasetRegistry):
+            msg = f"{type(DatasetRepo.__registry)} is not a valid registry object."
             logger.error(msg)
             raise ValueError(msg)
 
@@ -221,26 +204,20 @@ class DatasetRepo(Repo):
         )
         return os.path.join(self._directory, dataset.env, dataset.stage, filename)
 
-    def _registry_as_df(self) -> pd.DataFrame:
-        """Return a list of Dataset names."""
-        lod = []
-        for k, v in DatasetRepo.__registry.items():
-            lod.append(v)
-        if len(lod) == 0:
-            return None
-        elif len(lod) == 1:
-            return pd.DataFrame(data=lod, index=[0])
-        else:
-            return pd.DataFrame(data=lod)
-
 
 # ------------------------------------------------------------------------------------------------ #
 #                                       CONTAINER                                                  #
 # ------------------------------------------------------------------------------------------------ #
+
+
 class Container(containers.DeclarativeContainer):
 
     # Services
-    repo = providers.Singleton(DatasetRepo, io=IOService, file_format="pkl")
+    db = providers.Factory(Database, database="data")
+
+    registry = providers.Singleton(DatasetRegistry, database=db)
+
+    repo = providers.Singleton(DatasetRepo, file_format="pkl", io=IOService, registry=registry)
 
 
 # ------------------------------------------------------------------------------------------------ #

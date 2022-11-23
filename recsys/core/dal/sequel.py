@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:47:16 am                                              #
-# Modified   : Tuesday November 22nd 2022 09:38:07 pm                                              #
+# Modified   : Wednesday November 23rd 2022 07:52:06 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -25,7 +25,7 @@ from dataclasses import dataclass
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class CreateDatasetRegistryTable:
-    sql: str = """CREATE TABLE IF NOT EXISTS dataset_registry ( id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, env TEXT NOT NULL, stage TEXT NOT NULL, version INTEGER NOT NULL, cost INTEGER NOT NULL, nrows INTEGER NOT NULL, ncols INTEGER NOT NULL, null_counts INTEGER, memory_size INTEGER NOT NULL, creator TEXT NOT NULL, created DATETIME NOT NULL );"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataset_registry ( id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, env TEXT NOT NULL, stage TEXT NOT NULL, version INTEGER NOT NULL, cost INTEGER NOT NULL, nrows INTEGER NOT NULL, ncols INTEGER NOT NULL, null_counts INTEGER, memory_size INTEGER NOT NULL, filepath TEXT, creator TEXT NOT NULL, created DATETIME NOT NULL );"""
     args: tuple = ()
 
 
@@ -119,10 +119,11 @@ class InsertDataset:
     ncols: str
     null_counts: str
     memory_size: str
+    filepath: str
     creator: str
     created: str
 
-    sql: str = """INSERT INTO dataset_registry (name, description, env, stage, version, cost, nrows, ncols, null_counts, memory_size, creator, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
+    sql: str = """INSERT INTO dataset_registry (name, description, env, stage, version, cost, nrows, ncols, null_counts, memory_size, filepath, creator, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -137,6 +138,7 @@ class InsertDataset:
             self.ncols,
             self.null_counts,
             self.memory_size,
+            self.filepath,
             self.creator,
             self.created,
         )

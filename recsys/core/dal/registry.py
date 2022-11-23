@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 08:04:53 pm                                              #
-# Modified   : Wednesday November 23rd 2022 05:00:28 am                                            #
+# Modified   : Wednesday November 23rd 2022 08:24:52 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -113,15 +113,17 @@ class DatasetRegistry(Registry):
         Args:
             id (int): The id for the Dataset to retrieve.
         """
+        result = None
         select = SelectDataset(id=id)
         with self._database as db:
             result = db.select(select.sql, select.args)
-            try:
-                return self._results_to_dict(result[0])
-            except IndexError:
-                msg = f"Dataset id: {id} not found."
-                logger.error(msg)
-                raise FileNotFoundError(msg)
+        try:
+            result = result[0]
+            return self._results_to_dict(result)
+        except IndexError as e:
+            msg = f"Dataset id: {id} not found.\n{e}"
+            logger.error(msg)
+            raise FileNotFoundError(msg)
 
     def get_all(self) -> pd.DataFrame:
         """Returns a Dataframe representation of the registry."""
@@ -160,6 +162,7 @@ class DatasetRegistry(Registry):
     def _create_registry(self) -> None:
         create = CreateDatasetRegistryTable()
         with self._database as db:
+            logger.debug("\n\nCreating Registry Table")
             db.create(create.sql, create.args)
 
     def _drop_registry(self) -> None:
@@ -168,18 +171,24 @@ class DatasetRegistry(Registry):
             db.drop(drop.sql, drop.args)
 
     def _results_to_dict(self, result: tuple) -> dict:
-        result_dict = {}
-        result_dict["id"] = result[0]
-        result_dict["name"] = result[1]
-        result_dict["desc"] = result[2]
-        result_dict["env"] = result[3]
-        result_dict["stage"] = result[4]
-        result_dict["version"] = result[5]
-        result_dict["cost"] = result[6]
-        result_dict["nrows"] = result[7]
-        result_dict["ncols"] = result[8]
-        result_dict["null_counts"] = result[9]
-        result_dict["memory_size"] = result[10]
-        result_dict["creator"] = result[11]
-        result_dict["created"] = result[12]
-        return result_dict
+        try:
+            result_dict = {}
+            result_dict["id"] = result[0]
+            result_dict["name"] = result[1]
+            result_dict["description"] = result[2]
+            result_dict["env"] = result[3]
+            result_dict["stage"] = result[4]
+            result_dict["version"] = result[5]
+            result_dict["cost"] = result[6]
+            result_dict["nrows"] = result[7]
+            result_dict["ncols"] = result[8]
+            result_dict["null_counts"] = result[9]
+            result_dict["memory_size"] = result[10]
+            result_dict["filepath"] = result[11]
+            result_dict["creator"] = result[12]
+            result_dict["created"] = result[13]
+            return result_dict
+        except IndexError as e:
+            msg = f"Index error in _results_to_dict method.\n{e}"
+            logger.error(msg)
+            raise IndexError(msg)

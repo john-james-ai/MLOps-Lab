@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Wednesday November 23rd 2022 04:16:27 am                                            #
+# Modified   : Wednesday November 23rd 2022 06:27:42 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -59,6 +59,7 @@ class Dataset:
         data: pd.DataFrame = None,
         cost: Union[int, float] = None,
         version: int = 1,
+        filepath: str = None,
         creator: str = None,
         created: datetime = None,
         *args,
@@ -72,13 +73,14 @@ class Dataset:
         self._data = data
         self._cost = cost
         self._version = version
+        self._filepath = filepath
         self._created = created if created is not None else datetime.now()
         self._creator = creator
 
         self._validate()
 
         # Variables assigned automatically
-
+        self._filepath = None
         self._columns = None
         self._nrows = None
         self._ncols = None
@@ -183,16 +185,6 @@ class Dataset:
         return self._memory_size
 
     # ------------------------------------------------------------------------------------------------ #
-    # Variables assigned by operator
-    @property
-    def created(self) -> datetime:
-        return self._created
-
-    @property
-    def creator(self) -> str:
-        return self._creator
-
-    # ------------------------------------------------------------------------------------------------ #
     # Variables assigned or updated by the repo
     @property
     def version(self) -> str:
@@ -202,8 +194,24 @@ class Dataset:
     def version(self, version: int) -> None:
         self._version = version
 
+    @property
+    def filepath(self) -> str:
+        return self._filepath
+
+    @filepath.setter
+    def filepath(self, filepath: int) -> None:
+        self._filepath = filepath
+
     # ------------------------------------------------------------------------------------------------ #
-    # Variables set by the creator
+    # Variables set by the operator
+    @property
+    def created(self) -> datetime:
+        return self._created
+
+    @property
+    def creator(self) -> str:
+        return self._creator
+
     @property
     def data(self) -> pd.DataFrame:
         return self._data

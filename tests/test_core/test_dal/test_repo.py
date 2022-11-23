@@ -10,21 +10,18 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Monday November 21st 2022 09:21:05 pm                                               #
-# Modified   : Tuesday November 22nd 2022 01:08:04 am                                              #
+# Created    : Wednesday November 23rd 2022 06:14:49 am                                            #
+# Modified   : Wednesday November 23rd 2022 08:22:04 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import os
 import inspect
+import copy
 from datetime import datetime
 import pytest
 import logging
-
-from recsys.core.services.repo import DatasetRepo
-from recsys.core.services.io import IOService
-from recsys.core.dal.dataset import Dataset
 
 # ------------------------------------------------------------------------------------------------ #
 logging.basicConfig(
@@ -39,20 +36,6 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.repo
 class TestRepo:
-    def get_filepath(self, dataset: Dataset) -> str:
-        """Formats a filename using the Dataset name, environment, stage, and version."""
-        filename = (
-            dataset.name
-            + "_"
-            + dataset.env
-            + "_"
-            + dataset.stage
-            + "_v"
-            + str(dataset.version)
-            + ".pkl"
-        )
-        return os.path.join("tests/data/movielens20m/repo", dataset.env, dataset.stage, filename)
-
     # ============================================================================================ #
     def test_setup(self, repo, caplog):
         start = datetime.now()
@@ -65,7 +48,9 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
+        directory = repo.directory
         repo.reset()
+        assert not os.path.exists(directory)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -81,7 +66,7 @@ class TestRepo:
         )
 
     # ============================================================================================ #
-    def test_add(self, repo, datasets, caplog):
+    def test_add_get(self, datasets, repo, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -93,9 +78,16 @@ class TestRepo:
         )
         # ---------------------------------------------------------------------------------------- #
         for dataset in datasets:
-            dsout = repo.add(dataset)
-            assert dataset == dsout
-            assert os.path.exists(self.get_filepath(dsout))
+            d1 = repo.add(dataset)
+            d2 = repo.get(dataset.id)
+            assert d1 == d2
+
+        for dataset in datasets:
+            d1 = repo.add(copy.deepcopy(dataset))
+            d2 = repo.get(d1.id)
+            assert d1 == d2
+            assert not dataset == d2
+            assert d2.version == 2
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -112,7 +104,7 @@ class TestRepo:
         )
 
     # ============================================================================================ #
-    def test_version(self, repo, datasets, caplog):
+    def test_remove(self, datasets, repo, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -124,9 +116,9 @@ class TestRepo:
         )
         # ---------------------------------------------------------------------------------------- #
         for dataset in datasets:
-            dsout = repo.add(dataset)
-            assert dsout.version == 2
-            assert os.path.exists(self.get_filepath(dsout))
+            repo.remove(dataset.id)
+        assert len(repo) == 4
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -142,7 +134,7 @@ class TestRepo:
         )
 
     # ============================================================================================ #
-    def test_get_exists(self, repo, caplog):
+    def test_exists(self, datasets, repo, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -153,11 +145,11 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        for i in range(1, 7):
-            dataset = repo.get(i)
+        for dataset in datasets:
+            with pytest.raises(FileNotFoundError):
+                assert not repo.exists(dataset)
+            dataset.id == dataset.id + 4
             assert repo.exists(dataset)
-            assert isinstance(dataset, Dataset)
-            assert len(repo) == 6
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -185,41 +177,9 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        for i in range(1, 7):
-            repo.print(i)
+        logger.debug(repo.print(id=5))
+        logger.debug(repo.print_registry())
 
-        with pytest.raises(FileNotFoundError):
-            repo.print(8)
-
-        repo.print_registry()
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_validation(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        with pytest.raises(ValueError):
-            _ = DatasetRepo(io=IOService, file_format="232", version_control=True)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -236,5 +196,27 @@ class TestRepo:
 
     # ============================================================================================ #
     def test_teardown(self, repo, caplog):
-        # Enter teardown activities here
-        repo.reset()
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        # repo.reset()
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )

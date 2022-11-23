@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Tuesday November 22nd 2022 10:26:36 pm                                              #
+# Modified   : Wednesday November 23rd 2022 09:24:45 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -39,7 +39,7 @@ class Database:
         self._cursor = self._connection.cursor()
 
     def __enter__(self):
-        self._connection = self._connect()
+        # self._connection = self._connect()
         return self
 
     def __exit__(self, ext_type, exc_value, traceback):
