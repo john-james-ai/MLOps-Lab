@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Wednesday November 23rd 2022 09:18:45 am                                            #
+# Modified   : Wednesday November 23rd 2022 01:09:09 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -25,6 +25,7 @@ from datetime import datetime
 from typing import Any
 from functools import wraps
 import shutil
+
 
 from dependency_injector import containers, providers
 from dependency_injector.wiring import inject
@@ -66,15 +67,10 @@ class DatasetRepo(Repo):
 
     __registry = {}
 
-    def __init__(
-        self,
-        file_format: str,
-        io: IOService,
-        registry: DatasetRegistry,
-    ) -> None:
-        self._file_format = file_format
+    def __init__(self, io: IOService, registry: DatasetRegistry, file_format: str = "pkl") -> None:
         self._io = io
         DatasetRepo.__registry = registry
+        self._file_format = file_format
 
         self._directory = self._get_directory()
 
@@ -97,6 +93,8 @@ class DatasetRepo(Repo):
         Args:
             dataset (Dataset): The Dataset object
         """
+        while DatasetRepo.__registry.version_exists(dataset):
+            dataset.version = dataset.version + 1
 
         dataset.filepath = self._get_filepath(dataset)
         dataset = DatasetRepo.__registry.add(dataset)
@@ -119,6 +117,16 @@ class DatasetRepo(Repo):
             logger.error(msg)
             raise FileNotFoundError(msg)
 
+    def find_dataset(self, name: str, env: str = None, stage: str = None):
+        """Returns a Dataframe of Dataset objects that match the criteria
+
+        Args:
+            name (str): Required name of Dataset.
+            env (str): Optional, unless stage is provided. One of 'test', 'dev', or 'prod'.
+            stage (str): Optional, one of 'raw', 'interim', or 'cooked'.
+        """
+        return DatasetRepo.__registry.find_dataset(name=name, env=env, stage=stage)
+
     def remove(self, id: int, ignore_errors=False) -> None:
         """Removes a Dataset object from the registry and file system.
 
@@ -130,7 +138,7 @@ class DatasetRepo(Repo):
         """
         try:
             registration = DatasetRepo.__registry.get(id)
-            shutil.rmtree(registration["filepath"], ignore_errors=True)
+            os.remove(registration["filepath"])
             DatasetRepo.__registry.remove(id)
 
         except FileNotFoundError:
@@ -141,12 +149,21 @@ class DatasetRepo(Repo):
                 logger.error(msg)
                 raise FileNotFoundError(msg)
 
-    def exists(self, dataset: Dataset) -> bool:
+    def exists(self, id: int) -> bool:
         """Checks whether the dataset exists.
         Args:
             dataset (Dataset): The dataset to check.
         """
-        return DatasetRepo.__registry.exists(dataset)
+        return DatasetRepo.__registry.exists(id)
+
+    def version_exists(self, dataset: Dataset) -> bool:
+        """Checks whether the dataset exists.
+        Args:
+            dataset (Dataset): The dataset to check.
+        """
+        return DatasetRepo.__registry.version_exists(
+            name=dataset.name, env=dataset.env, stage=dataset.stage, version=dataset.version
+        )
 
     def print(self, id: int) -> None:
         """Prints a Dataset by id.
@@ -217,7 +234,7 @@ class Container(containers.DeclarativeContainer):
 
     registry = providers.Singleton(DatasetRegistry, database=db)
 
-    repo = providers.Singleton(DatasetRepo, file_format="pkl", io=IOService, registry=registry)
+    repo = providers.Singleton(DatasetRepo, io=IOService, registry=registry, file_format="pkl")
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -231,7 +248,7 @@ def repository(func):
         started = datetime.now()
 
         container = Container()
-        repo = container.repo()
+        repo = container.repo
 
         datasets = None
 

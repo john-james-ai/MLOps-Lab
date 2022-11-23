@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:47:16 am                                              #
-# Modified   : Wednesday November 23rd 2022 07:52:06 am                                            #
+# Modified   : Wednesday November 23rd 2022 12:19:32 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -42,7 +42,7 @@ class DropDatasetRegistryTable:
 @dataclass
 class TableExists:
     table: str
-    sql: str = """SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?;"""
+    sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -55,7 +55,7 @@ class TableExists:
 
 
 @dataclass
-class DatasetIdExists:
+class DatasetExists:
     id: int
     sql: str = """SELECT COUNT(*) FROM dataset_registry WHERE id = ?;"""
 
@@ -64,22 +64,58 @@ class DatasetIdExists:
 
 
 # ------------------------------------------------------------------------------------------------ #
+
+
 @dataclass
-class DatasetExists:
-    name: str
+class VersionExists:
+    name: int
     env: str
     stage: str
     version: int
+    sql: str = """SELECT COUNT(*) FROM dataset_registry WHERE name = ? AND env = ? and stage = ? AND version = ?;"""
+
+    def __post_init__(self) -> None:
+        self.args = (self.name, self.env, self.stage, self.version)
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class FindDatasetByNameEnvStage:
+    name: str
+    env: str
+    stage: str
     args: tuple = ()
-    sql: str = """SELECT COUNT(*) FROM dataset_registry WHERE name = ? AND env = ? AND stage = ? AND version = ?;"""
+    sql: str = """SELECT * FROM dataset_registry WHERE name = ? AND env = ? AND stage = ?;"""
 
     def __post_init__(self) -> None:
         self.args = (
             self.name,
             self.env,
             self.stage,
-            self.version,
         )
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class FindDatasetByNameEnv:
+    name: str
+    env: str
+    args: tuple = ()
+    sql: str = """SELECT * FROM dataset_registry WHERE name = ? AND env = ?;"""
+
+    def __post_init__(self) -> None:
+        self.args = (self.name, self.env)
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class FindDatasetByName:
+    name: str
+    args: tuple = ()
+    sql: str = """SELECT * FROM dataset_registry WHERE name = ?;"""
+
+    def __post_init__(self) -> None:
+        self.args = (self.name,)
 
 
 # ------------------------------------------------------------------------------------------------ #

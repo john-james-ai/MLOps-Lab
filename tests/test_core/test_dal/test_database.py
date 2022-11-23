@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 04:13:32 am                                              #
-# Modified   : Tuesday November 22nd 2022 10:32:38 pm                                              #
+# Modified   : Wednesday November 23rd 2022 11:36:46 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -29,7 +29,6 @@ from recsys.core.dal.sequel import (
     DropDatasetRegistryTable,
     TableExists,
     DatasetExists,
-    DatasetIdExists,
     SelectDataset,
     CountDatasets,
     SelectAllDatasets,
@@ -260,17 +259,9 @@ class TestDB:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        registration = dataset.as_dict()
-        id = DatasetIdExists(id=1)
-        exists = DatasetExists(
-            name=registration["name"],
-            env=registration["env"],
-            stage=registration["stage"],
-            version=registration["version"],
-        )
+        id = DatasetExists(id=1)
         with Database() as db:
             assert db.exists(id.sql, id.args)
-            assert db.exists(exists.sql, exists.args)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -299,7 +290,7 @@ class TestDB:
         )
         # ---------------------------------------------------------------------------------------- #
         delete = DeleteDataset(id=1)
-        exists = DatasetIdExists(id=1)
+        exists = DatasetExists(id=1)
         with Database() as db:
             db.delete(delete.sql, delete.args)
             assert not db.exists(exists.sql, exists.args)

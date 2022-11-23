@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 08:04:53 pm                                              #
-# Modified   : Wednesday November 23rd 2022 08:24:52 am                                            #
+# Modified   : Wednesday November 23rd 2022 01:06:14 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,18 +21,23 @@ from typing import Any
 import logging
 import pandas as pd
 
-from recsys.core import DATASET_FEATURES
+from recsys.core import DATASET_FEATURES, DB_TABLES
 from .dataset import Dataset
 from .database import Database
 from .sequel import (
     CreateDatasetRegistryTable,
     DropDatasetRegistryTable,
+    TableExists,
     DatasetExists,
+    VersionExists,
     SelectDataset,
     CountDatasets,
     SelectAllDatasets,
     InsertDataset,
     DeleteDataset,
+    FindDatasetByName,
+    FindDatasetByNameEnv,
+    FindDatasetByNameEnvStage,
 )
 
 # ------------------------------------------------------------------------------------------------ #
@@ -76,8 +81,9 @@ class Registry(ABC):
 
 # ------------------------------------------------------------------------------------------------ #
 class DatasetRegistry(Registry):
-    def __init__(self, database: Database) -> None:
+    def __init__(self, database: Database, file_format: str = "pkl") -> None:
         self._database = database
+        self._file_format = file_format
         self._create_registry()
 
     def __len__(self) -> int:
@@ -97,9 +103,6 @@ class DatasetRegistry(Registry):
         Args:
             dataset (Dataset): The Dataset to add to the registry.
         """
-        while self.exists(dataset):
-            dataset.version = dataset.version + 1
-
         dad = dataset.as_dict()
         registry = {k: dad[k] for k in DATASET_FEATURES}
         insert = InsertDataset(**registry)
@@ -117,37 +120,68 @@ class DatasetRegistry(Registry):
         select = SelectDataset(id=id)
         with self._database as db:
             result = db.select(select.sql, select.args)
-        try:
+        if len(result) > 0:
             result = result[0]
             return self._results_to_dict(result)
-        except IndexError as e:
-            msg = f"Dataset id: {id} not found.\n{e}"
+        else:
+            msg = f"Dataset id: {id} not found."
             logger.error(msg)
-            raise FileNotFoundError(msg)
+            raise FileNotFoundError
 
     def get_all(self) -> pd.DataFrame:
         """Returns a Dataframe representation of the registry."""
-        datasets = []
         select = SelectAllDatasets()
         with self._database as db:
             results = db.select(sql=select.sql, args=select.args)
-            if len(results) > 0:
-                for result in results:
-                    datasets.append(self._results_to_dict(result))
-                datasets = pd.DataFrame.from_dict(datasets)
-        return datasets
+            return self._results_to_df(results)
 
-    def exists(self, dataset: Dataset) -> bool:
+    def exists(self, id: int) -> bool:
         """Returns true if a dataset with the same name, env, stage and version exists in the registry.
 
         Args:
             dataset (Dataset): The Dataset to add to the registry.
         """
-        exists = DatasetExists(
+        exists = DatasetExists(id=id)
+        with self._database as db:
+            return db.exists(sql=exists.sql, args=exists.args)
+
+    def version_exists(self, dataset: Dataset) -> bool:
+        """Returns True if a Dataset or Datasets match the above criteria.
+
+        Args:
+            dataset (Dataset): Required. Dataset object
+        """
+        if not self._table_exists():
+            self._create_registry()
+
+        exists = VersionExists(
             name=dataset.name, env=dataset.env, stage=dataset.stage, version=dataset.version
         )
         with self._database as db:
             return db.exists(sql=exists.sql, args=exists.args)
+
+    def find_dataset(self, name: str, env: str = None, stage: str = None) -> pd.DataFrame:
+        """Finds a Dataset or Datasets that match the search criteria.
+
+        Args:
+            name (str): Required name of Dataset.
+            env (str): Optional, unless stage is provided. One of 'test', 'dev', or 'prod'.
+            stage (str): Optional, one of 'raw', 'interim', or 'cooked'.
+        """
+        if stage and not env:
+            msg = "If stage is in search criteria, env must also."
+            logger.error(msg)
+            raise ValueError(msg)
+
+        if not env:
+            find = FindDatasetByName(name=name)
+        elif not stage:
+            find = FindDatasetByNameEnv(name=name, env=env)
+        else:
+            find = FindDatasetByNameEnvStage(name=name, env=env, stage=stage)
+        with self._database as db:
+            results = db.select(find.sql, find.args)
+            return self._results_to_df(results)
 
     def remove(self, id: int) -> None:
         """Deletes a Dataset from the registry, given an id.
@@ -159,10 +193,15 @@ class DatasetRegistry(Registry):
         with self._database as db:
             db.delete(sql=remove.sql, args=remove.args)
 
+    def _table_exists(self) -> bool:
+        tablename = DB_TABLES[self.__class__.__name__]
+        exists = TableExists(table=tablename)
+        with self._database as db:
+            return db.exists(exists.sql, exists.args)
+
     def _create_registry(self) -> None:
         create = CreateDatasetRegistryTable()
         with self._database as db:
-            logger.debug("\n\nCreating Registry Table")
             db.create(create.sql, create.args)
 
     def _drop_registry(self) -> None:
@@ -192,3 +231,11 @@ class DatasetRegistry(Registry):
             msg = f"Index error in _results_to_dict method.\n{e}"
             logger.error(msg)
             raise IndexError(msg)
+
+    def _results_to_df(self, results: tuple) -> pd.DataFrame:
+        datasets = []
+        if len(results) > 0:
+            for result in results:
+                datasets.append(self._results_to_dict(result))
+            datasets = pd.DataFrame.from_dict(datasets)
+        return datasets

@@ -11,13 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday November 23rd 2022 06:14:49 am                                            #
-# Modified   : Wednesday November 23rd 2022 08:22:04 am                                            #
+# Modified   : Wednesday November 23rd 2022 01:07:44 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import os
 import inspect
+import pandas as pd
 import copy
 from datetime import datetime
 import pytest
@@ -104,7 +105,7 @@ class TestRepo:
         )
 
     # ============================================================================================ #
-    def test_remove(self, datasets, repo, caplog):
+    def test_find(self, repo, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -115,9 +116,16 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        for dataset in datasets:
-            repo.remove(dataset.id)
-        assert len(repo) == 4
+        # Find by name
+        d = {"name": "ds1", "env": "dev", "stage": "raw"}
+        result = repo.find_dataset(name=d["name"])
+        assert isinstance(result, pd.DataFrame)
+        result = repo.find_dataset(name=d["name"], env=d["env"])
+        assert isinstance(result, pd.DataFrame)
+        result = repo.find_dataset(name=d["name"], env=d["env"], stage=d["stage"])
+        assert isinstance(result, pd.DataFrame)
+        result = repo.find_dataset(name=d["name"], env=d["env"], stage="23209")
+        assert len(result) == 0
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -134,7 +142,7 @@ class TestRepo:
         )
 
     # ============================================================================================ #
-    def test_exists(self, datasets, repo, caplog):
+    def test_remove_exists(self, datasets, repo, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -145,11 +153,12 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        for dataset in datasets:
-            with pytest.raises(FileNotFoundError):
-                assert not repo.exists(dataset)
-            dataset.id == dataset.id + 4
-            assert repo.exists(dataset)
+        for i in range(1, 5):
+            repo.remove(i)
+        assert len(repo) == 4
+
+        for i in range(1, 5):
+            assert not repo.exists(i)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

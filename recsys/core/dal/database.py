@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Wednesday November 23rd 2022 09:24:45 am                                            #
+# Modified   : Wednesday November 23rd 2022 01:10:14 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -39,7 +39,8 @@ class Database:
         self._cursor = self._connection.cursor()
 
     def __enter__(self):
-        # self._connection = self._connect()
+        self._connection = self._connect()
+        self._cursor = self._connection.cursor()
         return self
 
     def __exit__(self, ext_type, exc_value, traceback):
@@ -52,6 +53,7 @@ class Database:
 
     def __del__(self):
         if self._connection is not None:
+            self._cursor.close()
             self._connection.close()
 
     def query(self, sql: str, args: tuple = None):
@@ -105,7 +107,6 @@ class Database:
         cursor = self.query(sql="SELECT last_insert_rowid();", args=())
         id = cursor.fetchall()[0][0]
         cursor.close()
-        logger.debug(f"\n\nId created: {id}")
         return id
 
     def _connect(self) -> None:

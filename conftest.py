@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 11th 2022 06:38:26 am                                               #
-# Modified   : Wednesday November 23rd 2022 07:48:31 am                                            #
+# Modified   : Wednesday November 23rd 2022 10:18:40 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -71,7 +71,9 @@ def datasets(ratings):
 @pytest.fixture(scope="module")
 def repo():
     container = Container()
-    return container.repo()
+    repo = container.repo()
+    repo.reset()
+    return repo
 
 
 # ------------------------------------------------------------------------------------------------ #

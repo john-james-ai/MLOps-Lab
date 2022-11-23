@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 20th 2022 10:55:22 pm                                               #
-# Modified   : Wednesday November 23rd 2022 07:51:36 am                                            #
+# Modified   : Wednesday November 23rd 2022 10:29:34 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -62,6 +62,10 @@ REPO_DIRS = {
         "test": "tests/models/movielens20m/repo",
     },
 }
+# ------------------------------------------------------------------------------------------------ #
+#                                     DB CONFIG                                                    #
+# ------------------------------------------------------------------------------------------------ #
+DB_TABLES = {"DatasetRegistry": "dataset_registry"}
 DB_LOCATIONS = {
     "data": {
         "dev": "data/movielens20m/repo/dataset_registry.sqlite",

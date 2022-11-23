@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 09:09:37 pm                                              #
-# Modified   : Wednesday November 23rd 2022 05:02:29 am                                            #
+# Modified   : Wednesday November 23rd 2022 12:28:41 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -83,6 +83,11 @@ class TestRegistry:
             REGISTRY.add(dataset)
             assert len(REGISTRY) == i
 
+        # Version 2
+        for i, dataset in enumerate(datasets, start=5):
+            REGISTRY.add(dataset)
+            assert len(REGISTRY) == i
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -110,8 +115,8 @@ class TestRegistry:
         )
         # ---------------------------------------------------------------------------------------- #
         for dataset in datasets:
-            REGISTRY.add(dataset)
-            assert dataset.version == 2
+            dataset = REGISTRY.add(dataset)
+            assert dataset.version == 3
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -192,6 +197,42 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
+    def test_find(self, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        d = {"name": "ds1", "env": "dev", "stage": "raw"}
+        result = REGISTRY.find_dataset(name=d["name"])
+        assert isinstance(result, pd.DataFrame)
+        result = REGISTRY.find_dataset(name=d["name"], env=d["env"])
+        assert isinstance(result, pd.DataFrame)
+        result = REGISTRY.find_dataset(name=d["name"], env=d["env"], stage=d["stage"])
+        assert isinstance(result, pd.DataFrame)
+        result = REGISTRY.find_dataset(name=d["name"], env=d["env"], stage="23209")
+        assert len(result) == 0
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
     def test_exists(self, datasets, caplog):
         start = datetime.now()
         logger.info(
@@ -203,10 +244,37 @@ class TestRegistry:
             )
         )
         # ---------------------------------------------------------------------------------------- #
+        for i in range(1, 5):
+            assert REGISTRY.exists(i)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_version_exists(self, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
         for dataset in datasets:
-            assert REGISTRY.exists(dataset)
-            dataset.version = 9
-            assert not REGISTRY.exists(dataset)
+            assert REGISTRY.version_exists(dataset)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -236,8 +304,39 @@ class TestRegistry:
         # ---------------------------------------------------------------------------------------- #
         for i in range(1, 5):
             REGISTRY.remove(id=i)
-        assert len(REGISTRY) == 4
+        assert len(REGISTRY) == 8
+        for i in range(5, 13):
+            REGISTRY.remove(id=i)
+        assert len(REGISTRY) == 0
 
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_version_exists_II(self, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        for dataset in datasets:
+            assert not REGISTRY.version_exists(dataset)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
