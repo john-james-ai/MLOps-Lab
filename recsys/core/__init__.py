@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 20th 2022 10:55:22 pm                                               #
-# Modified   : Tuesday November 22nd 2022 02:37:40 am                                              #
+# Modified   : Tuesday November 22nd 2022 06:48:29 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -29,6 +29,23 @@ COMPRESSED_FILE_FORMATS = ("tar.gz", "zip", "7z")
 ENVS = ["dev", "prod", "test"]
 STAGES = ["raw", "interim", "cooked"]
 # ------------------------------------------------------------------------------------------------ #
+#                                    DATASET CONFIG                                                #
+# ------------------------------------------------------------------------------------------------ #
+DATASET_FEATURES = [
+    "name",
+    "description",
+    "env",
+    "stage",
+    "version",
+    "cost",
+    "nrows",
+    "ncols",
+    "null_counts",
+    "memory_size",
+    "creator",
+    "created",
+]
+# ------------------------------------------------------------------------------------------------ #
 #                                     REPO CONFIG                                                  #
 # ------------------------------------------------------------------------------------------------ #
 REPO_FILE_FORMAT = "pkl"
@@ -45,7 +62,14 @@ REPO_DIRS = {
     },
 }
 DB_LOCATIONS = {
-    "dev": "data/movielens20m/repo/registry.sqlite",
-    "prod": "data/movielens20m/repo/registry.sqlite",
-    "test": "tests/data/movielens20m/repo/registry.sqlite",
+    "data": {
+        "dev": "data/movielens20m/repo/dataset_registry.sqlite",
+        "prod": "data/movielens20m/repo/dataset_registry.sqlite",
+        "test": "tests/data/movielens20m/repo/dataset_registry.sqlite",
+    },
+    "model": {
+        "dev": "models/repo/model_registry.sqlite",
+        "prod": "models/repo/model_registry.sqlite",
+        "test": "tests/models/repo/model_registry.sqlite",
+    },
 }

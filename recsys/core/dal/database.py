@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Tuesday November 22nd 2022 04:25:00 am                                              #
+# Modified   : Tuesday November 22nd 2022 10:26:36 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,13 +32,14 @@ class Database:
 
     __DB_LOCATION = None
 
-    def __init__(self):
-        self._set_db_location()
+    def __init__(self, database: str = "data"):
+        self._database = database
         self._connection = None
-        self._connection = sqlite3.connect(Database.__DB_LOCATION)
+        self._connection = self._connect()
         self._cursor = self._connection.cursor()
 
     def __enter__(self):
+        self._connection = self._connect()
         return self
 
     def __exit__(self, ext_type, exc_value, traceback):
@@ -50,23 +51,29 @@ class Database:
         self._connection.close()
 
     def __del__(self):
-        if self.connection is not None:
-            self.connection.close()
+        if self._connection is not None:
+            self._connection.close()
 
     def query(self, sql: str, args: tuple = None):
-        cursor = self.connection.cursor()
+        cursor = self._connection.cursor()
         cursor.execute(sql, args)
         return cursor
 
-    def create_table(self, sql: str, args: tuple = None) -> None:
-        _ = self.query(sql, args)
+    def create(self, sql: str, args: tuple = None) -> None:
+        cursor = self.query(sql, args)
+        self._connection.commit()
+        cursor.close()
+
+    def drop(self, sql: str, args: tuple = None) -> None:
+        cursor = self.query(sql, args)
+        self._connection.commit()
+        cursor.close()
 
     def insert(self, sql, args):
         cursor = self.query(sql, args)
-        id = self.query(sql="SELECT last_insert_rowid();", args=None)
-        self.connection.commit()
+        self._connection.commit()
         cursor.close()
-        return id
+        return self._get_last_insert_rowid()
 
     def select(self, sql: str, args: tuple = None) -> list:
         cursor = self.query(sql, args)
@@ -74,21 +81,41 @@ class Database:
         cursor.close()
         return rows
 
-    def remove(self, sql: str, args: tuple = None) -> list:
-        _ = self.query(sql, args)
-
-    def exists(self, sql: str, args: tuple = None) -> list:
+    def count(self, sql: str, args: tuple = None) -> list:
         cursor = self.query(sql, args)
         rows = cursor.fetchall()
         cursor.close()
-        return len(rows) > 0
+        return rows[0][0]
 
-    def _set_db_location(self) -> None:
+    def delete(self, sql: str, args: tuple = None) -> list:
+        cursor = self.query(sql, args)
+        self._connection.commit()
+        cursor.close()
+
+    def exists(self, sql: str, args: tuple = None) -> bool:
+        cursor = self.query(sql, args)
+        rows = cursor.fetchall()
+        cursor.close()
+        if len(rows) > 0:
+            return rows[0][0] > 0
+        else:
+            return False
+
+    def _get_last_insert_rowid(self) -> int:
+        cursor = self.query(sql="SELECT last_insert_rowid();", args=())
+        id = cursor.fetchall()[0][0]
+        cursor.close()
+        logger.debug(f"\n\nId created: {id}")
+        return id
+
+    def _connect(self) -> None:
         load_dotenv()
         ENV = os.getenv("ENV")
         try:
-            Database.__DB_LOCATION = DB_LOCATIONS.get(ENV)
+            Database.__DB_LOCATION = DB_LOCATIONS[self._database].get(ENV)
+            os.makedirs(os.path.dirname(Database.__DB_LOCATION), exist_ok=True)
+            return sqlite3.connect(Database.__DB_LOCATION)
         except KeyError:
-            msg = "The current environment, specified by the 'ENV' variable in the .env file, is not supported."
+            msg = f"Database: {self._database} or environment: {ENV} are invalid."
             logger.error(msg)
             raise ValueError(msg)

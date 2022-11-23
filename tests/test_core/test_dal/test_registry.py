@@ -4,27 +4,26 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /test_dataset.py                                                                    #
+# Filename   : /test_registry.py                                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Monday November 14th 2022 05:45:09 pm                                               #
-# Modified   : Tuesday November 22nd 2022 10:34:45 pm                                              #
+# Created    : Tuesday November 22nd 2022 09:09:37 pm                                              #
+# Modified   : Wednesday November 23rd 2022 05:02:29 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import inspect
-import logging
-import copy
-from datetime import datetime
-
 import pandas as pd
+from datetime import datetime
 import pytest
+import logging
 
-from recsys.core.dal.dataset import Dataset
+from recsys.core.dal.database import Database
+from recsys.core.dal.registry import DatasetRegistry, Registry
 
 # ------------------------------------------------------------------------------------------------ #
 logging.basicConfig(
@@ -35,16 +34,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
-
-DATASET = None
-NAME = "test_ratings"
-COST = 2093
-FILEPATH = "tests/data/dal/dataset/ratings.pkl"
+DATABASE = Database(database="data")
+REGISTRY = DatasetRegistry(database=DATABASE)
 
 
-@pytest.mark.dataset
-class TestDataset:
-    def test_validation(self, ratings, caplog):
+@pytest.mark.registry
+class TestRegistry:
+    # ============================================================================================ #
+    def test_setup(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -54,14 +51,9 @@ class TestDataset:
                 start.strftime("%m/%d/%Y"),
             )
         )
-        # ------------------------------------------------------------------------------------------------ #
-        with pytest.raises(ValueError):
-            _ = Dataset(name=NAME, data=ratings, stage="328")
-
-        with pytest.raises(ValueError):
-            _ = Dataset(name=NAME, data=ratings, env="328")
-
-        # ------------------------------------------------------------------------------------------------ #
+        # ---------------------------------------------------------------------------------------- #
+        REGISTRY.reset()
+        # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
 
@@ -76,7 +68,7 @@ class TestDataset:
         )
 
     # ============================================================================================ #
-    def test_instantiation(self, ratings, caplog):
+    def test_add(self, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -87,18 +79,9 @@ class TestDataset:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        DATASET = Dataset(name=NAME, data=ratings, cost=COST)
-
-        assert DATASET.name == NAME
-        assert DATASET.stage == "interim"
-        assert DATASET.env == "dev"
-        assert DATASET.nrows > 1000
-        assert DATASET.ncols > 2
-        assert DATASET.null_counts == 0
-        assert DATASET.memory_size > 0
-        assert isinstance(DATASET.created, datetime)
-        assert DATASET.description == f"Dataset.{NAME}"
-        assert DATASET.cost == COST
+        for i, dataset in enumerate(datasets, start=1):
+            REGISTRY.add(dataset)
+            assert len(REGISTRY) == i
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -115,7 +98,7 @@ class TestDataset:
         )
 
     # ============================================================================================ #
-    def test_reconstitution(self, ratings, caplog):
+    def test_version(self, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -126,11 +109,10 @@ class TestDataset:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        DATASET = Dataset(name=NAME, data=ratings, cost=COST)
-        metadata = DATASET.as_dict()
-        new_dataset = copy.deepcopy(Dataset(**metadata))
-        new_dataset.data = DATASET.data
-        assert DATASET == new_dataset
+        for dataset in datasets:
+            REGISTRY.add(dataset)
+            assert dataset.version == 2
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -146,7 +128,7 @@ class TestDataset:
         )
 
     # ============================================================================================ #
-    def test_repo_methods(self, ratings, caplog):
+    def test_get(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -157,7 +139,14 @@ class TestDataset:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        pass
+        for i in range(1, 9):
+            dataset = REGISTRY.get(i)
+            assert isinstance(dataset, dict)
+            assert dataset["id"] == i
+
+        with pytest.raises(FileNotFoundError):
+            REGISTRY.get(id=22)
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -173,7 +162,7 @@ class TestDataset:
         )
 
     # ============================================================================================ #
-    def test_id_reassignment(self, dataset, caplog):
+    def test_get_all(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -184,11 +173,100 @@ class TestDataset:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dataset.id = 99
-        assert dataset.id == 99
+        registry = REGISTRY.get_all()
+        assert isinstance(registry, pd.DataFrame)
+        logger.debug(f"\n\nRegistry\n{registry}")
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_exists(self, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        for dataset in datasets:
+            assert REGISTRY.exists(dataset)
+            dataset.version = 9
+            assert not REGISTRY.exists(dataset)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_remove(self, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        for i in range(1, 5):
+            REGISTRY.remove(id=i)
+        assert len(REGISTRY) == 4
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_base_class(self, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        # with pytest.raises(NotImplementedError):
         with pytest.raises(TypeError):
-            dataset.id = 22
-
+            _ = Registry()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -204,7 +282,7 @@ class TestDataset:
         )
 
     # ============================================================================================ #
-    def test_methods(self, ratings, caplog):
+    def test_teardown(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -215,17 +293,7 @@ class TestDataset:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        DATASET = Dataset(name=NAME, data=ratings, cost=COST)
-        logger.info(DATASET.info())
-        assert isinstance(DATASET.head(), pd.DataFrame)
-        assert isinstance(DATASET.tail(), pd.DataFrame)
-        assert isinstance(DATASET.sample(n=10), pd.DataFrame)
-        assert isinstance(DATASET.cluster_sample(n=10, by="userId"), pd.DataFrame)
-        assert DATASET.sample(n=10).shape[0] == 10
-
-        with pytest.raises(TypeError):
-            DATASET.data = ratings
-
+        REGISTRY.reset()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

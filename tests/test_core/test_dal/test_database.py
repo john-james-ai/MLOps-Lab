@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 04:13:32 am                                              #
-# Modified   : Tuesday November 22nd 2022 04:37:51 am                                              #
+# Modified   : Tuesday November 22nd 2022 10:32:38 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,15 +23,18 @@ import logging
 import shutil
 
 from recsys.core.dal.database import Database
-from recsys.core import DB_LOCATIONS
+from recsys.core import DB_LOCATIONS, DATASET_FEATURES
 from recsys.core.dal.sequel import (
     CreateDatasetRegistryTable,
     DropDatasetRegistryTable,
-    DatabaseRegistryTableExists,
+    TableExists,
     DatasetExists,
-    SelectDatasetRegistration,
-    InsertDatasetRegistration,
-    RemoveDatasetRegistration,
+    DatasetIdExists,
+    SelectDataset,
+    CountDatasets,
+    SelectAllDatasets,
+    InsertDataset,
+    DeleteDataset,
 )
 
 # ------------------------------------------------------------------------------------------------ #
@@ -59,7 +62,7 @@ class TestDB:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        shutil.rmtree(DB_LOCATIONS["test"], ignore_errors=True)
+        shutil.rmtree(DB_LOCATIONS["data"]["test"], ignore_errors=True)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -75,7 +78,7 @@ class TestDB:
         )
 
     # ============================================================================================ #
-    def test_create_table(self, caplog):
+    def test_create_table_exists(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -86,11 +89,13 @@ class TestDB:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        with Database as db:
-            db.create(CreateDatasetRegistryTable().sql)
+        stmt = TableExists("dataset_registry")
+        create = CreateDatasetRegistryTable()
+        with Database() as db:
+            db.create(create.sql, create.args)
             assert db.exists(
-                DatabaseRegistryTableExists().sql,
-                DatabaseRegistryTableExists().args,
+                stmt.sql,
+                stmt.args,
             )
 
         # ---------------------------------------------------------------------------------------- #
@@ -108,7 +113,143 @@ class TestDB:
         )
 
     # ============================================================================================ #
-    def test_insert_select(self, dataset, caplog):
+    def test_drop_table(self, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        drop = DropDatasetRegistryTable()
+        exists = TableExists("dataset_registry")
+        with Database() as db:
+            db.drop(drop.sql, drop.args)
+            assert not db.exists(exists.sql, exists.args)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_insert_select(self, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        for i, dataset in enumerate(datasets, start=1):
+            ds = dataset.as_dict()
+            registration = {k: ds[k] for k in DATASET_FEATURES}
+
+            result = None
+            create = CreateDatasetRegistryTable()
+            insert = InsertDataset(**registration)
+            select = SelectDataset(id=i)
+            with Database() as db:
+                db.create(create.sql, create.args)
+                id = db.insert(insert.sql, insert.args)
+                logger.debug(f"\n\nJust inserted Dataset id {id}\n")
+                result = db.select(select.sql, select.args)
+                logger.debug(f"\n\nResult from Dataset Select:\n{result}")
+                assert result is not None
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_select_all(self, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        select = SelectAllDatasets()
+        with Database() as db:
+            registry = db.select(select.sql, select.args)
+        logger.debug(f"\n\nDatasets\n{registry}")
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_count(self, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        query = CountDatasets()
+        with Database() as db:
+            count = db.count(sql=query.sql, args=query.args)
+            assert isinstance(count, int)
+            assert count == 4
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_exists(self, dataset, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -120,15 +261,17 @@ class TestDB:
         )
         # ---------------------------------------------------------------------------------------- #
         registration = dataset.as_dict()
-        result = None
-        command = InsertDatasetRegistration(**registration)
-        with Database as db:
-            db.insert(sql=command.sql, args=command.args)
-            result = db.select(
-                sql=SelectDatasetRegistration(id=1).sql,
-                args=SelectDatasetRegistration(id=1).args,
-            )
-            assert result is not None
+        id = DatasetIdExists(id=1)
+        exists = DatasetExists(
+            name=registration["name"],
+            env=registration["env"],
+            stage=registration["stage"],
+            version=registration["version"],
+        )
+        with Database() as db:
+            assert db.exists(id.sql, id.args)
+            assert db.exists(exists.sql, exists.args)
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -144,7 +287,7 @@ class TestDB:
         )
 
     # ============================================================================================ #
-    def test_remove(self, caplog):
+    def test_delete(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -155,15 +298,11 @@ class TestDB:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        with Database as db:
-            db.remove(
-                RemoveDatasetRegistration(id=1).sql,
-                RemoveDatasetRegistration(id=1).args,
-            )
-            assert not db.exists(
-                DatabaseRegistryTableExists().sql,
-                DatabaseRegistryTableExists().args,
-            )
+        delete = DeleteDataset(id=1)
+        exists = DatasetIdExists(id=1)
+        with Database() as db:
+            db.delete(delete.sql, delete.args)
+            assert not db.exists(exists.sql, exists.args)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -191,7 +330,7 @@ class TestDB:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        shutil.rmtree(DB_LOCATIONS["test"], ignore_errors=True)
+        shutil.rmtree(DB_LOCATIONS["data"]["test"], ignore_errors=True)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

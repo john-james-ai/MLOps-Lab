@@ -11,14 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Tuesday November 22nd 2022 03:22:51 am                                              #
+# Modified   : Wednesday November 23rd 2022 04:16:27 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Data Repository Module"""
 import inspect
-import copy
 import logging
 from datetime import datetime
 import pandas as pd
@@ -49,8 +48,6 @@ class Dataset:
         created (datetime): Required. Datetime the Dataset was created.
 
     """
-
-    __seq = {"prod": 1, "dev": 1, "test": 1}
 
     def __init__(
         self,
@@ -92,10 +89,12 @@ class Dataset:
         self._set_metadata()
 
     def __str__(self) -> str:
-        return f"\n\nDataset ID: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tEnv: {self._env}\n\tStage: {self._stage}"
+        return f"\n\nDataset ID: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tEnv: {self._env}\n\tStage: {self._stage}\
+            \n\tVersion: {self._version}\n\tCost: {self._cost}\n\tNrows: {self._nrows}\n\tNcols: {self._ncols}\n\tNull Counts: {self._null_counts}\
+            \n\tMemory Size: {self._memory_size}\n\tCreator: {self._creator}\n\t{self._created}"
 
     def __repr__(self) -> str:
-        return f"\n\nDataset ID: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tEnv: {self._env}\n\tStage: {self._stage}"
+        return f"Dataset({self._id}, {self._name}, {self._description}, {self._env}, {self._stage}, {self._version}, {self._cost}, {self._nrows}, {self._ncols}, {self._null_counts}, {self._memory_size}, {self._creator}, {self._created}"
 
     def __eq__(self, other) -> bool:
         """Compares two Datasets for equality.
@@ -136,6 +135,10 @@ class Dataset:
     @property
     def id(self) -> int:
         return self._id
+
+    @id.setter
+    def id(self, id: int) -> None:
+        self._id = id
 
     @property
     def name(self) -> str:
@@ -307,7 +310,6 @@ class Dataset:
         self._set_data_metadata()
 
     def _set_operational_metadata(self) -> None:
-        self._id = self._id if self._id is not None else self._get_id(self._env)
         self._description = self._description or f"{self.__class__.__name__}.{self._name}"
         self._created = self._created if self._created is not None else datetime.now()
         stack = inspect.stack()
@@ -315,22 +317,15 @@ class Dataset:
             self._creator = (
                 self._creator
                 if self._creator is not None
-                else stack[4][0].f_locals["self"].__class__.__name__
+                else stack[3][0].f_locals["self"].__class__.__name__
             )
         except KeyError:
-            self._creator = None
+            self._creator = "Not Designated"
 
     def _set_data_metadata(self) -> None:
         if self._data is not None:
-            self._memory_size = self._data.memory_usage(deep=True, index=True).sum()
-            self._nrows = self._data.shape[0]
-            self._ncols = self._data.shape[1]
+            self._memory_size = int(self._data.memory_usage(deep=True, index=True).sum())
+            self._nrows = int(self._data.shape[0])
+            self._ncols = int(self._data.shape[1])
             self._columns = self._data.columns
-            self._null_counts = self._data.isnull().sum().sum()
-
-    @classmethod
-    def _get_id(cls, env: str) -> str:
-        """Creates an id of the form <name>_<seq> where seq is an autoincremented integer"""
-        id = copy.copy(cls.__seq[env])
-        cls.__seq[env] = id + 1
-        return id
+            self._null_counts = int(self._data.isnull().sum().sum())
