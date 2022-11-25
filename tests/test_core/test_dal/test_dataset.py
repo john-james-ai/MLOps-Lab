@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 05:45:09 pm                                               #
-# Modified   : Tuesday November 22nd 2022 10:34:45 pm                                              #
+# Modified   : Friday November 25th 2022 05:17:30 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -58,9 +58,6 @@ class TestDataset:
         with pytest.raises(ValueError):
             _ = Dataset(name=NAME, data=ratings, stage="328")
 
-        with pytest.raises(ValueError):
-            _ = Dataset(name=NAME, data=ratings, env="328")
-
         # ------------------------------------------------------------------------------------------------ #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -91,7 +88,6 @@ class TestDataset:
 
         assert DATASET.name == NAME
         assert DATASET.stage == "interim"
-        assert DATASET.env == "dev"
         assert DATASET.nrows > 1000
         assert DATASET.ncols > 2
         assert DATASET.null_counts == 0

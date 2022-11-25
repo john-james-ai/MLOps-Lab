@@ -4,50 +4,39 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /etl.yaml                                                                           #
+# Filename   : /etl.yml                                                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday November 17th 2022 03:18:06 am                                             #
-# Modified   : Friday November 18th 2022 10:40:25 am                                               #
+# Created    : Friday November 25th 2022 03:01:44 pm                                               #
+# Modified   : Friday November 25th 2022 03:17:36 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
----
-# ================================================================================================ #
-#                                         ETL                                                      #
-# ================================================================================================ #
-
-name: movielens20m_etl
-description: Extracts, transforms and loads the MovieLens20M data from Kaggle.
-io_module: recsys.core.services.io
-io_service: IOService
-
-# ------------------------------------------------------------------------------------------------ #
-#                                       ETL STEPS                                                  #
-# ------------------------------------------------------------------------------------------------ #
+name: etl
+description: Extract Transform and Load for MovieLens20M Dataset
 steps:
   1:
     name: download_movielens20m
-    description: Downloads MovieLens20M data from Kaggle website.
-    module: recsys.core.dpl.etl
+    description: Downloads MovieLens20M Dataset from Kaggle
+    module: recsys.core.workflow.operators
     operator: KaggleDownloader
     params:
       kaggle_filepath: grouplens/movielens-20m-dataset
-      destination: data/movielens20m/ext
+      destination: data/ext
       force: False
 
   2:
     name: dezip_movielens20m
     description: UnZips MovieLens20M Dataset
-    module: recsys.core.dpl.etl
+    module: recsys.core.workflow.operators
     operator: DeZipper
     params:
-      zipfilepath: data/movielens20m/ext/movielens-20m-dataset.zip
-      destination: data/movielens20m/raw
+      zipfilepath: data/ext/movielens-20m-dataset.zip
+      destination: data/raw
       members:
         - rating.csv
       force: False
@@ -55,11 +44,11 @@ steps:
   3:
     name: pickle_dataset
     description: Pickles ratings dataset
-    module: recsys.core.dpl.etl
+    module: recsys.core.workflow.operators
     operator: Pickler
     params:
-      infilepath: data/movielens20m/raw/rating.csv
-      outfilepath: data/movielens20m/raw/rating.pkl
+      infilepath: data/raw/rating.csv
+      outfilepath: data/raw/rating.pkl
       infile_format: csv
       index_col: False
       encoding: utf-8

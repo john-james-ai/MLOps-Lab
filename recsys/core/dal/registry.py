@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 08:04:53 pm                                              #
-# Modified   : Wednesday November 23rd 2022 09:54:15 pm                                            #
+# Modified   : Friday November 25th 2022 05:13:37 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -36,8 +36,7 @@ from .sequel import (
     InsertDataset,
     DeleteDataset,
     FindDatasetByName,
-    FindDatasetByNameEnv,
-    FindDatasetByNameEnvStage,
+    FindDatasetByNameStage,
 )
 
 # ------------------------------------------------------------------------------------------------ #
@@ -68,7 +67,7 @@ class Registry(ABC):
 
     @abstractmethod
     def exists(self, *args, **kwargs) -> bool:
-        """Returns true if a dataset with the same name, env, stage and version exists in the registry."""
+        """Returns true if a dataset with the same name, stage and version exists in the registry."""
 
     @abstractmethod
     def remove(self, id: int) -> None:
@@ -81,10 +80,9 @@ class Registry(ABC):
 
 # ------------------------------------------------------------------------------------------------ #
 class DatasetRegistry(Registry):
-    def __init__(self, database: Database, file_format: str = "pkl") -> None:
+    def __init__(self, database: Database) -> None:
         self._database = database
-        self._file_format = file_format
-        self._create_registry()
+        self._create_registry_if_not_exists()
 
     def __len__(self) -> int:
         """Returns the number of items in the registry."""
@@ -95,7 +93,7 @@ class DatasetRegistry(Registry):
     def reset(self) -> None:
         """Drops the registry table and re-creatas it."""
         self._drop_registry()
-        self._create_registry()
+        self._create_registry_if_not_exists()
 
     def add(self, dataset: Dataset) -> Dataset:
         """Adds a dataset to the registry. If a duplicate is found, the version is bumped.
@@ -136,10 +134,10 @@ class DatasetRegistry(Registry):
             return self._results_to_df(results)
 
     def exists(self, id: int) -> bool:
-        """Returns true if a dataset with the same name, env, stage and version exists in the registry.
+        """Returns true if a dataset with id exists
 
         Args:
-            dataset (Dataset): The Dataset to add to the registry.
+            id (int): Dataset id
         """
         exists = DatasetExists(id=id)
         with self._database as db:
@@ -151,34 +149,22 @@ class DatasetRegistry(Registry):
         Args:
             dataset (Dataset): Required. Dataset object
         """
-        if not self._table_exists():
-            self._create_registry()
-
-        exists = VersionExists(
-            name=dataset.name, env=dataset.env, stage=dataset.stage, version=dataset.version
-        )
+        exists = VersionExists(name=dataset.name, stage=dataset.stage, version=dataset.version)
         with self._database as db:
             return db.exists(sql=exists.sql, args=exists.args)
 
-    def find_dataset(self, name: str, env: str = None, stage: str = None) -> pd.DataFrame:
+    def find_dataset(self, name: str, stage: str = None) -> pd.DataFrame:
         """Finds a Dataset or Datasets that match the search criteria.
 
         Args:
             name (str): Required name of Dataset.
-            env (str): Optional, unless stage is provided. One of 'test', 'dev', or 'prod'.
             stage (str): Optional, one of 'raw', 'interim', or 'cooked'.
         """
-        if stage and not env:
-            msg = "If stage is in search criteria, env must also."
-            logger.error(msg)
-            raise ValueError(msg)
 
-        if not env:
+        if not stage:
             find = FindDatasetByName(name=name)
-        elif not stage:
-            find = FindDatasetByNameEnv(name=name, env=env)
         else:
-            find = FindDatasetByNameEnvStage(name=name, env=env, stage=stage)
+            find = FindDatasetByNameStage(name=name, stage=stage)
         with self._database as db:
             results = db.select(find.sql, find.args)
             return self._results_to_df(results)
@@ -199,7 +185,7 @@ class DatasetRegistry(Registry):
         with self._database as db:
             return db.exists(exists.sql, exists.args)
 
-    def _create_registry(self) -> None:
+    def _create_registry_if_not_exists(self) -> None:
         create = CreateDatasetRegistryTable()
         with self._database as db:
             db.create(create.sql, create.args)
@@ -215,17 +201,16 @@ class DatasetRegistry(Registry):
             result_dict["id"] = result[0]
             result_dict["name"] = result[1]
             result_dict["description"] = result[2]
-            result_dict["env"] = result[3]
-            result_dict["stage"] = result[4]
-            result_dict["version"] = result[5]
-            result_dict["cost"] = result[6]
-            result_dict["nrows"] = result[7]
-            result_dict["ncols"] = result[8]
-            result_dict["null_counts"] = result[9]
-            result_dict["memory_size"] = result[10]
-            result_dict["filepath"] = result[11]
-            result_dict["creator"] = result[12]
-            result_dict["created"] = result[13]
+            result_dict["stage"] = result[3]
+            result_dict["version"] = result[4]
+            result_dict["cost"] = result[5]
+            result_dict["nrows"] = result[6]
+            result_dict["ncols"] = result[7]
+            result_dict["null_counts"] = result[8]
+            result_dict["memory_size"] = result[9]
+            result_dict["filepath"] = result[10]
+            result_dict["creator"] = result[11]
+            result_dict["created"] = result[12]
             return result_dict
         except IndexError as e:
             msg = f"Index error in _results_to_dict method.\n{e}"

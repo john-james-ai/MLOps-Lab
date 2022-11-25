@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Thursday November 24th 2022 03:13:05 am                                             #
+# Modified   : Friday November 25th 2022 08:41:00 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -93,7 +93,7 @@ class Dataset:
     def __str__(self) -> str:
         return f"\n\nDataset ID: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tEnv: {self._env}\n\tStage: {self._stage}\
             \n\tVersion: {self._version}\n\tCost: {self._cost}\n\tNrows: {self._nrows}\n\tNcols: {self._ncols}\n\tNull Counts: {self._null_counts}\
-            \n\tMemory Size: {self._memory_size}\n\tFilepath: {self._filepath}\n\tCreator: {self._creator}\n\t{self._created}"
+            \n\tMemory Size: {self._memory_size}\n\tFilepath: {self._filepath}\n\tCreator: {self._creator}\n\tCreated: {self._created}"
 
     def __repr__(self) -> str:
         return f"Dataset({self._id}, {self._name}, {self._description}, {self._env}, {self._stage}, {self._version}, {self._cost}, {self._nrows}, {self._ncols}, {self._null_counts}, {self._memory_size}, {self._filepath}, {self._creator}, {self._created}"
@@ -332,8 +332,11 @@ class Dataset:
 
     def _set_data_metadata(self) -> None:
         if self._data is not None:
-            self._memory_size = int(self._data.memory_usage(deep=True, index=True).sum())
-            self._nrows = int(self._data.shape[0])
+            self._memory_size = (
+                str(round(int(self._data.memory_usage(deep=True, index=True).sum()) / 1024**2, 2))
+                + " Mb"
+            )
+            self._nrows = "{:,}".format(int(self._data.shape[0]))
             self._ncols = int(self._data.shape[1])
             self._columns = self._data.columns
             self._null_counts = int(self._data.isnull().sum().sum())

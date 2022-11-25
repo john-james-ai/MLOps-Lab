@@ -70,12 +70,14 @@ include = '\.pyi?$'
 
 [tool.pytest.ini_options]
 addopts = """\
+    -s \
+    --cache-clear \
     --cov recsys \
     --cov tests \
     --cov-report term-missing \
     --no-cov-on-fail \
 """
-markers = ["sample","users","data","adj_ratings","weights","split","dataset"]
+markers = ["sample","users","data","adj_ratings","weights","split","dataset", "cf", "ops"]
 
 
 

@@ -11,16 +11,15 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 11th 2022 06:38:26 am                                               #
-# Modified   : Wednesday November 23rd 2022 10:18:40 am                                            #
+# Modified   : Friday November 25th 2022 05:42:48 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import pytest
 
-from recsys.core.services.repo import Container
+from recsys.core.services.container import Container
 from recsys.core.dal.dataset import Dataset
-from recsys.core.dal.database import Database
 from recsys.core.services.io import IOService
 
 # ------------------------------------------------------------------------------------------------ #
@@ -79,4 +78,5 @@ def repo():
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
 def database():
-    return Database(database="data")
+    container = Container()
+    return container.db

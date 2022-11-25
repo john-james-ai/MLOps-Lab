@@ -11,35 +11,28 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday November 19th 2022 08:09:34 am                                             #
-# Modified   : Thursday November 24th 2022 04:46:41 am                                             #
+# Modified   : Friday November 25th 2022 02:08:46 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-import os
 import inspect
-import importlib
-from dotenv import load_dotenv
 from datetime import datetime
 import pytest
 import logging
 
-
-from recsys.config.base import PIPELINES
 from recsys.core.dal.dataset import Dataset
 from recsys.core.services.io import IOService
-from recsys.core.workflow.operators import CreateDataset, TrainTestSplit, RatingsAdjuster, Phi
+from recsys.core.workflow.operators import CreateDataset, TrainTestSplit, RatingsAdjuster, User
+from recsys.config.collabfilter import (
+    CreateDatasetParams,
+    TrainTestParams,
+    RatingsAdjusterParams,
+    UserParams,
+)
 
 # ------------------------------------------------------------------------------------------------ #
 CONTEXT = IOService()
-
-
-class Pipeline:
-    load_dotenv()
-    env = os.getenv("ENV")
-    module = PIPELINES["collabfilter"]["preprocess"].get(env)
-    config = importlib.import_module(module)
-
 
 # ------------------------------------------------------------------------------------------------ #
 logging.basicConfig(
@@ -95,20 +88,16 @@ class TestCreateDataset:
         )
         # ---------------------------------------------------------------------------------------- #
         cds = CreateDataset(
-            step_params=Pipeline.config.CreateDatasetParams().step_params,
-            input_params=Pipeline.config.CreateDatasetParams().input_params,
-            output_params=Pipeline.config.CreateDatasetParams().output_params,
+            step_params=CreateDatasetParams().step_params,
+            input_params=CreateDatasetParams().input_params,
+            output_params=CreateDatasetParams().output_params,
         )
         dataset = cds.run(context=CONTEXT)
         assert isinstance(dataset, Dataset)
         assert dataset.name == "rating"
-        assert dataset.env == "test"
         assert dataset.stage == "interim"
         assert dataset.version == 1
-        filepath = os.path.join(
-            "tests/data/movielens20m/repo", dataset.env, dataset.stage, "rating_test_interim_v1.pkl"
-        )
-        assert os.path.exists(filepath)
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -166,33 +155,23 @@ class TestTrainTestSplit:
         )
         # ---------------------------------------------------------------------------------------- #
         tts = TrainTestSplit(
-            step_params=Pipeline.config.TrainTestParams().step_params,
-            input_params=Pipeline.config.TrainTestParams().input_params,
-            output_params=Pipeline.config.TrainTestParams().output_params,
+            step_params=TrainTestParams().step_params,
+            input_params=TrainTestParams().input_params,
+            output_params=TrainTestParams().output_params,
         )
         train_test = tts.run(context=CONTEXT)
 
         assert isinstance(train_test, dict)
         assert train_test["train"].name == "train"
-        assert train_test["train"].env == "test"
         assert train_test["train"].stage == "interim"
         assert train_test["train"].version == 1
         assert train_test["train"].data is not None
 
         assert train_test["test"].name == "test"
-        assert train_test["test"].env == "test"
         assert train_test["test"].stage == "interim"
         assert train_test["test"].version == 1
         assert train_test["test"].data is not None
 
-        train = os.path.join(
-            "tests/data/movielens20m/repo", "test", "interim", "train_test_interim_v1.pkl"
-        )
-        test = os.path.join(
-            "tests/data/movielens20m/repo", "test", "interim", "test_test_interim_v1.pkl"
-        )
-        assert os.path.exists(train)
-        assert os.path.exists(test)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -250,13 +229,12 @@ class TestCentering:
         )
         # ---------------------------------------------------------------------------------------- #
         ra = RatingsAdjuster(
-            step_params=Pipeline.config.RatingsAdjusterParams().step_params,
-            input_params=Pipeline.config.RatingsAdjusterParams().input_params,
-            output_params=Pipeline.config.RatingsAdjusterParams().output_params,
+            step_params=RatingsAdjusterParams().step_params,
+            input_params=RatingsAdjusterParams().input_params,
+            output_params=RatingsAdjusterParams().output_params,
         )
         dataset = ra.run(context=CONTEXT)
         assert dataset.name == "adjusted_ratings"
-        assert dataset.env == "test"
         assert dataset.stage == "interim"
         assert dataset.version == 1
         logger.debug(dataset.data.head())
@@ -316,81 +294,13 @@ class TestUserAverageRatings:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ra = RatingsAdjuster(
-            step_params=Pipeline.config.UserParams().step_params,
-            input_params=Pipeline.config.UserParams().input_params,
-            output_params=Pipeline.config.UserParams().output_params,
+        ra = User(
+            step_params=UserParams().step_params,
+            input_params=UserParams().input_params,
+            output_params=UserParams().output_params,
         )
         dataset = ra.run(context=CONTEXT)
         assert dataset.name == "user"
-        assert dataset.env == "test"
-        assert dataset.stage == "interim"
-        assert dataset.version == 1
-        logger.debug(dataset.data.head())
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-
-@pytest.mark.cf
-class TestPhi:
-    # ================================================================================================ #
-    def test_setup(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        pass
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_phi(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ra = Phi(
-            step_params=Pipeline.config.PhiParams().step_params,
-            input_params=Pipeline.config.PhiParams().input_params,
-            output_params=Pipeline.config.PhiParams().output_params,
-        )
-        dataset = ra.run(context=CONTEXT)
-        assert dataset.name == "user"
-        assert dataset.env == "test"
         assert dataset.stage == "interim"
         assert dataset.version == 1
         logger.debug(dataset.data.head())

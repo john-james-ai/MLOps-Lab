@@ -11,21 +11,27 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:22:05 am                                               #
-# Modified   : Thursday November 24th 2022 02:44:29 am                                             #
+# Modified   : Friday November 25th 2022 02:20:59 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Application-Wide and BaseConfiguration Module"""
+import os
 from datetime import datetime
 from dataclasses import dataclass
 from abc import ABC
 
 # ------------------------------------------------------------------------------------------------ #
+#                                     REPRODUCIBILITY                                              #
+# ------------------------------------------------------------------------------------------------ #
+RANDOM_STATE = 55
+
+# ------------------------------------------------------------------------------------------------ #
 #                                ENVIRONMENT AND STAGE                                             #
 # ------------------------------------------------------------------------------------------------ #
 ENVS = ["dev", "prod", "test"]
-STAGES = ["raw", "interim", "cooked"]
+STAGES = ["input", "interim", "cooked"]
 # ------------------------------------------------------------------------------------------------ #
 #                                    DATASET CONFIG                                                #
 # ------------------------------------------------------------------------------------------------ #
@@ -45,19 +51,26 @@ DATASET_FEATURES = [
     "created",
 ]
 # ------------------------------------------------------------------------------------------------ #
+#                                    DIRECTORY CONFIG                                              #
+# ------------------------------------------------------------------------------------------------ #
+DIRECTORIES = {
+    "data": {"base": "data", "ext": "data/ext", "raw": "data/raw", "repo": "data/repo"},
+    "models": {"base": "models", "repo": "models/repo"},
+}
+# ------------------------------------------------------------------------------------------------ #
 #                                     REPO CONFIG                                                  #
 # ------------------------------------------------------------------------------------------------ #
 REPO_FILE_FORMAT = "pkl"
 REPO_DIRS = {
     "data": {
-        "dev": "data/movielens20m/repo",
-        "prod": "data/movielens20m/repo",
-        "test": "tests/data/movielens20m/repo",
+        "dev": os.path.join(DIRECTORIES["data"]["repo"], "dev"),
+        "prod": os.path.join(DIRECTORIES["data"]["repo"], "prod"),
+        "test": os.path.join(DIRECTORIES["data"]["repo"], "test"),
     },
-    "model": {
-        "dev": "models/movielens20m/repo",
-        "prod": "models/movielens20m/repo",
-        "test": "tests/models/movielens20m/repo",
+    "models": {
+        "dev": os.path.join(DIRECTORIES["models"]["repo"], "dev"),
+        "prod": os.path.join(DIRECTORIES["models"]["repo"], "prod"),
+        "test": os.path.join(DIRECTORIES["models"]["repo"], "test"),
     },
 }
 # ------------------------------------------------------------------------------------------------ #
@@ -66,39 +79,34 @@ REPO_DIRS = {
 DB_TABLES = {"DatasetRegistry": "dataset_registry"}
 DB_LOCATIONS = {
     "data": {
-        "dev": "data/movielens20m/repo/dataset_registry.sqlite",
-        "prod": "data/movielens20m/repo/dataset_registry.sqlite",
-        "test": "tests/data/movielens20m/repo/dataset_registry.sqlite",
+        "dev": os.path.join(REPO_DIRS["data"]["dev"], "dataset_registry.sqlite"),
+        "prod": os.path.join(REPO_DIRS["data"]["prod"], "dataset_registry.sqlite"),
+        "test": os.path.join(REPO_DIRS["data"]["test"], "dataset_registry.sqlite"),
     },
     "model": {
-        "dev": "models/repo/model_registry.sqlite",
-        "prod": "models/repo/model_registry.sqlite",
-        "test": "tests/models/repo/model_registry.sqlite",
+        "dev": os.path.join(REPO_DIRS["models"]["dev"], "dataset_registry.sqlite"),
+        "prod": os.path.join(REPO_DIRS["models"]["prod"], "dataset_registry.sqlite"),
+        "test": os.path.join(REPO_DIRS["models"]["test"], "dataset_registry.sqlite"),
     },
 }
 
-# ------------------------------------------------------------------------------------------------ #
-#                                 PIPELINE CONFIGS                                                 #
-# ------------------------------------------------------------------------------------------------ #
-PIPELINES = {
-    "collabfilter": {
-        "preprocess": {
-            "dev": "recsys.config.collabfilter.dev",
-            "prod": "recsys.config.collabfilter.prod",
-            "test": "recsys.config.collabfilter.test",
-        },
-    }
-}
-
-# ------------------------------------------------------------------------------------------------ #
-#                                  BASE CONFIG CLASS                                               #
-# ------------------------------------------------------------------------------------------------ #
 # ------------------------------------------------------------------------------------------------ #
 #                            DATA TYPES AND FILE FORMATS                                           #
 # ------------------------------------------------------------------------------------------------ #
 IMMUTABLE_TYPES: tuple = (str, int, float, bool, type(None))
 SEQUENCE_TYPES: tuple = (list, tuple)
 COMPRESSED_FILE_FORMATS = ("tar.gz", "zip", "7z")
+
+# ------------------------------------------------------------------------------------------------ #
+#                             SAMPLING AND TRAIN PROPORTIONS                                       #
+# ------------------------------------------------------------------------------------------------ #
+
+SAMPLE_PROPORTION = {"prod": 1.0, "dev": 0.1, "test": 0.01}
+TRAIN_PROPORTION = 0.8
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    BASE CONFIG                                                   #
+# ------------------------------------------------------------------------------------------------ #
 
 
 @dataclass
@@ -183,3 +191,15 @@ class OperatorParams(Config):
     step_params: StepParams
     input_params: DatasetInput
     output_params: DatasetOutput
+
+
+# ================================================================================================ #
+#                                    VISUAL CONFIG                                                 #
+# ================================================================================================ #
+@dataclass
+class VisualConfig(Config):
+    figsize: tuple = (12, 6)
+    darkblue: str = "#1C3879"
+    lightblue: str = "steelblue"
+    palette: str = "Blues_r"
+    style: str = "whitegrid"

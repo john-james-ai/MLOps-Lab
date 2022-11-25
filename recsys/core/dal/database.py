@@ -11,17 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Thursday November 24th 2022 03:35:06 am                                             #
+# Modified   : Friday November 25th 2022 05:44:54 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import os
 import logging
-from dotenv import load_dotenv
 import sqlite3
-
-from recsys.config.base import DB_LOCATIONS
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -29,14 +26,11 @@ logger = logging.getLogger(__name__)
 
 
 class Database:
-
-    __DB_LOCATION = None
-
-    def __init__(self, database: str = "data"):
-        self._database = database
+    def __init__(self, db_location: str):
+        self._db_location = db_location
         self._connection = None
+        self._cursor = None
         self._connection = self._connect()
-        self._cursor = self._connection.cursor()
 
     def __enter__(self):
         self._connection = self._connect()
@@ -44,7 +38,8 @@ class Database:
         return self
 
     def __exit__(self, ext_type, exc_value, traceback):
-        self._cursor.close()
+
+        self._close_cursor()
         if isinstance(exc_value, Exception):
             self._connection.rollback()
         else:
@@ -52,6 +47,7 @@ class Database:
         self._connection.close()
 
     def __del__(self):
+        self._close_cursor()
         if self._connection is not None:
             self._connection.close()
 
@@ -109,13 +105,10 @@ class Database:
         return id
 
     def _connect(self) -> None:
-        load_dotenv()
-        ENV = os.getenv("ENV")
-        try:
-            Database.__DB_LOCATION = DB_LOCATIONS[self._database].get(ENV)
-            os.makedirs(os.path.dirname(Database.__DB_LOCATION), exist_ok=True)
-            return sqlite3.connect(Database.__DB_LOCATION)
-        except KeyError:
-            msg = f"Database: {self._database} or environment: {ENV} are invalid."
-            logger.error(msg)
-            raise ValueError(msg)
+        os.makedirs(os.path.dirname(self._db_location), exist_ok=True)
+        return sqlite3.connect(self._db_location)
+
+    def _close_cursor(self) -> None:
+        if self._cursor is not None:
+            self._cursor.close()
+            self._cursor = None

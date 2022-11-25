@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 10th 2022 04:03:40 pm                                             #
-# Modified   : Tuesday November 22nd 2022 01:58:15 am                                              #
+# Modified   : Friday November 25th 2022 02:55:00 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -100,16 +100,29 @@ class CSVIO(IO):
 
 class YamlIO(IO):
     @classmethod
-    def _read(cls, filepath: str, **kwargs) -> dict:
+    def _read(cls, filepath: str, document: str = None, **kwargs) -> dict:
 
-        with open(filepath, "r") as f:
-            try:
-                return yaml.safe_load(f)
-            except yaml.YAMLError as e:
-                logger.error(e)
-                raise IOError(e)
-            finally:
+        if document is not None:
+            with open(filepath, "r") as f:
+                docs = yaml.safe_load_all(f)
+                for doc in docs:
+                    if document in doc.keys():
+                        return doc.values()
                 f.close()
+                msg = f"Document {document} not found in {filepath}."
+                logger.error(msg)
+                raise ValueError(msg)
+
+        else:
+
+            with open(filepath, "r") as f:
+                try:
+                    return yaml.safe_load(f)
+                except yaml.YAMLError as e:
+                    logger.error(e)
+                    raise IOError(e)
+                finally:
+                    f.close()
 
     @classmethod
     def _write(cls, filepath: str, data: Any, **kwargs) -> None:

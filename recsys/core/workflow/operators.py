@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 17th 2022 02:51:27 am                                             #
-# Modified   : Thursday November 24th 2022 04:38:59 am                                             #
+# Modified   : Friday November 25th 2022 05:35:03 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.config.base import OperatorParams
 from recsys.core.services.profiler import profiler
 from recsys.core.workflow.pipeline import Context
 from recsys.core.dal.dataset import Dataset
-from recsys.core.services.repo import repository
+from recsys.core.services.decorator import repository
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -446,9 +446,6 @@ class TrainTestSplit(DatasetOperator):
         train = Dataset(**train_params, data=train_set)
         test = Dataset(**test_params, data=test_set)
 
-        logger.debug(f"\n\nTrain: \n{train}")
-        logger.debug(f"\n\nTest: \n{test}")
-
         result = {"train": train, "test": test}
 
         return result
@@ -538,7 +535,7 @@ class User(DatasetOperator):
         user_average_ratings = data.groupby("userId")["rating"].mean().reset_index()
         user_average_ratings.columns = ["userId", "mean_rating"]
 
-        params = self._output_params.as_dict()
+        params = self.output_params.as_dict()
 
         dataset = Dataset(**params, data=user_average_ratings)
 
@@ -586,12 +583,15 @@ class Phi(DatasetOperator):
         data = self.input_dataset
 
         phi = data.merge(data, how="inner", on="movieId")
+        logger.debug(f"\n\nPhi merge complete with {phi.shape[0]} rows.")
         # Remove rows where userId_x and userId_y are equal
         phi = phi.loc[phi["userId_x"] != phi["userId_y"]]
+        logger.debug(f"Phi dedup complete with {phi.shape[0]} rows.")
 
-        params = self._output_params.as_dict()
+        params = self.output_params.as_dict()
 
         dataset = Dataset(**params, data=phi)
+        logger.debug("Dataset instantiated.")
 
         return dataset
 

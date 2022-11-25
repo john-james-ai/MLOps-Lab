@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 13th 2022 03:21:56 pm                                               #
-# Modified   : Wednesday November 23rd 2022 11:23:33 pm                                            #
+# Modified   : Friday November 25th 2022 08:26:01 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -28,12 +28,11 @@ from atelier.utils.datetimes import Timer
 
 # ------------------------------------------------------------------------------------------------ #
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
     datefmt="%m/%d/%Y %H:%M",
     filename="logs/recsys.log",
     filemode="a",
-    force=True,
 )
 # ------------------------------------------------------------------------------------------------ #
 
@@ -51,7 +50,16 @@ def profiler(func):
 
             logger.info(msg)
 
-        def log_end(module: str, classname: str, timer: Timer, ram_usage, cpu_usage):
+            return logger
+
+        def log_end(
+            module: str,
+            classname: str,
+            timer: Timer,
+            ram_usage: int,
+            cpu_usage: int,
+            logger: logging.Logger,
+        ):
 
             date = timer.stopped.strftime("%m/%d/%Y")
             time = timer.stopped.strftime("%H:%M:%S")
@@ -79,7 +87,7 @@ def profiler(func):
             )
             timer = Timer()
             timer.start()
-            log_start(module, classname, timer)
+            logger = log_start(module, classname, timer)
 
             result = func(self, *args, **kwargs)
 
@@ -98,6 +106,7 @@ def profiler(func):
                 timer=timer,
                 ram_usage=ram_usage,
                 cpu_usage=cpu_usage,
+                logger=logger,
             )
             wandb.log(
                 {

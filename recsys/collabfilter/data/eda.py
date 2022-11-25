@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 10th 2022 06:19:23 pm                                             #
-# Modified   : Saturday November 19th 2022 02:01:56 pm                                             #
+# Modified   : Friday November 25th 2022 02:09:53 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,7 +22,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from recsys.core.services.io import IOService
-from config import DatasetConfig, VisualConfig
+from recsys.config.base import VisualConfig
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -40,14 +40,12 @@ class MovieLensRatings:
 
     def __init__(
         self,
-        filepath: str = DatasetConfig().filepath,
-        fileformat: str = DatasetConfig().fileformat,
-        IOService: IOService = IOService(),
+        filepath: str,
+        io: IOService = IOService,
     ) -> None:
         self._filepath = filepath
-        self._fileformat = fileformat
         self._io_factory = IOService
-        self._io = IOService.create(self._fileformat)
+        self._io = io
 
         self._ratings = None
         # Stats
