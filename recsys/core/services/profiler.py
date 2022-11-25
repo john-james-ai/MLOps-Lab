@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 13th 2022 03:21:56 pm                                               #
-# Modified   : Tuesday November 22nd 2022 12:15:49 am                                              #
+# Modified   : Wednesday November 23rd 2022 11:23:33 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -28,7 +28,7 @@ from atelier.utils.datetimes import Timer
 
 # ------------------------------------------------------------------------------------------------ #
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
     datefmt="%m/%d/%Y %H:%M",
     filename="logs/recsys.log",
@@ -41,6 +41,30 @@ logging.basicConfig(
 def profiler(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
+        def log_start(module: str, classname: str, timer: Timer):
+
+            date = timer.started.strftime("%m/%d/%Y")
+            time = timer.started.strftime("%H:%M:%S")
+
+            msg = "Started {} at {} on {}".format(classname, time, date)
+            logger = logging.getLogger(module)
+
+            logger.info(msg)
+
+        def log_end(module: str, classname: str, timer: Timer, ram_usage, cpu_usage):
+
+            date = timer.stopped.strftime("%m/%d/%Y")
+            time = timer.stopped.strftime("%H:%M:%S")
+            duration = timer.duration.as_string()
+
+            msg = "\n\t\tCompleted {} at {} on {}. Duration: {}.".format(
+                classname, time, date, duration
+            )
+            msg2 = "\t\tRam used: {} %\tCPU Usage: {} %".format(ram_usage, cpu_usage)
+            logger = logging.getLogger(module)
+
+            logger.info(msg)
+            logger.info(msg2)
 
         module = func.__module__
         classname = func.__qualname__
@@ -97,28 +121,3 @@ def profiler(func):
             raise e
 
     return wrapper
-
-    def log_start(module: str, classname: str, timer: Timer):
-
-        date = timer.started.strftime("%m/%d/%Y")
-        time = timer.stopped.strftime("%H:%M:%S")
-
-        msg = "Started {} at {} on {}".format(classname, time, date)
-        logger = logging.getLogger(module)
-
-        logger.info(msg)
-
-    def log_end(module: str, classname: str, timer: Timer, ram_usage, cpu_usage):
-
-        date = timer.stopped.strftime("%m/%d/%Y")
-        time = timer.stopped.strftime("%H:%M:%S")
-        duration = timer.duration.as_string()
-
-        msg = "\n\t\tCompleted {} at {} on {}. Duration: {}.".format(
-            classname, time, date, duration
-        )
-        msg2 = "\t\tRam used: {} %\tCPU Usage: {} %".format(ram_usage, cpu_usage)
-        logger = logging.getLogger(module)
-
-        logger.info(msg)
-        logger.info(msg2)

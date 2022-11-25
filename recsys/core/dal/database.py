@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Wednesday November 23rd 2022 01:10:14 pm                                            #
+# Modified   : Thursday November 24th 2022 03:35:06 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ import logging
 from dotenv import load_dotenv
 import sqlite3
 
-from recsys.core import DB_LOCATIONS
+from recsys.config.base import DB_LOCATIONS
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -53,7 +53,6 @@ class Database:
 
     def __del__(self):
         if self._connection is not None:
-            self._cursor.close()
             self._connection.close()
 
     def query(self, sql: str, args: tuple = None):

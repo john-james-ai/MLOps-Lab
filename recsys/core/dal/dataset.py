@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Wednesday November 23rd 2022 06:27:42 am                                            #
+# Modified   : Thursday November 24th 2022 03:13:05 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ from datetime import datetime
 import pandas as pd
 from typing import Union
 
-from recsys.core import IMMUTABLE_TYPES, SEQUENCE_TYPES, ENVS, STAGES
+from recsys.config.base import IMMUTABLE_TYPES, SEQUENCE_TYPES, ENVS, STAGES
 from recsys.core.utils.data import clustered_sample
 
 
@@ -93,10 +93,10 @@ class Dataset:
     def __str__(self) -> str:
         return f"\n\nDataset ID: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tEnv: {self._env}\n\tStage: {self._stage}\
             \n\tVersion: {self._version}\n\tCost: {self._cost}\n\tNrows: {self._nrows}\n\tNcols: {self._ncols}\n\tNull Counts: {self._null_counts}\
-            \n\tMemory Size: {self._memory_size}\n\tCreator: {self._creator}\n\t{self._created}"
+            \n\tMemory Size: {self._memory_size}\n\tFilepath: {self._filepath}\n\tCreator: {self._creator}\n\t{self._created}"
 
     def __repr__(self) -> str:
-        return f"Dataset({self._id}, {self._name}, {self._description}, {self._env}, {self._stage}, {self._version}, {self._cost}, {self._nrows}, {self._ncols}, {self._null_counts}, {self._memory_size}, {self._creator}, {self._created}"
+        return f"Dataset({self._id}, {self._name}, {self._description}, {self._env}, {self._stage}, {self._version}, {self._cost}, {self._nrows}, {self._ncols}, {self._null_counts}, {self._memory_size}, {self._filepath}, {self._creator}, {self._created}"
 
     def __eq__(self, other) -> bool:
         """Compares two Datasets for equality.

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Project    : Recommender Systems and Deep Learning in Python                                     #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
 # Filename   : /__init__.py                                                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
-# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# URL        : https://github.com/john-james-ai/Recommender-Systems-and-Deep-Learning-in-Python    #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Sunday November 20th 2022 10:55:22 pm                                               #
-# Modified   : Wednesday November 23rd 2022 07:22:24 pm                                            #
+# Created    : Thursday November 10th 2022 08:15:53 pm                                             #
+# Modified   : Thursday November 10th 2022 08:18:46 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #

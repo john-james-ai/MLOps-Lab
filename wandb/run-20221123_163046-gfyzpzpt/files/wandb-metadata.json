@@ -1,0 +1,168 @@
+{
+    "os": "Linux-5.10.102.1-microsoft-standard-WSL2-x86_64-with-glibc2.31",
+    "python": "3.10.6",
+    "heartbeatAt": "2022-11-23T21:30:47.786940",
+    "startedAt": "2022-11-23T21:30:46.974152",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "-s",
+        "-m",
+        "ops"
+    ],
+    "state": "running",
+    "program": "/home/john/anaconda3/envs/recsys/bin/pytest",
+    "git": {
+        "remote": "https://github.com/john-james-ai/Recommender-Systems.git",
+        "commit": "1f329884f020c6081254414cac0d00816575c661"
+    },
+    "email": "john.james.ai.studio@gmail.com",
+    "root": "/home/john/smartify/recsys",
+    "host": "Leviathan",
+    "username": "john",
+    "executable": "/home/john/anaconda3/envs/recsys/bin/python3.10",
+    "cpu_count": 12,
+    "cpu_count_logical": 24,
+    "cpu_freq": {
+        "current": 2660.0,
+        "min": 0.0,
+        "max": 0.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 2660.0,
+            "min": 0.0,
+            "max": 0.0
+        }
+    ],
+    "disk": {
+        "total": 491.152587890625,
+        "used": 57.21220779418945
+    },
+    "gpu": "Quadro P400",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "Quadro P400",
+            "memory_total": 2147483648
+        }
+    ],
+    "memory": {
+        "total": 100.5960578918457
+    }
+}

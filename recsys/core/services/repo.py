@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Wednesday November 23rd 2022 01:09:09 pm                                            #
+# Modified   : Thursday November 24th 2022 04:42:50 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,6 @@ import logging
 import os
 from dotenv import load_dotenv
 from abc import ABC, abstractmethod
-from datetime import datetime
 from typing import Any
 from functools import wraps
 import shutil
@@ -34,7 +33,7 @@ from recsys.core.dal.dataset import Dataset
 from recsys.core.dal.database import Database
 from recsys.core.dal.registry import DatasetRegistry
 from recsys.core.services.io import IOService
-from recsys.core import REPO_DIRS
+from recsys.config.base import REPO_DIRS, FilesetInput, DatasetInput
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -110,8 +109,7 @@ class DatasetRepo(Repo):
         """
         try:
             registration = DatasetRepo.__registry.get(id)
-            dataset = self._io.read(registration["filepath"])
-            return Dataset(**registration, data=dataset.data)
+            return self._io.read(registration["filepath"])
         except FileNotFoundError:
             msg = f"No Dataset with id = {id} exists."
             logger.error(msg)
@@ -230,7 +228,7 @@ class DatasetRepo(Repo):
 class Container(containers.DeclarativeContainer):
 
     # Services
-    db = providers.Factory(Database, database="data")
+    db = providers.Singleton(Database, database="data")
 
     registry = providers.Singleton(DatasetRegistry, database=db)
 
@@ -245,52 +243,52 @@ def repository(func):
     @inject
     def wrapper(self, *args, **kwargs):
 
-        started = datetime.now()
-
         container = Container()
-        repo = container.repo
+        repo = container.repo()
 
-        datasets = None
+        datasets = {}
+        dataset = None
 
-        if hasattr(self, "dataset_in"):
-            if isinstance(self.dataset_in, list):
-                datasets = {}
-                for id in self.dataset_in:
-                    try:
-                        datasets[str(id)] = repo.get(id)
-                    except FileNotFoundError:
-                        msg = f"Input Dataset id: {id} does not exist."
+        # Handle input
+        if hasattr(self, "input_params"):
+            if isinstance(self.input_params, FilesetInput):
+                pass  # This will be handled by the operator.
+            elif isinstance(self.input_params, DatasetInput):
+                dataset = repo.get(self.input_params.id)
+                setattr(self, "input_dataset", dataset.data)
+            elif isinstance(self.input_params, dict):
+                for k, v in self.input_params.items():
+                    if isinstance(v, FilesetInput):
+                        pass  # Again, handled by operator
+                    elif isinstance(v, DatasetInput):
+                        datasets[v.name] = repo.get(v.id)
+                    else:
+                        msg = f"{self.input_params} is unrecognized input."
                         logger.error(msg)
-                        raise FileNotFoundError(msg)
+                        raise TypeError(msg)
+                if len(datasets) > 0:
+                    setattr(func, "input_dataset", datasets)
 
-            else:
-                try:
-                    datasets = repo.get(self.dataset_in)
-                except FileNotFoundError:
-                    msg = f"Input Dataset id: {self.dataset_in} does not exist."
-                    logger.error(msg)
-                    raise FileNotFoundError(msg)
-
-            if datasets is not None:
-                setattr(func, "input_data", datasets)
-
+        # Execute wrapped method.
         result = func(self, *args, **kwargs)
 
-        ended = datetime.now()
-        duration = (started - ended).total_seconds()
+        # Handle Results
 
-        def store_result(result, duration) -> None:
+        results = {}
+
+        def store_result(result) -> None:
             if isinstance(result, dict):
                 for k, v in result.items():
-                    store_result(v, duration)
+                    results[k] = repo.add(v)
+                return results
             elif isinstance(result, Dataset):
-                result.cost = duration
                 return repo.add(result)
             else:
-                msg = "Result was not a Dataset object."
+                msg = "Result was not a Dataset or dictionary object."
                 logger.error(msg)
                 raise TypeError(msg)
 
-        return store_result(result, duration)
+        return store_result(result)
+        repo.print_registry()
 
     return wrapper

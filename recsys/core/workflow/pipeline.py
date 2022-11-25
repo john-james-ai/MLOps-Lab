@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday November 19th 2022 01:30:09 pm                                             #
-# Modified   : Sunday November 20th 2022 03:09:58 am                                               #
+# Modified   : Wednesday November 23rd 2022 02:34:35 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -134,7 +134,7 @@ class Pipeline(PipelineABC):
         self._setup()
         for name, step in tqdm(self._steps.items()):
 
-            result = step.execute(data=self._data, context=self._context)
+            result = step.run(data=self._data, context=self._context)
             self._data = result if result is not None else self._data
 
         self._teardown()

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 08:04:53 pm                                              #
-# Modified   : Wednesday November 23rd 2022 01:06:14 pm                                            #
+# Modified   : Wednesday November 23rd 2022 09:54:15 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ from typing import Any
 import logging
 import pandas as pd
 
-from recsys.core import DATASET_FEATURES, DB_TABLES
+from recsys.config.base import DATASET_FEATURES, DB_TABLES
 from .dataset import Dataset
 from .database import Database
 from .sequel import (
