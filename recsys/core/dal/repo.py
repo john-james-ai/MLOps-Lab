@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Sunday November 27th 2022 03:29:20 am                                               #
+# Modified   : Sunday November 27th 2022 05:53:13 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -203,7 +203,7 @@ class DatasetRepo(Repo):
         try:
             registration = self._registry.get(id)
             if self._archive:
-                self.archive_dataset(registration=registration)
+                self.archive_dataset(id=registration["id"])
             else:
                 os.remove(registration["filepath"])
             self._registry.remove(id)
@@ -259,7 +259,7 @@ class DatasetRepo(Repo):
         """movies repository data to an archive folder."""
         i = 0
 
-        registrations = self._registry.get_all(fmt=dict)
+        registrations = self._registry.get_all(as_dict=True)
         for id, registration in registrations.items():
             self.archive_dataset(id)
             i += 1

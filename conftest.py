@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 11th 2022 06:38:26 am                                               #
-# Modified   : Saturday November 26th 2022 09:45:09 pm                                             #
+# Modified   : Sunday November 27th 2022 05:35:08 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -29,7 +29,7 @@ from recsys.core.services.io import IOService
 
 
 # ------------------------------------------------------------------------------------------------ #
-RATINGS_FILEPATH = "data/raw/rating.pkl"
+RATINGS_FILEPATH = "data/working/test/input/rating.pkl"
 ETL_CONFIG_FILEPATH = "recsys/config/etl.yml"
 # ------------------------------------------------------------------------------------------------ #
 

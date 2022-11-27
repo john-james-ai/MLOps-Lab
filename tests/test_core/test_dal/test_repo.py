@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday November 26th 2022 09:04:08 am                                             #
-# Modified   : Sunday November 27th 2022 12:05:00 am                                               #
+# Modified   : Sunday November 27th 2022 05:50:20 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -91,10 +91,14 @@ class TestRepo:
             d2 = repo.get(dataset.id)
             assert d1 == d2
 
-        # Test Exception with Dataset file not found
-        os.remove(dataset.filepath)
+        # Test Exception Data not Found
+        repo.archive_dataset(1)
         with pytest.raises(FileNotFoundError):
-            repo.get(dataset.id)
+            dataset = repo.get(1)
+            assert not os.path.exists(dataset.filepath)
+        repo.restore_dataset(1)
+        assert os.path.exists(dataset.filepath)
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -157,6 +161,7 @@ class TestRepo:
         repo.archive_repo()
         assert os.path.exists(repo.archive_directory)
         assert len(os.listdir(repo.archive_directory)) > 0
+        repo.restore_repo()
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -228,7 +233,7 @@ class TestRepo:
                 repo.archive_directory, ds.stage, os.path.basename(ds.filepath)
             )
             assert os.path.exists(archive_filepath)
-        assert len(repo) == 6
+        assert len(repo) == 7
 
         # Test w/o archive
         repo.archive = False
@@ -241,7 +246,7 @@ class TestRepo:
             )
             assert not os.path.exists(archive_filepath)
 
-        for i in range(1, 5):
+        for i in range(3, 5):
             assert not repo.exists(i)
 
         repo.archive = True
@@ -322,7 +327,7 @@ class TestRepo:
         )
 
     # ============================================================================================ #
-    def test_get_dataset(self, repo, ratings, caplog):
+    def test_dataset(self, repo, ratings, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(

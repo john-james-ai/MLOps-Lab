@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 08:04:53 pm                                              #
-# Modified   : Sunday November 27th 2022 04:38:53 am                                               #
+# Modified   : Sunday November 27th 2022 05:54:14 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -252,5 +252,5 @@ class DatasetRegistry(Registry):
 
     def _results_to_df(self, results: list) -> pd.DataFrame:
         results = self._results_to_dict(results)
-        datasets = pd.DataFrame.from_dict(results)
+        datasets = pd.DataFrame.from_dict(results).T
         return datasets
