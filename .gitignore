@@ -8,13 +8,18 @@ __pycache__/
 
 # Data
 /data
-**/**/tests/data/
 *.pkl
+*.csv
 
 # Logs
 *.log
 /logs
 tests/tests.log
+
+# Wandb
+*wandb*.*
+*.wandb
+wandb/
 
 # Distribution / packaging
 .Python

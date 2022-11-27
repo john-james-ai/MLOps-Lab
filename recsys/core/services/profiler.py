@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 13th 2022 03:21:56 pm                                               #
-# Modified   : Friday November 25th 2022 08:26:01 am                                               #
+# Modified   : Saturday November 26th 2022 04:40:36 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -110,9 +110,10 @@ def profiler(func):
             )
             wandb.log(
                 {
-                    "operator": kwargs.get("name", "Operator"),
+                    "module": module,
+                    "operator": classname,
                     "started": timer.started,
-                    "ended": timer.ended,
+                    "stopped": timer.stopped,
                     "duration": timer.duration.as_string(),
                     "total_memory (bytes)": "{:,}".format(total_memory),
                     "used_memory (bytes)": "{:,}".format(used_memory),

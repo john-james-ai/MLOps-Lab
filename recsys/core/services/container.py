@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 25th 2022 03:18:36 pm                                               #
-# Modified   : Friday November 25th 2022 05:31:48 pm                                               #
+# Modified   : Saturday November 26th 2022 05:35:29 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,7 @@ from recsys.core.services.io import IOService
 from recsys.core.dal.database import Database
 from recsys.core.dal.registry import DatasetRegistry
 from recsys.core.dal.repo import DatasetRepo
-from recsys.config.base import REPO_DIRS, REPO_FILE_FORMAT, DB_LOCATIONS
+from recsys.config.data import REPO_DIRS, REPO_FILE_FORMAT, DB_LOCATIONS
 
 # ------------------------------------------------------------------------------------------------ #
 #                                       CONTAINER                                                  #
@@ -38,6 +38,14 @@ def get_env():
 
 class Container(containers.DeclarativeContainer):
 
+    wiring_config = containers.WiringConfiguration(
+        modules=[
+            "recsys.core.services.decorator",
+            "recsys.core.workflow.pipeline",
+            # "recsys.recommenders.collabfilter.data.process",
+        ]
+    )
+
     ENV = get_env()
 
     config = providers.Configuration()
@@ -50,6 +58,8 @@ class Container(containers.DeclarativeContainer):
         }
     )
 
+    io = providers.Factory(IOService)
+
     db = providers.Factory(Database, config.db_location)
 
     registry = providers.Factory(DatasetRegistry, database=db)
@@ -61,3 +71,6 @@ class Container(containers.DeclarativeContainer):
         registry=registry,
         file_format=config.repo_file_format,
     )
+
+
+container = Container()

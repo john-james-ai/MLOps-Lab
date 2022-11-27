@@ -4,56 +4,54 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /test_cluster_sample.py                                                             #
+# Filename   : /main.py                                                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday November 12th 2022 08:14:50 pm                                             #
-# Modified   : Saturday November 26th 2022 12:13:35 am                                             #
+# Created    : Friday November 25th 2022 07:22:27 pm                                               #
+# Modified   : Saturday November 26th 2022 04:50:06 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-import inspect
-import pytest
+import os
 import logging
-import logging.config
-import pandas as pd
+from logging import config
 
-from recsys.core.utils.data import clustered_sample
+from recsys.config.log import log_config
+from recsys.core.services.io import IOService
+from recsys.core.workflow.pipeline import PipelineDirector
+from recsys.core.data.etl import ETLPipelineBuilder
+from recsys.config.data import ETL_CONFIG_FILE
 
 # ------------------------------------------------------------------------------------------------ #
-logging.basicConfig(level=logging.INFO)
+config.dictConfig(log_config)
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-@pytest.mark.sample
-class TestSample:
-    def test_errors(self, ratings, caplog):
-        logger.info("\tStarted {} {}".format(self.__class__.__name__, inspect.stack()[0][3]))
+def get_config(config_filepath, io: IOService):
+    return io.read(config_filepath)
 
-        with pytest.raises(KeyError):
-            clustered_sample(ratings, by="x")
-        with pytest.raises(ValueError):
-            clustered_sample(ratings, by="userId", frac=0.8, n=2)
-        with pytest.raises(ValueError):
-            clustered_sample(ratings, by="userId", frac=2)
 
-        logger.info("\tCompleted {} {}".format(self.__class__.__name__, inspect.stack()[0][3]))
+def get_data(config: dict):
+    builder = ETLPipelineBuilder()
+    director = PipelineDirector(config=config, builder=builder)
+    director.build_pipeline()
+    pipeline = builder.pipeline
+    pipeline.run()
+    assert os.path.exists(
+        config["steps"][3]["params"]["outfilepath"]
+    ), f"Output file {config['steps'][3]['params']['outfilepath']} was not found."
 
-    def test_sample(self, ratings, caplog):
-        logger.info("\tStarted {} {}".format(self.__class__.__name__, inspect.stack()[0][3]))
 
-        sample = clustered_sample(ratings, by="userId", frac=0.01)
+def main():
+    cfg = get_config(config_filepath=ETL_CONFIG_FILE, io=IOService)
+    get_data(config=cfg)
 
-        assert isinstance(sample, pd.DataFrame)
-        assert ratings.shape[0] > sample.shape[0]
-        logger.info(sample.head())
-        logger.info(
-            "There are {} unique clusters in the sample.".format(sample["userId"].nunique())
-        )
 
-        logger.info("\tCompleted {} {}".format(self.__class__.__name__, inspect.stack()[0][3]))
+# ------------------------------------------------------------------------------------------------ #
+if __name__ == "__main__":
+    main()

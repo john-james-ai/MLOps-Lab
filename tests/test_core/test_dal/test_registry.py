@@ -10,8 +10,8 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Tuesday November 22nd 2022 09:09:37 pm                                              #
-# Modified   : Friday November 25th 2022 05:18:14 pm                                               #
+# Created    : Saturday November 26th 2022 08:07:14 am                                             #
+# Modified   : Sunday November 27th 2022 04:40:59 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,26 +22,17 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.dal.database import Database
-from recsys.core.dal.registry import DatasetRegistry, Registry
+from recsys.core.dal.registry import Registry
 
 # ------------------------------------------------------------------------------------------------ #
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
-    datefmt="%m/%d/%Y %H:%M",
-    force=True,
-)
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
-DATABASE = Database(database="data")
-REGISTRY = DatasetRegistry(database=DATABASE)
 
 
 @pytest.mark.registry
 class TestRegistry:
     # ============================================================================================ #
-    def test_setup(self, caplog):
+    def test_setup(self, registry, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -52,7 +43,7 @@ class TestRegistry:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        REGISTRY.reset()
+        registry.reset()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -68,7 +59,7 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
-    def test_add(self, datasets, caplog):
+    def test_add(self, datasets, registry, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -80,14 +71,10 @@ class TestRegistry:
         )
         # ---------------------------------------------------------------------------------------- #
         for i, dataset in enumerate(datasets, start=1):
-            REGISTRY.add(dataset)
-            assert len(REGISTRY) == i
+            registry.add(dataset)
+            assert len(registry) == i
 
-        # Version 2
-        for i, dataset in enumerate(datasets, start=5):
-            REGISTRY.add(dataset)
-            assert len(REGISTRY) == i
-
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -103,7 +90,38 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
-    def test_version(self, datasets, caplog):
+    def test_duplicate(self, datasets, registry, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        # Version 2
+        for i, dataset in enumerate(datasets, start=5):
+            registry.add(dataset)
+            assert len(registry) == i
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_version(self, datasets, registry, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -115,9 +133,9 @@ class TestRegistry:
         )
         # ---------------------------------------------------------------------------------------- #
         for dataset in datasets:
-            dataset = REGISTRY.add(dataset)
-            assert dataset.version == 3
-
+            dataset = registry.add(dataset)
+            assert dataset.version == 1
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -133,7 +151,7 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
-    def test_get(self, caplog):
+    def test_get(self, registry, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -145,13 +163,14 @@ class TestRegistry:
         )
         # ---------------------------------------------------------------------------------------- #
         for i in range(1, 9):
-            dataset = REGISTRY.get(i)
+            dataset = registry.get(i)
             assert isinstance(dataset, dict)
             assert dataset["id"] == i
 
         with pytest.raises(FileNotFoundError):
-            REGISTRY.get(id=22)
+            registry.get(id=22)
 
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -167,7 +186,7 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
-    def test_get_all(self, caplog):
+    def test_get_all(self, registry, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -178,10 +197,12 @@ class TestRegistry:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        registry = REGISTRY.get_all()
-        assert isinstance(registry, pd.DataFrame)
+        registrations = registry.get_all()
+        assert isinstance(registrations, pd.DataFrame)
         logger.debug(f"\n\nRegistry\n{registry}")
-
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
+        registrations = registry.get_all(as_dict=True)
+        assert isinstance(registrations, dict)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -197,7 +218,7 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
-    def test_find(self, caplog):
+    def test_find(self, registry, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -208,16 +229,14 @@ class TestRegistry:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        d = {"name": "ds1", "env": "dev", "stage": "raw"}
-        result = REGISTRY.find_dataset(name=d["name"])
+        d = {"name": "ds1", "stage": "input"}
+        result = registry.find_dataset(name=d["name"])
         assert isinstance(result, pd.DataFrame)
-        result = REGISTRY.find_dataset(name=d["name"], env=d["env"])
+        result = registry.find_dataset(name=d["name"], stage=d["stage"])
         assert isinstance(result, pd.DataFrame)
-        result = REGISTRY.find_dataset(name=d["name"], env=d["env"], stage=d["stage"])
-        assert isinstance(result, pd.DataFrame)
-        result = REGISTRY.find_dataset(name=d["name"], env=d["env"], stage="23209")
+        result = registry.find_dataset(name=d["name"], stage="23209")
         assert len(result) == 0
-
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -233,7 +252,7 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
-    def test_exists(self, datasets, caplog):
+    def test_exists(self, datasets, registry, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -245,8 +264,8 @@ class TestRegistry:
         )
         # ---------------------------------------------------------------------------------------- #
         for i in range(1, 5):
-            assert REGISTRY.exists(i)
-
+            assert registry.exists(i)
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -262,7 +281,7 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
-    def test_version_exists(self, datasets, caplog):
+    def test_version_exists(self, datasets, registry, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -274,8 +293,8 @@ class TestRegistry:
         )
         # ---------------------------------------------------------------------------------------- #
         for dataset in datasets:
-            assert REGISTRY.version_exists(dataset)
-
+            assert registry.version_exists(dataset)
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -291,7 +310,7 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
-    def test_remove(self, datasets, caplog):
+    def test_remove(self, datasets, registry, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -303,12 +322,12 @@ class TestRegistry:
         )
         # ---------------------------------------------------------------------------------------- #
         for i in range(1, 5):
-            REGISTRY.remove(id=i)
-        assert len(REGISTRY) == 8
+            registry.remove(id=i)
+        assert len(registry) == 8
         for i in range(5, 13):
-            REGISTRY.remove(id=i)
-        assert len(REGISTRY) == 0
-
+            registry.remove(id=i)
+        assert len(registry) == 0
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -324,7 +343,7 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
-    def test_version_exists_II(self, datasets, caplog):
+    def test_version_exists_II(self, datasets_ii, registry, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -335,8 +354,9 @@ class TestRegistry:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        for dataset in datasets:
-            assert not REGISTRY.version_exists(dataset)
+        for dataset in datasets_ii:
+            assert not registry.version_exists(dataset)
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -352,7 +372,7 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
-    def test_base_class(self, caplog):
+    def test_base_class(self, registry, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -366,6 +386,7 @@ class TestRegistry:
         # with pytest.raises(NotImplementedError):
         with pytest.raises(TypeError):
             _ = Registry()
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -381,7 +402,7 @@ class TestRegistry:
         )
 
     # ============================================================================================ #
-    def test_teardown(self, caplog):
+    def test_archive(self, registry, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -392,7 +413,81 @@ class TestRegistry:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        REGISTRY.reset()
+        registry.reset()
+        for dataset in datasets:
+            dataset = registry.add(dataset)
+            if dataset.id % 2 == 0:
+                registry.archive(dataset.id)
+                registration = registry.get(dataset.id)
+                assert registration["archived"] == 1
+        archive = registry.get_archive()
+        assert isinstance(archive, dict)
+        assert len(archive) == len(datasets) / 2
+        logger.debug(f"\n\nArchived Datasets:\n{archive}")
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_restore(self, registry, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        archived = registry.get_archive()
+        for id, dataset in archived.items():
+            registry.restore(id)
+            registration = registry.get(id)
+            logger.debug(f"\n\nRegistration in test_restore:\n{registration}\n")
+            assert registration["archived"] == 0
+
+        archived = registry.get_archive()
+        assert len(archived) == 0
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_teardown(self, registry, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        # registry.reset()
+        logger.debug(f"\nRegistry as of {inspect.stack()[0][3]}:\n{registry.get_all()}\n")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

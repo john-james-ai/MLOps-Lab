@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Friday November 25th 2022 08:41:00 am                                               #
+# Modified   : Sunday November 27th 2022 04:26:02 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ from datetime import datetime
 import pandas as pd
 from typing import Union
 
-from recsys.config.base import IMMUTABLE_TYPES, SEQUENCE_TYPES, ENVS, STAGES
+from recsys.config.data import IMMUTABLE_TYPES, SEQUENCE_TYPES, STAGES
 from recsys.core.utils.data import clustered_sample
 
 
@@ -39,8 +39,7 @@ class Dataset:
         id (int): Only set during reconstruction of the Dataset by the repo.
         name (str): Required. Short lowercase alphabetic label for the dataset.
         description (str): Optional. Describes the Dataset
-        env (str): Required. One of ['prod', 'dev', 'test'].
-        stage (str): Required. One of ['raw', 'interim', 'cooked']
+        stage (str): Required. One of ['raw', 'interim', 'final']
         data (pd.DataFrame): Required. The data payload.
         cost (int): Required. The number of seconds the Operator took to create the Dataset.
         version (int): Required. Initializes at 1 by default, but may be incremented by Repo.
@@ -54,7 +53,6 @@ class Dataset:
         id: int = None,
         name: str = None,
         description: str = None,
-        env: str = "dev",
         stage: str = "interim",
         data: pd.DataFrame = None,
         cost: Union[int, float] = None,
@@ -68,7 +66,6 @@ class Dataset:
         self._id = id
         self._name = name
         self._description = description
-        self._env = env
         self._stage = stage
         self._data = data
         self._cost = cost
@@ -81,22 +78,25 @@ class Dataset:
 
         # Variables assigned automatically
         self._filepath = None
-        self._columns = None
+
         self._nrows = None
         self._ncols = None
         self._null_counts = None
-        self._memory_size = None
+        self._memory_size_mb = None
+
+        # State variable
+        self._archived = False
 
         # Set metadata
         self._set_metadata()
 
     def __str__(self) -> str:
-        return f"\n\nDataset ID: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tEnv: {self._env}\n\tStage: {self._stage}\
+        return f"\n\nDataset ID: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tStage: {self._stage}\
             \n\tVersion: {self._version}\n\tCost: {self._cost}\n\tNrows: {self._nrows}\n\tNcols: {self._ncols}\n\tNull Counts: {self._null_counts}\
-            \n\tMemory Size: {self._memory_size}\n\tFilepath: {self._filepath}\n\tCreator: {self._creator}\n\tCreated: {self._created}"
+            \n\tMemory Size: {self._memory_size_mb}\n\tFilepath: {self._filepath}\n\tArchived: {self._archived}\n\tCreator: {self._creator}\n\tCreated: {self._created}"
 
     def __repr__(self) -> str:
-        return f"Dataset({self._id}, {self._name}, {self._description}, {self._env}, {self._stage}, {self._version}, {self._cost}, {self._nrows}, {self._ncols}, {self._null_counts}, {self._memory_size}, {self._filepath}, {self._creator}, {self._created}"
+        return f"Dataset({self._id}, {self._name}, {self._description}, {self._stage}, {self._version}, {self._cost}, {self._nrows}, {self._ncols}, {self._null_counts}, {self._memory_size_mb}, {self._filepath}, {self._archived}, {self._creator}, {self._created}"
 
     def __eq__(self, other) -> bool:
         """Compares two Datasets for equality.
@@ -109,28 +109,18 @@ class Dataset:
         """
 
         if isinstance(other, Dataset):
-            if (
+            return (
                 self._id == other.id
                 and self._name == other.name
                 and self._description == other.description
-                and self._env == other.env
                 and self._stage == other.stage
                 and self._nrows == other.nrows
                 and self._ncols == other.ncols
                 and self._null_counts == other.null_counts
-                and self._memory_size == other.memory_size
+                and self._memory_size_mb == other.memory_size_mb
                 and self._cost == other.cost
-            ):
-                if isinstance(self._data, pd.DataFrame) and isinstance(other.data, pd.DataFrame):
-                    return self._data.equals(other.data)
-                elif self._data == other.data:
-                    return True
-                else:
-                    return False
-            else:
-                return False
-        else:
-            return False
+                and self._data.equals(other.data)
+            )
 
     # ------------------------------------------------------------------------------------------------ #
     # Id var and variables assigned at instantiation
@@ -154,19 +144,8 @@ class Dataset:
     def stage(self) -> str:
         return self._stage
 
-    @property
-    def env(self) -> str:
-        return self._env
-
     # ------------------------------------------------------------------------------------------------ #
     # Variables assigned automatically
-
-    @property
-    def columns(self) -> list:
-        if self._data is not None:
-            return self._data.columns
-        else:
-            return None
 
     @property
     def nrows(self) -> int:
@@ -181,8 +160,8 @@ class Dataset:
         return self._null_counts
 
     @property
-    def memory_size(self) -> int:
-        return self._memory_size
+    def memory_size_mb(self) -> int:
+        return self._memory_size_mb
 
     # ------------------------------------------------------------------------------------------------ #
     # Variables assigned or updated by the repo
@@ -201,6 +180,14 @@ class Dataset:
     @filepath.setter
     def filepath(self, filepath: int) -> None:
         self._filepath = filepath
+
+    @property
+    def archived(self) -> str:
+        return self._archived
+
+    @archived.setter
+    def archived(self, archived: int) -> None:
+        self._archived = archived
 
     # ------------------------------------------------------------------------------------------------ #
     # Variables set by the operator
@@ -234,7 +221,25 @@ class Dataset:
 
     @cost.setter
     def cost(self, cost: int) -> None:
-        self._cost = cost
+        if self._cost is None:
+            self._cost = cost
+        else:
+            msg = (
+                f"The 'cost' attribute on  Dataset {self._id} does not support item re-assignment."
+            )
+            logger.error(msg)
+            raise TypeError(msg)
+
+    # ------------------------------------------------------------------------------------------------ #
+    # Archive related methods
+    def archive(self) -> None:
+        self._archived = True
+
+    def restore(self) -> None:
+        self._archived = False
+
+    def is_archived(self) -> bool:
+        return self._archived
 
     # ------------------------------------------------------------------------------------------------ #
     # Exports object as dictionary sans the DataFrame.
@@ -247,14 +252,14 @@ class Dataset:
         """Returns v with Configs converted to dicts, recursively."""
         if isinstance(v, IMMUTABLE_TYPES):
             return v
-        elif isinstance(v, SEQUENCE_TYPES):
+        elif isinstance(v, SEQUENCE_TYPES):  # pragma: no cover
             return type(v)(map(cls._export_config, v))
         elif isinstance(v, datetime):
             return v.strftime("%H:%M:%S on %m/%d/%Y")
-        elif isinstance(v, dict):
-            return {kk.lstrip("_"): cls._export_config(vv) for kk, vv in v}
+        elif isinstance(v, dict):  # pragma: no cover
+            return v
         else:
-            pass
+            """Do nothing"""
 
     # ------------------------------------------------------------------------------------------------ #
     # Validation logic
@@ -269,9 +274,6 @@ class Dataset:
             announce_and_raise(msg)
         if self._stage not in STAGES:
             msg = f"Stage {self._stage} is invalid. Use one of {STAGES}."
-            announce_and_raise(msg)
-        if self._env not in ENVS:
-            msg = f"Environment {self._env} is invalid. Use one of {ENVS}."
             announce_and_raise(msg)
 
     # ------------------------------------------------------------------------------------------------ #
@@ -331,12 +333,10 @@ class Dataset:
             self._creator = "Not Designated"
 
     def _set_data_metadata(self) -> None:
-        if self._data is not None:
-            self._memory_size = (
-                str(round(int(self._data.memory_usage(deep=True, index=True).sum()) / 1024**2, 2))
-                + " Mb"
+        if isinstance(self._data, pd.DataFrame):
+            self._memory_size_mb = float(
+                round(self._data.memory_usage(deep=True, index=True).sum() / 1024**2, 2)
             )
-            self._nrows = "{:,}".format(int(self._data.shape[0]))
+            self._nrows = int(self._data.shape[0])
             self._ncols = int(self._data.shape[1])
-            self._columns = self._data.columns
             self._null_counts = int(self._data.isnull().sum().sum())

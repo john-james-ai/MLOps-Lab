@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 10th 2022 04:03:40 pm                                             #
-# Modified   : Friday November 25th 2022 02:55:00 pm                                               #
+# Modified   : Saturday November 26th 2022 05:03:04 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -174,6 +174,10 @@ class PickleIO(IO):
 class IOService:
 
     __io = {"csv": CSVIO, "yaml": YamlIO, "yml": YamlIO, "pkl": PickleIO, "pickle": PickleIO}
+
+    def __init__(self) -> None:
+        """Here to test dependency injection with providers."""
+        pass
 
     @property
     def file_formats(self) -> list:

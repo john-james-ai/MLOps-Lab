@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+# ================================================================================================ #
+# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Version    : 0.1.0                                                                               #
+# Python     : 3.10.6                                                                              #
+# Filename   : /cf.yml                                                                             #
+# ------------------------------------------------------------------------------------------------ #
+# Author     : John James                                                                          #
+# Email      : john.james.ai.studio@gmail.com                                                      #
+# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# ------------------------------------------------------------------------------------------------ #
+# Created    : Saturday November 26th 2022 12:17:05 pm                                             #
+# Modified   : Saturday November 26th 2022 07:16:44 pm                                             #
+# ------------------------------------------------------------------------------------------------ #
+# License    : MIT License                                                                         #
+# Copyright  : (c) 2022 John James                                                                 #
+# ================================================================================================ #
+# Collaborative Filtering Preprocessing Configuration Module"
+name: collabfilter_data_prep
+description: Data Preprocessing for Collaborative Filter Recommender
+steps:
+  1:
+    name: create_dataset
+    description: Creates Dataset from input and Stages the Data.
+    module: recsys.recommenders.collabfilter.workflow.operators
+    operator: CreateDataset
+    params:
+      step_params:
+        force: False
+      input_params:
+        filepath: input/rating.pkl
+      output_params:
+        name: rating
+        description: Rating Dataset
+        stage: staged
+
+  2:
+    name: train_test_split
+    description: Train Test Split by User Clusters
+    module: recsys.recommenders.collabfilter.workflow.operators
+    operator: TrainTestSplit
+    params:
+      step_params:
+        clustered bool: True
+        clustered_by: userId
+        train_frac float: 0.8
+        random_stage int: 55
+        force: False
+      input_params:
+        name: rating
+        stage: staged
+      output_params:
+        train:
+          name: train
+          description: MovieLens20M Training Set for Collaborative Filtering
+          stage: interim
+        test:
+          name: test
+          description: MovieLens20M Test Set for Collaborative Filtering
+          stage: interim
+
+    3:
+      name: centered_train_ratings
+      description: Centralizes Train Ratings
+      module: recsys.recommenders.collabfilter.workflow.operators
+      operator: DataCentralizer
+      params:
+        step_params:
+          force: False
+        input_params:
+          name: train
+          stage: interim
+        output_params:
+          name: train_centered
+          description: Centered Ratings for Training Set
+          stage: interim
+
+    4:
+      name: centered_test_ratings
+      description: Centralizes Test Ratings
+      module: recsys.recommenders.collabfilter.workflow.operators
+      operator: DataCentralizer
+      params:
+        step_params:
+          force: False
+        input_params:
+          name: test
+          stage: interim
+        output_params:
+          name: test_centered
+          description: Centered Ratings for Test Set
+          stage: interim
+
+    5:
+      name: train_user_average
+      description: User Average Ratings for Training Set
+      module: recsys.recommenders.collabfilter.workflow.operators
+      operator: User
+      params:
+        step_params:
+          force: False
+        input_params:
+          name: train
+          stage: interim
+        output_params:
+          name: train_user_mean_ratings
+          description: Mean User Ratings for Training Set
+          stage: interim
+
+    6:
+      name: test_user_average
+      description: User Average Ratings for Training Set
+      module: recsys.recommenders.collabfilter.workflow.operators
+      operator: User
+      params:
+        step_params:
+          force: False
+        input_params:
+          name: test
+          stage: interim
+        output_params:
+          name: test_user_mean_ratings
+          description: Mean User Ratings for Test Set
+          stage: interim

@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /collabfilter.py                                                                    #
+# Filename   : /preprocess.py                                                                      #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 25th 2022 11:26:57 am                                               #
-# Modified   : Friday November 25th 2022 01:37:02 pm                                               #
+# Modified   : Saturday November 26th 2022 12:42:35 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from typing import Dict
 from dotenv import load_dotenv
 
-from recsys.config.base import (
+from recsys.config.workflow import (
     StepParams,
     FilesetInput,
     DatasetInput,
@@ -68,7 +68,7 @@ class CreateDatasetInput(FilesetInput):
     filepath: str = None
 
     def __post_init__(self) -> None:
-        self.filepath = os.path.join(DATA_DIRS["raw"], self.filename)
+        self.filepath = os.path.join(DATA_DIRS["input"], self.filename)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -152,16 +152,16 @@ class TrainTestParams(OperatorParams):
 
 
 @dataclass
-class RatingsAdjusterStep(StepParams):
+class DataCentralizerStep(StepParams):
     name: str = "ratings_adjuster"
     description: str = "Center Ratings by User Mean"
     module: str = "recsys.core.workflow.operators"
-    operator: str = "RatingsAdjuster"
+    operator: str = "DataCentralizer"
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class RatingsAdjusterInput(DatasetInput):
+class DataCentralizerInput(DatasetInput):
     """Dictionary of string Dataset id pairs."""
 
     id: int = 2
@@ -170,7 +170,7 @@ class RatingsAdjusterInput(DatasetInput):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class RatingsAdjusterOutput(DatasetOutput):
+class DataCentralizerOutput(DatasetOutput):
     """Adjusted Ratings"""
 
     name: str = "adjusted_ratings"
@@ -181,10 +181,10 @@ class RatingsAdjusterOutput(DatasetOutput):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class RatingsAdjusterParams(OperatorParams):
-    step_params: StepParams = RatingsAdjusterStep()
-    input_params: DatasetInput = RatingsAdjusterInput()
-    output_params: DatasetOutput = RatingsAdjusterOutput()
+class DataCentralizerParams(OperatorParams):
+    step_params: StepParams = DataCentralizerStep()
+    input_params: DatasetInput = DataCentralizerInput()
+    output_params: DatasetOutput = DataCentralizerOutput()
 
 
 # ------------------------------------------------------------------------------------------------ #

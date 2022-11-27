@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Friday November 25th 2022 05:48:17 pm                                               #
+# Modified   : Saturday November 26th 2022 08:16:54 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -25,7 +25,6 @@ from dependency_injector.wiring import Provide, inject
 from recsys.core.services.container import Container
 from recsys.core.dal.dataset import Dataset
 from recsys.core.dal.repo import DatasetRepo
-from recsys.config.base import FilesetInput, DatasetInput
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -41,28 +40,13 @@ def repository(func, repo: DatasetRepo = Provide[Container.repo]):  # noqa C109
     @wraps(func)
     def wrapper(self, *args, **kwargs):
 
-        datasets = {}
         dataset = None
 
         # Handle input
         if hasattr(self, "input_params"):
-            if isinstance(self.input_params, FilesetInput):
-                pass  # This will be handled by the operator.
-            elif isinstance(self.input_params, DatasetInput):
-                dataset = repo.get(self.input_params.id)
+            if not self.input_params.get("filepath", None):
+                dataset = repo.get_dataset(self.input_params["name"], self.input_params["stage"])
                 setattr(self, "input_dataset", dataset.data)
-            elif isinstance(self.input_params, dict):
-                for k, v in self.input_params.items():
-                    if isinstance(v, FilesetInput):
-                        pass  # Again, handled by operator
-                    elif isinstance(v, DatasetInput):
-                        datasets[v.name] = repo.get(v.id)
-                    else:
-                        msg = f"{self.input_params} is unrecognized input."
-                        logger.error(msg)
-                        raise TypeError(msg)
-                if len(datasets) > 0:
-                    setattr(func, "input_dataset", datasets)
 
         # Execute wrapped method.
         result = func(self, *args, **kwargs)
@@ -84,6 +68,5 @@ def repository(func, repo: DatasetRepo = Provide[Container.repo]):  # noqa C109
                 raise TypeError(msg)
 
         return store_result(result)
-        repo.print_registry()
 
     return wrapper

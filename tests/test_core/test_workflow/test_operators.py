@@ -4,119 +4,248 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /test_process.py                                                                    #
+# Filename   : /test_operators.py                                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday November 19th 2022 08:09:34 am                                             #
-# Modified   : Friday November 25th 2022 02:08:46 pm                                               #
+# Created    : Saturday November 26th 2022 12:17:19 am                                             #
+# Modified   : Saturday November 26th 2022 05:53:47 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+import os
 import inspect
 from datetime import datetime
 import pytest
 import logging
+from logging import config
 
-from recsys.core.dal.dataset import Dataset
+from recsys.config.log import test_log_config
 from recsys.core.services.io import IOService
-from recsys.core.workflow.operators import CreateDataset, TrainTestSplit, RatingsAdjuster, User
-from recsys.config.collabfilter import (
-    CreateDatasetParams,
-    TrainTestParams,
-    RatingsAdjusterParams,
-    UserParams,
-)
+from recsys.core.workflow.operators import KaggleDownloader, DeZipper, Pickler, Copier, Sampler
+from recsys.core.workflow.pipeline import Context, PipelineDirector
+from recsys.core.data.etl import ETLPipelineBuilder
 
 # ------------------------------------------------------------------------------------------------ #
-CONTEXT = IOService()
-
-# ------------------------------------------------------------------------------------------------ #
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
-    datefmt="%m/%d/%Y %H:%M",
-    force=True,
-)
+config.dictConfig(test_log_config)
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-@pytest.mark.cf
-class TestCreateDataset:
-
-    # ============================================================================================ #
-    def test_setup(self, repo, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        repo.reset()
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_create_dataset(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        cds = CreateDataset(
-            step_params=CreateDatasetParams().step_params,
-            input_params=CreateDatasetParams().input_params,
-            output_params=CreateDatasetParams().output_params,
-        )
-        dataset = cds.run(context=CONTEXT)
-        assert isinstance(dataset, Dataset)
-        assert dataset.name == "rating"
-        assert dataset.stage == "interim"
-        assert dataset.version == 1
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-
-@pytest.mark.cf
-class TestTrainTestSplit:
+@pytest.mark.ops
+class TestOperators:  # pragma: no cover
     # ================================================================================================ #
-    def test_setup(self, caplog):
+    def test_setup(self, etl_config, caplog):
+        # Enter setup activities here
+        pass
+
+    # ================================================================================================ #
+    def test_downloader(self, etl_config, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        config = etl_config["steps"][1]["params"]
+        dl = KaggleDownloader(
+            kaggle_filepath=config["kaggle_filepath"],
+            destination=config["destination"],
+            force=True,
+        )
+        dl.execute()
+        assert os.path.exists(
+            os.path.join(config["destination"], os.path.basename(config["kaggle_filepath"]))
+            + ".zip"
+        )
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_dezip(self, etl_config, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        config = etl_config["steps"][2]["params"]
+        dz = DeZipper(
+            zipfilepath=config["zipfilepath"],
+            destination=config["destination"],
+            members=config["members"],
+            force=True,
+        )
+        dz.execute()
+        assert os.path.exists(os.path.join(config["destination"], config["members"][0]))
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_pickler(self, etl_config, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        context = Context(name="test_pickler", description="testing pickler", io=IOService)
+
+        config = etl_config["steps"][3]["params"]
+        p = Pickler(
+            infilepath=config["infilepath"],
+            outfilepath=config["outfilepath"],
+            infile_format=config["infile_format"],
+            index_col=config["index_col"],
+            encoding=config["encoding"],
+            low_memory=config["low_memory"],
+            usecols=config["usecols"],
+            force=True,
+        )
+        p.execute(context=context)
+        assert os.path.exists(config["outfilepath"])
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_copy(self, etl_config, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        context = Context(name="test_copier", description="testing copier", io=IOService)
+
+        config = etl_config["steps"][4]["params"]
+
+        c = Copier(
+            infilepath=config["infilepath"],
+            outfilepath=config["outfilepath"],
+            force=True,
+        )
+        c.execute(context=context)
+        assert os.path.exists(config["outfilepath"])
+        assert os.path.getsize(config["infilepath"]) == os.path.getsize(config["outfilepath"])
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_sampler(self, etl_config, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        context = Context(name="test_sampler", description="testing samplier", io=IOService)
+
+        config = etl_config["steps"][5]["params"]
+
+        s = Sampler(
+            infilepath=config["infilepath"],
+            outfilepath=config["outfilepath"],
+            clustered=config["clustered"],
+            clustered_by=config["clustered_by"],
+            frac=config["frac"],
+            random_state=config["random_state"],
+            force=True,
+        )
+        s.execute(context=context)
+        assert os.path.exists(config["outfilepath"])
+        assert os.path.getsize(config["infilepath"]) > os.path.getsize(config["outfilepath"])
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ================================================================================================ #
+    def test_teardown(self, etl_config, caplog):
+        # Enter teardown activities here
+        pass
+
+
+@pytest.mark.pipe
+class TestPipeline:
+    # ================================================================================================ #
+    def test_setup(self, etl_config, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -143,7 +272,7 @@ class TestTrainTestSplit:
         )
 
     # ============================================================================================ #
-    def test_train_test_split_clustered(self, caplog):
+    def test_director(self, etl_config, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -154,24 +283,12 @@ class TestTrainTestSplit:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        tts = TrainTestSplit(
-            step_params=TrainTestParams().step_params,
-            input_params=TrainTestParams().input_params,
-            output_params=TrainTestParams().output_params,
-        )
-        train_test = tts.run(context=CONTEXT)
-
-        assert isinstance(train_test, dict)
-        assert train_test["train"].name == "train"
-        assert train_test["train"].stage == "interim"
-        assert train_test["train"].version == 1
-        assert train_test["train"].data is not None
-
-        assert train_test["test"].name == "test"
-        assert train_test["test"].stage == "interim"
-        assert train_test["test"].version == 1
-        assert train_test["test"].data is not None
-
+        outfile = etl_config["steps"][6]["params"]["outfilepath"]
+        d = PipelineDirector(config=etl_config, builder=ETLPipelineBuilder())
+        d.build_pipeline()
+        pipeline = d.builder.pipeline
+        pipeline.run()
+        assert os.path.exists(outfile)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -186,11 +303,8 @@ class TestTrainTestSplit:
             )
         )
 
-
-@pytest.mark.cf
-class TestCentering:
     # ================================================================================================ #
-    def test_setup(self, caplog):
+    def test_teardown(self, etl_config, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -202,108 +316,6 @@ class TestCentering:
         )
         # ---------------------------------------------------------------------------------------- #
         pass
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_centering(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ra = RatingsAdjuster(
-            step_params=RatingsAdjusterParams().step_params,
-            input_params=RatingsAdjusterParams().input_params,
-            output_params=RatingsAdjusterParams().output_params,
-        )
-        dataset = ra.run(context=CONTEXT)
-        assert dataset.name == "adjusted_ratings"
-        assert dataset.stage == "interim"
-        assert dataset.version == 1
-        logger.debug(dataset.data.head())
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-
-@pytest.mark.cf
-class TestUserAverageRatings:
-    # ================================================================================================ #
-    def test_setup(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        pass
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_user(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ra = User(
-            step_params=UserParams().step_params,
-            input_params=UserParams().input_params,
-            output_params=UserParams().output_params,
-        )
-        dataset = ra.run(context=CONTEXT)
-        assert dataset.name == "user"
-        assert dataset.stage == "interim"
-        assert dataset.version == 1
-        logger.debug(dataset.data.head())
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 25th 2022 03:01:44 pm                                               #
-# Modified   : Friday November 25th 2022 03:17:36 pm                                               #
+# Modified   : Saturday November 26th 2022 12:10:29 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -27,7 +27,7 @@ steps:
     params:
       kaggle_filepath: grouplens/movielens-20m-dataset
       destination: data/ext
-      force: False
+      force: True
 
   2:
     name: dezip_movielens20m
@@ -39,7 +39,7 @@ steps:
       destination: data/raw
       members:
         - rating.csv
-      force: False
+      force: True
 
   3:
     name: pickle_dataset
@@ -57,3 +57,42 @@ steps:
         - userId
         - movieId
         - rating
+      force: True
+
+  4:
+    name: copy_raw_ratings_to_prod
+    description: Copy Raw Ratings Data to Prod Input
+    module: recsys.core.workflow.operators
+    operator: Copier
+    params:
+      infilepath: data/raw/rating.pkl
+      outfilepath: data/working/prod/input/rating.pkl
+      force: True
+
+  5:
+    name: create_dev_input_data
+    description: Create Dev Input Data from Sample
+    module: recsys.core.workflow.operators
+    operator: Sampler
+    params:
+      infilepath: data/raw/rating.pkl
+      outfilepath: data/working/dev/input/rating.pkl
+      clustered: True
+      clustered_by: userId
+      frac: 0.1
+      random_state: 55
+      force: True
+
+  6:
+    name: create_test_input_data
+    description: Create Test Input Data from Sample
+    module: recsys.core.workflow.operators
+    operator: Sampler
+    params:
+      infilepath: data/raw/rating.pkl
+      outfilepath: data/working/test/input/rating.pkl
+      clustered: True
+      clustered_by: userId
+      frac: 0.01
+      random_state: 55
+      force: True

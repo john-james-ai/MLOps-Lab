@@ -10,8 +10,8 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Tuesday November 22nd 2022 04:13:32 am                                              #
-# Modified   : Friday November 25th 2022 05:18:13 pm                                               #
+# Created    : Saturday November 26th 2022 07:23:09 am                                             #
+# Modified   : Sunday November 27th 2022 04:10:18 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,27 +22,23 @@ import pytest
 import logging
 import shutil
 
-from recsys.core.dal.database import Database
-from recsys.config.base import DB_LOCATIONS, DATASET_FEATURES
+from recsys.config.data import DB_LOCATIONS
 from recsys.core.dal.sequel import (
     CreateDatasetRegistryTable,
     DropDatasetRegistryTable,
+    SelectArchivedDatasets,
+    ArchiveDataset,
+    RestoreDataset,
     TableExists,
     DatasetExists,
     SelectDataset,
     CountDatasets,
-    SelectAllDatasets,
+    SelectCurrentDatasets,
     InsertDataset,
     DeleteDataset,
 )
 
 # ------------------------------------------------------------------------------------------------ #
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
-    datefmt="%m/%d/%Y %H:%M",
-    force=True,
-)
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
@@ -50,7 +46,7 @@ logger = logging.getLogger(__name__)
 @pytest.mark.db
 class TestDB:
     # ============================================================================================ #
-    def test_setup(self, caplog):
+    def test_setup(self, database, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -61,7 +57,7 @@ class TestDB:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        shutil.rmtree(DB_LOCATIONS["data"]["test"], ignore_errors=True)
+        shutil.rmtree(database.location, ignore_errors=True)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -77,7 +73,7 @@ class TestDB:
         )
 
     # ============================================================================================ #
-    def test_create_table_exists(self, caplog):
+    def test_create_table_exists(self, database, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -90,7 +86,7 @@ class TestDB:
         # ---------------------------------------------------------------------------------------- #
         stmt = TableExists("dataset_registry")
         create = CreateDatasetRegistryTable()
-        with Database() as db:
+        with database as db:
             db.create(create.sql, create.args)
             assert db.exists(
                 stmt.sql,
@@ -112,7 +108,7 @@ class TestDB:
         )
 
     # ============================================================================================ #
-    def test_drop_table(self, caplog):
+    def test_drop_table(self, database, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -125,7 +121,7 @@ class TestDB:
         # ---------------------------------------------------------------------------------------- #
         drop = DropDatasetRegistryTable()
         exists = TableExists("dataset_registry")
-        with Database() as db:
+        with database as db:
             db.drop(drop.sql, drop.args)
             assert not db.exists(exists.sql, exists.args)
 
@@ -144,7 +140,7 @@ class TestDB:
         )
 
     # ============================================================================================ #
-    def test_insert_select(self, datasets, caplog):
+    def test_insert_select(self, datasets, database, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -156,14 +152,12 @@ class TestDB:
         )
         # ---------------------------------------------------------------------------------------- #
         for i, dataset in enumerate(datasets, start=1):
-            ds = dataset.as_dict()
-            registration = {k: ds[k] for k in DATASET_FEATURES}
-
+            dsad = dataset.as_dict()
             result = None
             create = CreateDatasetRegistryTable()
-            insert = InsertDataset(**registration)
+            insert = InsertDataset(**dsad)
             select = SelectDataset(id=i)
-            with Database() as db:
+            with database as db:
                 db.create(create.sql, create.args)
                 id = db.insert(insert.sql, insert.args)
                 logger.debug(f"\n\nJust inserted Dataset id {id}\n")
@@ -185,7 +179,7 @@ class TestDB:
         )
 
     # ============================================================================================ #
-    def test_select_all(self, caplog):
+    def test_select_all(self, database, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -196,8 +190,8 @@ class TestDB:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        select = SelectAllDatasets()
-        with Database() as db:
+        select = SelectCurrentDatasets()
+        with database as db:
             registry = db.select(select.sql, select.args)
         logger.debug(f"\n\nDatasets\n{registry}")
 
@@ -216,7 +210,7 @@ class TestDB:
         )
 
     # ============================================================================================ #
-    def test_count(self, caplog):
+    def test_count(self, database, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -228,7 +222,7 @@ class TestDB:
         )
         # ---------------------------------------------------------------------------------------- #
         query = CountDatasets()
-        with Database() as db:
+        with database as db:
             count = db.count(sql=query.sql, args=query.args)
             assert isinstance(count, int)
             assert count == 4
@@ -248,7 +242,7 @@ class TestDB:
         )
 
     # ============================================================================================ #
-    def test_exists(self, dataset, caplog):
+    def test_exists(self, dataset, database, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -260,8 +254,9 @@ class TestDB:
         )
         # ---------------------------------------------------------------------------------------- #
         id = DatasetExists(id=1)
-        with Database() as db:
+        with database as db:
             assert db.exists(id.sql, id.args)
+            assert not db.exists(id.sql, (832,))
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -278,7 +273,7 @@ class TestDB:
         )
 
     # ============================================================================================ #
-    def test_delete(self, caplog):
+    def test_delete(self, database, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -291,7 +286,7 @@ class TestDB:
         # ---------------------------------------------------------------------------------------- #
         delete = DeleteDataset(id=1)
         exists = DatasetExists(id=1)
-        with Database() as db:
+        with database as db:
             db.delete(delete.sql, delete.args)
             assert not db.exists(exists.sql, exists.args)
 
@@ -310,7 +305,67 @@ class TestDB:
         )
 
     # ============================================================================================ #
-    def test_teardown(self, caplog):
+    def test_archive_restore(self, database, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%H:%M:%S"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        # Refresh the Database
+        drop = DropDatasetRegistryTable()
+        create = CreateDatasetRegistryTable()
+        table_exists = TableExists(table="dataset_registry")
+        with database as db:
+            db.drop(drop.sql, drop.args)
+            db.create(create.sql, create.args)
+            assert db.exists(table_exists.sql, table_exists.args)
+
+        # Archive
+        for id, dataset in enumerate(datasets, start=1):
+            dsad = dataset.as_dict()
+            insert = InsertDataset(**dsad)
+            archive = ArchiveDataset(id)
+            with database as db:
+                dataset.id = db.insert(insert.sql, insert.args)
+                db.update(archive.sql, archive.args)
+
+        # Get archived datasets
+        archived = SelectArchivedDatasets()
+        with database as db:
+            dsets = db.select(archived.sql, archived.args)
+        assert len(datasets) == len(dsets)
+        logger.debug(f"\n\nArchived Datasets:\n{dsets}")
+
+        # Restore Datasets
+        for id in range(1, len(datasets) + 1):
+            restore = RestoreDataset(id)
+
+        # Should show no archived datasets
+        with database as db:
+            dsets = db.select(restore.sql, restore.args)
+        assert len(dsets) == 0
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%H:%M:%S"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_teardown(self, database, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(

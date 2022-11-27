@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:47:16 am                                              #
-# Modified   : Friday November 25th 2022 01:06:44 pm                                               #
+# Modified   : Sunday November 27th 2022 04:31:21 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -25,7 +25,7 @@ from dataclasses import dataclass
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class CreateDatasetRegistryTable:
-    sql: str = """CREATE TABLE IF NOT EXISTS dataset_registry ( id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, stage TEXT NOT NULL, version INTEGER NOT NULL, cost INTEGER NOT NULL, nrows TEXT NOT NULL, ncols INTEGER NOT NULL, null_counts INTEGER, memory_size TEXT NOT NULL, filepath TEXT, creator TEXT NOT NULL, created DATETIME NOT NULL );"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataset_registry ( id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, stage TEXT NOT NULL, version INTEGER NOT NULL, cost INTEGER NOT NULL, nrows INTEGER NOT NULL, ncols INTEGER NOT NULL, null_counts INTEGER, memory_size_mb TEXT NOT NULL, filepath TEXT, archived INTEGER DEFAULT 0,  creator TEXT NOT NULL, created TEXT DEFAULT (datetime('now')));"""
     args: tuple = ()
 
 
@@ -58,6 +58,7 @@ class TableExists:
 class DatasetExists:
     id: int
     sql: str = """SELECT COUNT(*) FROM dataset_registry WHERE id = ?;"""
+    args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (self.id,)
@@ -74,9 +75,14 @@ class VersionExists:
     sql: str = (
         """SELECT COUNT(*) FROM dataset_registry WHERE name = ? AND stage = ? AND version = ?;"""
     )
+    args: tuple = ()
 
     def __post_init__(self) -> None:
-        self.args = (self.name, self.stage, self.version)
+        self.args = (
+            self.name,
+            self.stage,
+            self.version,
+        )
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -122,9 +128,56 @@ class SelectDataset:
 
 
 @dataclass
-class SelectAllDatasets:
-    sql: str = """SELECT * FROM dataset_registry;"""
+class SelectCurrentDatasets:
+    sql: str = """SELECT * FROM dataset_registry WHERE archived = ?;"""
     args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.args = (0,)
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class SelectArchivedDatasets:
+    sql: str = """SELECT * FROM dataset_registry WHERE archived = ?;"""
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.args = (1,)
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class ArchiveDataset:
+    id: int
+    sql: str = """UPDATE dataset_registry SET archived = ? WHERE id = ?;"""
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.args = (
+            True,
+            self.id,
+        )
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class RestoreDataset:
+    id: int
+    sql: str = """UPDATE dataset_registry SET archived = ? WHERE id = ?;"""
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.args = (
+            False,
+            self.id,
+        )
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -132,20 +185,25 @@ class SelectAllDatasets:
 
 @dataclass
 class InsertDataset:
+    """All attributes of a Dataset are included; however, two are not used - namely id, and data."""
+
+    id: int
     name: str
     description: str
+    data: bool
     stage: str
-    version: str
-    cost: str
-    nrows: str
-    ncols: str
-    null_counts: str
-    memory_size: str
+    version: int
+    cost: int
+    nrows: int
+    ncols: int
+    null_counts: int
+    memory_size_mb: int
     filepath: str
+    archived: bool
     creator: str
     created: str
 
-    sql: str = """INSERT INTO dataset_registry (name, description, stage, version, cost, nrows, ncols, null_counts, memory_size, filepath, creator, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
+    sql: str = """INSERT INTO dataset_registry (name, description, stage, version, cost, nrows, ncols, null_counts, memory_size_mb, filepath, archived, creator, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -158,8 +216,9 @@ class InsertDataset:
             self.nrows,
             self.ncols,
             self.null_counts,
-            self.memory_size,
+            self.memory_size_mb,
             self.filepath,
+            self.archived,
             self.creator,
             self.created,
         )
