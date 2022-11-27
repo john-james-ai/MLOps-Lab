@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Sunday November 27th 2022 04:26:02 am                                               #
+# Modified   : Sunday November 27th 2022 11:48:55 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ from datetime import datetime
 import pandas as pd
 from typing import Union
 
-from recsys.config.data import IMMUTABLE_TYPES, SEQUENCE_TYPES, STAGES
+from recsys.config.data import IMMUTABLE_TYPES, SEQUENCE_TYPES
 from recsys.core.utils.data import clustered_sample
 
 
@@ -271,9 +271,6 @@ class Dataset:
 
         if self._name is None:
             msg = "Name is a required value for Dataset objects."
-            announce_and_raise(msg)
-        if self._stage not in STAGES:
-            msg = f"Stage {self._stage} is invalid. Use one of {STAGES}."
             announce_and_raise(msg)
 
     # ------------------------------------------------------------------------------------------------ #

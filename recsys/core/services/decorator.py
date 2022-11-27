@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Saturday November 26th 2022 08:16:54 pm                                             #
+# Modified   : Sunday November 27th 2022 04:53:26 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -43,10 +43,9 @@ def repository(func, repo: DatasetRepo = Provide[Container.repo]):  # noqa C109
         dataset = None
 
         # Handle input
-        if hasattr(self, "input_params"):
-            if not self.input_params.get("filepath", None):
-                dataset = repo.get_dataset(self.input_params["name"], self.input_params["stage"])
-                setattr(self, "input_dataset", dataset.data)
+        if not hasattr(self.input_params, "filepath"):
+            dataset = repo.get_dataset(name=self.input_params.name, stage=self.input_params.stage)
+            setattr(self, "input_data", dataset.data)
 
         # Execute wrapped method.
         result = func(self, *args, **kwargs)
@@ -56,14 +55,14 @@ def repository(func, repo: DatasetRepo = Provide[Container.repo]):  # noqa C109
         results = {}
 
         def store_result(result) -> None:
-            if isinstance(result, dict):
-                for k, v in result.items():
-                    results[k] = repo.add(v)
-                return results
-            elif isinstance(result, Dataset):
+            if isinstance(result, Dataset):
                 return repo.add(result)
+            elif isinstance(result, dict):
+                for name, dataset in result.items():
+                    results[name] = store_result(dataset)
+                return results
             else:
-                msg = "Result was not a Dataset or dictionary object."
+                msg = f"Result type: {type(result)} is not supported."
                 logger.error(msg)
                 raise TypeError(msg)
 

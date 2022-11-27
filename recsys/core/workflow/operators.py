@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 17th 2022 02:51:27 am                                             #
-# Modified   : Saturday November 26th 2022 05:58:13 am                                             #
+# Modified   : Sunday November 27th 2022 04:49:34 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -29,17 +29,20 @@ import subprocess
 from zipfile import ZipFile
 
 from recsys.config.workflow import OperatorParams
-
 from recsys.core.services.profiler import profiler
 from recsys.core.workflow.pipeline import Context
 from recsys.core.dal.dataset import Dataset
+from recsys.config.workflow import DatasetGroupABC
 from recsys.core.services.decorator import repository
 from recsys.core.utils.data import clustered_sample
-
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
+
+# ================================================================================================ #
+#                                 COMMON OPERATORS                                                 #
+# ================================================================================================ #
 
 
 class Operator(ABC):
@@ -102,16 +105,9 @@ class DatasetOperator(Operator):
     """Base class for operators that interact with Dataset objects in the Dataset Repository.
 
     Args:
-        step_params (StepParams): Parameters associated with the identifying and processing
-            the pipeline step.
-        input_params (Union[str, int, Dict[int]]): Input parameters may be a string filepath, a
-            Dataset Id, or a dictionary of Dataset name/Id pairs.
-        output_params (Union]DatasetParams,Dict[str,DatasetParams]). A DatasetParams object or
-            a dictionary of DatasetParams objects.
-
-    Attributes:
-        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
-            injected by the repository decorator.
+        step_params (StepPO): Parameters that provide identity and control behavior.
+        input_params (InputPO): Input data
+        output_params (OutputPO] Output Data
 
     Returns: Output Dataset Object
     """
@@ -122,26 +118,25 @@ class DatasetOperator(Operator):
         input_params: OperatorParams = None,
         output_params: OperatorParams = None,
     ) -> None:
-        super().__init__(
-            step_params=step_params, input_params=input_params, output_params=output_params
-        )
+        step_params = step_params.as_dict()
+        super().__init__(**step_params, input_params=input_params, output_params=output_params)
         self._started = None
         self._ended = None
         self._duration = None
-        self.input_dataset = None
+        self.input_data = None
 
     @property
-    def input_dataset(self) -> Union[Dataset, Dict[str, Dataset]]:
-        return self._input_dataset
+    def input_data(self) -> pd.DataFrame:
+        return self._input_data
 
-    @input_dataset.setter
-    def input_dataset(self, input_dataset: Union[Dataset, Dict[str, Dataset]]) -> None:
-        self._input_dataset = input_dataset
+    @input_data.setter
+    def input_data(self, input_data: pd.DataFrame) -> None:
+        self._input_data = input_data
 
     @repository
     def run(
         self, data: Dataset = None, context: Context = None, *args, **kwargs
-    ) -> Union[Dataset, Dict[str, Dataset]]:
+    ) -> Union[Dataset, DatasetGroupABC]:
         data = self._setup(data=data)
         data = self.execute(data=data, context=context)
         data = self._teardown(data=data)
@@ -161,10 +156,12 @@ class DatasetOperator(Operator):
         if isinstance(data, Dataset):
             data.cost = self._duration
 
-        elif isinstance(data, dict):
-            for k, v in data.items():
+        elif isinstance(data, DatasetGroupABC):
+            datasets = data.get_datasets()
+            for k, v in datasets.items():
                 v.cost = self._duration
-                data[k] = v
+                datasets[k] = v
+            data = datasets
         else:
             msg = "Output is invalid. Not a dictionary nor a Dataset."
             logger.error(msg)

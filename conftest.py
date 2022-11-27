@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 11th 2022 06:38:26 am                                               #
-# Modified   : Sunday November 27th 2022 05:35:08 am                                               #
+# Modified   : Sunday November 27th 2022 04:08:29 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -26,11 +26,13 @@ from recsys.core.services.container import container
 from recsys.core.dal.dataset import Dataset
 from recsys.core.dal.registry import DatasetRegistry
 from recsys.core.services.io import IOService
+from recsys.core.workflow.pipeline import Context
 
 
 # ------------------------------------------------------------------------------------------------ #
-RATINGS_FILEPATH = "data/working/test/input/rating.pkl"
+RATINGS_FILEPATH = "data/working/dev/input/rating.pkl"
 ETL_CONFIG_FILEPATH = "recsys/config/etl.yml"
+CF_CONFIG_FILEPATH = "recsys/config/cf.yml"
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -157,3 +159,17 @@ def registry(database):
 def repo():
     repo = container.repo()
     return repo
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    CONFIG FIXTURES                                               #
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def cf_config():
+    return IOService().read(filepath=CF_CONFIG_FILEPATH)
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="function")
+def context(cf_config):
+    return Context(name=cf_config["name"], description=cf_config["description"], io=IOService)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday November 19th 2022 01:30:09 pm                                             #
-# Modified   : Saturday November 26th 2022 05:30:37 am                                             #
+# Modified   : Sunday November 27th 2022 04:37:09 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -45,7 +45,7 @@ class Context:
         io (Any): Object responsible for persistence and io.
     """
 
-    name: str
+    name: str = None
     description: str = None
     io: Any = None
 

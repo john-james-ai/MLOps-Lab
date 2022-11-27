@@ -10,27 +10,83 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday November 25th 2022 11:49:36 pm                                               #
-# Modified   : Saturday November 26th 2022 12:42:35 pm                                             #
+# Created    : Sunday November 27th 2022 06:59:08 am                                               #
+# Modified   : Sunday November 27th 2022 04:55:24 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-"""Collaborative Filtering Data Preprocessing Module."""
+#                     COLLABORATIVE FILTERING DATA PREP OPERATORS                                  #
+# ================================================================================================ #
+import os
+from dataclasses import dataclass
+from dotenv import load_dotenv
 import numpy as np
-import pandas as pd
 import logging
-from typing import Union, List
 
-from recsys.config.base import OperatorParams
-from recsys.core.workflow.pipeline import Context
+from recsys.config.data import DIRECTORIES, TRAIN_PROPORTION
+from recsys.config.workflow import RANDOM_STATE
 from recsys.core.workflow.operators import DatasetOperator
+from recsys.core.workflow.pipeline import Context
 from recsys.core.dal.dataset import Dataset
+from recsys.config.workflow import (
+    StepPO,
+    InputPO,
+    OutputPO,
+    FilsetInputPO,
+    DatasetInputPO,
+    DatasetOutputPO,
+    DatasetGroupPO,
+    DatasetGroupABC,
+)
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
-#                                     CREATE DATASET                                               #
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                      CREATE DATASET                                              #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+INPUT_DIRECTORIES = {
+    "prod": os.path.join(DIRECTORIES["data"]["prod"], "input", "rating.pkl"),
+    "dev": os.path.join(DIRECTORIES["data"]["dev"], "input", "rating.pkl"),
+    "test": os.path.join(DIRECTORIES["data"]["test"], "input", "rating.pkl"),
+}
+# ------------------------------------------------------------------------------------------------ #
+#                                 PARAMETER CONFIGURATIONS                                         #
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class CreateDatasetStepPO(StepPO):
+    name: str = "create_rating_dataset"
+    description: str = "Creates rating dataset"
+    force: bool = False
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class CreateDatasetInputPO(FilsetInputPO):
+    filepath: str = None
+
+    def __post_init__(self) -> None:
+        load_dotenv()
+        ENV = os.getenv("ENV")
+        self.filepath = INPUT_DIRECTORIES[ENV]
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class CreateDatasetOutputPO(DatasetOutputPO):
+    name: str = "rating"
+    description: str = "Rating Dataset"
+    stage: str = "staged"
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                          CREATE DATASET OPERATOR                                                 #
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -38,32 +94,25 @@ class CreateDataset(DatasetOperator):
     """Reads a DataFrame, creates a Dataset and commits it to the repository.
 
     Args:
-        step_params (StepParams): Parameters associated with the identifying and processing
-            the pipeline step.
-        input_params (Union[str, int, Dict[int]]): Input parameters may be a string filepath, a
-            Dataset Id, or a dictionary of Dataset name/Id pairs.
-        output_params (Union]DatasetParams,Dict[str,DatasetParams]). A DatasetParams object or
-            a dictionary of DatasetParams objects.
-
-    Attributes:
-        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
-            injected by the repository decorator.
+        step_params (StepPO): Parameters which control operator identity and behavior.
+        input_params (InputPO): Input filepath
+        output_params (OutputPO). Parameters for the Dataset to be created.
 
     Returns: Output Dataset Object
     """
 
     def __init__(
         self,
-        step_params: OperatorParams,
-        input_params: OperatorParams,
-        output_params: OperatorParams,
+        step_params: StepPO = CreateDatasetStepPO(),
+        input_params: InputPO = CreateDatasetInputPO(),
+        output_params: OutputPO = CreateDatasetOutputPO(),
     ) -> None:
         super().__init__(step_params, input_params, output_params)
 
     def execute(self, data: Dataset = None, context: Context = None, *args, **kwargs) -> Dataset:
         """Creates the dataset."""
 
-        io = context
+        io = context.io
         try:
             data = io.read(self.input_params.filepath)
         except TypeError:
@@ -78,63 +127,116 @@ class CreateDataset(DatasetOperator):
         dataset = Dataset(
             name=self.output_params.name,
             description=self.output_params.description,
-            env=self.output_params.env,
             stage=self.output_params.stage,
-            version=self.output_params.version,
             data=data,
         )
 
         return dataset
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                    TRAIN TEST SPLIT                                              #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # ------------------------------------------------------------------------------------------------ #
-#                                   TRAIN TEST SPLIT                                               #
+#                            TRAIN TEST SPLIT PARAMETER CONFIG                                     #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TrainTestStepPO(StepPO):
+    name: str = "train_test_split"
+    description: str = "User Clustered Train-Test Split"
+    train_proportion: float = TRAIN_PROPORTION
+    clustered: bool = True
+    clustered_by: str = "userId"
+    random_state: int = RANDOM_STATE
+    force: bool = True
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TrainTestInputPO(DatasetInputPO):
+    name: str = "rating"
+    stage: str = "staged"
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TrainSetOutputPO(DatasetOutputPO):
+    name: str = "train"
+    description: str = "Train Set"
+    stage: str = "split"
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TestSetOutputPO(DatasetOutputPO):
+    name: str = "test"
+    description: str = "Test Set"
+    stage: str = "split"
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TrainTestOutputPO(DatasetGroupPO):
+    train: TrainSetOutputPO = TrainSetOutputPO()
+    test: TestSetOutputPO = TestSetOutputPO()
+
+    def get_datasets(self) -> dict:
+        d = {"train": self.train, "test": self.test}
+        return d
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class DatasetGroup(DatasetGroupABC):
+    train: Dataset
+    test: Dataset
+
+    def get_datasets(self) -> dict:
+        d = {"train": self.train, "test": self.test}
+        return d
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                               TRAIN TEST SPLIT OPERATOR                                          #
 # ------------------------------------------------------------------------------------------------ #
 class TrainTestSplit(DatasetOperator):
     """Splits the dataset into to training and test sets by user
 
     Args:
-        step_params (StepParams): Parameters associated with the identifying and processing
-            the pipeline step.
-        input_params (Union[str, int, Dict[int]]): Input parameters may be a string filepath, a
-            Dataset Id, or a dictionary of Dataset name/Id pairs.
-        output_params (Union]DatasetParams,Dict[str,DatasetParams]). A DatasetParams object or
-            a dictionary of DatasetParams objects.
+        step_params (StepPO): Training proportion and random state parameters.
+        input_params (InputPO): Input Dataset name and stage.
+        output_params (TrainTestOutput) Dictionary of Train and Test set Datasets.
 
-    Attributes:
-        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
-            injected by the repository decorator.
-
-    Returns: Output Dataset Object Dictionary, containing Train and Test Datasets.
+    Returns: Dictionary of Train and Test Dataset objects.
 
     """
 
     def __init__(
         self,
-        step_params: OperatorParams,
-        input_params: OperatorParams,
-        output_params: OperatorParams,
+        step_params: StepPO = TrainTestStepPO(),
+        input_params: InputPO = TrainTestInputPO(),
+        output_params: OutputPO = TrainTestOutputPO(),
     ) -> None:
         super().__init__(step_params, input_params, output_params)
 
     def execute(self, data: Dataset = None, context: Context = None, *args, **kwargs) -> Dataset:
 
-        data = self.input_dataset
+        data = self.input_data
 
-        if self.step_params.clustered:
+        if self.clustered:
 
-            rng = np.random.default_rng(self.step_params.random_state)
+            rng = np.random.default_rng(self.random_state)
 
-            clusters = data[self.step_params.clustered_by].unique()
-            train_set_size = int(len(clusters) * self.step_params.train_proportion)
+            clusters = data[self.clustered_by].unique()
+            train_set_size = int(len(clusters) * self.train_proportion)
 
             train_clusters = rng.choice(
                 a=clusters, size=train_set_size, replace=False, shuffle=True
             )
             test_clusters = np.setdiff1d(clusters, train_clusters)
 
-            train_set = data.loc[data[self.step_params.clustered_by].isin(train_clusters)]
-            test_set = data.loc[data[self.step_params.clustered_by].isin(test_clusters)]
+            train_set = data.loc[data[self.clustered_by].isin(train_clusters)]
+            test_set = data.loc[data[self.clustered_by].isin(test_clusters)]
 
         else:
             # Get all indices
@@ -142,10 +244,10 @@ class TrainTestSplit(DatasetOperator):
 
             # Split the training set by the train proportion
             train_set = data.sample(
-                frac=self.step_params.train_proportion,
+                frac=self.train_proportion,
                 replace=False,
                 axis=0,
-                random_state=self.step_params.random_state,
+                random_state=self.random_state,
             )
 
             # Obtain training indices and perform setdiff to get test indices
@@ -156,51 +258,88 @@ class TrainTestSplit(DatasetOperator):
             test_set = data.loc[test_idx]
 
         # Create train and test Dataset objects.
-        train_params = self.output_params["train"]().as_dict()
-        test_params = self.output_params["test"]().as_dict()
+        train_params = self.output_params.train.as_dict()
+        test_params = self.output_params.test.as_dict()
 
         train = Dataset(**train_params, data=train_set)
         test = Dataset(**test_params, data=test_set)
 
-        result = {"train": train, "test": test}
+        result = DatasetGroup(train=train, test=test)
 
         return result
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                    DATA CENTRALIZER                                              #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
 # ------------------------------------------------------------------------------------------------ #
-#                                      RATINGS ADJUSTER                                            #
+#                           DATA CENTRALIZER PARAMETER CONFIG                                      #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class DataCentralizerStepPO(StepPO):
+    name: str = "data_centralizer"
+    description: str = "Center Ratings by User Mean"
+    force: bool = True
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TrainDataCentralizerInputPO(DatasetInputPO):
+    name: str = "train"
+    stage: str = "split"
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TrainDataCentralizerOutputPO(DatasetOutputPO):
+    name: str = "train_ratings_centered"
+    description: str = "Training User Ratings Centered by User Mean Rating"
+    stage: str = "interim"
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TestDataCentralizerInputPO(DatasetInputPO):
+    name: str = "test"
+    stage: str = "split"
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TestDataCentralizerOutputPO(DatasetOutputPO):
+    name: str = "test_ratings_centered"
+    description: str = "Test User Ratings Centered by User Mean Rating"
+    stage: str = "interim"
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                               DATA CENTRALIZER OPERATOR                                          #
 # ------------------------------------------------------------------------------------------------ #
 
 
-class DataCentralizer(DatasetOperator):
+class TrainDataCentralizer(DatasetOperator):
     """Centers the ratings by subtracting the users average rating from each of the users ratings.
 
     Args:
-        step_params (StepParams): Parameters associated with the identifying and processing
-            the pipeline step.
-        input_params (Union[str, int, Dict[int]]): Input parameters may be a string filepath, a
-            Dataset Id, or a dictionary of Dataset name/Id pairs.
-        output_params (Union]DatasetParams,Dict[str,DatasetParams]). A DatasetParams object or
-            a dictionary of DatasetParams objects.
-
-    Attributes:
-        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
-            injected by the repository decorator.
+        step_params (StepPO): Name and description of the step
+        input_params (InputPO): The train Dataset params
+        output_params (DatasetOutputPO) Train centralized ratings
 
     Returns: Output Dataset Object
     """
 
     def __init__(
         self,
-        step_params: OperatorParams,
-        input_params: OperatorParams,
-        output_params: OperatorParams,
+        step_params: StepPO = DataCentralizerStepPO(),
+        input_params: DatasetInputPO = TrainDataCentralizerInputPO(),
+        output_params: DatasetOutputPO = TrainDataCentralizerOutputPO(),
     ) -> None:
         super().__init__(step_params, input_params, output_params)
 
     def execute(self, data: Dataset = None, context: Context = None, *args, **kwargs) -> Dataset:
 
-        data = self.input_dataset
+        data = self.input_data
 
         data["adj_rating"] = data["rating"].sub(data.groupby("userId")["rating"].transform("mean"))
 
@@ -212,24 +351,101 @@ class DataCentralizer(DatasetOperator):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                     USER AVERAGE SCORES                                          #
+
+
+class TestDataCentralizer(DatasetOperator):
+    """Centers the ratings by subtracting the users average rating from each of the users ratings.
+
+    Args:
+        step_params (StepPO): Name and description of the step
+        input_params (InputPO): The test Dataset params
+        output_params (DatasetOutputPO) Test centralized ratings
+
+    Returns: Output Dataset Object
+    """
+
+    def __init__(
+        self,
+        step_params: StepPO = DataCentralizerStepPO(),
+        input_params: DatasetInputPO = TestDataCentralizerInputPO(),
+        output_params: DatasetOutputPO = TestDataCentralizerOutputPO(),
+    ) -> None:
+        super().__init__(step_params, input_params, output_params)
+
+    def execute(self, data: Dataset = None, context: Context = None, *args, **kwargs) -> Dataset:
+
+        data = self.input_data
+
+        data["adj_rating"] = data["rating"].sub(data.groupby("userId")["rating"].transform("mean"))
+
+        params = self.output_params.as_dict()
+
+        dataset = Dataset(**params, data=data)
+
+        return dataset
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                   USER AVERAGE SCORES                                            #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                 USER PARAMETER CONFIG                                            #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class UserStepPO(StepPO):
+    name: str = "user"
+    description: str = "User Average Ratings"
+    force: bool = True
+
+
 # ------------------------------------------------------------------------------------------------ #
 
 
-class User(DatasetOperator):
+@dataclass
+class TrainUserInputPO(DatasetInputPO):
+    name: str = "train"
+    stage: str = "split"
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TrainUserOutputPO(DatasetOutputPO):
+    name: str = "train_user_ave_ratings"
+    description: str = "Train User Average Ratings"
+    stage: str = "interim"
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class TestUserInputPO(DatasetInputPO):
+    name: str = "test"
+    stage: str = "split"
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TestUserOutputPO(DatasetOutputPO):
+    name: str = "test_user_ave_ratings"
+    description: str = "Test User Average Ratings"
+    stage: str = "interim"
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                     USER OPERATOR                                                #
+# ------------------------------------------------------------------------------------------------ #
+
+
+class TrainUser(DatasetOperator):
     """Computes and stores average rating for each user.
 
     Args:
-        step_params (StepParams): Parameters associated with the identifying and processing
-            the pipeline step.
-        input_params (Union[str, int, Dict[int]]): Input parameters may be a string filepath, a
-            Dataset Id, or a dictionary of Dataset name/Id pairs.
-        output_params (Union]DatasetParams,Dict[str,DatasetParams]). A DatasetParams object or
-            a dictionary of DatasetParams objects.
-
-    Attributes:
-        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
-            injected by the repository decorator.
+        step_params (StepPO): Name and description of the step
+        input_params (InputPO): The train user Dataset params
+        output_params (Dict[str, DatasetOutputPO]) Train user average ratings
 
     Returns: Output Dataset Object
 
@@ -238,15 +454,15 @@ class User(DatasetOperator):
 
     def __init__(
         self,
-        step_params: OperatorParams,
-        input_params: OperatorParams,
-        output_params: OperatorParams,
+        step_params: StepPO = UserStepPO(),
+        input_params: DatasetInputPO = TrainUserInputPO(),
+        output_params: DatasetOutputPO = TrainUserOutputPO(),
     ) -> None:
         super().__init__(step_params, input_params, output_params)
 
     def execute(self, data: Dataset = None, context: Context = None, *args, **kwargs) -> Dataset:
 
-        data = self.input_dataset
+        data = self.input_data
 
         user_average_ratings = data.groupby("userId")["rating"].mean().reset_index()
         user_average_ratings.columns = ["userId", "mean_rating"]
@@ -259,27 +475,15 @@ class User(DatasetOperator):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                               PHI                                                #
-# ------------------------------------------------------------------------------------------------ #
-class Phi(DatasetOperator):
-    """Produces the Phi dataframe which contains every combination of users with rated films in common.
 
-    This output will be on the order of N^2M and will be written to file. This class will create a DataFrame for each movie of the format:
-    - movieId (int)
-    - user (int): A user that rated movieId
-    - neighbor (int): A user who also rated movieId
+
+class TestUser(DatasetOperator):
+    """Computes and stores average rating for each user.
 
     Args:
-        step_params (StepParams): Parameters associated with the identifying and processing
-            the pipeline step.
-        input_params (Union[str, int, Dict[int]]): Input parameters may be a string filepath, a
-            Dataset Id, or a dictionary of Dataset name/Id pairs.
-        output_params (Union]DatasetParams,Dict[str,DatasetParams]). A DatasetParams object or
-            a dictionary of DatasetParams objects.
-
-    Attributes:
-        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
-            injected by the repository decorator.
+        step_params (StepPO): Name and description of the step
+        input_params (DatasetInputPO): The test user Dataset params
+        output_params (DatasetOutputPO) Test user average ratings
 
     Returns: Output Dataset Object
 
@@ -288,173 +492,21 @@ class Phi(DatasetOperator):
 
     def __init__(
         self,
-        step_params: OperatorParams,
-        input_params: OperatorParams,
-        output_params: OperatorParams,
+        step_params: StepPO = UserStepPO(),
+        input_params: DatasetInputPO = TestUserInputPO(),
+        output_params: DatasetOutputPO = TestUserOutputPO(),
     ) -> None:
         super().__init__(step_params, input_params, output_params)
 
     def execute(self, data: Dataset = None, context: Context = None, *args, **kwargs) -> Dataset:
 
-        data = self.input_dataset
+        data = self.input_data
 
-        phi = data.merge(data, how="inner", on="movieId")
-        logger.debug(f"\n\nPhi merge complete with {phi.shape[0]} rows.")
-        # Remove rows where userId_x and userId_y are equal
-        phi = phi.loc[phi["userId_x"] != phi["userId_y"]]
-        logger.debug(f"Phi dedup complete with {phi.shape[0]} rows.")
+        user_average_ratings = data.groupby("userId")["rating"].mean().reset_index()
+        user_average_ratings.columns = ["userId", "mean_rating"]
 
         params = self.output_params.as_dict()
 
-        dataset = Dataset(**params, data=phi)
-        logger.debug("Dataset instantiated.")
+        dataset = Dataset(**params, data=user_average_ratings)
 
         return dataset
-
-
-# ------------------------------------------------------------------------------------------------ #
-class UserWeights(DatasetOperator):
-    """Computes user-user pearson correlation coefficients representing similarity between users.
-
-    Args:
-        step_params (StepParams): Parameters associated with the identifying and processing
-            the pipeline step.
-        input_params (Union[str, int, Dict[int]]): Input parameters may be a string filepath, a
-            Dataset Id, or a dictionary of Dataset name/Id pairs.
-        output_params (Union]DatasetParams,Dict[str,DatasetParams]). A DatasetParams object or
-            a dictionary of DatasetParams objects.
-
-    Attributes:
-        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
-            injected by the repository decorator.
-
-    Returns: Output Dataset Object
-    """
-
-    def __init__(
-        self,
-        name: str,
-        input_params: Union[int, List[int]],
-        output_params: dict,
-        description: str = None,
-    ) -> None:
-        name = self.__class__.__name__.lower() if name is None else name
-        super().__init__(
-            name=name,
-            input_params=input_params,
-            output_params=output_params,
-            description=description,
-        )
-
-    def execute(self, data: Dataset = None, context: Context = None, *args, **kwargs) -> Dataset:
-        """Executes the operation
-
-        Args:
-            data (pd.DataFrame): The user neighbor rating data
-        """
-
-        data = self.input_data.data
-
-        weights = self._compute_weights(data=data)
-
-        dataset = Dataset(**self._output_dataset_params, data=weights)
-
-        return dataset
-
-    def _compute_weights(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Computes the pearson's correlation for each user and her neighbors
-
-        Technically, the algorithm calls for pearson's correlation coefficient, which
-        centers the data. Since the ratings have already been centered,
-        the calculation below is equivalent to cosine similarity.
-
-        Args:
-            data (pd.DataFrame): The dataframe containing users and neighbors
-        """
-
-        weights = (
-            data.groupby(["userId_x", "userId_y"])
-            .progress_apply(
-                lambda x: (
-                    np.dot(x["adj_rating_x"], x["adj_rating_y"])
-                    / (
-                        np.sqrt(
-                            np.sum(np.square(x["adj_rating_x"]))
-                            * np.sum(np.square(x["adj_rating_y"]))
-                        )
-                    )
-                )
-            )
-            .reset_index()
-        )
-
-        weights.columns = ["userId", "neighbor", "weight"]
-
-        return weights
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
-class DataIntegrator(DatasetOperator):
-    """Integrates user, rating, and weight data
-
-    Args:
-        step_params (StepParams): Parameters associated with the identifying and processing
-            the pipeline step.
-        input_params (Union[str, int, Dict[int]]): Input parameters may be a string filepath, a
-            Dataset Id, or a dictionary of Dataset name/Id pairs.
-        output_params (Union]DatasetParams,Dict[str,DatasetParams]). A DatasetParams object or
-            a dictionary of DatasetParams objects.
-
-    Attributes:
-        input_dataset (Union[Dataset, List[Dataset]). The input Dataset or Datasets is/are
-            injected by the repository decorator.
-
-    Returns: Output Dataset Object
-    """
-
-    def __init__(
-        self,
-        name: str,
-        input_params: Union[int, List[int]],
-        output_params: dict,
-        description: str = None,
-    ) -> None:
-        name = self.__class__.__name__.lower() if name is None else name
-        super().__init__(
-            name=name,
-            input_params=input_params,
-            output_params=output_params,
-            description=description,
-        )
-        self._users = None
-        self._ratings = None
-        self._weights = None
-
-    def execute(self, data: Dataset = None, context: Context = None, *args, **kwargs) -> Dataset:
-        """Executes the operation
-
-        Args:
-            data (pd.DataFrame): Not used.
-        """
-        self._load_data()
-
-        # Add Users and Weights
-        data = self._users.merge(self._weights, how="left", on="userId")
-        # Merge in ratings for the neighbors into the dataframe
-        data = data.merge(self._ratings, how="left", left_on="neighbor", right_on="userId")
-
-        dataset = Dataset(**self._output_dataset_params, data=data)
-
-        return dataset
-
-    def _load_data(self) -> None:
-        """Loads user, ratings, and weights data"""
-
-        self._users = self.input_params["users"]
-        self._ratings = self.input_params["ratings"]
-        self._weights = self.input_params["weights"]
-
-
-# ------------------------------------------------------------------------------------------------ #

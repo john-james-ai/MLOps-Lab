@@ -11,83 +11,99 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 25th 2022 06:32:02 pm                                               #
-# Modified   : Friday November 25th 2022 06:32:44 pm                                               #
+# Modified   : Sunday November 27th 2022 04:35:17 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from .base import Config
+from recsys.core.dal.dataset import Dataset
 
 
 # ================================================================================================ #
 #                                    WORKFLOW CONFIG                                               #
 # ================================================================================================ #
+RANDOM_STATE = 55
 # ------------------------------------------------------------------------------------------------ #
-#                                PIPELINE STEP PARAMETERS                                          #
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class StepParams(Config):
-    name: str
-    description: str
-    module: str
-    operator: str
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                  INPUT DATASET PARAMETERS                                        #
+#                                   PIPELINE STEP PARAMETERS                                       #
 # ------------------------------------------------------------------------------------------------ #
 
 
 @dataclass
-class DatasetInput(Config):
+class StepPO(Config):
+    force: bool
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                      INPUT PARAMETERS                                            #
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class InputPO(Config):
+    """Base class for Input Parameter Objects"""
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class FilsetInputPO(InputPO):
     """Name and ID for a Dataset."""
 
-    id: int
-    name: str
-
-
-@dataclass
-class FilesetInput(Config):
-    """Name and ID for a Dataset."""
-
-    name: str
     filepath: str
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                 OUTPUT DATASET PARAMETERS                                        #
-# ------------------------------------------------------------------------------------------------ #
-
-
 @dataclass
-class DatasetOutput(Config):
-    """Dataset Passport"""
+class DatasetInputPO(InputPO):
+    name: str
+    stage: str
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                     OUTPUT PARAMETERS                                            #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class OutputPO(Config):
+    """Base class for Output Parameter Objects."""
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class DatasetOutputPO(OutputPO):
+    """Dataset Output Parameter Object."""
 
     name: str
     description: str
-    env: str
     stage: str
-    version: int
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                   OPERATOR PARAMETERS                                            #
+@dataclass
+class DatasetGroupPO(OutputPO):
+    """Base class for a group of Parameter Objects."""
+
+    @abstractmethod
+    def get_datasets(self) -> dict:
+        pass
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class DatasetGroupABC(ABC):
+    train: Dataset
+    test: Dataset
+
+    def get_datasets(self) -> dict:
+        pass
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                       DATASET OPERATOR PARAMETER OBJECT GROUP                                    #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class OperatorParams(Config):
-    step_params: StepParams
-    input_params: DatasetInput
-    output_params: DatasetOutput
-
-
-# ================================================================================================ #
-#                                    VISUAL CONFIG                                                 #
-# ================================================================================================ #
-@dataclass
-class VisualConfig(Config):
-    figsize: tuple = (12, 6)
-    darkblue: str = "#1C3879"
-    lightblue: str = "steelblue"
-    palette: str = "Blues_r"
-    style: str = "whitegrid"
+    step_params: StepPO
+    input_params: InputPO
+    output_params: OutputPO

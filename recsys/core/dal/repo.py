@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Sunday November 27th 2022 05:53:13 am                                               #
+# Modified   : Sunday November 27th 2022 01:20:53 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -177,7 +177,7 @@ class DatasetRepo(Repo):
             stage (str): Preprocessing stage. One of 'staged', 'interim' or 'final'
         """
         result = self.find_dataset(name=name, stage=stage)
-        logger.error(f"\n\nget_dataset method returned:\n{result}\n")
+        logger.debug(f"\n\nget_dataset method returned:\n{result}\n")
         if result.shape[0] > 1:
             result = result.sort_values(by="version", ascending=False).reset_index().iloc[0]
         return self.get(int(result["id"]))

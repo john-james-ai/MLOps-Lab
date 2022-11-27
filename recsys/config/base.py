@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:22:05 am                                               #
-# Modified   : Saturday November 26th 2022 11:04:10 am                                             #
+# Modified   : Sunday November 27th 2022 04:16:51 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -39,7 +39,7 @@ class Config(ABC):
 
     def as_dict(self) -> dict:
         """Returns a dictionary representation of the the Config object."""
-        return {k: self._export_config(v) for k, v in self.__dict__.items()}
+        return {k.lstrip("_"): self._export_config(v) for k, v in self.__dict__.items()}
 
     @classmethod
     def _export_config(cls, v):
