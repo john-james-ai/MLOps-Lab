@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+# ================================================================================================ #
+# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Version    : 0.1.0                                                                               #
+# Python     : 3.10.6                                                                              #
+# Filename   : /_toc.yml                                                                           #
+# ------------------------------------------------------------------------------------------------ #
+# Author     : John James                                                                          #
+# Email      : john.james.ai.studio@gmail.com                                                      #
+# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# ------------------------------------------------------------------------------------------------ #
+# Created    : Sunday November 27th 2022 10:06:40 pm                                               #
+# Modified   : Sunday November 27th 2022 10:50:11 pm                                               #
+# ------------------------------------------------------------------------------------------------ #
+# License    : MIT License                                                                         #
+# Copyright  : (c) 2022 John James                                                                 #
+# ================================================================================================ #
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+chapters:
+- file: markdown
+- file: notebooks
+- file: markdown-notebooks

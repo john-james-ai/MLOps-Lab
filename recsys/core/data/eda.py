@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 10th 2022 06:19:23 pm                                             #
-# Modified   : Friday November 25th 2022 02:09:53 pm                                               #
+# Modified   : Sunday November 27th 2022 10:01:54 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class MovieLensRatings:
-    """Encapsulates Movielens20m Dataset
+    """Encapsulates Movielens25M Dataset
 
     Args:
         filepath (str): The filepath to the ratings file.
