@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Sunday November 27th 2022 11:48:55 am                                               #
+# Modified   : Tuesday November 29th 2022 08:01:52 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -238,9 +238,6 @@ class Dataset:
     def restore(self) -> None:
         self._archived = False
 
-    def is_archived(self) -> bool:
-        return self._archived
-
     # ------------------------------------------------------------------------------------------------ #
     # Exports object as dictionary sans the DataFrame.
     def as_dict(self) -> dict:
@@ -264,7 +261,7 @@ class Dataset:
     # ------------------------------------------------------------------------------------------------ #
     # Validation logic
 
-    def _validate(self) -> None:
+    def _validate(self) -> None:  # pragma: no cover
         def announce_and_raise(msg: str) -> None:
             logger.error(msg)
             raise ValueError(msg)

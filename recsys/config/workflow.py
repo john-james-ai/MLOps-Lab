@@ -11,12 +11,12 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 25th 2022 06:32:02 pm                                               #
-# Modified   : Sunday November 27th 2022 04:35:17 pm                                               #
+# Modified   : Tuesday November 29th 2022 08:35:27 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass
 from .base import Config
 from recsys.core.dal.dataset import Dataset
@@ -48,7 +48,7 @@ class InputPO(Config):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class FilsetInputPO(InputPO):
+class FilesetInputPO(InputPO):
     """Name and ID for a Dataset."""
 
     filepath: str
@@ -84,19 +84,12 @@ class DatasetOutputPO(OutputPO):
 class DatasetGroupPO(OutputPO):
     """Base class for a group of Parameter Objects."""
 
-    @abstractmethod
-    def get_datasets(self) -> dict:
-        pass
-
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class DatasetGroupABC(ABC):
     train: Dataset
     test: Dataset
-
-    def get_datasets(self) -> dict:
-        pass
 
 
 # ------------------------------------------------------------------------------------------------ #

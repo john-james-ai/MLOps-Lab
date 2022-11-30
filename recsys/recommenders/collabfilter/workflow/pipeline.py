@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 27th 2022 06:59:18 am                                               #
-# Modified   : Sunday November 27th 2022 04:50:26 pm                                               #
+# Modified   : Tuesday November 29th 2022 10:58:36 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,7 +19,7 @@
 import importlib
 import logging
 from tqdm import tqdm
-
+from copy import deepcopy
 from recsys.core.services.io import IOService
 from recsys.core.workflow.pipeline import Pipeline, PipelineBuilder, Context
 
@@ -96,6 +96,7 @@ class CFDataPipelineBuilder(PipelineBuilder):
 
     def build_steps(self) -> None:
         steps = self._config["steps"]
+
         for _, operator_name in steps.items():
             try:
                 module = importlib.import_module(name=self._config["operator_module"])
@@ -103,16 +104,13 @@ class CFDataPipelineBuilder(PipelineBuilder):
 
                 operator = step()
 
-                self._steps[operator.name] = operator
+                self._steps[operator.name] = deepcopy(operator)
 
             except KeyError as e:
                 logging.error("Configuration File is missing operator configuration data")
                 raise (e)
 
     def build_pipeline(self) -> None:
-        logger.debug(
-            f"Config name: {self._config['name']}, Config description: {self._config['description']}"
-        )
         self._pipeline = CFDataPipeline(
             name=self._config["name"], description=self._config["description"]
         )

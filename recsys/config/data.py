@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 25th 2022 06:28:24 pm                                               #
-# Modified   : Sunday November 27th 2022 03:02:21 am                                               #
+# Modified   : Tuesday November 29th 2022 09:18:08 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -51,7 +51,7 @@ DIRECTORIES = {
     "models": {"base": "models", "prod": "models/prod", "dev": "models/dev", "test": "models/test"},
 }
 # ------------------------------------------------------------------------------------------------ #
-#                                     REPO CONFIG                                                  #
+#                               REPO AND ARCHIVE CONFIG                                            #
 # ------------------------------------------------------------------------------------------------ #
 REPO_FILE_FORMAT = "pkl"
 REPO_DIRS = {
@@ -64,6 +64,18 @@ REPO_DIRS = {
         "prod": os.path.join(DIRECTORIES["models"]["prod"], "repo"),
         "dev": os.path.join(DIRECTORIES["models"]["dev"], "repo"),
         "test": os.path.join(DIRECTORIES["models"]["test"], "repo"),
+    },
+}
+ARCHIVE_DIRS = {
+    "data": {
+        "prod": os.path.join(DIRECTORIES["data"]["prod"], "archive"),
+        "dev": os.path.join(DIRECTORIES["data"]["dev"], "archive"),
+        "test": os.path.join(DIRECTORIES["data"]["test"], "archive"),
+    },
+    "models": {
+        "prod": os.path.join(DIRECTORIES["models"]["prod"], "archive"),
+        "dev": os.path.join(DIRECTORIES["models"]["dev"], "archive"),
+        "test": os.path.join(DIRECTORIES["models"]["test"], "archive"),
     },
 }
 # ------------------------------------------------------------------------------------------------ #

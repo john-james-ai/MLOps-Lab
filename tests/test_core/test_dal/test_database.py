@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday November 26th 2022 07:23:09 am                                             #
-# Modified   : Sunday November 27th 2022 04:10:18 am                                               #
+# Modified   : Tuesday November 29th 2022 11:07:01 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.db
-class TestDB:
+class TestDB:  # pragma: no cover
     # ============================================================================================ #
     def test_setup(self, database, caplog):
         start = datetime.now()
@@ -92,7 +92,7 @@ class TestDB:
                 stmt.sql,
                 stmt.args,
             )
-
+        assert database.location == "data/working/test/repo/dataset_registry.sqlite"
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

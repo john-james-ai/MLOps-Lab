@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 25th 2022 03:18:36 pm                                               #
-# Modified   : Saturday November 26th 2022 05:35:29 am                                             #
+# Modified   : Tuesday November 29th 2022 09:19:48 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,7 @@ from recsys.core.services.io import IOService
 from recsys.core.dal.database import Database
 from recsys.core.dal.registry import DatasetRegistry
 from recsys.core.dal.repo import DatasetRepo
-from recsys.config.data import REPO_DIRS, REPO_FILE_FORMAT, DB_LOCATIONS
+from recsys.config.data import REPO_DIRS, REPO_FILE_FORMAT, DB_LOCATIONS, ARCHIVE_DIRS
 
 # ------------------------------------------------------------------------------------------------ #
 #                                       CONTAINER                                                  #
@@ -52,6 +52,7 @@ class Container(containers.DeclarativeContainer):
 
     config.from_dict(
         {
+            "archive_directory": ARCHIVE_DIRS["data"][ENV],
             "repo_directory": REPO_DIRS["data"][ENV],
             "db_location": DB_LOCATIONS["data"][ENV],
             "repo_file_format": REPO_FILE_FORMAT,
@@ -66,7 +67,8 @@ class Container(containers.DeclarativeContainer):
 
     repo = providers.Factory(
         DatasetRepo,
-        directory=config.repo_directory,
+        repo_directory=config.repo_directory,
+        archive_directory=config.archive_directory,
         io=IOService,
         registry=registry,
         file_format=config.repo_file_format,

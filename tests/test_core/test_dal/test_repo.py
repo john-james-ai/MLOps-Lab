@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday November 26th 2022 09:04:08 am                                             #
-# Modified   : Sunday November 27th 2022 05:50:20 am                                               #
+# Modified   : Tuesday November 29th 2022 11:02:18 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,6 @@ import pytest
 import logging
 
 from recsys.core.dal.dataset import Dataset
-from recsys.config.data import STAGES
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -35,12 +34,6 @@ def load_data(repo, datasets):
     for dataset in datasets:
         _ = repo.add(dataset)
     return repo
-
-
-# Check stage folders
-def check_reset(repo):
-    for stage in STAGES:
-        assert not os.path.exists(os.path.join(repo.directory, stage))
 
 
 @pytest.mark.repo
@@ -57,9 +50,9 @@ class TestRepo:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        directory = repo.directory
+        repo_directory = repo.repo_directory
         repo.reset()
-        assert os.path.exists(directory)
+        assert os.path.exists(repo_directory)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -95,7 +88,6 @@ class TestRepo:
         repo.archive_dataset(1)
         with pytest.raises(FileNotFoundError):
             dataset = repo.get(1)
-            assert not os.path.exists(dataset.filepath)
         repo.restore_dataset(1)
         assert os.path.exists(dataset.filepath)
 
@@ -390,7 +382,6 @@ class TestRepo:
         # #1: Reset: archive: False, purge_archive: False, silent: False
         repo.archive = False
         repo.reset(purge_archive=False, silent=False)
-        check_reset(repo)
         load_data(repo=repo, datasets=datasets)
 
         # ---------------------------------------------------------------------------------------- #
@@ -422,7 +413,6 @@ class TestRepo:
         # 2: Reset archive False, purge_archive: False, silent: True
         repo.archive = False
         repo.reset(purge_archive=False, silent=True)
-        check_reset(repo)
         load_data(repo=repo, datasets=datasets)
 
         # ---------------------------------------------------------------------------------------- #
@@ -454,7 +444,6 @@ class TestRepo:
         # 3: Reset archive True, purge_archive: False, silent: False
         repo.archive = True
         repo.reset(purge_archive=False, silent=False)
-        check_reset(repo)
         load_data(repo=repo, datasets=datasets)
 
         # ---------------------------------------------------------------------------------------- #
@@ -486,7 +475,6 @@ class TestRepo:
         # 4: Reset archive True, purge_archive: False, silent: True
         repo.archive = True
         repo.reset(purge_archive=False, silent=True)
-        check_reset(repo)
         load_data(repo=repo, datasets=datasets)
 
         # ---------------------------------------------------------------------------------------- #
@@ -518,7 +506,6 @@ class TestRepo:
         # #5: Reset: archive: False, purge_archive: True, silent: False
         repo.archive = False
         repo.reset(purge_archive=True, silent=False)
-        check_reset(repo)
         load_data(repo=repo, datasets=datasets)
 
         # ---------------------------------------------------------------------------------------- #
@@ -550,7 +537,6 @@ class TestRepo:
         # 6: Reset archive False, purge_archive: True, silent: True
         repo.archive = False
         repo.reset(purge_archive=True, silent=True)
-        check_reset(repo)
         load_data(repo=repo, datasets=datasets)
 
         # ---------------------------------------------------------------------------------------- #
@@ -582,7 +568,6 @@ class TestRepo:
         # 7: Reset archive True, purge_archive: True, silent: False
         repo.archive = True
         repo.reset(purge_archive=True, silent=False)
-        check_reset(repo)
         load_data(repo=repo, datasets=datasets)
 
         # ---------------------------------------------------------------------------------------- #
@@ -614,8 +599,6 @@ class TestRepo:
         # 8: Reset archive True, purge_archive: False, silent: True
         repo.archive = True
         repo.reset(purge_archive=True, silent=True)
-        check_reset(repo)
-        load_data(repo=repo, datasets=datasets)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

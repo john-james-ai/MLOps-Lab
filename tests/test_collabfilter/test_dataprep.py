@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 27th 2022 09:15:09 am                                               #
-# Modified   : Sunday November 27th 2022 03:44:05 pm                                               #
+# Modified   : Wednesday November 30th 2022 12:28:34 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -271,7 +271,7 @@ class TestCFDataPrep:
 @pytest.mark.cfpipe
 class TestCFPipeline:
     # ================================================================================================ #
-    def test_setup(self, cf_config, repo, caplog):
+    def test_pipeline(self, cf_config, repo, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -282,66 +282,14 @@ class TestCFPipeline:
             )
         )
         # ---------------------------------------------------------------------------------------- #
+        repo.reset(silent=True)
         builder = CFDataPipelineBuilder()
         director = PipelineDirector(config=cf_config, builder=builder, io=IOService)
         director.build_pipeline()
         pipeline = builder.pipeline
         pipeline.run()
-        repo.print_registry()
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_something(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ================================================================================================ #
-    def test_teardown(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-
+        registry = repo.print_registry()
+        assert registry.shape[0] == 7
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

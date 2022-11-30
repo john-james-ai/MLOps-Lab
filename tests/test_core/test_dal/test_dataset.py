@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 05:45:09 pm                                               #
-# Modified   : Saturday November 26th 2022 08:21:24 pm                                             #
+# Modified   : Tuesday November 29th 2022 08:01:14 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -37,37 +37,6 @@ COST = 23022
 
 @pytest.mark.dataset
 class TestDataset:
-    def test_validation(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%H:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ------------------------------------------------------------------------------------------------ #
-        with pytest.raises(ValueError):
-            _ = Dataset(name=NAME, data=ratings, stage="328")
-
-        with pytest.raises(ValueError):
-            _ = Dataset(data=ratings, stage="input")
-
-        # ------------------------------------------------------------------------------------------------ #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%H:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
     # ============================================================================================ #
     def test_instantiation(self, ratings, caplog):
         start = datetime.now()
@@ -183,9 +152,17 @@ class TestDataset:
         assert isinstance(DATASET.head(), pd.DataFrame)
         assert isinstance(DATASET.tail(), pd.DataFrame)
         assert isinstance(DATASET.sample(n=10), pd.DataFrame)
-        assert len(DATASET.columns) == 3
+        assert DATASET.ncols == 3
         assert isinstance(DATASET.cluster_sample(n=10, by="userId"), pd.DataFrame)
         assert DATASET.sample(n=10).shape[0] == 10
+        DATASET.archive()
+        assert DATASET.archived is True
+        DATASET.restore()
+        assert DATASET.archived is False
+        DATASET.archived = True
+        assert DATASET.archived is True
+        DATASET.id = 999
+        assert DATASET.id == 999
 
         with pytest.raises(TypeError):
             DATASET.data = ratings
@@ -263,7 +240,6 @@ class TestDataset:
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        assert dataset_sans_data.columns is None
         assert dataset_sans_data.nrows is None
         assert dataset_sans_data.ncols is None
         assert dataset_sans_data.memory_size_mb is None

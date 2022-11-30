@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 10th 2022 04:03:40 pm                                             #
-# Modified   : Saturday November 26th 2022 05:03:04 am                                             #
+# Modified   : Tuesday November 29th 2022 11:55:22 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -39,7 +39,7 @@ class IO(ABC):
     @classmethod
     @abstractmethod
     def _read(cls, filepath: str, **kwargs) -> Any:
-        pass
+        """Read data"""
 
     @classmethod
     def write(cls, filepath: str, data: Any, *args, **kwargs) -> None:
@@ -49,7 +49,7 @@ class IO(ABC):
     @classmethod
     @abstractmethod
     def _write(cls, filepath: str, data: Any, **kwargs) -> None:
-        pass
+        """Write data"""
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -63,7 +63,7 @@ class CSVIO(IO):
         cls,
         filepath: str,
         header: Union[int, None] = 0,
-        index_col: Union[int, str] = None,
+        index_col: Union[int, str] = 0,
         usecols: List[str] = None,
         low_memory: bool = False,
         encoding: str = "utf-8",
@@ -85,7 +85,7 @@ class CSVIO(IO):
         filepath: str,
         data: pd.DataFrame,
         sep: str = ",",
-        index: bool = False,
+        index: bool = True,
         index_label: bool = None,
         encoding: str = "utf-8",
         **kwargs,
@@ -102,34 +102,21 @@ class YamlIO(IO):
     @classmethod
     def _read(cls, filepath: str, document: str = None, **kwargs) -> dict:
 
-        if document is not None:
-            with open(filepath, "r") as f:
-                docs = yaml.safe_load_all(f)
-                for doc in docs:
-                    if document in doc.keys():
-                        return doc.values()
+        with open(filepath, "r") as f:
+            try:
+                return yaml.safe_load(f)
+            except yaml.YAMLError as e:  # pragma: no cover
+                logger.error(e)
+                raise IOError(e)
+            finally:
                 f.close()
-                msg = f"Document {document} not found in {filepath}."
-                logger.error(msg)
-                raise ValueError(msg)
-
-        else:
-
-            with open(filepath, "r") as f:
-                try:
-                    return yaml.safe_load(f)
-                except yaml.YAMLError as e:
-                    logger.error(e)
-                    raise IOError(e)
-                finally:
-                    f.close()
 
     @classmethod
     def _write(cls, filepath: str, data: Any, **kwargs) -> None:
         with open(filepath, "w") as f:
             try:
                 yaml.dump(data, f)
-            except yaml.YAMLError as e:
+            except yaml.YAMLError as e:  # pragma: no cover
                 logger.error(e)
                 raise IOError(e)
             finally:
@@ -148,7 +135,7 @@ class PickleIO(IO):
         with open(filepath, "rb") as f:
             try:
                 return pickle.load(f)
-            except pickle.PickleError() as e:
+            except pickle.PickleError() as e:  # pragma: no cover
                 logger.error(e)
                 raise IOError(e)
             finally:
@@ -161,7 +148,7 @@ class PickleIO(IO):
         with open(filepath, write_mode) as f:
             try:
                 pickle.dump(data, f)
-            except pickle.PickleError() as e:
+            except pickle.PickleError() as e:  # pragma: no cover
                 logger.error(e)
                 raise (e)
             finally:
@@ -181,29 +168,30 @@ class IOService:
 
     @property
     def file_formats(self) -> list:
-        return IOService.__io.keys()
+        return list(IOService.__io.keys())
 
     @classmethod
     def read(cls, filepath: str, **kwargs) -> Any:
-        io = cls._get_io(filepath)
+        file_format = cls._validate(filepath)
+        io = cls._get_io(file_format)
         return io.read(filepath, **kwargs)
 
     @classmethod
     def write(cls, filepath: str, data: Any, **kwargs) -> None:
-        io = cls._get_io(filepath)
+        file_format = cls._validate(filepath)
+        io = cls._get_io(file_format)
         io.write(filepath=filepath, data=data, **kwargs)
 
     @classmethod
-    def _get_io(cls, filepath: str) -> IO:
+    def _get_io(cls, file_format: str) -> IO:
+        return IOService.__io[file_format]
+
+    @classmethod
+    def _validate(cls, filepath) -> str:
         file_format = os.path.splitext(filepath)[1].replace(".", "")
-        try:
-            return IOService.__io[file_format]
-        except TypeError:
-            if filepath is None:
-                msg = "Filepath is None"
-                logger.error(msg)
-                raise ValueError(msg)
-        except KeyError:
-            msg = "File type {} is not supported.".format(file_format)
+        if file_format not in IOService.__io.keys():
+            msg = f"File format {file_format} is not supported."
             logger.error(msg)
-            raise ValueError(msg)
+            raise TypeError(msg)
+
+        return file_format

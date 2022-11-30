@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 27th 2022 06:59:08 am                                               #
-# Modified   : Sunday November 27th 2022 04:55:24 pm                                               #
+# Modified   : Tuesday November 29th 2022 10:58:55 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from dotenv import load_dotenv
 import numpy as np
 import logging
+from copy import deepcopy
 
 from recsys.config.data import DIRECTORIES, TRAIN_PROPORTION
 from recsys.config.workflow import RANDOM_STATE
@@ -33,7 +34,7 @@ from recsys.config.workflow import (
     StepPO,
     InputPO,
     OutputPO,
-    FilsetInputPO,
+    FilesetInputPO,
     DatasetInputPO,
     DatasetOutputPO,
     DatasetGroupPO,
@@ -68,7 +69,7 @@ class CreateDatasetStepPO(StepPO):
 
 
 @dataclass
-class CreateDatasetInputPO(FilsetInputPO):
+class CreateDatasetInputPO(FilesetInputPO):
     filepath: str = None
 
     def __post_init__(self) -> None:
@@ -261,8 +262,8 @@ class TrainTestSplit(DatasetOperator):
         train_params = self.output_params.train.as_dict()
         test_params = self.output_params.test.as_dict()
 
-        train = Dataset(**train_params, data=train_set)
-        test = Dataset(**test_params, data=test_set)
+        train = deepcopy(Dataset(**train_params, data=train_set))
+        test = deepcopy(Dataset(**test_params, data=test_set))
 
         result = DatasetGroup(train=train, test=test)
 
@@ -277,8 +278,8 @@ class TrainTestSplit(DatasetOperator):
 #                           DATA CENTRALIZER PARAMETER CONFIG                                      #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DataCentralizerStepPO(StepPO):
-    name: str = "data_centralizer"
+class TrainDataCentralizerStepPO(StepPO):
+    name: str = "train_data_centralizer"
     description: str = "Center Ratings by User Mean"
     force: bool = True
 
@@ -296,6 +297,14 @@ class TrainDataCentralizerOutputPO(DatasetOutputPO):
     name: str = "train_ratings_centered"
     description: str = "Training User Ratings Centered by User Mean Rating"
     stage: str = "interim"
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TestDataCentralizerStepPO(StepPO):
+    name: str = "test_data_centralizer"
+    description: str = "Center Ratings by User Mean"
+    force: bool = True
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -331,7 +340,7 @@ class TrainDataCentralizer(DatasetOperator):
 
     def __init__(
         self,
-        step_params: StepPO = DataCentralizerStepPO(),
+        step_params: StepPO = TrainDataCentralizerStepPO(),
         input_params: DatasetInputPO = TrainDataCentralizerInputPO(),
         output_params: DatasetOutputPO = TrainDataCentralizerOutputPO(),
     ) -> None:
@@ -366,7 +375,7 @@ class TestDataCentralizer(DatasetOperator):
 
     def __init__(
         self,
-        step_params: StepPO = DataCentralizerStepPO(),
+        step_params: StepPO = TestDataCentralizerStepPO(),
         input_params: DatasetInputPO = TestDataCentralizerInputPO(),
         output_params: DatasetOutputPO = TestDataCentralizerOutputPO(),
     ) -> None:
@@ -394,8 +403,8 @@ class TestDataCentralizer(DatasetOperator):
 #                                 USER PARAMETER CONFIG                                            #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class UserStepPO(StepPO):
-    name: str = "user"
+class TrainUserStepPO(StepPO):
+    name: str = "train_user"
     description: str = "User Average Ratings"
     force: bool = True
 
@@ -415,6 +424,14 @@ class TrainUserOutputPO(DatasetOutputPO):
     name: str = "train_user_ave_ratings"
     description: str = "Train User Average Ratings"
     stage: str = "interim"
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class TestUserStepPO(StepPO):
+    name: str = "test_user"
+    description: str = "User Average Ratings"
+    force: bool = True
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -454,7 +471,7 @@ class TrainUser(DatasetOperator):
 
     def __init__(
         self,
-        step_params: StepPO = UserStepPO(),
+        step_params: StepPO = TrainUserStepPO(),
         input_params: DatasetInputPO = TrainUserInputPO(),
         output_params: DatasetOutputPO = TrainUserOutputPO(),
     ) -> None:
@@ -492,7 +509,7 @@ class TestUser(DatasetOperator):
 
     def __init__(
         self,
-        step_params: StepPO = UserStepPO(),
+        step_params: StepPO = TestUserStepPO(),
         input_params: DatasetInputPO = TestUserInputPO(),
         output_params: DatasetOutputPO = TestUserOutputPO(),
     ) -> None:

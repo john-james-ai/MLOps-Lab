@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 25th 2022 02:57:23 pm                                               #
-# Modified   : Saturday November 26th 2022 05:33:24 am                                             #
+# Modified   : Tuesday November 29th 2022 10:58:04 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -87,7 +87,7 @@ class ETLPipelineBuilder(PipelineBuilder):
             self._context = Context(
                 name=self._config["name"], description=self._config["description"], io=io
             )
-        except KeyError as e:
+        except KeyError as e:  # pragma: no cover
             logger.error(e)
             raise
 
@@ -104,22 +104,16 @@ class ETLPipelineBuilder(PipelineBuilder):
                     **step_config["params"],
                 )
 
-                logger.debug(operator)
-
                 self._steps[operator.name] = operator
 
-            except KeyError as e:
+            except KeyError as e:  # pragma: no cover
                 logging.error("Configuration File is missing operator configuration data")
                 raise (e)
 
     def build_pipeline(self) -> None:
-        logger.debug(
-            f"Config name: {self._config['name']}, Config description: {self._config['description']}"
-        )
         self._pipeline = ETLPipeline(
             name=self._config["name"], description=self._config["description"]
         )
-        logger.debug(self._pipeline)
         self._pipeline.context = self._context
         for _, step in self._steps.items():
             self._pipeline.add_step(step)

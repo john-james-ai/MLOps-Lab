@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Sunday November 27th 2022 04:53:26 pm                                               #
+# Modified   : Tuesday November 29th 2022 11:09:38 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -59,9 +59,10 @@ def repository(func, repo: DatasetRepo = Provide[Container.repo]):  # noqa C109
                 return repo.add(result)
             elif isinstance(result, dict):
                 for name, dataset in result.items():
-                    results[name] = store_result(dataset)
+                    repo.add(dataset)
+                    results[name] = dataset
                 return results
-            else:
+            else:  # pragma: no cover
                 msg = f"Result type: {type(result)} is not supported."
                 logger.error(msg)
                 raise TypeError(msg)

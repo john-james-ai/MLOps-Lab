@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 17th 2022 02:51:27 am                                             #
-# Modified   : Sunday November 27th 2022 04:49:34 pm                                               #
+# Modified   : Tuesday November 29th 2022 10:58:17 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -27,11 +27,14 @@ import shlex
 import shutil
 import subprocess
 from zipfile import ZipFile
+from urllib.request import urlopen
 
 from recsys.config.workflow import OperatorParams
-from recsys.core.services.profiler import profiler
+
+# from recsys.core.services.profiler import profiler
 from recsys.core.workflow.pipeline import Context
 from recsys.core.dal.dataset import Dataset
+
 from recsys.config.workflow import DatasetGroupABC
 from recsys.core.services.decorator import repository
 from recsys.core.utils.data import clustered_sample
@@ -158,15 +161,81 @@ class DatasetOperator(Operator):
 
         elif isinstance(data, DatasetGroupABC):
             datasets = data.get_datasets()
+
             for k, v in datasets.items():
                 v.cost = self._duration
                 datasets[k] = v
             data = datasets
+
         else:
             msg = "Output is invalid. Not a dictionary nor a Dataset."
             logger.error(msg)
             raise TypeError(msg)
         return data
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                         DOWNLOADER                                               #
+# ------------------------------------------------------------------------------------------------ #
+
+
+class Downloader(Operator):
+    """Downloads Dataset from a website using urllib
+
+    Args:
+        url (str): The URL to the web resource
+        destination (str): The file into which the data will be downloaded.
+    """
+
+    def __init__(
+        self,
+        url: str,
+        destination: str,
+        force: bool = False,
+        name: str = None,
+        description: str = None,
+    ) -> None:
+
+        name = self.__class__.__name__.lower() if name is None else name
+        description = self.__class__.__name__ + " from " + url + " to " + destination
+
+        super().__init__(
+            name=name,
+            description=description,
+            url=url,
+            destination=destination,
+            force=force,
+        )
+
+    # @profiler
+    def execute(self, data: pd.DataFrame = None, context: Context = None, *args, **kwargs) -> None:
+        """Download file."""
+
+        if self._proceed():
+            os.makedirs(os.path.dirname(self.destination), exist_ok=True)
+
+            zipresp = urlopen(self.url)
+            # Create a new file on the hard drive
+            tempzip = open("/tmp/tempfile.zip", "wb")
+            # Write the contents of the downloaded file into the new file
+            tempzip.write(zipresp.read())
+            # Close the newly-created file
+            tempzip.close()
+            # Re-open the newly-created file with ZipFile()
+            zf = ZipFile("/tmp/tempfile.zip")
+            # Extract its contents into <extraction_path>
+            # note that extractall will automatically create the path
+            zf.extractall(path=self.destination)
+            # close the ZipFile instance
+            zf.close()
+
+    def _proceed(self) -> bool:
+        if self.force:
+            return True
+        elif os.path.exists(self.destination):
+            return False
+        else:
+            return True
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -203,7 +272,7 @@ class KaggleDownloader(Operator):
             "kaggle datasets download" + " -d " + self.kaggle_filepath + " -p " + self.destination
         )
 
-    @profiler
+    # @profiler
     def execute(self, data: pd.DataFrame = None, context: Context = None, *args, **kwargs) -> None:
         """Downloads compressed data via an API using bash"""
         os.makedirs(self.destination, exist_ok=True)
@@ -258,7 +327,7 @@ class DeZipper(Operator):
             force=force,
         )
 
-    @profiler
+    # @profiler
     def execute(self, data: pd.DataFrame = None, context: Context = None, *args, **kwargs) -> None:
         os.makedirs(self.destination, exist_ok=True)
 
@@ -325,7 +394,7 @@ class Pickler(Operator):
             force=force,
         )
 
-    @profiler
+    # @profiler
     def execute(self, data: pd.DataFrame = None, context: Context = None, *args, **kwargs) -> None:
         """Executes the operation
 
@@ -389,7 +458,7 @@ class Copier(Operator):
             force=force,
         )
 
-    @profiler
+    # @profiler
     def execute(self, data: pd.DataFrame = None, context: Context = None, *args, **kwargs) -> None:
         """Executes the operation
 
@@ -456,7 +525,7 @@ class Sampler(Operator):
             force=force,
         )
 
-    @profiler
+    # @profiler
     def execute(self, data: pd.DataFrame = None, context: Context = None, *args, **kwargs) -> None:
         """Executes the operation
 

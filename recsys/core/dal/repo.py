@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Sunday November 27th 2022 01:20:53 pm                                               #
+# Modified   : Wednesday November 30th 2022 12:26:52 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,11 +19,11 @@
 """Data Repository Module"""
 import logging
 import os
+from glob import glob
 from abc import ABC, abstractmethod
-from typing import Any, Union, List
+from typing import Any
 import shutil
 
-from recsys.config.data import STAGES
 from recsys.core.dal.dataset import Dataset
 from recsys.core.dal.registry import DatasetRegistry
 from recsys.core.services.io import IOService
@@ -60,7 +60,8 @@ class DatasetRepo(Repo):
     Repository of Dataset objects.
 
     Args:
-        directory (str): The base directory for the repository.
+        repo_directory (str): The base directory for the repository.
+        archive_directory (str): The base directory for the archive.
         io (IOService): Service responsible for reading and writing data to, from the repository.
         file_format (str): The format in which the Dataset objects are stored.
         archive (bool): Whether to archive rather than delete objects on reset and remove.
@@ -68,25 +69,26 @@ class DatasetRepo(Repo):
 
     def __init__(
         self,
-        directory: str,
+        repo_directory: str,
+        archive_directory: str,
         io: IOService,
         registry: DatasetRegistry,
         file_format: str,
         archive: bool = True,
     ) -> None:
-        self._directory = directory
+        self._repo_directory = repo_directory
+        self._archive_directory = archive_directory
         self._io = io
         self._registry = registry
         self._archive = archive
-        self._archive_directory = os.path.join(self._directory, "archive")
         self._file_format = file_format
 
     def __len__(self) -> int:
         return len(self._registry)
 
     @property
-    def directory(self) -> str:
-        return self._directory
+    def repo_directory(self) -> str:
+        return self._repo_directory
 
     @property
     def archive(self) -> bool:
@@ -123,10 +125,7 @@ class DatasetRepo(Repo):
                 if "y" in sure.lower():
                     self._reset_all()
             elif self._archive:
-                msg = "Resetting the repository will archive all data. Are you SURE? (Y/N)"
-                sure = input(msg)
-                if "y" in sure.lower():
-                    self._reset_and_archive()
+                self._reset_and_archive()
             else:
                 msg = (
                     "Resetting the repository will PERMANENTLY DELETE all data. Are you SURE? (Y/N)"
@@ -177,7 +176,6 @@ class DatasetRepo(Repo):
             stage (str): Preprocessing stage. One of 'staged', 'interim' or 'final'
         """
         result = self.find_dataset(name=name, stage=stage)
-        logger.debug(f"\n\nget_dataset method returned:\n{result}\n")
         if result.shape[0] > 1:
             result = result.sort_values(by="version", ascending=False).reset_index().iloc[0]
         return self.get(int(result["id"]))
@@ -229,6 +227,17 @@ class DatasetRepo(Repo):
         """
         return self._registry.version_exists(dataset=dataset)
 
+    def archive_repo(self) -> None:
+        """movies repository data to an archive folder."""
+        i = 0
+
+        registrations = self._registry.get_all(as_dict=True)
+        for id, registration in registrations.items():
+            self.archive_dataset(id)
+            i += 1
+
+        logger.info(f"Archive complete, {str(i)} files archived.")
+
     def archive_dataset(self, id: int) -> None:
         """Moves a Dataset to archive.
 
@@ -243,6 +252,16 @@ class DatasetRepo(Repo):
         self._move_file(source=source, destination=destination)
         self._registry.archive(id)
 
+    def restore_repo(self) -> None:
+        """Restores a repository from archive"""
+        i = 0
+
+        registrations = self._registry.get_archive()
+        for id, registration in registrations.items():
+            self.restore_dataset(id)
+            i += 1
+        logger.info(f"Restore complete, {str(i)} files restored.")
+
     def restore_dataset(self, id: int) -> None:
         """Restores a Dataset from archive.
 
@@ -254,27 +273,6 @@ class DatasetRepo(Repo):
         destination = registration["filepath"]  # Filepath doesn't change under archive.
         self._move_file(source=source, destination=destination)
         self._registry.restore(id)
-
-    def archive_repo(self) -> None:
-        """movies repository data to an archive folder."""
-        i = 0
-
-        registrations = self._registry.get_all(as_dict=True)
-        for id, registration in registrations.items():
-            self.archive_dataset(id)
-            i += 1
-
-        logger.info(f"Archive complete, {str(i)} files archived.")
-
-    def restore_repo(self) -> None:
-        """Restores a repository from archive"""
-        i = 0
-
-        registrations = self._registry.get_archive()
-        for id, registration in registrations.items():
-            self.restore_dataset(id)
-            i += 1
-        logger.info(f"Restore complete, {str(i)} files restored.")
 
     def print(self, id: int) -> None:
         """Prints a Dataset by id.
@@ -294,8 +292,9 @@ class DatasetRepo(Repo):
 
     def print_registry(self) -> None:
         """Prints and returns a DataFrame containing the registry."""
-        print(self._registry.get_all())
-        return self._registry.get_all()
+        registry = self._registry.get_all()
+        print(registry)
+        return registry
 
     def _get_filepath(self, dataset: Dataset) -> str:
         """Formats a filename using the Dataset name, stage, and version."""
@@ -308,7 +307,7 @@ class DatasetRepo(Repo):
             + "."
             + self._file_format
         )
-        return os.path.join(self._directory, dataset.stage, filename)
+        return os.path.join(self._repo_directory, dataset.stage, filename)
 
     def _get_archive_filepath(self, registration: str) -> str:
         """Returns the archive filepath given a registration."""
@@ -327,8 +326,8 @@ class DatasetRepo(Repo):
     def _reset_and_archive(self) -> None:
         """Resets the repository, archiving all data."""
         self._registry.reset()
+        self.archive_repo()
         self._purge_repo()
-        self._purge_archive()
 
     def _reset_repo(self) -> None:
         """Resets repo and deletes data. Archive is untouched."""
@@ -337,25 +336,28 @@ class DatasetRepo(Repo):
 
     def _purge_repo(self) -> None:
         """Deletes the data in the repository."""
-        folders = []
-        for stage in STAGES:
-            folders.append(os.path.join(self._directory, stage))
-        self._purge(folder=folders)
+        pattern = self._repo_directory + "/**/*." + self._file_format
+        filelist = glob(pattern)
+        self._purge(filelist=filelist)
 
     def _purge_archive(self) -> None:
-        self._purge(folder=self._archive_directory)
+        pattern = self._archive_directory + "/**/*." + self._file_format
+        filelist = glob(pattern)
+        self._purge(filelist=filelist)
 
-    def _purge(self, folder: Union[str, List[str]]) -> None:
+    def _purge(self, filelist: list) -> None:
         """Purges the designated folder(s) and contents.
 
         Args:
-            folder (Union[str, List[str]]): Folder or list of folders to purge.
+            filelist (list): List of files to remove.
         """
-        if isinstance(folder, str):
-            shutil.rmtree(folder, ignore_errors=True)
-        else:
-            for f in folder:
-                shutil.rmtree(f, ignore_errors=True)
+        for filepath in filelist:
+            try:
+                os.remove(filepath)
+            except OSError as e:  # pragma: no cover
+                msg = f"Error while deleting {filepath}\n{e}"
+                logger.error(msg)
+                raise OSError(msg)
 
     def _move_file(self, source, destination) -> None:
         os.makedirs(os.path.dirname(destination), exist_ok=True)
