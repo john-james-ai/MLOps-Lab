@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 13th 2022 03:38:50 am                                               #
-# Modified   : Tuesday November 15th 2022 11:56:00 pm                                              #
+# Modified   : Wednesday November 30th 2022 12:55:07 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -162,7 +162,7 @@ class CollaborativeFilterRecommender:
             .progress_apply(
                 lambda x: (
                     x["mean_rating"]
-                    + (np.dot(x["weight"], x["adj_rating"] / np.sum(np.abs(x["weight"]))))
+                    + (np.dot(x["weight"], x["rating_centered"] / np.sum(np.abs(x["weight"]))))
                 )
             )
             .reset_index()

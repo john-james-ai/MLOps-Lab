@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 27th 2022 06:59:08 am                                               #
-# Modified   : Tuesday November 29th 2022 10:58:55 pm                                              #
+# Modified   : Wednesday November 30th 2022 12:55:08 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -350,7 +350,9 @@ class TrainDataCentralizer(DatasetOperator):
 
         data = self.input_data
 
-        data["adj_rating"] = data["rating"].sub(data.groupby("userId")["rating"].transform("mean"))
+        data["rating_centered"] = data["rating"].sub(
+            data.groupby("userId")["rating"].transform("mean")
+        )
 
         params = self.output_params.as_dict()
 
@@ -385,7 +387,9 @@ class TestDataCentralizer(DatasetOperator):
 
         data = self.input_data
 
-        data["adj_rating"] = data["rating"].sub(data.groupby("userId")["rating"].transform("mean"))
+        data["rating_centered"] = data["rating"].sub(
+            data.groupby("userId")["rating"].transform("mean")
+        )
 
         params = self.output_params.as_dict()
 

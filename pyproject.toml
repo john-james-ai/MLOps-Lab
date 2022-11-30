@@ -77,7 +77,7 @@ addopts = """\
     --cov-report term-missing \
     --no-cov-on-fail \
 """
-markers = ["sample","users","data","adj_ratings","weights","split","dataset", "cf", "ops", "pipe", "config"]
+markers = ["sample","users","data","rating_centereds","weights","split","dataset", "cf", "ops", "pipe", "config"]
 
 
 
