@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 05:45:09 pm                                               #
-# Modified   : Tuesday November 29th 2022 08:01:14 pm                                              #
+# Modified   : Thursday December 1st 2022 01:36:15 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -52,6 +52,7 @@ class TestDataset:
         DATASET = Dataset(name=NAME, data=ratings, cost=COST)
 
         assert DATASET.name == NAME
+        assert DATASET.env == "test"
         assert DATASET.stage == "interim"
         assert DATASET.nrows > 1000
         assert DATASET.ncols > 2

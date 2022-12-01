@@ -4,69 +4,60 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /decorator.py                                                                       #
+# Filename   : /cf_config.py                                                                       #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Tuesday November 29th 2022 11:09:38 pm                                              #
+# Created    : Thursday December 1st 2022 12:25:04 am                                              #
+# Modified   : Thursday December 1st 2022 01:28:34 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-"""Repository decorator for DatasetOperator classes."""
+import os
+import dotenv
 import logging
-from functools import wraps
+from dataclasses import dataclass
 
-from dependency_injector.wiring import Provide, inject
-
-from recsys.core.services.container import Container
-from recsys.core.dal.dataset import Dataset
-from recsys.core.dal.repo import DatasetRepo
+from recsys.config.base import StepPO, FilesetPO, DatasetPO, OperatorParams, DATA_STRUCTURE
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 # ------------------------------------------------------------------------------------------------ #
-#                                   DECORATOR FUNCTIONS                                            #
+#                          MOVIELENS 25M DATA PREP CONFIG                                          #
 # ------------------------------------------------------------------------------------------------ #
+@dataclass
+class CreateDatasetStepPO(StepPO):
+    name: str = "create_ratings_dataset"
+    description: str = "Creates ratings Dataset object"
+    force: bool = False
 
 
-@inject
-def repository(func, repo: DatasetRepo = Provide[Container.repo]):  # noqa C109
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class CreateDatasetInputPO(FilesetPO):
+    source: str = "movielens25m"
+    filepath: str = None
 
-        dataset = None
+    def __post_init__(self) -> None:
+        dotenv.load_dotenv()
+        ENV = os.getenv("ENV")
+        try:
+            self.filepath = DATA_STRUCTURE["data"]["sources"][self.source][ENV]
+        except KeyError as e:
+            msg = f"Data source, {self.datasource} or environment: {ENV} is not recognized.\n{e}"
+            logger.error(msg)
+            raise ValueError(msg)
 
-        # Handle input
-        if not hasattr(self.input_params, "filepath"):
-            dataset = repo.get_dataset(name=self.input_params.name, stage=self.input_params.stage)
-            setattr(self, "input_data", dataset.data)
 
-        # Execute wrapped method.
-        result = func(self, *args, **kwargs)
-
-        # Handle Results
-
-        results = {}
-
-        def store_result(result) -> None:
-            if isinstance(result, Dataset):
-                return repo.add(result)
-            elif isinstance(result, dict):
-                for name, dataset in result.items():
-                    repo.add(dataset)
-                    results[name] = dataset
-                return results
-            else:  # pragma: no cover
-                msg = f"Result type: {type(result)} is not supported."
-                logger.error(msg)
-                raise TypeError(msg)
-
-        return store_result(result)
-
-    return wrapper
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class CreateDatasetOutputPO(DatasetPO):
+    name: str = "ratings"
+    description: str = "Ratings Dataset"
+    source: str = "movielens25m"
+    stage: str = "staged"

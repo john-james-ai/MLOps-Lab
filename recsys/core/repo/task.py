@@ -4,26 +4,15 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /cf.yml                                                                             #
+# Filename   : /dataset.py                                                                         #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday November 26th 2022 12:17:05 pm                                             #
-# Modified   : Sunday November 27th 2022 01:36:24 pm                                               #
+# Created    : Thursday December 1st 2022 05:48:13 am                                              #
+# Modified   : Thursday December 1st 2022 05:48:17 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-# Collaborative Filtering Preprocessing Configuration Module"
-name: collabfilter_data_prep
-description: Data Preprocessing for Collaborative Filter Recommender
-operator_module: recsys.recommenders.collabfilter.workflow.operators
-steps:
-  1: CreateDataset
-  2: TrainTestSplit
-  3: TrainDataCentralizer
-  4: TestDataCentralizer
-  5: TrainUser
-  6: TestUser

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 17th 2022 02:51:27 am                                             #
-# Modified   : Tuesday November 29th 2022 10:58:17 pm                                              #
+# Modified   : Thursday December 1st 2022 01:29:05 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,12 +31,10 @@ from urllib.request import urlopen
 
 from recsys.config.workflow import OperatorParams
 
-# from recsys.core.services.profiler import profiler
+from recsys.config.base import DatasetGroup
 from recsys.core.workflow.pipeline import Context
 from recsys.core.dal.dataset import Dataset
-
-from recsys.config.workflow import DatasetGroupABC
-from recsys.core.services.decorator import repository
+from recsys.core.services.repository import repository
 from recsys.core.utils.data import clustered_sample
 
 # ------------------------------------------------------------------------------------------------ #
@@ -139,7 +137,7 @@ class DatasetOperator(Operator):
     @repository
     def run(
         self, data: Dataset = None, context: Context = None, *args, **kwargs
-    ) -> Union[Dataset, DatasetGroupABC]:
+    ) -> Union[Dataset, DatasetGroup]:
         data = self._setup(data=data)
         data = self.execute(data=data, context=context)
         data = self._teardown(data=data)
@@ -159,7 +157,7 @@ class DatasetOperator(Operator):
         if isinstance(data, Dataset):
             data.cost = self._duration
 
-        elif isinstance(data, DatasetGroupABC):
+        elif isinstance(data, DatasetGroup):
             datasets = data.get_datasets()
 
             for k, v in datasets.items():
@@ -297,8 +295,8 @@ class KaggleDownloader(Operator):
 # ------------------------------------------------------------------------------------------------ #
 
 
-class DeZipper(Operator):
-    """Unzipps a ZipFile archive
+class EliFpiZ(Operator):
+    """Unzips a ZipFile archive
 
     Args:
         zipfilepath (str): The path to the Zipfile to be extracted.
@@ -347,150 +345,22 @@ class DeZipper(Operator):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                          PICKLER                                                 #
+#                                          DataGenerator                                           #
 # ------------------------------------------------------------------------------------------------ #
 
 
-class Pickler(Operator):
-    """Converts a file to pickle format and optionally removes the original file.
+class DataGenerator(Operator):
+    """Generates data from an input source to a destination of a designated sample size and format.
 
     Args:
-        infilepath (str): Path to file being converted
-        outfilepath (str): Path to the converted file
-        infile_format(str): The format of the input file
-        infile_params (dict): Optional. Dictionary containing additional keyword arguments for reading the infile.
-        usecols (list): List of columns to select.
-        outfile_params (dict): Optional. Dictionary containing additional keyword arguments for writing the outfile.
-        force (bool): If True, overwrite existing file if it exists.
-        kwargs (dict): Additional keyword arguments to be passed to io object.
-    """
-
-    def __init__(
-        self,
-        infilepath: str,
-        outfilepath: str,
-        infile_format: str = "csv",
-        usecols: list = [],
-        index_col: bool = False,
-        encoding: str = "utf-8",
-        low_memory: bool = False,
-        name: str = None,
-        description: str = None,
-        force: bool = False,
-    ) -> None:
-        name = self.__class__.__name__ if name is None else name
-        description = self.__str__()
-
-        super().__init__(
-            name=name,
-            description=description,
-            infilepath=infilepath,
-            outfilepath=outfilepath,
-            infile_format=infile_format,
-            usecols=usecols,
-            index_col=index_col,
-            encoding=encoding,
-            low_memory=low_memory,
-            force=force,
-        )
-
-    # @profiler
-    def execute(self, data: pd.DataFrame = None, context: Context = None, *args, **kwargs) -> None:
-        """Executes the operation
-
-        Args:
-            context (Context): Context object containing the name
-                and description of Pipeline, and the io object as well.
-        """
-        if self._proceed():
-            io = context.io
-            data = io.read(
-                filepath=self.infilepath,
-                usecols=self.usecols,
-                index_col=self.index_col,
-                low_memory=self.low_memory,
-                encoding=self.encoding,
-            )
-            os.makedirs(os.path.dirname(self.outfilepath), exist_ok=True)
-            io.write(self.outfilepath, data)
-
-    def _proceed(self) -> bool:
-        if self.force:
-            return True
-        elif os.path.exists(self.outfilepath):
-            outfilename = os.path.basename(self.outfilepath)
-            logger.info("Pickler skipped as {} already exists.".format(outfilename))
-            return False
-        else:
-            return True
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                           COPY                                                   #
-# ------------------------------------------------------------------------------------------------ #
-
-
-class Copier(Operator):
-    """Copies a file from source to destination
-
-    Args:
+        name (str): Name for the instance
+        description (str): Description for the instance.
         infilepath (str): Path to file being copied
         outfilepath (str): The destination filepath
-        force (bool): If True, overwrite existing file if it exists.
-    """
-
-    def __init__(
-        self,
-        infilepath: str,
-        outfilepath: str,
-        name: str = None,
-        description: str = None,
-        force: bool = False,
-    ) -> None:
-        name = self.__class__.__name__ if name is None else name
-        description = self.__str__()
-
-        super().__init__(
-            name=name,
-            description=description,
-            infilepath=infilepath,
-            outfilepath=outfilepath,
-            force=force,
-        )
-
-    # @profiler
-    def execute(self, data: pd.DataFrame = None, context: Context = None, *args, **kwargs) -> None:
-        """Executes the operation
-
-        Args:
-            context (Context): Context object containing the name
-                and description of Pipeline, and the io object as well.
-        """
-        if self._proceed():
-            shutil.copy(src=self.infilepath, dst=self.outfilepath)
-
-    def _proceed(self) -> bool:
-        if self.force:
-            return True
-        elif os.path.exists(self.outfilepath):
-            outfilename = os.path.basename(self.outfilepath)
-            logger.info("Copier skipped as {} already exists.".format(outfilename))
-            return False
-        else:
-            return True
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                          SAMPLER                                                 #
-# ------------------------------------------------------------------------------------------------ #
-
-
-class Sampler(Operator):
-    """Copies a file from source to destination
-
-    Args:
-        infilepath (str): Path to file being copied
-        outfilepath (str): The destination filepath
+        index_col (int, bool): The column to use for the index. Default = False
+        encoding (str): Encoding to use when reading the csv file. Default = utf-8
+        low_memory (bool): Whether to process file in chunks, resulting in lower memory use. Default = False
+        use_cols (list): The columns to read from the CSV file.
         clustered (bool): Conduct clustered sampling if True. Otherwise, simple random sampling.
         clustered_by (str): The column name to cluster by.
         frac (float): The proportion of the data to return as sample.
@@ -502,6 +372,10 @@ class Sampler(Operator):
         self,
         infilepath: str,
         outfilepath: str,
+        use_cols: list,
+        index_col: bool = False,
+        encoding: str = "utf-8",
+        low_memory: bool = False,
         clustered: bool = False,
         clustered_by: str = None,
         frac: float = None,
@@ -510,14 +384,16 @@ class Sampler(Operator):
         description: str = None,
         force: bool = False,
     ) -> None:
-        name = self.__class__.__name__ if name is None else name
-        description = self.__str__()
 
         super().__init__(
             name=name,
             description=description,
             infilepath=infilepath,
             outfilepath=outfilepath,
+            use_cols=use_cols,
+            index_col=index_col,
+            encoding=encoding,
+            low_memory=low_memory,
             clustered=clustered,
             clustered_by=clustered_by,
             frac=frac,
@@ -535,8 +411,16 @@ class Sampler(Operator):
         """
         if self._proceed():
             io = context.io
-            data = io.read(self.infilepath)
-            if self.clustered:
+            data = io.read(
+                self.infilepath,
+                index_col=self.index_col,
+                usecols=self.usecols,
+                low_memory=self.low_memory,
+                encoding=self.encoding,
+            )
+            if self.frac == 1.0:
+                pass
+            elif self.clustered:
                 data = clustered_sample(
                     df=data, by=self.clustered_by, frac=self.frac, random_state=self.random_state
                 )
@@ -549,7 +433,7 @@ class Sampler(Operator):
             return True
         elif os.path.exists(self.outfilepath):
             outfilename = os.path.basename(self.outfilepath)
-            logger.info("Sampler skipped as {} already exists.".format(outfilename))
+            logger.info("DataGenerator skipped as {} already exists.".format(outfilename))
             return False
         else:
             return True

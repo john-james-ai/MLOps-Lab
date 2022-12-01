@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday November 10th 2022 04:03:40 pm                                             #
-# Modified   : Tuesday November 29th 2022 11:55:22 pm                                              #
+# Modified   : Wednesday November 30th 2022 07:05:18 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -63,7 +63,7 @@ class CSVIO(IO):
         cls,
         filepath: str,
         header: Union[int, None] = 0,
-        index_col: Union[int, str] = 0,
+        index_col: Union[int, str] = False,
         usecols: List[str] = None,
         low_memory: bool = False,
         encoding: str = "utf-8",
@@ -180,6 +180,7 @@ class IOService:
     def write(cls, filepath: str, data: Any, **kwargs) -> None:
         file_format = cls._validate(filepath)
         io = cls._get_io(file_format)
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
         io.write(filepath=filepath, data=data, **kwargs)
 
     @classmethod

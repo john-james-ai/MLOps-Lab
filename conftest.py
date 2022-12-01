@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 11th 2022 06:38:26 am                                               #
-# Modified   : Sunday November 27th 2022 04:08:29 pm                                               #
+# Modified   : Thursday December 1st 2022 06:09:58 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,9 +22,9 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from recsys.config.base import Config
-from recsys.core.services.container import container
+from recsys.containers import container
 from recsys.core.dal.dataset import Dataset
-from recsys.core.dal.registry import DatasetRegistry
+from recsys.core.dal.registry import Dataset
 from recsys.core.services.io import IOService
 from recsys.core.workflow.pipeline import Context
 
@@ -50,19 +50,79 @@ class CONFIG_TESTER(Config):
 
 
 DATASET_PARAMS_I = [
-    {"name": "ds1", "stage": "staged", "description": "Desc1", "cost": 1234},
-    {"name": "ds2", "stage": "interim", "description": "Desc2", "cost": 2345},
-    {"name": "ds3", "stage": "staged", "description": "Desc3", "cost": 3456},
-    {"name": "ds4", "stage": "final", "description": "Desc4", "cost": 4567},
-    {"name": "ds5", "stage": "interim", "description": "Desc5", "cost": None},
+    {
+        "name": "ds1",
+        "source": "movielens25m",
+        "stage": "staged",
+        "description": "Desc1",
+        "cost": 1234,
+    },
+    {
+        "name": "ds2",
+        "source": "movielens25m",
+        "stage": "interim",
+        "description": "Desc2",
+        "cost": 2345,
+    },
+    {
+        "name": "ds3",
+        "source": "movielens25m",
+        "stage": "staged",
+        "description": "Desc3",
+        "cost": 3456,
+    },
+    {
+        "name": "ds4",
+        "source": "movielens25m",
+        "stage": "final",
+        "description": "Desc4",
+        "cost": 4567,
+    },
+    {
+        "name": "ds5",
+        "source": "movielens25m",
+        "stage": "interim",
+        "description": "Desc5",
+        "cost": None,
+    },
 ]
 
 DATASET_PARAMS_II = [
-    {"name": "ds6", "stage": "staged", "description": "Desc6", "cost": 1234},
-    {"name": "ds7", "stage": "interim", "description": "Desc7", "cost": 2345},
-    {"name": "ds8", "stage": "staged", "description": "Desc8", "cost": 3456},
-    {"name": "ds9", "stage": "final", "description": "Desc9", "cost": 4567},
-    {"name": "ds10", "stage": "interim", "description": "Desc10", "cost": None},
+    {
+        "name": "ds6",
+        "source": "movielens25m",
+        "stage": "staged",
+        "description": "Desc6",
+        "cost": 1234,
+    },
+    {
+        "name": "ds7",
+        "source": "movielens25m",
+        "stage": "interim",
+        "description": "Desc7",
+        "cost": 2345,
+    },
+    {
+        "name": "ds8",
+        "source": "movielens25m",
+        "stage": "staged",
+        "description": "Desc8",
+        "cost": 3456,
+    },
+    {
+        "name": "ds9",
+        "source": "movielens25m",
+        "stage": "final",
+        "description": "Desc9",
+        "cost": 4567,
+    },
+    {
+        "name": "ds10",
+        "source": "movielens25m",
+        "stage": "interim",
+        "description": "Desc10",
+        "cost": None,
+    },
 ]
 # ------------------------------------------------------------------------------------------------ #
 #                                     CONFIG FIXTURE                                               #
@@ -151,7 +211,7 @@ def database():
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
 def registry(database):
-    return DatasetRegistry(database=database)
+    return Dataset(database=database)
 
 
 # ------------------------------------------------------------------------------------------------ #

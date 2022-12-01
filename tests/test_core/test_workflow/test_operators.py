@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday November 26th 2022 12:17:19 am                                             #
-# Modified   : Tuesday November 29th 2022 08:23:12 pm                                              #
+# Modified   : Wednesday November 30th 2022 08:25:00 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,11 +30,11 @@ from recsys.core.workflow.operators import (
     DeZipper,
     Pickler,
     Copier,
-    Sampler,
+    DataGenerator,
     Downloader,
 )
 from recsys.core.workflow.pipeline import Context, PipelineDirector
-from recsys.core.data.etl import ETLPipelineBuilder
+from recsys.core.data.etl import DataPipelineBuilder
 
 # ------------------------------------------------------------------------------------------------ #
 config.dictConfig(test_log_config)
@@ -202,7 +202,7 @@ class TestOperators:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_sampler(self, etl_config, caplog):
+    def test_DataGenerator(self, etl_config, caplog):
         start = datetime.now()
         logger.info(
             "\n\tStarted {} {} at {} on {}".format(
@@ -213,11 +213,11 @@ class TestOperators:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        context = Context(name="test_sampler", description="testing samplier", io=IOService)
+        context = Context(name="test_DataGenerator", description="testing samplier", io=IOService)
 
         config = etl_config["steps"][5]["params"]
 
-        s = Sampler(
+        s = DataGenerator(
             infilepath=config["infilepath"],
             outfilepath=config["outfilepath"],
             clustered=config["clustered"],
@@ -323,7 +323,7 @@ class TestPipeline:
         )
         # ---------------------------------------------------------------------------------------- #
         outfile = etl_config["steps"][6]["params"]["outfilepath"]
-        d = PipelineDirector(config=etl_config, builder=ETLPipelineBuilder())
+        d = PipelineDirector(config=etl_config, builder=DataPipelineBuilder())
         d.build_pipeline()
         builder = d.builder
         assert builder.config == etl_config

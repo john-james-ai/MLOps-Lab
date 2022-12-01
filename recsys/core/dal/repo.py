@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:27:04 am                                               #
-# Modified   : Wednesday November 30th 2022 12:26:52 am                                            #
+# Modified   : Thursday December 1st 2022 06:09:59 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -25,7 +25,7 @@ from typing import Any
 import shutil
 
 from recsys.core.dal.dataset import Dataset
-from recsys.core.dal.registry import DatasetRegistry
+from recsys.core.dal.registry import Dataset
 from recsys.core.services.io import IOService
 
 # ------------------------------------------------------------------------------------------------ #
@@ -72,7 +72,7 @@ class DatasetRepo(Repo):
         repo_directory: str,
         archive_directory: str,
         io: IOService,
-        registry: DatasetRegistry,
+        registry: Dataset,
         file_format: str,
         archive: bool = True,
     ) -> None:
@@ -145,7 +145,6 @@ class DatasetRepo(Repo):
 
         dataset.filepath = self._get_filepath(dataset)
         dataset = self._registry.add(dataset)
-        os.makedirs(os.path.dirname(dataset.filepath), exist_ok=True)
         self._io.write(filepath=dataset.filepath, data=dataset)
         return dataset
 

@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /main.py                                                                            #
+# Filename   : /__main__.py                                                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 25th 2022 07:22:27 pm                                               #
-# Modified   : Saturday November 26th 2022 04:50:06 am                                             #
+# Modified   : Wednesday November 30th 2022 08:25:00 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ from logging import config
 from recsys.config.log import log_config
 from recsys.core.services.io import IOService
 from recsys.core.workflow.pipeline import PipelineDirector
-from recsys.core.data.etl import ETLPipelineBuilder
+from recsys.core.data.etl import DataPipelineBuilder
 from recsys.config.data import ETL_CONFIG_FILE
 
 # ------------------------------------------------------------------------------------------------ #
@@ -37,7 +37,7 @@ def get_config(config_filepath, io: IOService):
 
 
 def get_data(config: dict):
-    builder = ETLPipelineBuilder()
+    builder = DataPipelineBuilder()
     director = PipelineDirector(config=config, builder=builder)
     director.build_pipeline()
     pipeline = builder.pipeline

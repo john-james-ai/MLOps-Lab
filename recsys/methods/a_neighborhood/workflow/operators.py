@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 27th 2022 06:59:08 am                                               #
-# Modified   : Wednesday November 30th 2022 12:55:08 am                                            #
+# Modified   : Wednesday November 30th 2022 08:56:25 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,15 +30,14 @@ from recsys.config.workflow import RANDOM_STATE
 from recsys.core.workflow.operators import DatasetOperator
 from recsys.core.workflow.pipeline import Context
 from recsys.core.dal.dataset import Dataset
-from recsys.config.workflow import (
+from recsys.config.base import (
     StepPO,
     InputPO,
     OutputPO,
     FilesetInputPO,
     DatasetInputPO,
     DatasetOutputPO,
-    DatasetGroupPO,
-    DatasetGroupABC,
+    DatasetGroup,
 )
 
 # ------------------------------------------------------------------------------------------------ #
@@ -177,7 +176,7 @@ class TestSetOutputPO(DatasetOutputPO):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class TrainTestOutputPO(DatasetGroupPO):
+class TrainTestOutputPO(DatasetGroup):
     train: TrainSetOutputPO = TrainSetOutputPO()
     test: TestSetOutputPO = TestSetOutputPO()
 
@@ -188,7 +187,7 @@ class TrainTestOutputPO(DatasetGroupPO):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DatasetGroup(DatasetGroupABC):
+class DatasetGroup:
     train: Dataset
     test: Dataset
 

@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /container.py                                                                       #
+# Filename   : /containers.py                                                                      #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 25th 2022 03:18:36 pm                                               #
-# Modified   : Tuesday November 29th 2022 09:19:48 pm                                              #
+# Modified   : Thursday December 1st 2022 08:19:33 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -29,8 +29,6 @@ from recsys.config.data import REPO_DIRS, REPO_FILE_FORMAT, DB_LOCATIONS, ARCHIV
 # ------------------------------------------------------------------------------------------------ #
 #                                       CONTAINER                                                  #
 # ------------------------------------------------------------------------------------------------ #
-
-
 def get_env():
     load_dotenv()
     return os.getenv("ENV")
@@ -40,9 +38,9 @@ class Container(containers.DeclarativeContainer):
 
     wiring_config = containers.WiringConfiguration(
         modules=[
-            "recsys.core.services.decorator",
+            "recsys.core.services.repository",
             "recsys.core.workflow.pipeline",
-            # "recsys.recommenders.collabfilter.data.process",
+            # "recsys.methods.neighborhood.data.process",
         ]
     )
 

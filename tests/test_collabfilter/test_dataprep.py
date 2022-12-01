@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 27th 2022 09:15:09 am                                               #
-# Modified   : Wednesday November 30th 2022 12:28:34 am                                            #
+# Modified   : Wednesday November 30th 2022 10:24:18 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -25,8 +25,8 @@ import logging
 from recsys.core.dal.dataset import Dataset
 from recsys.core.services.io import IOService
 
-# from recsys.recommenders.collabfilter.workflow.pipeline import CFDataPipelineBuilder, CFDataPipeline
-from recsys.recommenders.collabfilter.workflow.operators import (
+# from recsys.methods.neighborhood.workflow.pipeline import DatasetPipelineBuilder, DatasetPipeline
+from recsys.methods.neighborhood.workflow.operators import (
     CreateDataset,
     TrainTestSplit,
     TrainDataCentralizer,
@@ -34,7 +34,7 @@ from recsys.recommenders.collabfilter.workflow.operators import (
     TrainUser,
     TestUser,
 )
-from recsys.recommenders.collabfilter.workflow.pipeline import CFDataPipelineBuilder
+from recsys.methods.neighborhood.workflow.pipeline import DatasetPipelineBuilder
 from recsys.core.workflow.pipeline import PipelineDirector
 
 # ------------------------------------------------------------------------------------------------ #
@@ -283,7 +283,7 @@ class TestCFPipeline:
         )
         # ---------------------------------------------------------------------------------------- #
         repo.reset(silent=True)
-        builder = CFDataPipelineBuilder()
+        builder = DatasetPipelineBuilder()
         director = PipelineDirector(config=cf_config, builder=builder, io=IOService)
         director.build_pipeline()
         pipeline = builder.pipeline

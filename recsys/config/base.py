@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday November 14th 2022 01:22:05 am                                               #
-# Modified   : Sunday November 27th 2022 04:16:51 pm                                               #
+# Modified   : Thursday December 1st 2022 06:09:25 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -20,13 +20,50 @@
 from datetime import datetime
 from dataclasses import dataclass
 from abc import ABC
-
-from recsys.config.data import IMMUTABLE_TYPES, SEQUENCE_TYPES
+from typing import Union
 
 # ------------------------------------------------------------------------------------------------ #
-#                                     REPRODUCIBILITY                                              #
+#                                DATA DIRECTORY STRUCTURE                                          #
+# ------------------------------------------------------------------------------------------------ #
+DATA_STRUCTURE = {
+    "data": {
+        "sources": {
+            "movielens25m": {
+                "ext": "data/sources/movielens25m/ext",
+                "raw": "data/sources/movielens25m/raw",
+                "prod": "data/sources/movielens25m/prod",
+                "dev": "data/sources/movielens25m/dev",
+                "test": "tests/data/sources/movielens25m/test",
+            },
+        },
+        "repo": {
+            "base": "data/repo",
+            "registry": "data/repo/dataset.sqlite3"
+            },
+        },
+        "archive": {
+            "movielens25m": {
+                "prod": "data/archive/movielens25m/prod",
+                "dev": "data/archive/movielens25m/dev",
+                "test": "tests/archive/movielens25m/test",
+            }
+        },
+    }
+}
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    REPRODUCIBILITY                                               #
 # ------------------------------------------------------------------------------------------------ #
 RANDOM_STATE = 55
+# ------------------------------------------------------------------------------------------------ #
+#                                    TRAIN/TEST SPLIT                                              #
+# ------------------------------------------------------------------------------------------------ #
+TRAIN_PROPORTION = 0.8
+# ------------------------------------------------------------------------------------------------ #
+#                                      DATA TYPES                                                  #
+# ------------------------------------------------------------------------------------------------ #
+IMMUTABLE_TYPES: tuple = (str, int, float, bool, type(None))
+SEQUENCE_TYPES: tuple = (list, tuple)
 
 # ------------------------------------------------------------------------------------------------ #
 #                                    BASE CONFIG                                                   #
@@ -54,3 +91,37 @@ class Config(ABC):
             return v
         else:
             """Else nothing. What do you want?"""
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                            WORKFLOW PARAMETER OBJECT BASE CLASSES                                #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class StepPO(Config):
+    """Base class for step parameter objects. These parameters control operator behavior."""
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class FilesetPO(Config):
+    """Name and ID for a Dataset."""
+
+    source: str = None
+    filepath: str = None
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class DatasetPO(Config):
+    name: str = None
+    source: str = None
+    env: str = None
+    stage: str = None
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class OperatorParams(Config):
+    step_params: StepPO
+    input_params: Union[FilesetPO, DatasetPO]
+    output_params: Union[FilesetPO, DatasetPO]

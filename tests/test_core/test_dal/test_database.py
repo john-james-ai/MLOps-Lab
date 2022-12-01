@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday November 26th 2022 07:23:09 am                                             #
-# Modified   : Tuesday November 29th 2022 11:07:01 pm                                              #
+# Modified   : Thursday December 1st 2022 06:09:59 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,8 +24,8 @@ import shutil
 
 from recsys.config.data import DB_LOCATIONS
 from recsys.core.dal.sequel import (
-    CreateDatasetRegistryTable,
-    DropDatasetRegistryTable,
+    CreateDatasetTable,
+    DropDatasetTable,
     SelectArchivedDatasets,
     ArchiveDataset,
     RestoreDataset,
@@ -84,15 +84,15 @@ class TestDB:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        stmt = TableExists("dataset_registry")
-        create = CreateDatasetRegistryTable()
+        stmt = TableExists("dataset")
+        create = CreateDatasetTable()
         with database as db:
             db.create(create.sql, create.args)
             assert db.exists(
                 stmt.sql,
                 stmt.args,
             )
-        assert database.location == "data/working/test/repo/dataset_registry.sqlite"
+        assert database.location == "data/working/test/repo/dataset.sqlite"
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -119,8 +119,8 @@ class TestDB:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        drop = DropDatasetRegistryTable()
-        exists = TableExists("dataset_registry")
+        drop = DropDatasetTable()
+        exists = TableExists("dataset")
         with database as db:
             db.drop(drop.sql, drop.args)
             assert not db.exists(exists.sql, exists.args)
@@ -154,7 +154,7 @@ class TestDB:  # pragma: no cover
         for i, dataset in enumerate(datasets, start=1):
             dsad = dataset.as_dict()
             result = None
-            create = CreateDatasetRegistryTable()
+            create = CreateDatasetTable()
             insert = InsertDataset(**dsad)
             select = SelectDataset(id=i)
             with database as db:
@@ -317,9 +317,9 @@ class TestDB:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         # Refresh the Database
-        drop = DropDatasetRegistryTable()
-        create = CreateDatasetRegistryTable()
-        table_exists = TableExists(table="dataset_registry")
+        drop = DropDatasetTable()
+        create = CreateDatasetTable()
+        table_exists = TableExists(table="dataset")
         with database as db:
             db.drop(drop.sql, drop.args)
             db.create(create.sql, create.args)

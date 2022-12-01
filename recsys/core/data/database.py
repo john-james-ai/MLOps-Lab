@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Sunday November 27th 2022 02:39:06 am                                               #
+# Modified   : Thursday December 1st 2022 07:20:59 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,20 +19,20 @@
 import os
 import logging
 import sqlite3
+from abc import ABC, abstractmethod
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-class Database:
-    def __init__(self, db_location: str):
-        self._db_location = db_location
+class Database(ABC):
+    def __init__(self, *args, **kwargs):
         self._connection = None
-        self._connection = self._connect()
+        self._connection = self.connect()
 
     def __enter__(self):
-        self._connection = self._connect()
+        self._connection = self.connect()
         return self
 
     def __exit__(self, ext_type, exc_value, traceback):
@@ -46,24 +46,29 @@ class Database:
         if self._connection is not None:
             self._connection.close()
 
+    @abstractmethod
+    def connect(self) -> None:
+        """Subclasses connect to databases."""
+
+    @abstractmethod
+    def _get_last_insert_rowid(self) -> int:
+        """Returns the last inserted id. Implemented differently in databases."""
+
     @property
     def location(self) -> str:
-        if "test" in self._db_location:
-            return self._db_location
-        else:
-            return "The database location is none of your business."  # pragma: no cover
+        return self._db_location
 
     def query(self, sql: str, args: tuple = None):
         cursor = self._connection.cursor()
         cursor.execute(sql, args)
         return cursor
 
-    def create(self, sql: str, args: tuple = None) -> None:
+    def create_table(self, sql: str, args: tuple = None) -> None:
         cursor = self.query(sql, args)
         self._connection.commit()
         cursor.close()
 
-    def drop(self, sql: str, args: tuple = None) -> None:
+    def drop_table(self, sql: str, args: tuple = None) -> None:
         cursor = self.query(sql, args)
         self._connection.commit()
         cursor.close()
@@ -102,12 +107,20 @@ class Database:
         cursor.close()
         return rows[0][0] > 0
 
+
+# ------------------------------------------------------------------------------------------------ #
+class SqliteDatabase(Database):
+    def __init__(self, db_location: str):
+        self._db_location = db_location
+        self._connection = None
+        self._connection = self.connect()
+
+    def connect(self) -> None:
+        os.makedirs(os.path.dirname(self._db_location), exist_ok=True)
+        return sqlite3.connect(self._db_location)
+
     def _get_last_insert_rowid(self) -> int:
         cursor = self.query(sql="SELECT last_insert_rowid();", args=())
         id = cursor.fetchall()[0][0]
         cursor.close()
         return id
-
-    def _connect(self) -> None:
-        os.makedirs(os.path.dirname(self._db_location), exist_ok=True)
-        return sqlite3.connect(self._db_location)

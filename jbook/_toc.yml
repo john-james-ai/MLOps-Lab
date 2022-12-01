@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 27th 2022 10:06:40 pm                                               #
-# Modified   : Sunday November 27th 2022 10:50:11 pm                                               #
+# Modified   : Wednesday November 30th 2022 11:47:05 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,44 @@
 
 format: jb-book
 root: intro
-chapters:
-- file: markdown
-- file: notebooks
-- file: markdown-notebooks
+options:
+  numbered: 3
+parts:
+  - caption: 1. Introduction to Recommender Systems
+    numbered: 3
+    chapters:
+      - file: 1_introduction/1_introduction
+      - file: 1_introduction/2_objectives
+      - file: 1_introduction/3_model_overview
+  - caption: 2. Data
+    numbered: 3
+    chapters:
+      - file: 2_data/1_intro
+      - file: 2_data/2_movielens
+      - file: 2_data/3_amazon
+      - file: 2_data/4_million_song
+      - file: 2_data/5_influencers
+  - caption: 3. Neighborhood-Based Collaborative Filtering
+    numbered: 3
+    chapters:
+      - file: 3_neighborhood/1_introduction
+      - file: 3_neighborhood/2_user_based
+      - file: 3_neighborhood/3_item_based
+      - file: 3_neighborhood/4_clustering
+      - file: 3_neighborhood/5_dimensionality_reduction
+      - file: 3_neighborhood/6_regression_models
+      - file: 3_neighborhood/7_graph_models
+      - file: 3_neighborhood/8_summary
+  - caption: 4. Model-Based Collaborative Filtering
+  - caption: 5. Content-Based Recommender Systems
+  - caption: 6. Knowledge-Based Recommender Systems
+  - caption: 7. Ensemble-Based Recommender Systems
+  - caption: 8. Hybrid Recommender Systems
+  - caption: 9. Context-Sensitive Recommender Systems
+  - caption: 10. Time-and-Location Sensitive Recommender Systems
+  - caption: 11. Structural Recommender Systems
+  - caption: 12. Social and Trust-Centric Recommender Systems
+  - caption: 13. Deep Learning-Based Recommender Systems
+  - caption: References
+    chapters:
+      - file: 99_references
