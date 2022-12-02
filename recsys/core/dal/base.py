@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 1st 2022 05:44:55 am                                              #
-# Modified   : Thursday December 1st 2022 09:40:14 am                                              #
+# Modified   : Friday December 2nd 2022 02:43:09 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,20 +23,11 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any
 
-from recsys.config.base import IMMUTABLE_TYPES, SEQUENCE_TYPES
+from recsys.config import IMMUTABLE_TYPES, SEQUENCE_TYPES
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
-# ------------------------------------------------------------------------------------------------ #
-#                              DATABASE SEQUEL BASE CLASS                                          #
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
-class Sequel(ABC):
-    sql: str
-    args: tuple = {}
 
 
 # ------------------------------------------------------------------------------------------------ #

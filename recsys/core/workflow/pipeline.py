@@ -11,14 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday November 19th 2022 01:30:09 pm                                             #
-# Modified   : Wednesday November 30th 2022 11:11:28 pm                                            #
+# Modified   : Friday December 2nd 2022 03:03:46 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from typing import Any
 import logging
 import importlib
 from copy import deepcopy
@@ -26,7 +25,7 @@ from copy import deepcopy
 from tqdm import tqdm
 from dependency_injector.wiring import Provide, inject
 
-from recsys.core.services.container import Container
+from recsys.core.entity.containers import IO
 from recsys.core.services.io import IOService
 from recsys.core.dal.repo import Repo
 
@@ -154,7 +153,7 @@ class PipelineDirector:
 
     @inject
     def __init__(
-        self, config: dict, builder: PipelineBuilder, io: IOService = Provide[Container.io]
+        self, config: dict, builder: PipelineBuilder, io: IOService = Provide[IO.io]
     ) -> None:
         self._config = config
         self._builder = builder

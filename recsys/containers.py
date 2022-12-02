@@ -11,30 +11,49 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday November 25th 2022 03:18:36 pm                                               #
-# Modified   : Thursday December 1st 2022 08:19:33 am                                              #
+# Modified   : Friday December 2nd 2022 06:27:27 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-import os
-from dotenv import load_dotenv
+
+import logging
+import sqlite3
 from dependency_injector import containers, providers
 
-from recsys.core.services.io import IOService
-from recsys.core.dal.database import Database
-from recsys.core.dal.registry import DatasetRegistry
-from recsys.core.dal.repo import DatasetRepo
-from recsys.config.data import REPO_DIRS, REPO_FILE_FORMAT, DB_LOCATIONS, ARCHIVE_DIRS
+from recsys.services.io import IOService
+from recsys.data.database import Database
+from recsys.core.dal.dto import DatasetDTO
+
 
 # ------------------------------------------------------------------------------------------------ #
-#                                       CONTAINER                                                  #
+#                                         CORE                                                     #
 # ------------------------------------------------------------------------------------------------ #
-def get_env():
-    load_dotenv()
-    return os.getenv("ENV")
 
 
-class Container(containers.DeclarativeContainer):
+class Core(containers.DeclarativeContainer):
+
+    config = providers.Configuration()
+
+    logging = providers.Resource(
+        logging.config.dictConfig,
+        config=config.logging,
+    )
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                         CORE                                                     #
+# ------------------------------------------------------------------------------------------------ #
+class DataLayer(containers.DeclarativeContainer):
+
+    config = providers.Configuration()
+
+    database = providers.Singleton(sqlite3.connect, config.data.database.sqlite.location)
+
+
+class Services(containers.DeclarativeContainer):
+
+    config = providers.Configuration()
 
     wiring_config = containers.WiringConfiguration(
         modules=[
@@ -61,16 +80,7 @@ class Container(containers.DeclarativeContainer):
 
     db = providers.Factory(Database, config.db_location)
 
-    registry = providers.Factory(DatasetRegistry, database=db)
-
-    repo = providers.Factory(
-        DatasetRepo,
-        repo_directory=config.repo_directory,
-        archive_directory=config.archive_directory,
-        io=IOService,
-        registry=registry,
-        file_format=config.repo_file_format,
-    )
+    dataset_dto = providers.Factory(DatasetDTO, database=db)
 
 
 container = Container()

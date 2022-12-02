@@ -4,18 +4,25 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /config.yml                                                                         #
+# Filename   : /objects.py                                                                         #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday December 1st 2022 03:15:53 am                                              #
-# Modified   : Thursday December 1st 2022 04:36:36 am                                              #
+# Created    : Friday December 2nd 2022 12:22:16 am                                                #
+# Modified   : Friday December 2nd 2022 12:25:11 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-data:
-  database:
-    location: data/database.sqlite3
+    ds = Dataset(
+            source="movielens25m",
+            name="joe",
+            description="Some description",
+            data=5,
+            stage="interim",
+            version=1,
+            task_id=15,
+            step_id=29
+            )
