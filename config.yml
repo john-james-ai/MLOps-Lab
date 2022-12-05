@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 1st 2022 05:01:51 pm                                              #
-# Modified   : Friday December 2nd 2022 06:16:07 am                                                #
+# Modified   : Sunday December 4th 2022 04:24:48 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -28,10 +28,10 @@ core:
     formatters:
       console:
         format: "[%(asctime)s] [%(levelname)s] [%(name)s] [%(funcName)s] : %(message)s"
-        datefmt: "%d-%m-%Y %I:%M:%S"
+        datefmt: "%m/%d/%Y %I:%M:%S %p"
       file:
         format: "[%(asctime)s] [%(levelname)s] [%(name)s] [%(module)s] [%(funcName)s] : %(message)s"
-        datefmt: "%d-%m-%Y %I:%M:%S"
+        datefmt: "%m/%d/%Y %I:%M:%S %p"
     handlers:
       console:
         class: "logging.StreamHandler"
@@ -55,29 +55,5 @@ data:
   database:
     sqlite:
       location: data/recsys.sqlite3
-
-  sources:
-    - movielens25m
-    - spotify
-
-  directories:
-    movielens25m: data/movielens25m
-    spotify: data/spotify
-    repo: data/repo
-
-  stages:
-    - ext
-    - rew
-    - staged
-    - interim
-    - final
-
-
-
-
-
-services:
-  random_state: 55
-  train_proportion: 0.8
 
 

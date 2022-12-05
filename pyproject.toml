@@ -77,11 +77,15 @@ addopts = """\
     --cov-report term-missing \
     --no-cov-on-fail \
 """
-markers = ["sample","users","data","rating_centereds","weights","split","dataset", "cf", "ops", "pipe", "config"]
-
+markers = ["connection", "database"]
+filterwarnings = [
+    "ignore::pytest.PytestCollectionWarning",
+    "ignore::pytest.PytestUnknownMarkWarning",
+    ]
 
 
 [tool.coverage.report]
+skip_empty = true
 fail_under = 100
 exclude_lines = [
     'if TYPE_CHECKING:',

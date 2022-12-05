@@ -1,44 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Project    : Recommender Systems and Deep Learning in Python                                     #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/__main__.py                                                                 #
+# Filename   : /__init__.py                                                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
-# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# URL        : https://github.com/john-james-ai/Recommender-Systems-and-Deep-Learning-in-Python    #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday December 3rd 2022 02:32:23 pm                                              #
-# Modified   : Sunday December 4th 2022 05:42:12 pm                                                #
+# Created    : Thursday November 10th 2022 08:15:53 pm                                             #
+# Modified   : Thursday November 10th 2022 08:18:46 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-"""Main Module."""
-from dependency_injector.wiring import Provide, inject
-
-from recsys.containers import Recsys
-from recsys.core.dal.ddo import TableService
-
-
-@inject
-def build_tables(dataset_table: TableService = Provide[Recsys.dal.dataset_table]) -> None:
-    dataset_table.create()
-    assert dataset_table.exists()
-
-
-def wireup():
-    recsys = Recsys()
-    recsys.core.init_resources()
-    recsys.wire(modules=[__name__])
-
-
-def main():
-    wireup()
-    build_tables()
-
-
-if __name__ == "__main__":  # pragma: no cover
-    main()

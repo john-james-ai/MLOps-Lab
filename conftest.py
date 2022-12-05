@@ -10,129 +10,65 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday November 11th 2022 06:38:26 am                                               #
-# Modified   : Friday December 2nd 2022 03:02:37 am                                                #
+# Created    : Saturday December 3rd 2022 09:37:10 am                                              #
+# Modified   : Sunday December 4th 2022 06:18:49 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import pytest
+import sqlite3
 from datetime import datetime
-from collections import defaultdict
-from dataclasses import dataclass, field
 
-from recsys.config import Config
-
-# from recsys.containers import container
-from recsys.core.entity.dataset import Dataset
-from recsys.core.services.io import IOService
-from recsys.core.workflow.pipeline import Context
-
+from recsys.core.dal.dao import DatasetDTO
+from recsys.core.data.database import SQLiteConnection, SQLiteDatabase
 
 # ------------------------------------------------------------------------------------------------ #
-RATINGS_FILEPATH = "data/working/dev/input/rating.pkl"
-ETL_CONFIG_FILEPATH = "recsys/config/etl.yml"
-CF_CONFIG_FILEPATH = "recsys/config/cf.yml"
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
-class CONFIG_TESTER(Config):
-    name: str = "joe"
-    age: int = 42
-    kid_ages: list[int] = field(default_factory=list)
-    dob: datetime = datetime.now()
-    wife: defaultdict[dict] = field(default_factory=lambda: defaultdict(dict))
-
-    def __post_init__(self) -> None:
-        self.kid_ages = [2, 3, 5]
-        self.wife = {"name": "Ann", "age": 39}
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                     CONFIG FIXTURE                                               #
+TEST_LOCATION = "tests/test.sqlite3"
 # ------------------------------------------------------------------------------------------------ #
 
 
 @pytest.fixture(scope="module")
-def cfg():
-    return CONFIG_TESTER()
+def location():
+    return TEST_LOCATION
 
 
-# ------------------------------------------------------------------------------------------------ #
-#                                     RATINGS DATA                                                 #
 # ------------------------------------------------------------------------------------------------ #
 
 
 @pytest.fixture(scope="module")
-def ratings():
-    return IOService().read(filepath=RATINGS_FILEPATH)
+def connection():
+    return SQLiteConnection(connector=sqlite3.connect, location=TEST_LOCATION)
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                    PIPELINE CONFIG                                               #
-# ------------------------------------------------------------------------------------------------ #
-
-
 @pytest.fixture(scope="module")
-def etl_config():
-    return IOService().read(filepath=ETL_CONFIG_FILEPATH)
+def database(connection):
+    return SQLiteDatabase(connection=connection)
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                       DATASETS                                                   #
-# ------------------------------------------------------------------------------------------------ #
-
-
-@pytest.fixture(scope="function")
-def datasets(ratings):
-    stages = ["raw", "staged", "interim", "final", "ext"]
-    datasets = []
-    for i in range(5):
-        j = i % 5
-        datasets.append(
-            Dataset(source="movielens25m"),
-            name=f"dataset_{i}",
-            description=f"Description {i}",
-            data=ratings,
-            stage=stages[j],
-            version=i,
-            task_id=i,
-            step_id=i + 5,
+@pytest.fixture(scope="module")
+def dataset_dtos():
+    dtos = []
+    for i in range(1, 6):
+        dto = DatasetDTO(
+            id=None,
+            name=f"dataset_dto_{i}",
+            description=f"Description for Dataset DTO {i}",
+            source="movielens25m",
+            env="test",
+            stage="staged",
+            version=1,
+            cost=1000 * i,
+            nrows=100 * i,
+            ncols=i,
+            null_counts=i + i,
+            memory_size_mb=100 * i,
+            filepath="tests/file/" + f"dataset_dto_{i}" + ".pkl",
+            task_id=i + i,
+            created=datetime.now(),
+            modified=datetime.now(),
         )
-    return datasets
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                DATABASE, REGISTRY, AND REPO                                      #
-# ------------------------------------------------------------------------------------------------ #
-# @pytest.fixture(scope="module")
-# def database():
-#     return container.db()
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def registry(database):
-    return Dataset(database=database)
-
-
-# # ------------------------------------------------------------------------------------------------ #
-# @pytest.fixture(scope="module")
-# def repo():
-#     repo = container.repo()
-#     return repo
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                    CONFIG FIXTURES                                               #
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def cf_config():
-    return IOService().read(filepath=CF_CONFIG_FILEPATH)
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="function")
-def context(cf_config):
-    return Context(name=cf_config["name"], description=cf_config["description"], io=IOService)
+        dtos.append(dto)
+    return dtos

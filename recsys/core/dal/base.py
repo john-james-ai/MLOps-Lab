@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /base.py                                                                            #
+# Filename   : /recsys/core/dal/base.py                                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday December 1st 2022 05:44:55 am                                              #
-# Modified   : Friday December 2nd 2022 02:43:09 am                                                #
+# Created    : Saturday December 3rd 2022 12:44:06 pm                                              #
+# Modified   : Sunday December 4th 2022 04:09:41 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,61 +21,53 @@ from datetime import datetime
 from dataclasses import dataclass
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Dict, List, Tuple
+from collections import OrderedDict
 
-from recsys.config import IMMUTABLE_TYPES, SEQUENCE_TYPES
+from recsys import IMMUTABLE_TYPES, SEQUENCE_TYPES
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
-
-
 # ------------------------------------------------------------------------------------------------ #
-#                            DATA ACCESS OBJECT ABC                                                #
-# ------------------------------------------------------------------------------------------------ #
-
-
-class DAO(ABC):
-    @abstractmethod
-    def add(self, *args, **kwargs) -> None:
-        """Adds a dataset to the registry. If a duplicate is found, the version is bumped"""
-
-    @abstractmethod
-    def get(self, id: int) -> Any:
-        """Retrieves dataset metadata from the registry, given an id
-
-        Args:
-            id (int): The id for the Dataset to retrieve.
-        """
-
-    @abstractmethod
-    def get_all(self) -> Any:
-        """Returns a Dataframe representation of the registry."""
-
-    @abstractmethod
-    def exists_id(self, id: int) -> bool:
-        """Returns True if the entity with id exists in the database."""
-
-    @abstractmethod
-    def exists(self, *args, **kwargs) -> bool:
-        """Returns true if a dataset with the same name, stage and version exists in the registry."""
-
-    @abstractmethod
-    def remove(self, id: int) -> None:
-        """Deletes a Dataset from the registry, given an id.
-
-        Args:
-            id (int): The id for the Dataset to remove.
-        """
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                            DATA TRANSFER OBJECT ABC                                              #
+#                                  SQL COMMAND ABC                                                 #
 # ------------------------------------------------------------------------------------------------ #
 
 
 @dataclass
-class DTO(ABC):
+class SQL(ABC):
+    """Base class for SQL Command Objects."""
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                             DDL AGGREGATION BASE CLASS                                           #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class DDL(ABC):
+    """Base class for entity DDL."""
+
+    create: SQL
+    drop: SQL
+    exists: SQL
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                   SERVICE BASE CLASS                                             #
+# ------------------------------------------------------------------------------------------------ #
+class Service(ABC):
+    def __init__(self) -> None:
+        self._logger = logging.getLogger(
+            f"{__name__}.{self.__class__.__name__}",
+        )
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                              DATA TRANSFER OBJECT ABC                                            #
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class DTO(ABC):  # pragma: no cover
     """Data Transfer Object"""
 
     def as_dict(self) -> dict:
@@ -95,3 +87,64 @@ class DTO(ABC):
             return v
         else:
             """Else nothing. What do you want?"""
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                            DATA ACCESS OBJECT ABC                                                #
+# ------------------------------------------------------------------------------------------------ #
+
+
+class DAO(Service):  # pragma: no cover
+    def __init__(self) -> None:
+        super().__init__()
+
+    @abstractmethod
+    def add(self, *args, **kwargs) -> None:
+        """Adds an entity to the database."""
+
+    @abstractmethod
+    def get(self, id: int) -> DTO:
+        """Retrieves an entity from the database, based upon id
+        Args:
+            id (int): The id for the entity.
+
+        Returns a Data Transfer Object (DTO)
+        """
+
+    @abstractmethod
+    def get_all(self) -> Dict[str, DTO]:
+        """Returns a dictionary of Data Transfer Objects."""
+
+    @abstractmethod
+    def update(self, dto: DTO) -> None:
+        """Updates an existing entity.
+
+        Args:
+            dto (DTO): Data Transfer Object
+        """
+
+    @abstractmethod
+    def exists(self, id: int) -> bool:
+        """Returns True if the entity with id exists in the database.
+
+        Args:
+            id (int): id for the entity
+        """
+
+    @abstractmethod
+    def delete(self, id: int) -> None:
+        """Deletes a Dataset from the registry, given an id.
+        Args:
+            id (int): The id for the entity to delete.
+        """
+
+    @abstractmethod
+    def _row_to_dto(self, row: Tuple) -> Dict:
+        """Converts a row from the database to a DTO object."""
+
+    def _results_to_dict(self, results: List) -> Dict:
+        results_dict = OrderedDict()
+        for row in results:
+            dto = self._row_to_dto(row)
+            results_dict[dto.id] = dto
+        return results_dict

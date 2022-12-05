@@ -1,1 +1,0 @@
-{"pipeline": "movielens20m_etl", "step": "pickler", "started": "2022-11-18T12:48:45.577617", "ended": "2022-11-18T12:49:00.696576", "duration": 15.118959, "_timestamp": 1668793740.69669, "_runtime": 20.70099902153015, "_step": 3, "_wandb": {"runtime": 20}}
