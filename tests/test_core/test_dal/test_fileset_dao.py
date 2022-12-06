@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_core/test_dal/test_dao.py                                               #
+# Filename   : /tests/test_core/test_dal/test_fileset_dao.py                                       #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Sunday December 4th 2022 07:17:41 pm                                                #
+# Modified   : Monday December 5th 2022 03:01:09 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ import logging
 
 from recsys.__main__ import main
 from recsys.containers import Recsys
-from recsys.core.dal.dto import DatasetDTO
+from recsys.core.dal.dto import FilesetDTO
 import tests.containers  # noqa F401
 
 # ------------------------------------------------------------------------------------------------ #
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.dao
-class TestDatasetDAO:  # pragma: no cover
+class TestFilesetDAO:  # pragma: no cover
     # ============================================================================================ #
     def test_setup(self, caplog):
         start = datetime.now()
@@ -48,7 +48,7 @@ class TestDatasetDAO:  # pragma: no cover
         main()
         recsys = Recsys()
         dal = recsys.dal()
-        dal.dataset_table().reset()
+        dal.fileset_table().reset()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -64,7 +64,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_add(self, dataset_dtos, caplog):
+    def test_add(self, fileset_dtos, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -77,8 +77,8 @@ class TestDatasetDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         recsys = Recsys()
         dal = recsys.dal()
-        dao = dal.dataset_dao()
-        for i, dto in enumerate(dataset_dtos, start=1):
+        dao = dal.fileset_dao()
+        for i, dto in enumerate(fileset_dtos, start=1):
             dto = dao.add(dto)
             assert dto.id == i
             assert dao.exists(i)
@@ -97,7 +97,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get(self, dataset_dtos, caplog):
+    def test_get(self, fileset_dtos, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -110,10 +110,10 @@ class TestDatasetDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         recsys = Recsys()
         dal = recsys.dal()
-        dao = dal.dataset_dao()
+        dao = dal.fileset_dao()
         for i in range(1, 6):
             dto = dao.get(i)
-            assert isinstance(dto, DatasetDTO)
+            assert isinstance(dto, FilesetDTO)
 
         for i in range(10, 15):
             dto = dao.get(i)
@@ -146,19 +146,15 @@ class TestDatasetDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         recsys = Recsys()
         dal = recsys.dal()
-        dao = dal.dataset_dao()
+        dao = dal.fileset_dao()
         dtos = dao.get_all()
         assert len(dtos) == 5
         assert isinstance(dtos, dict)
         for i, dto in dtos.items():
-            assert isinstance(dto, DatasetDTO)
+            assert isinstance(dto, FilesetDTO)
             assert dto.id == i
-            assert dto.version == 1
-            assert dto.cost == 1000 * i
-            assert dto.nrows == 100 * i
-            assert dto.ncols == i
-            assert dto.null_counts == i + i
             assert dto.task_id == i + i
+            assert isinstance(dto.creator, str)
             assert isinstance(dto.created, str)
             assert isinstance(dto.modified, str)
         # ---------------------------------------------------------------------------------------- #
@@ -176,7 +172,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_update(self, dataset_dtos, caplog):
+    def test_update(self, fileset_dtos, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -189,14 +185,14 @@ class TestDatasetDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         recsys = Recsys()
         dal = recsys.dal()
-        dao = dal.dataset_dao()
-        for i, dto in enumerate(dataset_dtos, start=1):
-            dto.version = i
+        dao = dal.fileset_dao()
+        for i, dto in enumerate(fileset_dtos, start=1):
+            dto.task_id = i
             dao.update(dto)
 
         for i in range(1, 6):
             dto = dao.get(i)
-            assert dto.version == i
+            assert dto.task_id == i
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -226,7 +222,7 @@ class TestDatasetDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         recsys = Recsys()
         dal = recsys.dal()
-        dao = dal.dataset_dao()
+        dao = dal.fileset_dao()
         for i in range(1, 6):
             dao.delete(i)
 
@@ -259,7 +255,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         recsys = Recsys()
-        recsys.dal().dataset_table().reset()
+        recsys.dal().fileset_table().reset()
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

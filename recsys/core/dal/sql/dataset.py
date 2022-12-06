@@ -4,20 +4,21 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/dal/sql.py                                                             #
+# Filename   : /recsys/core/dal/sql/dataset.py                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday December 4th 2022 07:10:26 pm                                                #
+# Modified   : Tuesday December 6th 2022 06:05:03 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 from dataclasses import dataclass
-from .base import SQL, DDL, DTO
+from recsys.core.dal.base import SQL, DDL, DML
+from recsys.core.dal.dto import DTO
 
 # ================================================================================================ #
 #                                        DATASET                                                   #
@@ -30,7 +31,7 @@ from .base import SQL, DDL, DTO
 @dataclass
 class CreateDatasetTable(SQL):
     name: str = "dataset"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, source TEXT NOT NULL, env TEXT NOT NULL, stage TEXT NOT NULL, version INTEGER NOT NULL, cost INTEGER NOT NULL, nrows INTEGER NOT NULL, ncols INTEGER NOT NULL, null_counts INTEGER NOT NULL, memory_size_mb INTEGER NOT NULL, filepath TEXT NOT NULL, task_id INTEGER DEFAULT (0), created TEXT DEFAULT (datetime('now')), modified TEXT DEFAULT (datetime('now')));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, source TEXT NOT NULL, workspace TEXT NOT NULL, stage TEXT NOT NULL, version INTEGER NOT NULL, cost INTEGER NOT NULL, nrows INTEGER NOT NULL, ncols INTEGER NOT NULL, null_counts INTEGER NOT NULL, memory_size_mb REAL NOT NULL, filename TEXT NOT NULL, filepath TEXT NOT NULL, task_id INTEGER DEFAULT (0), creator TEXT NOT NULL, created TEXT DEFAULT (datetime('now')), modified TEXT DEFAULT (datetime('now')));"""
     args: tuple = ()
 
 
@@ -74,7 +75,7 @@ class InsertDataset(SQL):
 
     dto: DTO
 
-    sql: str = """INSERT INTO dataset (name, description, source, env, stage, version, cost, nrows, ncols, null_counts, memory_size_mb, filepath, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO dataset (name, description, source, workspace, stage, version, cost, nrows, ncols, null_counts, memory_size_mb, filename, filepath, task_id, creator, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -82,7 +83,7 @@ class InsertDataset(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.source,
-            self.dto.env,
+            self.dto.workspace,
             self.dto.stage,
             self.dto.version,
             self.dto.cost,
@@ -90,8 +91,10 @@ class InsertDataset(SQL):
             self.dto.ncols,
             self.dto.null_counts,
             self.dto.memory_size_mb,
+            self.dto.filename,
             self.dto.filepath,
             self.dto.task_id,
+            self.dto.creator,
             self.dto.created,
             self.dto.modified,
         )
@@ -103,7 +106,7 @@ class InsertDataset(SQL):
 @dataclass
 class UpdateDataset(SQL):
     dto: DTO
-    sql: str = """UPDATE dataset SET name = ?, description = ?, source = ?, env = ?, stage = ?, version = ?, cost = ?, nrows = ?, ncols = ?, null_counts = ?, memory_size_mb = ?, filepath = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE dataset SET name = ?, description = ?, source = ?, workspace = ?, stage = ?, version = ?, cost = ?, nrows = ?, ncols = ?, null_counts = ?, memory_size_mb = ?, filename = ?, filepath = ?, task_id = ?, creator = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -111,7 +114,7 @@ class UpdateDataset(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.source,
-            self.dto.env,
+            self.dto.workspace,
             self.dto.stage,
             self.dto.version,
             self.dto.cost,
@@ -119,8 +122,10 @@ class UpdateDataset(SQL):
             self.dto.ncols,
             self.dto.null_counts,
             self.dto.memory_size_mb,
+            self.dto.filename,
             self.dto.filepath,
             self.dto.task_id,
+            self.dto.creator,
             self.dto.created,
             self.dto.modified,
             self.dto.id,
@@ -171,3 +176,14 @@ class DeleteDataset(SQL):
 
     def __post_init__(self) -> None:
         self.args = (self.id,)
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class DatasetDML(DML):
+    insert: type(SQL) = InsertDataset
+    update: type(SQL) = UpdateDataset
+    select: type(SQL) = SelectDataset
+    select_all: type(SQL) = SelectAllDatasets
+    exists: type(SQL) = DatasetExists
+    delete: type(SQL) = DeleteDataset

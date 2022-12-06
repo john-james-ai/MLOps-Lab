@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+# ================================================================================================ #
+# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Version    : 0.1.0                                                                               #
+# Python     : 3.10.6                                                                              #
+# Filename   : /recsys/core/workflow/config/00_movielens25m_datasets.yml                           #
+# ------------------------------------------------------------------------------------------------ #
+# Author     : John James                                                                          #
+# Email      : john.james.ai.studio@gmail.com                                                      #
+# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# ------------------------------------------------------------------------------------------------ #
+# Created    : Monday December 5th 2022 02:42:49 pm                                                #
+# Modified   : Tuesday December 6th 2022 01:09:56 am                                               #
+# ------------------------------------------------------------------------------------------------ #
+# License    : MIT License                                                                         #
+# Copyright  : (c) 2022 John James                                                                 #
+# ================================================================================================ #
+pipeline:
+  name: make_movielens25m_dataset
+  description: Extracts MovieLens25M data from GroupLens website, Transforms data into Datasets and Loads into Production, Development, and Test workspaces.
+  params:
+    id: 1
+    kind: websource
+    name: movielens25m_download_link
+    description: Grouplens' MovieLens 25M Dataset
+    url: https://files.grouplens.org/datasets/movielens/ml-25m.zip
+  tasks:
+    - id: 1
+      kind: task
+      name: download_movielens25m
+      description: Downloads MovieLens25M data from GroupLens website.
+      operator: Downloader
+      module: recsys.core.workflow.operators
+      params:
+        specs:
+          destination: data/movielens25m/ext
+        input:
+        - id: 1
+          kind: websource
+          name: movielens25m_download_link
+          description: Grouplens' MovieLens 25M Dataset
+          url: https://files.grouplens.org/datasets/movielens/ml-25m.zip
+        output:
+        - id: 1
+          kind: fileset
+          name: movielens25m_zipfile
+          description: Grouplens' MovieLens 25M Dataset ZipFile
+          source: movielens25m
+          filepath: data/movielens25m/ext/ml-25m.zip
+        force: False
+
+    - id: 2
+      kind: task
+      name: unzip_movielens25m
+      description: UnZips Movielens25M Data into Raw Directory
+      operator: UnZipFile
+      module: recsys.core.workflow.operators
+      params:
+        specs:
+          destination: data/movielens25m/raw
+        input:
+        - id: 1
+          kind: fileset
+          name: movielens25m_zipfile
+          source: movielens25m
+          filepath: data/movielens25m/ext/ml-25m.zip
+        output:
+        - id: 2
+          kind: fileset
+          name: movielens25m_genome-scores
+          source: movielens25m
+          filepath: data/movielens25m/raw/genome-scores.csv
+        - id: 3
+          kind: fileset
+          name: movielens25m_genome-tags
+          source: movielens25m
+          filepath: data/movielens25m/raw/genome-tags.csv
+        - id: 4
+          kind: fileset
+          name: movielens25m_links
+          source: movielens25m
+          filepath: data/movielens25m/raw/links.csv
+        - id: 5
+          kind: fileset
+          name: movielens25m_movies
+          source: movielens25m
+          filepath: data/movielens25m/raw/movies.csv
+        - id: 6
+          kind: fileset
+          name: movielens25m_ratings
+          source: movielens25m
+          filepath: data/movielens25m/raw/ratings.csv
+        - id: 7
+          kind: fileset
+          name: movielens25m_tags
+          source: movielens25m
+          filepath: data/movielens25m/raw/tags.csv
+        force: False
+
+    - id: 3
+      kind: task
+      name: generate_production_dataset
+      description: Generate MovieLens25M Production Workspace Dataset
+      operator: DatasetGen
+      module: recsys.core.workflow.operators
+      params:
+        specs:
+          frac: 1
+          shuffle: True
+          replace: False
+          random_stage: 55
+        input:
+          id: 6
+          kind: fileset
+          name: movielens25m_ratings
+          source: movielens25m
+          filepath: data/movielens25m/raw/ratings.csv
+        output:
+          id: 1
+          kind: dataset
+          name: movielens25m_ratings_prod
+          description: Ratings Dataset Production Workspace
+          source: movielens25m
+          workspace: prod
+          stage: input
+          filename: ratings.pkl
+        force: False
+
+    - id: 4
+      kind: task
+      name: generate_development_dataset
+      description: Generate MovieLens25M Development Workspace Dataset
+      operator: DatasetGen
+      module: recsys.core.workflow.operators
+      params:
+        specs:
+          frac: 0.1
+          shuffle: True
+          replace: False
+          random_stage: 55
+        input:
+          id: 6
+          kind: fileset
+          name: movielens25m_ratings
+          source: movielens25m
+          filepath: data/movielens25m/raw/ratings.csv
+        output:
+          id: 2
+          kind: dataset
+          name: movielens25m_ratings_dev
+          description: Ratings Dataset Development Workspace
+          source: movielens25m
+          workspace: dev
+          stage: input
+          filename: ratings.pkl
+        force: False
+
+    - id: 5
+      kind: task
+      name: generate_unit_testing_dataset
+      description: Generate MovieLens25M Unit Testing Workspace Dataset
+      operator: DatasetGen
+      module: recsys.core.workflow.operators
+      params:
+        specs:
+          frac: 0.01
+          shuffle: True
+          replace: False
+          random_stage: 55
+        input:
+          id: 6
+          kind: fileset
+          name: movielens25m_ratings
+          source: movielens25m
+          filepath: data/movielens25m/raw/ratings.csv
+        output:
+          id: 3
+          kind: dataset
+          name: movielens25m_ratings_testing
+          description: Ratings Dataset Unit Testing Workspace
+          source: movielens25m
+          workspace: dev
+          stage: input
+          filename: ratings.pkl
+        force: False

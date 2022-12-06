@@ -4,33 +4,29 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /config.yml                                                                         #
+# Filename   : /recsys/load_tables.py                                                              #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday December 1st 2022 06:06:08 pm                                              #
-# Modified   : Friday December 2nd 2022 05:29:35 am                                                #
+# Created    : Tuesday December 6th 2022 04:21:13 am                                               #
+# Modified   : Tuesday December 6th 2022 06:34:40 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-# Entity_config
-DATASET:
-  SOURCES:
-    - movielens25m
-  STAGES:
-    - ext
-    - raw
-    - staged
-    - interim
-    - preprocessed
-    - final
-  REQUIRED:
-     - name
-     - source
-     - env
-     - data
-     - stage
-     - version
+from dependency_injector.wiring import Provide, inject
+
+from containers import Recsys
+
+
+@inject
+def load_tables(
+    config=Provide[Recsys.config],
+    table=Provide[Recsys.dal.datasource_table],
+    dao=Provide[Recsys.dal.source_dao],
+) -> None:
+    sources = config["data_sources"]
+    for source in sources:
+        print(source)
