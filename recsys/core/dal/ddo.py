@@ -11,20 +11,23 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Sunday December 4th 2022 06:34:17 pm                                                #
+# Modified   : Friday December 9th 2022 07:11:53 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Data Definition Object Module."""
+
 from recsys.core import Service
 from recsys.core.data.database import Database
 from .base import DDL
-
+# ------------------------------------------------------------------------------------------------ #
 
 # ------------------------------------------------------------------------------------------------ #
 #                                       TABLE SERVICE                                              #
 # ------------------------------------------------------------------------------------------------ #
+
+
 class TableService(Service):
     def __init__(self, database: Database, ddl: DDL) -> None:
         self._database = database
@@ -32,23 +35,33 @@ class TableService(Service):
         super().__init__()
 
     def create(self) -> None:
-        with self._database as db:
+        self._logger.debug(self._database)
+        with self._database() as db:
             db.create_table(self._ddl.create.sql, self._ddl.create.args)
             self._logger.info(f"Created {self._ddl.create.name} table.")
 
     def drop(self) -> None:
-        with self._database as db:
+        self._logger.debug(self._database)
+        with self._database() as db:
             db.drop_table(self._ddl.drop.sql, self._ddl.drop.args)
             self._logger.info(f"Dropped {self._ddl.drop.name} table.")
 
     def exists(self) -> bool:
-        with self._database as db:
+        self._logger.debug(self._database)
+        with self._database() as db:
             exists = db.exists(self._ddl.exists.sql, self._ddl.exists.args)
             does = " does " if exists else " does not "
             msg = f"Table {self._ddl.exists.name}{does} exist."
             self._logger.info(msg)
             return exists
 
+    def save(self) -> None:
+        self._logger.debug(self._database)
+        with self._database() as db:
+            db.save()
+
     def reset(self) -> None:
         self.drop()
+        self.save()
         self.create()
+        self.save()

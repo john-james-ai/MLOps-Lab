@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Thursday December 8th 2022 06:12:13 pm                                              #
+# Modified   : Friday December 9th 2022 05:50:46 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -59,11 +59,10 @@ class DataLayerContainer(containers.DeclarativeContainer):
     database = providers.Factory(SQLiteDatabase, connection=connection)
 
 
-class DataAccessLayerContainer(containers.DeclarativeContainer):
+class TableContainer(containers.DeclarativeContainer):
 
     database = providers.Dependency()
 
-    # Tables
     dataset_table = providers.Factory(TableService, database=database, ddl=DatasetDDL)
 
     fileset_table = providers.Factory(TableService, database=database, ddl=FilesetDDL)
@@ -74,7 +73,11 @@ class DataAccessLayerContainer(containers.DeclarativeContainer):
 
     task_table = providers.Factory(TableService, database=database, ddl=TaskDDL)
 
-    # DAO
+
+class DAOContainer(containers.DeclarativeContainer):
+
+    database = providers.Dependency()
+
     dataset_dao = providers.Factory(DatasetDAO, database=database, dml=DatasetDML)
 
     fileset_dao = providers.Factory(FilesetDAO, database=database, dml=FilesetDML)
@@ -94,4 +97,6 @@ class Recsys(containers.DeclarativeContainer):
 
     data = providers.Container(DataLayerContainer, config=config.data)
 
-    dal = providers.Container(DataAccessLayerContainer, database=data.database)
+    table = providers.Container(TableContainer, database=data.database)
+
+    dao = providers.Container(DAOContainer, database=data.database)

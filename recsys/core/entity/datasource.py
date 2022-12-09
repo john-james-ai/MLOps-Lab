@@ -11,11 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:26:05 am                                              #
-# Modified   : Thursday December 8th 2022 05:00:53 pm                                              #
+# Modified   : Friday December 9th 2022 09:09:02 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+from datetime import datetime
+
 from recsys.core.dal.dto import DataSourceDTO
 from .base import Entity
 # ------------------------------------------------------------------------------------------------ #
@@ -40,7 +42,7 @@ class DataSource(Entity):
         self._validate()
 
     def __str__(self) -> str:
-        return f"\n\nDatasource Id: {self._id}\n\tName: {self._name}\n\tPublisher: {self._publisher}\n\tDescription: {self._description}\n\tWebsite: {self._website}\n\t\n\tURL: {self._url}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"\n\nDatasource Id: {self._id}\n\tName: {self._name}\n\tPublisher: {self._publisher}\n\tDescription: {self._description}\n\tWebsite: {self._website}\n\tURL: {self._url}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
         return f"{self._id}, {self._name}, {self._description}, {self._website}, {self._created}, {self._modified}"
@@ -62,15 +64,30 @@ class DataSource(Entity):
     def publisher(self) -> str:
         return self._publisher
 
+    @publisher.setter
+    def publisher(self, publisher: str) -> None:
+        self._publisher = publisher
+        self._modified = datetime.now()
+
     # ------------------------------------------------------------------------------------------------ #
     @property
     def website(self) -> str:
         return self._website
 
+    @website.setter
+    def website(self, website: str) -> None:
+        self._website = website
+        self._modified = datetime.now()
+
     # ------------------------------------------------------------------------------------------------ #
     @property
     def url(self) -> str:
         return self._url
+
+    @url.setter
+    def url(self, url: str) -> None:
+        self._url = url
+        self._modified = datetime.now()
 
     # ------------------------------------------------------------------------------------------------ #
     def as_dto(self) -> DataSourceDTO:
@@ -80,7 +97,10 @@ class DataSource(Entity):
             publisher=self._publisher,
             description=self._description,
             website=self._website,
-            url=self._url)
+            url=self._url,
+            created=self._created,
+            modified=self._modified,
+        )
 
     # ------------------------------------------------------------------------------------------------ #
     def _from_dto(self, dto: DataSourceDTO) -> Entity:
@@ -91,4 +111,6 @@ class DataSource(Entity):
         self._description = dto.description
         self._website = dto.website
         self._url = dto.url
+        self._created = dto.created
+        self._modified = dto.modified
         self._validate()

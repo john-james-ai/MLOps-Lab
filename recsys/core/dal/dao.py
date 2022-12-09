@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Thursday December 8th 2022 04:43:32 pm                                              #
+# Modified   : Friday December 9th 2022 09:14:13 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -51,9 +51,9 @@ class DAO(Service):
         """Adds an entity to the database.
 
         Args:
-            dto (DatasetDTO): Dataset Data Transfer Object
+            dto (DTO): Data Transfer Object
 
-        Returns: DatasetDTO with id set.
+        Returns: DTO with id set.
         """
         cmd = self._dml.insert(dto)
         with self._database as db:
@@ -72,9 +72,9 @@ class DAO(Service):
         with self._database as db:
             row = db.select(cmd.sql, cmd.args)
             if len(row) == 0:
-                msg = f"Dataset {id} does not exist."
+                msg = f"{self.__class__.__name__}.{id} does not exist."
                 self._logger.info(msg)
-                return None
+                raise FileNotFoundError(msg)
             else:
                 return self._row_to_dto(row[0])
 
@@ -84,7 +84,7 @@ class DAO(Service):
         with self._database as db:
             results = db.select(cmd.sql, cmd.args)
             if len(results) == 0:
-                msg = "There are no Datasets in the database."
+                msg = f"There are no Entities in the {self.__class__.__name__} database."
                 self._logger.info(msg)
                 return None
             else:
@@ -111,7 +111,7 @@ class DAO(Service):
             return db.exists(cmd.sql, cmd.args)
 
     def delete(self, id: int) -> None:
-        """Deletes a Dataset from the registry, given an id.
+        """Deletes a Entity from the registry, given an id.
         Args:
             id (int): The id for the entity to delete.
         """
@@ -121,7 +121,8 @@ class DAO(Service):
 
     def save(self) -> None:
         """Commits the changes to the database."""
-        self._database.save()
+        with self._database as db:
+            db.save()
 
     def _results_to_dict(self, results: List) -> Dict:
         """Converts the results to a dictionary of DTO objects."""
@@ -261,7 +262,10 @@ class JobDAO(DAO):
                 description=row[2],
                 source=row[3],
                 workspace=row[4],
-                profile=profile)
+                profile=profile,
+                created=row[25],
+                modified=row[26],
+            )
 
         except IndexError as e:  # pragma: no cover
             msg = f"Index error in_row_to_dto method.\n{e}"
@@ -283,10 +287,12 @@ class DataSourceDAO(DAO):
             return DataSourceDTO(
                 id=int(row[0]),
                 name=row[1],
-                description=row[2],
-                publisher=row[3],
+                publisher=row[2],
+                description=row[3],
                 website=row[4],
                 url=row[5],
+                created=row[6],
+                modified=row[7],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -360,7 +366,10 @@ class TaskDAO(DAO):
                 input_id=int(row[8]),
                 output_kind=row[9],
                 output_id=int(row[10]),
-                profile=profile)
+                profile=profile,
+                created=row[25],
+                modified=row[26],
+            )
 
         except IndexError as e:  # pragma: no cover
             msg = f"Index error in_row_to_dto method.\n{e}"

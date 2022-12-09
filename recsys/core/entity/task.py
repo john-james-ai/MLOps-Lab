@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 08:03:23 pm                                             #
-# Modified   : Thursday December 8th 2022 06:35:57 am                                              #
+# Modified   : Friday December 9th 2022 08:37:51 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -142,6 +142,8 @@ class Task(Entity):  # pragma: no cover
         self._output_kind = dto.output_kind
         self._output_id = dto.output_id
         self._profile = dto.profile
+        self._created = dto.created
+        self._modified = dto.modified
 
         self._validate()
 
@@ -159,7 +161,9 @@ class Task(Entity):  # pragma: no cover
             input_id=self._input_id,
             output_kind=self._output_kind,
             output_id=self._output_id,
-            profile=self._profile
+            profile=self._profile,
+            created=self._created,
+            modified=self._modified,
         )
 
     def _validate(self) -> None:

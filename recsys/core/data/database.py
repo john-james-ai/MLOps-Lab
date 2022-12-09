@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Thursday December 8th 2022 06:15:36 pm                                              #
+# Modified   : Friday December 9th 2022 07:13:49 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -75,7 +75,6 @@ class SQLiteConnection(Connection):
 
     def __init__(self, connector: sqlite3.connect, location: str) -> None:
         self._location = location
-        logger.debug(f"Location is {self._location}")
         os.makedirs(os.path.dirname(self._location), exist_ok=True)
         super().__init__(connector=connector)
 
@@ -89,22 +88,22 @@ class SQLiteConnection(Connection):
 #                                        DATABASE                                                  #
 # ------------------------------------------------------------------------------------------------ #
 class Database(ABC):
-    def __init__(self, connection: Connection):  # pragma: no cover
+    def __init__(self, connection: Connection):
         self._connection = connection
 
-    def __enter__(self):  # pragma: no cover
+    def __enter__(self):
         if not self._connection.is_connected():
             self._connection.connect()
         return self
 
-    def __exit__(self, ext_type, exc_value, traceback):  # pragma: no cover
+    def __exit__(self, ext_type, exc_value, traceback):
         if isinstance(exc_value, Exception):
             self._connection.rollback()
         else:
             self._connection.commit()
         self._connection.close()
 
-    def __del__(self):  # pragma: no cover
+    def __del__(self):
         if self._connection.is_connected():
             self._connection.close()
 
@@ -163,7 +162,16 @@ class Database(ABC):
 # ------------------------------------------------------------------------------------------------ #
 class SQLiteDatabase(Database):
     def __init__(self, connection: SQLiteConnection):
-        self._connection = connection
+        super().__init__(connection=connection)
+
+    def __enter__(self):
+        return super().__enter__()
+
+    def __exit__(self, ext_type, exc_value, traceback):
+        super().__exit__(ext_type=ext_type, exc_value=exc_value, traceback=traceback)
+
+    def __del__(self):
+        super().__del__()
 
     def _get_last_insert_rowid(self) -> int:
         cursor = self.query(sql="SELECT last_insert_rowid();", args=())

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:23:19 pm                                              #
-# Modified   : Thursday December 8th 2022 04:27:48 pm                                              #
+# Modified   : Friday December 9th 2022 07:46:08 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,6 +32,10 @@ class Repo(ABC):
     @abstractmethod
     def get(self, id: str) -> Entity:
         "Returns an entity with the designated id"
+
+    @abstractmethod
+    def update(self, entity: Entity) -> None:
+        """Updates an entity in the database."""
 
     @abstractmethod
     def remove(self, id: str) -> None:

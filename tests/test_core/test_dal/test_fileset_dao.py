@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Thursday December 8th 2022 06:02:03 pm                                              #
+# Modified   : Friday December 9th 2022 07:24:29 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -115,8 +115,8 @@ class TestFilesetDAO:  # pragma: no cover
             assert isinstance(dto, FilesetDTO)
 
         for i in range(10, 15):
-            dto = dao.get(i)
-            assert dto is None
+            with pytest.raises(FileNotFoundError):
+                dto = dao.get(i)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

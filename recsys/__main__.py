@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 02:32:23 pm                                              #
-# Modified   : Thursday December 8th 2022 05:50:58 pm                                              #
+# Modified   : Friday December 9th 2022 05:52:24 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,33 +24,33 @@ from recsys.core.dal.ddo import TableService
 
 
 @inject
-def build_dataset_table(dataset_table: TableService = Provide[Recsys.dal.dataset_table]) -> None:
+def build_dataset_table(dataset_table: TableService = Provide[Recsys.table.dataset_table]) -> None:
     dataset_table.create()
     assert dataset_table.exists()
 
 
 @inject
-def build_fileset_table(fileset_table: TableService = Provide[Recsys.dal.fileset_table]) -> None:
+def build_fileset_table(fileset_table: TableService = Provide[Recsys.table.fileset_table]) -> None:
     fileset_table.create()
     assert fileset_table.exists()
 
 
 @inject
-def build_job_table(job_table: TableService = Provide[Recsys.dal.job_table]) -> None:
+def build_job_table(job_table: TableService = Provide[Recsys.table.job_table]) -> None:
     job_table.create()
     assert job_table.exists()
 
 
 @inject
 def build_datasource_table(
-    datasource_table: TableService = Provide[Recsys.dal.datasource_table],
+    datasource_table: TableService = Provide[Recsys.table.datasource_table],
 ) -> None:
     datasource_table.create()
     assert datasource_table.exists()
 
 
 @inject
-def build_task_table(task_table: TableService = Provide[Recsys.dal.task_table]) -> None:
+def build_task_table(task_table: TableService = Provide[Recsys.table.task_table]) -> None:
     task_table.create()
     assert task_table.exists()
 

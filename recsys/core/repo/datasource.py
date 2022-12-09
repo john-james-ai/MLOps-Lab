@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:07:04 pm                                              #
-# Modified   : Thursday December 8th 2022 06:49:03 pm                                              #
+# Modified   : Friday December 9th 2022 08:17:05 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,8 +30,8 @@ class DataSourceRepo(Repo):
     """Repository base class"""
 
     @inject
-    def __init__(self, dao: DAO = Provide[Recsys.dal.datasource_dao]) -> None:
-        self._dao = dao()
+    def __init__(self, dao: DAO = Provide[Recsys.dao.datasource_dao]) -> None:
+        self._dao = dao
 
     def __len__(self) -> int:
         return len(self._dao)
@@ -39,12 +39,19 @@ class DataSourceRepo(Repo):
     def add(self, datasource: DataSource) -> DataSource:
         """Adds an entity to the repository and returns the DataSource with the id added."""
         dto = datasource.as_dto()
-        datasource.id = self._dao.add(dto)
+        dto = self._dao.add(dto)
+        datasource = DataSource.from_dto(dto)
         return datasource
 
     def get(self, id: str) -> DataSource:
         "Returns an entity with the designated id"
-        return self._dao.get(id)
+        dto = self._dao.get(id)
+        return DataSource.from_dto(dto)
+
+    def update(self, datasource: DataSource) -> None:
+        """Updates a DataSource in the databases."""
+        dto = datasource.as_dto()
+        self._dao.update(dto=dto)
 
     def remove(self, id: str) -> None:
         """Removes an entity with id from repository."""
@@ -52,7 +59,7 @@ class DataSourceRepo(Repo):
 
     def exists(self, id: str) -> bool:
         """Returns True if entity with id exists in the repository."""
-        self._dao.exists(id)
+        return self._dao.exists(id)
 
     def print(self) -> None:
         """Prints the repository contents as a DataFrame."""

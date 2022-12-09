@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/dal/sql/source.py                                                      #
+# Filename   : /recsys/core/dal/sql/datasource.py                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Thursday December 8th 2022 04:44:41 pm                                              #
+# Modified   : Friday December 9th 2022 08:39:55 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDataSourceTable(SQL):
     name: str = "source"
-    sql: str = """CREATE TABLE IF NOT EXISTS source (id INTEGER PRIMARY KEY, name TEXT NOT NULL, publisher TEXT NOT NULL, description TEXT NOT NULL, website TEXT NOT NULL, url TEXT NOT NULL);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS source (id INTEGER PRIMARY KEY, name TEXT NOT NULL, publisher TEXT NOT NULL, description TEXT NOT NULL, website TEXT NOT NULL, url TEXT NOT NULL, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -73,7 +73,7 @@ class DataSourceDDL(DDL):
 @dataclass
 class InsertDataSource(SQL):
     dto: DTO
-    sql: str = """INSERT INTO source (id, name, publisher, description, website, uri) VALUES (?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO source (id, name, publisher, description, website, url, created, modified) VALUES (?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -84,6 +84,8 @@ class InsertDataSource(SQL):
             self.dto.description,
             self.dto.website,
             self.dto.url,
+            self.dto.created,
+            self.dto.modified,
         )
 
 
@@ -93,7 +95,7 @@ class InsertDataSource(SQL):
 @dataclass
 class UpdateDataSource(SQL):
     dto: DTO
-    sql: str = """UPDATE source SET name = ?, publisher = ?, description = ?, website = ?, url = ? WHERE id = ?;"""
+    sql: str = """UPDATE source SET name = ?, publisher = ?, description = ?, website = ?, url = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -103,6 +105,8 @@ class UpdateDataSource(SQL):
             self.dto.description,
             self.dto.website,
             self.dto.url,
+            self.dto.created,
+            self.dto.modified,
             self.dto.id,
         )
 

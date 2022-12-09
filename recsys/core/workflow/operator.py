@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/entity/operator.py                                                     #
+# Filename   : /recsys/core/workflow/operator.py                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:31:12 am                                                #
-# Modified   : Monday December 5th 2022 05:03:20 am                                                #
+# Modified   : Friday December 9th 2022 08:36:27 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -158,6 +158,8 @@ class Operator(Entity):
             module=self._module,
             classname=self._classname,
             filepath=self._filepath,
+            created=self._created,
+            modified=self._modified,
         )
 
 
