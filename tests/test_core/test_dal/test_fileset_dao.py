@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Friday December 9th 2022 07:24:29 am                                                #
+# Modified   : Friday December 9th 2022 02:44:40 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -78,7 +78,7 @@ class TestFilesetDAO:  # pragma: no cover
         dal = recsys.dal()
         dao = dal.fileset_dao()
         for i, dto in enumerate(fileset_dtos, start=1):
-            dto = dao.add(dto)
+            dto = dao.create(dto)
             assert dto.id == i
             assert dao.exists(i)
         # ---------------------------------------------------------------------------------------- #
@@ -111,12 +111,12 @@ class TestFilesetDAO:  # pragma: no cover
         dal = recsys.dal()
         dao = dal.fileset_dao()
         for i in range(1, 6):
-            dto = dao.get(i)
+            dto = dao.read(i)
             assert isinstance(dto, FilesetDTO)
 
         for i in range(10, 15):
             with pytest.raises(FileNotFoundError):
-                dto = dao.get(i)
+                dto = dao.read(i)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -146,7 +146,7 @@ class TestFilesetDAO:  # pragma: no cover
         recsys = Recsys()
         dal = recsys.dal()
         dao = dal.fileset_dao()
-        dtos = dao.get_all()
+        dtos = dao.read_all()
         assert len(dtos) == 5
         assert isinstance(dtos, dict)
         for i, dto in dtos.items():
@@ -189,7 +189,7 @@ class TestFilesetDAO:  # pragma: no cover
             dao.update(dto)
 
         for i in range(1, 6):
-            dto = dao.get(i)
+            dto = dao.read(i)
             assert dto.task_id == i
 
         # ---------------------------------------------------------------------------------------- #

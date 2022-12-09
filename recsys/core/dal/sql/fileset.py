@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Thursday December 8th 2022 05:02:36 pm                                              #
+# Modified   : Friday December 9th 2022 04:06:36 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateFilesetTable(SQL):
     name: str = "fileset"
-    sql: str = """CREATE TABLE IF NOT EXISTS fileset (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, source TEXT NOT NULL, filepath TEXT NOT NULL, filesize INTEGER NOT NULL, task_id INTEGER DEFAULT (0), created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS fileset (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, source TEXT NOT NULL, filepath TEXT NOT NULL, filesize INTEGER NOT NULL, task_id INTEGER NOT NULL, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -82,7 +82,7 @@ class InsertFileset(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.datasource,
-            self.dto.uri,
+            self.dto.filepath,
             self.dto.filesize,
             self.dto.task_id,
             self.dto.created,
@@ -104,7 +104,7 @@ class UpdateFileset(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.datasource,
-            self.dto.uri,
+            self.dto.filepath,
             self.dto.filesize,
             self.dto.task_id,
             self.dto.created,

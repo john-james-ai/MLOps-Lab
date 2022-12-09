@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:07:04 pm                                              #
-# Modified   : Friday December 9th 2022 08:17:05 am                                                #
+# Modified   : Friday December 9th 2022 02:52:09 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ class DataSourceRepo(Repo):
     """Repository base class"""
 
     @inject
-    def __init__(self, dao: DAO = Provide[Recsys.dao.datasource_dao]) -> None:
+    def __init__(self, dao: DAO = Provide[Recsys.dao.datasource]) -> None:
         self._dao = dao
 
     def __len__(self) -> int:
@@ -39,13 +39,13 @@ class DataSourceRepo(Repo):
     def add(self, datasource: DataSource) -> DataSource:
         """Adds an entity to the repository and returns the DataSource with the id added."""
         dto = datasource.as_dto()
-        dto = self._dao.add(dto)
+        dto = self._dao.create(dto)
         datasource = DataSource.from_dto(dto)
         return datasource
 
     def get(self, id: str) -> DataSource:
         "Returns an entity with the designated id"
-        dto = self._dao.get(id)
+        dto = self._dao.read(id)
         return DataSource.from_dto(dto)
 
     def update(self, datasource: DataSource) -> None:
@@ -63,6 +63,6 @@ class DataSourceRepo(Repo):
 
     def print(self) -> None:
         """Prints the repository contents as a DataFrame."""
-        sources = self._dao.get_all()
+        sources = self._dao.read_all()
         df = pd.DataFrame.from_dict(data=sources, orient='index', columns=['id', 'name', 'description', 'publisher', 'website', 'url'])
         print(df)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Friday December 9th 2022 05:50:46 am                                                #
+# Modified   : Friday December 9th 2022 02:52:49 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -63,30 +63,30 @@ class TableContainer(containers.DeclarativeContainer):
 
     database = providers.Dependency()
 
-    dataset_table = providers.Factory(TableService, database=database, ddl=DatasetDDL)
+    dataset = providers.Factory(TableService, database=database, ddl=DatasetDDL)
 
-    fileset_table = providers.Factory(TableService, database=database, ddl=FilesetDDL)
+    fileset = providers.Factory(TableService, database=database, ddl=FilesetDDL)
 
-    job_table = providers.Factory(TableService, database=database, ddl=JobDDL)
+    job = providers.Factory(TableService, database=database, ddl=JobDDL)
 
-    datasource_table = providers.Factory(TableService, database=database, ddl=DataSourceDDL)
+    datasource = providers.Factory(TableService, database=database, ddl=DataSourceDDL)
 
-    task_table = providers.Factory(TableService, database=database, ddl=TaskDDL)
+    task = providers.Factory(TableService, database=database, ddl=TaskDDL)
 
 
 class DAOContainer(containers.DeclarativeContainer):
 
     database = providers.Dependency()
 
-    dataset_dao = providers.Factory(DatasetDAO, database=database, dml=DatasetDML)
+    dataset = providers.Factory(DatasetDAO, database=database, dml=DatasetDML)
 
-    fileset_dao = providers.Factory(FilesetDAO, database=database, dml=FilesetDML)
+    fileset = providers.Factory(FilesetDAO, database=database, dml=FilesetDML)
 
-    job_dao = providers.Factory(JobDAO, database=database, dml=JobDML)
+    job = providers.Factory(JobDAO, database=database, dml=JobDML)
 
-    datasource_dao = providers.Factory(DataSourceDAO, database=database, dml=DataSourceDML)
+    datasource = providers.Factory(DataSourceDAO, database=database, dml=DataSourceDML)
 
-    task_dao = providers.Factory(TaskDAO, database=database, dml=TaskDML)
+    task = providers.Factory(TaskDAO, database=database, dml=TaskDML)
 
 
 class Recsys(containers.DeclarativeContainer):

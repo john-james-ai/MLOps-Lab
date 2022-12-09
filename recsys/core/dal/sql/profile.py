@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Thursday December 8th 2022 02:59:12 pm                                              #
+# Modified   : Friday December 9th 2022 02:21:12 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateProfileTable(SQL):
     name: str = "profile"
-    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id INTEGER PRIMARY KEY, job_task_id INTEGER DEFAULT (0), start timestamp, end timestamp, duration INTEGER DEFAULT (0), user_cpu_time INTEGER DEFAULT (0), percent_cpu_used REAL NOT NULL, total_physical_memory INTEGER DEFAULT (0), physical_memory_available INTEGER DEFAULT (0), physical_memory_used INTEGER DEFAULT (0), percent_physical_memory_used REAL NOT NULL, active_memory_used INTEGER DEFAULT (0), disk_usage INTEGER DEFAULT (0), percent_disk_usage REAL NOT NULL, read_count INTEGER DEFAULT (0), write_count INTEGER DEFAULT (0), read_bytes INTEGER DEFAULT (0), write_bytes INTEGER DEFAULT (0), read_time INTEGER DEFAULT (0), write_time INTEGER DEFAULT (0), bytes_sent INTEGER DEFAULT (0), bytes_recv INTEGER DEFAULT (0));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, start timestamp, end timestamp, duration INTEGER DEFAULT 0, user_cpu_time INTEGER DEFAULT 0, percent_cpu_used REAL NOT NULL, total_physical_memory INTEGER DEFAULT 0, physical_memory_available INTEGER DEFAULT 0, physical_memory_used INTEGER DEFAULT 0, percent_physical_memory_used REAL NOT NULL, active_memory_used INTEGER DEFAULT 0, disk_usage INTEGER DEFAULT 0, percent_disk_usage REAL NOT NULL, read_count INTEGER DEFAULT 0, write_count INTEGER DEFAULT 0, read_bytes INTEGER DEFAULT 0, write_bytes INTEGER DEFAULT 0, read_time INTEGER DEFAULT 0, write_time INTEGER DEFAULT 0, bytes_sent INTEGER DEFAULT 0, bytes_recv INTEGER DEFAULT 0, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -72,34 +72,35 @@ class ProfileDDL(DDL):
 @dataclass
 class InsertProfile(SQL):
     dto: DTO
-    sql: str = """INSERT INTO profile (id, job_task_id, start, end, duration, user_cpu_time, percent_cpu_used, total_physical_memory, physical_memory_available, physical_memory_used, percent_physical_memory_used, active_memory_used, disk_usage, percent_disk_usage, read_count, write_count, read_bytes, write_bytes, read_time, write_time, bytes_sent, bytes_recv) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO profile (name, description, start, end, duration, user_cpu_time, percent_cpu_used, total_physical_memory, physical_memory_available, physical_memory_used, percent_physical_memory_used, active_memory_used, disk_usage, percent_disk_usage, read_count, write_count, read_bytes, write_bytes, read_time, write_time, bytes_sent, bytes_recv, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
-            self.dto.id,
-            self.dto.job_task_id,
-            self.dto.time.start,
-            self.dto.time.end,
-            self.dto.time.duration,
-            self.dto.cpu.user_cpu_time,
-            self.dto.cpu.percent_cpu_used,
-            self.dto.memory.total_physical_memory,
-            self.dto.memory.physical_memory_available,
-            self.dto.memory.physical_memory_used,
-            self.dto.memory.percent_physical_memory_used,
-            self.dto.memory.active_memory_used,
-            self.dto.disk.disk_usage,
-            self.dto.disk.percent_disk_usage,
-            self.dto.disk.read_count,
-            self.dto.disk.write_count,
-            self.dto.disk.read_bytes,
-            self.dto.disk.write_bytes,
-            self.dto.disk.read_time,
-            self.dto.disk.write_time,
-            self.dto.network.bytes_sent,
-            self.dto.network.bytes_recv,
-
+            self.dto.name,
+            self.dto.description,
+            self.dto.start,
+            self.dto.end,
+            self.dto.duration,
+            self.dto.user_cpu_time,
+            self.dto.percent_cpu_used,
+            self.dto.total_physical_memory,
+            self.dto.physical_memory_available,
+            self.dto.physical_memory_used,
+            self.dto.percent_physical_memory_used,
+            self.dto.active_memory_used,
+            self.dto.disk_usage,
+            self.dto.percent_disk_usage,
+            self.dto.read_count,
+            self.dto.write_count,
+            self.dto.read_bytes,
+            self.dto.write_bytes,
+            self.dto.read_time,
+            self.dto.write_time,
+            self.dto.bytes_sent,
+            self.dto.bytes_recv,
+            self.dto.created,
+            self.dto.modified,
         )
 
 
@@ -109,34 +110,36 @@ class InsertProfile(SQL):
 @dataclass
 class UpdateProfile(SQL):
     dto: DTO
-    sql: str = """UPDATE profile SET job_task_id = ?, start = ?, end = ?, duration = ?, user_cpu_time = ?, percent_cpu_used = ?, total_physical_memory = ?, physical_memory_available = ?, physical_memory_used = ?, percent_physical_memory_used = ?, active_memory_used = ?, disk_usage = ?, percent_disk_usage = ?, read_count = ?, write_count = ?, read_bytes = ?, write_bytes = ?, read_time = ?, write_time = ?, bytes_sent = ?, bytes_recv = ? WHERE id = ?;"""
+    sql: str = """UPDATE profile SET name = ?, description = ?, start = ?, end = ?, duration = ?, user_cpu_time = ?, percent_cpu_used = ?, total_physical_memory = ?, physical_memory_available = ?, physical_memory_used = ?, percent_physical_memory_used = ?, active_memory_used = ?, disk_usage = ?, percent_disk_usage = ?, read_count = ?, write_count = ?, read_bytes = ?, write_bytes = ?, read_time = ?, write_time = ?, bytes_sent = ?, bytes_recv = ?, created = ?, modified = ?  WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
-            self.dto.job_task_id,
-            self.dto.time.start,
-            self.dto.time.end,
-            self.dto.time.duration,
-            self.dto.cpu.user_cpu_time,
-            self.dto.cpu.percent_cpu_used,
-            self.dto.memory.total_physical_memory,
-            self.dto.memory.physical_memory_available,
-            self.dto.memory.physical_memory_used,
-            self.dto.memory.percent_physical_memory_used,
-            self.dto.memory.active_memory_used,
-            self.dto.disk.disk_usage,
-            self.dto.disk.percent_disk_usage,
-            self.dto.disk.read_count,
-            self.dto.disk.write_count,
-            self.dto.disk.read_bytes,
-            self.dto.disk.write_bytes,
-            self.dto.disk.read_time,
-            self.dto.disk.write_time,
-            self.dto.network.bytes_sent,
-            self.dto.network.bytes_recv,
+            self.dto.name,
+            self.dto.description,
+            self.dto.start,
+            self.dto.end,
+            self.dto.duration,
+            self.dto.user_cpu_time,
+            self.dto.percent_cpu_used,
+            self.dto.total_physical_memory,
+            self.dto.physical_memory_available,
+            self.dto.physical_memory_used,
+            self.dto.percent_physical_memory_used,
+            self.dto.active_memory_used,
+            self.dto.disk_usage,
+            self.dto.percent_disk_usage,
+            self.dto.read_count,
+            self.dto.write_count,
+            self.dto.read_bytes,
+            self.dto.write_bytes,
+            self.dto.read_time,
+            self.dto.write_time,
+            self.dto.bytes_sent,
+            self.dto.bytes_recv,
+            self.dto.created,
+            self.dto.modified,
             self.dto.id,
-
         )
 
 

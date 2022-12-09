@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:49:55 pm                                              #
-# Modified   : Friday December 9th 2022 09:07:27 am                                                #
+# Modified   : Friday December 9th 2022 02:52:09 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -73,7 +73,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = DataSourceRepo(dao=container.dao.datasource_dao())
+        repo = DataSourceRepo(dao=container.dao.datasource())
         for datasource in datasources:
             datasource = repo.add(datasource)
             assert datasource.id is not None
@@ -105,7 +105,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = DataSourceRepo(dao=container.dao.datasource_dao())
+        repo = DataSourceRepo(dao=container.dao.datasource())
         assert isinstance(repo.get(id=2), DataSource)
         with pytest.raises(FileNotFoundError):
             repo.get(id=99)
@@ -137,7 +137,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
         # ---------------------------------------------------------------------------------------- #
-        repo = DataSourceRepo(dao=container.dao.datasource_dao())
+        repo = DataSourceRepo(dao=container.dao.datasource())
         for i, datasource in enumerate(datasources, start=1):
             datasource.id = i
             datasource.publisher = "j2sDubLab"
@@ -177,7 +177,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = DataSourceRepo(dao=container.dao.datasource_dao())
+        repo = DataSourceRepo(dao=container.dao.datasource())
         repo.remove(id=2)
         assert len(repo) == 3
         with pytest.raises(FileNotFoundError):
@@ -209,7 +209,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = DataSourceRepo(dao=container.dao.datasource_dao())
+        repo = DataSourceRepo(dao=container.dao.datasource())
         assert repo.exists(3)
         assert not repo.exists(44)
 
@@ -239,7 +239,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = DataSourceRepo(dao=container.dao.datasource_dao())
+        repo = DataSourceRepo(dao=container.dao.datasource())
         logger.info(repo.print())
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
