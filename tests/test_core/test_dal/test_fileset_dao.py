@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Friday December 9th 2022 02:44:40 pm                                                #
+# Modified   : Friday December 9th 2022 06:52:20 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,19 +21,20 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.__main__ import main
-from recsys.containers import Recsys
 from recsys.core.dal.dto import FilesetDTO
+from recsys.core.dal.sql.fileset import FilesetDDL
+from recsys.core.dal.ddo import TableService
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-@pytest.mark.fs
+@pytest.mark.dao
+@pytest.mark.fileset_dao
 class TestFilesetDAO:  # pragma: no cover
     # ============================================================================================ #
-    def test_setup(self, caplog):
+    def test_setup(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -44,10 +45,8 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        main()
-        recsys = Recsys()
-        dal = recsys.dal()
-        dal.fileset_table().reset()
+        ts = TableService(database=container.data.database, ddl=FilesetDDL)
+        ts.reset()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -63,7 +62,7 @@ class TestFilesetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_add(self, fileset_dtos, caplog):
+    def test_create(self, fileset_dtos, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -74,9 +73,7 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        recsys = Recsys()
-        dal = recsys.dal()
-        dao = dal.fileset_dao()
+        dao = container.dao.fileset()
         for i, dto in enumerate(fileset_dtos, start=1):
             dto = dao.create(dto)
             assert dto.id == i
@@ -96,7 +93,7 @@ class TestFilesetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get(self, fileset_dtos, caplog):
+    def test_read(self, fileset_dtos, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -107,16 +104,14 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        recsys = Recsys()
-        dal = recsys.dal()
-        dao = dal.fileset_dao()
-        for i in range(1, 6):
+        dao = container.dao.fileset()
+        for i, fileset_dto in enumerate(fileset_dtos, start=1):
             dto = dao.read(i)
-            assert isinstance(dto, FilesetDTO)
-
-        for i in range(10, 15):
+            assert dto == fileset_dto
+            j = i + 10
             with pytest.raises(FileNotFoundError):
-                dto = dao.read(i)
+                _ = dao.read(j)
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -132,7 +127,7 @@ class TestFilesetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_all(self, caplog):
+    def test_read_all(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -143,18 +138,22 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        recsys = Recsys()
-        dal = recsys.dal()
-        dao = dal.fileset_dao()
+        dao = container.dao.fileset()
         dtos = dao.read_all()
         assert len(dtos) == 5
         assert isinstance(dtos, dict)
         for i, dto in dtos.items():
             assert isinstance(dto, FilesetDTO)
             assert dto.id == i
+            assert dto.name == f"fileset_dto_{i}"
+            assert dto.description == f"Fileset Description DTO {i}"
+            assert dto.datasource == "movielens25m"
+            assert dto.filesize == 501
+            assert dto.filepath == "tests/file/" + f"dataset_dto_{i}" + ".pkl"
             assert dto.task_id == i + i
-            assert isinstance(dto.created, str)
-            assert isinstance(dto.modified, str)
+            assert isinstance(dto.created, datetime)
+            assert isinstance(dto.modified, datetime)
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -170,7 +169,7 @@ class TestFilesetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_update(self, fileset_dtos, caplog):
+    def test_update(self, fileset_dtos, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -181,16 +180,14 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        recsys = Recsys()
-        dal = recsys.dal()
-        dao = dal.fileset_dao()
+        dao = container.dao.fileset()
         for i, dto in enumerate(fileset_dtos, start=1):
-            dto.task_id = i
+            dto.filesize = i * 100
             dao.update(dto)
 
         for i in range(1, 6):
             dto = dao.read(i)
-            assert dto.task_id == i
+            assert dto.filesize == i * 100
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -207,7 +204,7 @@ class TestFilesetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_delete(self, caplog):
+    def test_delete(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -218,9 +215,7 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        recsys = Recsys()
-        dal = recsys.dal()
-        dao = dal.fileset_dao()
+        dao = container.dao.fileset()
         for i in range(1, 6):
             dao.delete(i)
 
@@ -241,30 +236,3 @@ class TestFilesetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_teardown(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        recsys = Recsys()
-        recsys.dal().fileset_table().reset()
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )

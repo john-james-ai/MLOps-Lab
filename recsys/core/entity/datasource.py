@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:26:05 am                                              #
-# Modified   : Friday December 9th 2022 09:09:02 am                                                #
+# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -27,10 +27,10 @@ class DataSource(Entity):
     """A Source of Data for the Recsys Project
 
     Args:
-        name (str): Name of the source
-        publisher (str): The publisher of the data source
-        description (str): Description of the source
-        website (str): The base website for the source.
+        name (str): Name of the datasource
+        publisher (str): The publisher of the data datasource
+        description (str): Description of the datasource
+        website (str): The base website for the datasource.
         url (str): The download link
     """
     def __init__(self, name: str, publisher: str, website: str, url: str, description: str = None) -> None:

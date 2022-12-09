@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Thursday December 8th 2022 05:02:36 pm                                              #
+# Modified   : Friday December 9th 2022 06:49:33 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -35,7 +35,7 @@ class Dataset(Entity):
         *id (int): Unique integer identifier for the Dataset object.
         *name (str): Short, yet descriptive lowercase name for Dataset object.
         *description (str): Describes the Dataset object.
-        *source (str): The data source
+        *datasource (str): The data datasource
         workspace (str): One of ['prod', 'dev', 'test']
         stage (str): The stage of the data processing lifecycle to which the Dataset belongs.
         version (int): Version is initialized at 1 and bumped by the repo if the Dataset object exists.*
@@ -59,7 +59,7 @@ class Dataset(Entity):
     def __init__(
         self,
         name: str,
-        source: str,
+        datasource: str,
         stage: str,
         task_id: int,
         version: int = 1,
@@ -69,7 +69,7 @@ class Dataset(Entity):
     ) -> None:
         super().__init__(name=name, description=description)
 
-        self._source = source
+        self. _datasource = datasource
         self._workspace = workspace
         self._stage = stage
         self._version = version
@@ -93,10 +93,10 @@ class Dataset(Entity):
         self._validate()
 
     def __str__(self) -> str:
-        return f"\n\nDataset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._source}\n\tWorkspace: {self._workspace}\n\tStage: {self._stage}\n\tVersion: {self._version}\n\tData: {self._data}\n\tCost: {self._cost}\n\tNrows: {self._nrows}\n\tNcols: {self._ncols}\n\tNull_Counts: {self._null_counts}\n\tMemory_Size_Mb: {self._memory_size_mb}\n\tFilepath: {self._filepath}\n\tStep_Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"\n\nDataset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self. _datasource}\n\tWorkspace: {self._workspace}\n\tStage: {self._stage}\n\tVersion: {self._version}\n\tData: {self._data}\n\tCost: {self._cost}\n\tNrows: {self._nrows}\n\tNcols: {self._ncols}\n\tNull_Counts: {self._null_counts}\n\tMemory_Size_Mb: {self._memory_size_mb}\n\tFilepath: {self._filepath}\n\tStep_Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id},{self._name},{self._description},{self._source},{self._workspace},{self._stage},{self._version},{self._data},{self._cost},{self._nrows},{self._ncols},{self._null_counts},{self._memory_size_mb},{self._filepath},{self._task_id},{self._created},{self._modified}"
+        return f"{self._id},{self._name},{self._description},{self. _datasource},{self._workspace},{self._stage},{self._version},{self._data},{self._cost},{self._nrows},{self._ncols},{self._null_counts},{self._memory_size_mb},{self._filepath},{self._task_id},{self._created},{self._modified}"
 
     def __eq__(self, other) -> bool:
         """Compares two Datasets for equality.
@@ -128,8 +128,8 @@ class Dataset(Entity):
         return self._workspace
 
     @property
-    def source(self) -> str:
-        return self._source
+    def datasource(self) -> str:
+        return self. _datasource
 
     @property
     def stage(self) -> str:
@@ -226,7 +226,7 @@ class Dataset(Entity):
             id=self._id,
             name=self._name,
             description=self._description,
-            source=self._source,
+            datasource=self. _datasource,
             workspace=self._workspace,
             stage=self._stage,
             version=self._version,
@@ -245,7 +245,7 @@ class Dataset(Entity):
     def _from_dto(self, dto: DatasetDTO) -> None:
         super().__init__(name=dto.name, description=dto.description)
         self._id = dto.id
-        self._source = dto.datasource
+        self. _datasource = dto.datasource
         self._workspace = dto.workspace
         self._stage = dto.stage
         self._version = dto.version

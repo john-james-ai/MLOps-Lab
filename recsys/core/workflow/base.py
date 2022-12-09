@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 10:24:47 pm                                                #
-# Modified   : Monday December 5th 2022 10:45:30 pm                                                #
+# Modified   : Friday December 9th 2022 06:49:10 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -53,11 +53,11 @@ class Pipeline(ABC):
     """
 
     def __init__(
-        self, name: str, source: str, workspace: str, description: str = None, **kwargs
+        self, name: str, datasource: str, workspace: str, description: str = None, **kwargs
     ) -> None:
         self._id = None
         self._name = name
-        self._source = source
+        self. _datasource = datasource
         self._workspace = workspace
         self._description = description
         self._logger = logging.getLogger(
@@ -90,8 +90,8 @@ class Pipeline(ABC):
         return self._description
 
     @property
-    def source(self) -> str:
-        return self._source
+    def datasource(self) -> str:
+        return self. _datasource
 
     @property
     def workspace(self) -> str:

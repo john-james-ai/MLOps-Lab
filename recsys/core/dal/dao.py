@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Friday December 9th 2022 05:34:00 pm                                                #
+# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -41,7 +41,7 @@ class DAO(Service):
         super().__init__()
 
     def __len__(self) -> int:
-        result = self.get_all()
+        result = self.read_all()
         length = 0 if result is None else len(result)
         return length
 
@@ -150,7 +150,7 @@ class DatasetDAO(DAO):
                 id=int(row[0]),
                 name=row[1],
                 description=row[2],
-                source=row[3],
+                datasource=row[3],
                 workspace=row[4],
                 stage=row[5],
                 version=int(row[6]),
@@ -186,7 +186,7 @@ class FilesetDAO(DAO):
                 id=int(row[0]),
                 name=row[1],
                 description=row[2],
-                source=row[3],
+                datasource=row[3],
                 filepath=row[4],
                 filesize=int(row[5]),
                 task_id=int(row[6]),

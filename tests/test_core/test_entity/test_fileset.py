@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 10:37:56 am                                             #
-# Modified   : Thursday December 8th 2022 06:02:14 pm                                              #
+# Modified   : Friday December 9th 2022 06:50:29 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -46,7 +46,7 @@ class TestFilesetEntity:  # pragma: no cover
         fs = Fileset(
             name="fileset_test",
             description="Fileset Test",
-            source="spotify",
+            datasource="spotify",
             filepath="tests/file/fileset_test.pkl",
             task_id=122,
         )
@@ -106,15 +106,15 @@ class TestFilesetEntity:  # pragma: no cover
             _ = Fileset(name="test")  # Source missing
 
         with pytest.raises(TypeError):
-            _ = Fileset(name="test", source="spotify")  # Filepath missing
+            _ = Fileset(name="test", datasource="spotify")  # Filepath missing
 
         with pytest.raises(TypeError):
-            _ = Fileset(name="test", source="spotify", filepath="/test/filepath")  # Task_id missing
+            _ = Fileset(name="test", datasource="spotify", filepath="/test/filepath")  # Task_id missing
 
         with pytest.raises(ValueError):
             _ = Fileset(
-                name="test", source="asa", filepath="/test/filepath", task_id=22
-            )  # Invalid source
+                name="test", datasource="asa", filepath="/test/filepath", task_id=22
+            )  # Invalid datasource
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -145,7 +145,7 @@ class TestFilesetEntity:  # pragma: no cover
         fs = Fileset(
             name="fileset_test",
             description="Fileset Test",
-            source="spotify",
+            datasource="spotify",
             filepath="tests/file/fileset_test.pkl",
             task_id=122,
         )
@@ -214,7 +214,7 @@ class TestFilesetEntity:  # pragma: no cover
         fs = Fileset(
             name="fileset_test",
             description="Fileset Test",
-            source="spotify",
+            datasource="spotify",
             filepath="data/movielens25m/raw/ratings.csv",
             task_id=122,
         )
@@ -256,7 +256,7 @@ class TestFilesetEntity:  # pragma: no cover
         fs = Fileset(
             name="fileset_test",
             description="Fileset Test",
-            source="spotify",
+            datasource="spotify",
             filepath="tests/file/fileset_test.pkl",
             task_id=122,
         )
@@ -292,7 +292,7 @@ class TestFilesetEntity:  # pragma: no cover
         fs = Fileset(
             name="fileset_test",
             description="Fileset Test",
-            source="spotify",
+            datasource="spotify",
             filepath="tests/file/fileset_test.pkl",
             task_id=122,
         )
@@ -301,7 +301,7 @@ class TestFilesetEntity:  # pragma: no cover
         assert d["id"] is None
         assert d["name"] == "fileset_test"
         assert d["description"] == "Fileset Test"
-        assert d["source"] == "spotify"
+        assert d["datasource"] == "spotify"
         assert d["filepath"] == "tests/file/fileset_test.pkl"
         assert d["task_id"] == 122
 
@@ -334,7 +334,7 @@ class TestFilesetEntity:  # pragma: no cover
         fs = Fileset(
             name="fileset_test",
             description="Fileset Test",
-            source="spotify",
+            datasource="spotify",
             filepath="tests/file/fileset_test.pkl",
             task_id=122,
         )
@@ -370,21 +370,21 @@ class TestFilesetEntity:  # pragma: no cover
         fs1 = Fileset(
             name="fileset_test",
             description="Fileset Test",
-            source="spotify",
+            datasource="spotify",
             filepath="data/movielens25m/raw/ratings.csv",
             task_id=122,
         )
         fs2 = Fileset(
             name="fileset_test",
             description="Fileset Test",
-            source="spotify",
+            datasource="spotify",
             filepath="data/movielens25m/raw/ratings.csv",
             task_id=122,
         )
         fs3 = Fileset(
             name="fileset_test",
             description="Fileset Test",
-            source="spotify",
+            datasource="spotify",
             filepath="data/movielens25m/raw",
             task_id=122,
         )

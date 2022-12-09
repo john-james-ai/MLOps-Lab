@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:31:12 am                                                #
-# Modified   : Friday December 9th 2022 08:36:27 am                                                #
+# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -81,7 +81,7 @@ class OutputPO(ABC):
 @dataclass
 class FilesetOutputPO(OutputPO):
     name: str
-    source: str
+    datasource: str
     filepath: str
     description: str = None
 
@@ -89,7 +89,7 @@ class FilesetOutputPO(OutputPO):
 @dataclass
 class DatasetOutputPO(OutputPO):
     name: str
-    source: str
+    datasource: str
     workspace: str
     stage: str
     description: str = None
@@ -377,7 +377,7 @@ class Pickler(Operator):
 
 
 class Copier(Operator):
-    """Copies a file from source to destination
+    """Copies a file from datasource to destination
     Args:
         infilepath (str): Path to file being copied
         outfilepath (str): The destination filepath
@@ -430,7 +430,7 @@ class Copier(Operator):
 
 
 class Sampler(Operator):
-    """Copies a file from source to destination
+    """Copies a file from datasource to destination
     Args:
         infilepath (str): Path to file being copied
         outfilepath (str): The destination filepath

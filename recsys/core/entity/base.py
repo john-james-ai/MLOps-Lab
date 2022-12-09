@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Wednesday December 7th 2022 09:31:59 pm                                             #
+# Modified   : Friday December 9th 2022 06:50:29 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,10 +31,10 @@ class Entity(ABC):
     """Abstract base class for entity classes.
 
     It provides several services for the subclasses.
-        1. name, source, and description are added as private members.
+        1. name, datasource, and description are added as private members.
         2. created is initialized to current datetime and private modified member is created.
-        3. Properties for id, name, description, and source are created.
-        4. Validation is provided for name, source, workspace, and stage
+        3. Properties for id, name, description, and datasource are created.
+        4. Validation is provided for name, datasource, workspace, and stage
 
     It also provides methods to export the Entity as a dictionary.
 
@@ -124,12 +124,12 @@ class Entity(ABC):
                 self._logger.error(msg)
                 raise TypeError(msg)
 
-        if hasattr(self, "source"):
-            if self._source is None:
+        if hasattr(self, "datasource"):
+            if self. _datasource is None:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is required for {self.__class__.__name__} objects."
                 self._logger.error(msg)
                 raise TypeError(msg)
-            elif self._source not in SOURCES:
+            elif self. _datasource not in SOURCES:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is invalid. Must be one of {SOURCES}."
                 self._logger.error(msg)
                 raise ValueError(msg)

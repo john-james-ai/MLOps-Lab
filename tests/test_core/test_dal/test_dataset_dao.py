@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Friday December 9th 2022 03:25:03 pm                                                #
+# Modified   : Friday December 9th 2022 06:12:18 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -73,7 +73,7 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset
+        dao = container.dao.dataset()
         for i, dto in enumerate(dataset_dtos, start=1):
             dto = dao.create(dto)
             assert dto.id == i
@@ -104,7 +104,7 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset
+        dao = container.dao.dataset()
         for i, dataset_dto in enumerate(dataset_dtos, start=1):
             dto = dao.read(i)
             assert dto == dataset_dto
@@ -138,14 +138,14 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset
+        dao = container.dao.dataset()
         dtos = dao.read_all()
         assert len(dtos) == 5
         assert isinstance(dtos, dict)
         for i, dto in dtos.items():
             assert isinstance(dto, DatasetDTO)
             assert dto.id == i
-            assert dto.version == 1
+            assert dto.version == i + 1
             assert dto.cost == 1000 * i
             assert dto.nrows == 100 * i
             assert dto.ncols == i
@@ -179,7 +179,7 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset
+        dao = container.dao.dataset()
         for i, dto in enumerate(dataset_dtos, start=1):
             dto.version = i + 10
             dao.update(dto)
@@ -214,7 +214,7 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset
+        dao = container.dao.dataset()
         for i in range(1, 6):
             dao.delete(i)
 

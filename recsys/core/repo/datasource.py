@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:07:04 pm                                              #
-# Modified   : Friday December 9th 2022 02:52:09 pm                                                #
+# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -63,6 +63,6 @@ class DataSourceRepo(Repo):
 
     def print(self) -> None:
         """Prints the repository contents as a DataFrame."""
-        sources = self._dao.read_all()
+        datasources = self._dao.read_all()
         df = pd.DataFrame.from_dict(data=sources, orient='index', columns=['id', 'name', 'description', 'publisher', 'website', 'url'])
         print(df)

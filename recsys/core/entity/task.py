@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 08:03:23 pm                                             #
-# Modified   : Friday December 9th 2022 08:37:51 am                                                #
+# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -61,7 +61,7 @@ class Task(Entity):  # pragma: no cover
 
     def __eq__(self, other) -> bool:
         """Compares two Filesets for equality.
-        Equality is defined by common name, source, and filesize.
+        Equality is defined by common name, datasource, and filesize.
         """
 
         if isinstance(other, Task):

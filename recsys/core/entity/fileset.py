@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Thursday December 8th 2022 05:02:36 pm                                              #
+# Modified   : Friday December 9th 2022 06:49:33 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ class Fileset(Entity):
         *id (int): Unique integer identifier for the Fileset object.
         *name (str): Short, yet descriptive lowercase name for Fileset object.
         *description (str): Description of fileset
-        *source (str): The data source
+        *datasource (str): The data datasource
         url (str): Optional. The URL associated with the Fileset. For websources.
         filesize (float): The size of the file in Mb
         filepath (str): The path to the file relative to the project root directory.
@@ -48,13 +48,13 @@ class Fileset(Entity):
     def __init__(
         self,
         name: str,
-        source: str,
+        datasource: str,
         url: str,
         filepath: str,
         task_id: int,
         description: str = None,
     ) -> None:
-        super().__init__(name=name, source=source, description=description)
+        super().__init__(name=name, datasource=source, description=description)
         self._filepath = filepath
         self._task_id = task_id
         self._filepath = filepath
@@ -64,20 +64,20 @@ class Fileset(Entity):
         self._validate()
 
     def __str__(self) -> str:
-        return f"\n\nFileset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._source}\n\tFilesize: {self._filesize}\n\tFilepath: {self._filepath}\n\tStep_Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"\n\nFileset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self. _datasource}\n\tFilesize: {self._filesize}\n\tFilepath: {self._filepath}\n\tStep_Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id},{self._name},{self._description},{self._source},{self._filesize},{self._filepath},{self._task_id},{self._created},{self._modified}"
+        return f"{self._id},{self._name},{self._description},{self. _datasource},{self._filesize},{self._filepath},{self._task_id},{self._created},{self._modified}"
 
     def __eq__(self, other) -> bool:
         """Compares two Filesets for equality.
-        Equality is defined by common name, source, and filesize.
+        Equality is defined by common name, datasource, and filesize.
         """
 
         if isinstance(other, Fileset):
             return (
                 self._name == other.name
-                and self._source == other.datasource
+                and self. _datasource == other.datasource
                 and self._filesize == other.filesize
             )
         else:
@@ -122,7 +122,7 @@ class Fileset(Entity):
             id=self._id,
             name=self._name,
             description=self._description,
-            source=self._source,
+            datasource=self. _datasource,
             filesize=self._filesize,
             filepath=self._filepath,
             task_id=self._task_id,
@@ -135,7 +135,7 @@ class Fileset(Entity):
     def _from_dto(self, dto: FilesetDTO) -> None:
         super().__init__(name=dto.name, description=dto.description)
         self._id = dto.id
-        self._source = dto.datasource
+        self. _datasource = dto.datasource
         self._filesize = dto.filesize
         self._filepath = dto.filepath
         self._task_id = dto.task_id

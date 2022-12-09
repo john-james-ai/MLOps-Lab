@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday December 9th 2022 08:39:55 am                                                #
+# Modified   : Friday December 9th 2022 06:45:14 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,16 +31,16 @@ from recsys.core.dal.dto import DTO
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class CreateDataSourceTable(SQL):
-    name: str = "source"
-    sql: str = """CREATE TABLE IF NOT EXISTS source (id INTEGER PRIMARY KEY, name TEXT NOT NULL, publisher TEXT NOT NULL, description TEXT NOT NULL, website TEXT NOT NULL, url TEXT NOT NULL, created timestamp, modified timestamp);"""
+    name: str = "datasource"
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id INTEGER PRIMARY KEY, name TEXT NOT NULL, publisher TEXT NOT NULL, description TEXT NOT NULL, website TEXT NOT NULL, url TEXT NOT NULL, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class DropDataSourceTable(SQL):
-    name: str = "source"
-    sql: str = """DROP TABLE IF EXISTS source;"""
+    name: str = "datasource"
+    sql: str = """DROP TABLE IF EXISTS datasource;"""
     args: tuple = ()
 
 
@@ -49,7 +49,7 @@ class DropDataSourceTable(SQL):
 
 @dataclass
 class DataSourceTableExists(SQL):
-    name: str = "source"
+    name: str = "datasource"
     sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
     args: tuple = ()
 
@@ -73,7 +73,7 @@ class DataSourceDDL(DDL):
 @dataclass
 class InsertDataSource(SQL):
     dto: DTO
-    sql: str = """INSERT INTO source (id, name, publisher, description, website, url, created, modified) VALUES (?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO datasource (id, name, publisher, description, website, url, created, modified) VALUES (?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -95,7 +95,7 @@ class InsertDataSource(SQL):
 @dataclass
 class UpdateDataSource(SQL):
     dto: DTO
-    sql: str = """UPDATE source SET name = ?, publisher = ?, description = ?, website = ?, url = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE datasource SET name = ?, publisher = ?, description = ?, website = ?, url = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -117,7 +117,7 @@ class UpdateDataSource(SQL):
 @dataclass
 class SelectDataSource(SQL):
     id: int
-    sql: str = """SELECT * FROM source WHERE id = ?;"""
+    sql: str = """SELECT * FROM datasource WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -129,7 +129,7 @@ class SelectDataSource(SQL):
 
 @dataclass
 class SelectAllDataSource(SQL):
-    sql: str = """SELECT * FROM source;"""
+    sql: str = """SELECT * FROM datasource;"""
     args: tuple = ()
 
 
@@ -139,7 +139,7 @@ class SelectAllDataSource(SQL):
 @dataclass
 class DataSourceExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM source WHERE id = ?;"""
+    sql: str = """SELECT COUNT(*) FROM datasource WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -150,7 +150,7 @@ class DataSourceExists(SQL):
 @dataclass
 class DeleteDataSource(SQL):
     id: int
-    sql: str = """DELETE FROM source WHERE id = ?;"""
+    sql: str = """DELETE FROM datasource WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:

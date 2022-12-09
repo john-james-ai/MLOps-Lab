@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 10:37:56 am                                             #
-# Modified   : Thursday December 8th 2022 06:02:08 pm                                              #
+# Modified   : Friday December 9th 2022 06:50:29 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -47,7 +47,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             stage="staged",
         )
@@ -94,7 +94,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             data=ratings,
             task_id=22,
             stage="staged",
@@ -139,34 +139,34 @@ class TestDatasetEntity:  # pragma: no cover
         with pytest.raises(TypeError):  # No name
             _ = Dataset()
 
-        with pytest.raises(TypeError):  # No source
+        with pytest.raises(TypeError):  # No datasource
             _ = Dataset(name="johosephat")
 
         with pytest.raises(TypeError):
-            _ = Dataset(name="johosephat", source="spotify")  # No task_id
+            _ = Dataset(name="johosephat", datasource="spotify")  # No task_id
 
         with pytest.raises(TypeError):
-            _ = Dataset(name="johosephat", source="spotify", task_id=232)  # No stage
+            _ = Dataset(name="johosephat", datasource="spotify", task_id=232)  # No stage
 
         with pytest.raises(ValueError):
             _ = Dataset(
-                name="johosephat", source="spotify", task_id=232, stage="rafas"
+                name="johosephat", datasource="spotify", task_id=232, stage="rafas"
             )  # Invalid stage
 
         with pytest.raises(TypeError):
             _ = Dataset(
-                name="johosephat", source="spotify", task_id=232, stage="raw", version="55"
+                name="johosephat", datasource="spotify", task_id=232, stage="raw", version="55"
             )  # Invalid version
 
         with pytest.raises(TypeError):
             _ = Dataset(
-                name="johosephat", source="spotify", task_id="232", stage="raw"
+                name="johosephat", datasource="spotify", task_id="232", stage="raw"
             )  # Invalid task_id
 
         with pytest.raises(ValueError):
             _ = Dataset(
-                name="johosephat", source="dfas", task_id=232, version=2, stage="raw"
-            )  # Invalid source
+                name="johosephat", datasource="dfas", task_id=232, version=2, stage="raw"
+            )  # Invalid datasource
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -246,10 +246,10 @@ class TestDatasetEntity:  # pragma: no cover
                 with pytest.raises(TypeError):
                     Dataset.from_dto(dto)
             if i == 2:
-                dto.datasource = None  # no source
+                dto.datasource = None  # no datasource
                 with pytest.raises(TypeError):
                     Dataset.from_dto(dto)
-                dto.datasource = "dssds"  # Invalid source
+                dto.datasource = "dssds"  # Invalid datasource
                 with pytest.raises(ValueError):
                     Dataset.from_dto(dto)
             if i == 3:
@@ -296,7 +296,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             data=ratings,
             stage="staged",
@@ -306,7 +306,7 @@ class TestDatasetEntity:  # pragma: no cover
         assert d["id"] is None
         assert d["name"] == inspect.stack()[0][3]
         assert d["description"] == f"Description of {inspect.stack()[0][3]}"
-        assert d["source"] == "movielens25m"
+        assert d["datasource"] == "movielens25m"
         assert d["workspace"] == "test"
         assert d["stage"] == "staged"
         assert d["version"] == 1
@@ -349,7 +349,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             data=ratings,
             stage="staged",
@@ -402,7 +402,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             data=ratings,
             stage="staged",
@@ -439,7 +439,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             stage="staged",
         )
@@ -476,7 +476,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             stage="staged",
         )
@@ -517,7 +517,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             stage="staged",
         )
@@ -571,7 +571,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             stage="staged",
         )
@@ -607,7 +607,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds1 = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             stage="staged",
             data=ratings,
@@ -615,7 +615,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds2 = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             stage="staged",
         )
@@ -650,7 +650,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds1 = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             stage="staged",
             data=ratings,
@@ -660,7 +660,7 @@ class TestDatasetEntity:  # pragma: no cover
         ds2 = Dataset(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            source="movielens25m",
+            datasource="movielens25m",
             task_id=22,
             stage="staged",
         )

@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/workflow/config/00_movielens25m_datasets.yml                           #
+# Filename   : /recsys/core/workflow/config/01_movielens25m_datasets.yml                           #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:42:49 pm                                                #
-# Modified   : Tuesday December 6th 2022 01:09:56 am                                               #
+# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -46,7 +46,7 @@ pipeline:
           kind: fileset
           name: movielens25m_zipfile
           description: Grouplens' MovieLens 25M Dataset ZipFile
-          source: movielens25m
+          datasource: movielens25m
           filepath: data/movielens25m/ext/ml-25m.zip
         force: False
 
@@ -63,38 +63,38 @@ pipeline:
         - id: 1
           kind: fileset
           name: movielens25m_zipfile
-          source: movielens25m
+          datasource: movielens25m
           filepath: data/movielens25m/ext/ml-25m.zip
         output:
         - id: 2
           kind: fileset
           name: movielens25m_genome-scores
-          source: movielens25m
+          datasource: movielens25m
           filepath: data/movielens25m/raw/genome-scores.csv
         - id: 3
           kind: fileset
           name: movielens25m_genome-tags
-          source: movielens25m
+          datasource: movielens25m
           filepath: data/movielens25m/raw/genome-tags.csv
         - id: 4
           kind: fileset
           name: movielens25m_links
-          source: movielens25m
+          datasource: movielens25m
           filepath: data/movielens25m/raw/links.csv
         - id: 5
           kind: fileset
           name: movielens25m_movies
-          source: movielens25m
+          datasource: movielens25m
           filepath: data/movielens25m/raw/movies.csv
         - id: 6
           kind: fileset
           name: movielens25m_ratings
-          source: movielens25m
+          datasource: movielens25m
           filepath: data/movielens25m/raw/ratings.csv
         - id: 7
           kind: fileset
           name: movielens25m_tags
-          source: movielens25m
+          datasource: movielens25m
           filepath: data/movielens25m/raw/tags.csv
         force: False
 
@@ -114,14 +114,14 @@ pipeline:
           id: 6
           kind: fileset
           name: movielens25m_ratings
-          source: movielens25m
+          datasource: movielens25m
           filepath: data/movielens25m/raw/ratings.csv
         output:
           id: 1
           kind: dataset
           name: movielens25m_ratings_prod
           description: Ratings Dataset Production Workspace
-          source: movielens25m
+          datasource: movielens25m
           workspace: prod
           stage: input
           filename: ratings.pkl
@@ -143,14 +143,14 @@ pipeline:
           id: 6
           kind: fileset
           name: movielens25m_ratings
-          source: movielens25m
+          datasource: movielens25m
           filepath: data/movielens25m/raw/ratings.csv
         output:
           id: 2
           kind: dataset
           name: movielens25m_ratings_dev
           description: Ratings Dataset Development Workspace
-          source: movielens25m
+          datasource: movielens25m
           workspace: dev
           stage: input
           filename: ratings.pkl
@@ -172,14 +172,14 @@ pipeline:
           id: 6
           kind: fileset
           name: movielens25m_ratings
-          source: movielens25m
+          datasource: movielens25m
           filepath: data/movielens25m/raw/ratings.csv
         output:
           id: 3
           kind: dataset
           name: movielens25m_ratings_testing
           description: Ratings Dataset Unit Testing Workspace
-          source: movielens25m
+          datasource: movielens25m
           workspace: dev
           stage: input
           filename: ratings.pkl

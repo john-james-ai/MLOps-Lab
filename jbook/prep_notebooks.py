@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /prep_notebooks.py                                                                  #
+# Filename   : /jbook/prep_notebooks.py                                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 27th 2022 10:50:44 pm                                               #
-# Modified   : Sunday November 27th 2022 10:50:50 pm                                               #
+# Modified   : Friday December 9th 2022 06:50:29 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -75,7 +75,7 @@ def prepare_notebooks():
         for cell in ntbk.cells:
             cell_tags = cell.get("metadata", {}).get("tags", [])
             for key, val in text_search_dict.items():
-                if key in cell["source"]:
+                if key in cell["datasource"]:
                     if val not in cell_tags:
                         cell_tags.append(val)
             if len(cell_tags) > 0:

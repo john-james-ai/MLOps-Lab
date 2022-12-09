@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Thursday December 8th 2022 06:54:59 pm                                              #
+# Modified   : Friday December 9th 2022 06:50:29 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -69,7 +69,7 @@ def dataset_dtos():
             id=i,
             name=f"dataset_dto_{i}",
             description=f"Description for Dataset DTO {i}",
-            source="movielens25m",
+            datasource="movielens25m",
             workspace="test",
             stage="staged",
             version=i + 1,
@@ -96,7 +96,7 @@ def fileset_dtos():
             id=None,
             name=f"fileset_dto_{i}",
             description=f"Fileset Description DTO {i}",
-            source="movielens25m",
+            datasource="movielens25m",
             filesize=501,
             filepath="tests/file/" + f"dataset_dto_{i}" + ".pkl",
             task_id=i + i,
@@ -116,7 +116,7 @@ def dataset_dicts():
         d = {
             "name": f"dataset_{i}",
             "description": f"Description for Dataset {i}",
-            "source": "movielens25m",
+            "datasource": "movielens25m",
             "workspace": "test",
             "stage": "staged",
             "task_id": i + i,
@@ -135,7 +135,7 @@ def fileset_dicts():
         d = {
             "name": f"fileset_{i}",
             "description": f"Description for fileset_{i}",
-            "source": "movielens25m",
+            "datasource": "movielens25m",
             "filepath": "tests/file/" + f"fileset_dto_{i}" + ".pkl",
             "task_id": i + i,
         }
@@ -148,13 +148,13 @@ def fileset_dicts():
 @pytest.fixture(scope="module")
 def datasources():
     """Provide a list of DataSource objects."""
-    data_sources = []
+    datasources = []
     df = pd.read_csv(DATA_SOURCE_FILEPATH)
     for idx in df.index:
         ds = DataSource(name=df['name'][idx], publisher=df['publisher'][idx], description=df['description'][idx], website=df['website'][idx], url=df['url'][idx])
-        data_sources.append(ds)
+        datasources.append(ds)
 
-    return data_sources
+    return datasources
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -162,5 +162,5 @@ def datasources():
 def container():
     container = Recsys()
     container.init_resources()
-    container.wire(modules=[recsys.__main__])
+    container.wire(modules=[recsys.__name__])
     return container
