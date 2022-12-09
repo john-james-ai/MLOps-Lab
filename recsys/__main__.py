@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 02:32:23 pm                                              #
-# Modified   : Tuesday December 6th 2022 06:32:20 am                                               #
+# Modified   : Thursday December 8th 2022 05:50:58 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,8 +19,7 @@
 """Main Module."""
 from dependency_injector.wiring import Provide, inject
 
-from load_tables import load_tables
-from containers import Recsys
+from recsys.containers import Recsys
 from recsys.core.dal.ddo import TableService
 
 
@@ -43,14 +42,6 @@ def build_job_table(job_table: TableService = Provide[Recsys.dal.job_table]) -> 
 
 
 @inject
-def build_operator_table(
-    operator_table: TableService = Provide[Recsys.dal.operator_table],
-) -> None:
-    operator_table.create()
-    assert operator_table.exists()
-
-
-@inject
 def build_datasource_table(
     datasource_table: TableService = Provide[Recsys.dal.datasource_table],
 ) -> None:
@@ -68,21 +59,19 @@ def build_tables():
     build_dataset_table()
     build_fileset_table()
     build_job_table()
-    build_operator_table()
     build_datasource_table()
     build_task_table()
-
-
-def main():
-    wireup()
-    build_tables()
-    load_tables()
 
 
 def wireup():
     recsys = Recsys()
     recsys.core.init_resources()
-    recsys.wire(modules=[__name__, build_tables, load_tables])
+    recsys.wire(modules=[__name__])
+
+
+def main():
+    wireup()
+    build_tables()
 
 
 if __name__ == "__main__":  # pragma: no cover

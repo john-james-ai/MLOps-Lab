@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Monday December 5th 2022 03:01:09 am                                                #
+# Modified   : Thursday December 8th 2022 06:54:59 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,18 +19,31 @@
 import pytest
 import sqlite3
 from datetime import datetime
+import pandas as pd
 
+import recsys
+from recsys.containers import Recsys
+from recsys.core.services.io import IOService
 from recsys.core.dal.dao import DatasetDTO, FilesetDTO
 from recsys.core.data.database import SQLiteConnection, SQLiteDatabase
+from recsys.core.entity.datasource import DataSource
 
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
+RATINGS_FILEPATH = "tests/data/movielens25m/ratings.pkl"
+DATA_SOURCE_FILEPATH = "data/sources.csv"
 # ------------------------------------------------------------------------------------------------ #
 
 
 @pytest.fixture(scope="module")
 def location():
     return TEST_LOCATION
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def ratings():
+    return IOService.read(RATINGS_FILEPATH)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -53,13 +66,13 @@ def dataset_dtos():
     dtos = []
     for i in range(1, 6):
         dto = DatasetDTO(
-            id=None,
+            id=i,
             name=f"dataset_dto_{i}",
             description=f"Description for Dataset DTO {i}",
             source="movielens25m",
             workspace="test",
             stage="staged",
-            version=1,
+            version=i + 1,
             cost=1000 * i,
             nrows=100 * i,
             ncols=i,
@@ -67,7 +80,6 @@ def dataset_dtos():
             memory_size_mb=100 * i,
             filepath="tests/file/" + f"dataset_dto_{i}" + ".pkl",
             task_id=i + i,
-            creator=None,
             created=datetime.now(),
             modified=datetime.now(),
         )
@@ -82,12 +94,12 @@ def fileset_dtos():
     for i in range(1, 6):
         dto = FilesetDTO(
             id=None,
-            name=f"dataset_dto_{i}",
+            name=f"fileset_dto_{i}",
+            description=f"Fileset Description DTO {i}",
             source="movielens25m",
             filesize=501,
             filepath="tests/file/" + f"dataset_dto_{i}" + ".pkl",
             task_id=i + i,
-            creator=None,
             created=datetime.now(),
             modified=datetime.now(),
         )
@@ -107,17 +119,7 @@ def dataset_dicts():
             "source": "movielens25m",
             "workspace": "test",
             "stage": "staged",
-            "version": 1,
-            "cost": 1000 * i,
-            "nrows": 100 * i,
-            "ncols": i,
-            "null_counts": i + i,
-            "memory_size_mb": 100 * i,
-            "filepath": "tests/file/" + f"dataset_dto_{i}" + ".pkl",
             "task_id": i + i,
-            "creator": None,
-            "created": datetime.now(),
-            "modified": datetime.now(),
         }
         lod.append(d)
 
@@ -131,15 +133,34 @@ def fileset_dicts():
     lod = []
     for i in range(1, 6):
         d = {
-            "name": f"dataset_{i}",
+            "name": f"fileset_{i}",
+            "description": f"Description for fileset_{i}",
             "source": "movielens25m",
-            "filesize": 501,
-            "filepath": "tests/file/" + f"dataset_dto_{i}" + ".pkl",
+            "filepath": "tests/file/" + f"fileset_dto_{i}" + ".pkl",
             "task_id": i + i,
-            "creator": None,
-            "created": datetime.now(),
-            "modified": datetime.now(),
         }
         lod.append(d)
 
     return lod
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def datasources():
+    """Provide a list of DataSource objects."""
+    data_sources = []
+    df = pd.read_csv(DATA_SOURCE_FILEPATH)
+    for idx in df.index:
+        ds = DataSource(name=df['name'][idx], publisher=df['publisher'][idx], description=df['description'][idx], website=df['website'][idx], url=df['url'][idx])
+        data_sources.append(ds)
+
+    return data_sources
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope='module', autouse=True)
+def container():
+    container = Recsys()
+    container.init_resources()
+    container.wire(modules=[recsys.__main__])
+    return container

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Tuesday December 6th 2022 06:15:25 am                                               #
+# Modified   : Wednesday December 7th 2022 08:09:18 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateTaskTable(SQL):
     name: str = "task"
-    sql: str = """CREATE TABLE IF NOT EXISTS task (id INTEGER PRIMARY KEY, job_id INTEGER DEFAULT (0), name TEXT NOT NULL, description TEXT NOT NULL, operator TEXT NOT NULL, module TEXT NOT NULL, input_kind TEXT NOT NULL, input_id INTEGER DEFAULT (0), output_kind TEXT NOT NULL, output_id INTEGER DEFAULT (0), start TEXT, end TEXT, duration INTEGER DEFAULT (0), cpu_user_time INTEGER DEFAULT (0), cpu_percent REAL NOT NULL, physical_memory_total INTEGER DEFAULT (0), physical_memory_available INTEGER DEFAULT (0), physical_memory_used INTEGER DEFAULT (0), physical_memory_used_pct REAL NOT NULL, RAM_used INTEGER DEFAULT (0), RAM_used_pct REAL NOT NULL, disk_usage INTEGER DEFAULT (0), disk_usage_pct REAL NOT NULL, disk_read_count INTEGER DEFAULT (0), disk_write_count INTEGER DEFAULT (0), disk_read_bytes INTEGER DEFAULT (0), disk_write_bytes INTEGER DEFAULT (0), disk_read_time INTEGER DEFAULT (0), disk_write_time INTEGER DEFAULT (0), network_bytes_sent INTEGER DEFAULT (0), network_bytes_recv INTEGER DEFAULT (0));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS task (id INTEGER PRIMARY KEY, job_id INTEGER DEFAULT (0), name TEXT NOT NULL, description TEXT NOT NULL, workspace TEXT NOT NULL, operator TEXT NOT NULL, module TEXT NOT NULL, input_kind TEXT NOT NULL, input_id INTEGER DEFAULT (0), output_kind TEXT NOT NULL, output_id INTEGER DEFAULT (0), start TEXT, end TEXT, duration INTEGER DEFAULT (0), cpu_user_time INTEGER DEFAULT (0), cpu_percent REAL NOT NULL, physical_memory_total INTEGER DEFAULT (0), physical_memory_available INTEGER DEFAULT (0), physical_memory_used INTEGER DEFAULT (0), physical_memory_used_pct REAL NOT NULL, RAM_used INTEGER DEFAULT (0), RAM_used_pct REAL NOT NULL, disk_usage INTEGER DEFAULT (0), disk_usage_pct REAL NOT NULL, disk_read_count INTEGER DEFAULT (0), disk_write_count INTEGER DEFAULT (0), disk_read_bytes INTEGER DEFAULT (0), disk_write_bytes INTEGER DEFAULT (0), disk_read_time INTEGER DEFAULT (0), disk_write_time INTEGER DEFAULT (0), network_bytes_sent INTEGER DEFAULT (0), network_bytes_recv INTEGER DEFAULT (0));"""
     args: tuple = ()
 
 
@@ -75,7 +75,7 @@ class InsertTask(SQL):
 
     dto: DTO
 
-    sql: str = """INSERT INTO task (job_id, name, description, operator, module, input_kind, input_id, output_kind, output_id, start, end, duration, cpu_user_time, cpu_percent, physical_memory_total, physical_memory_available, physical_memory_used, physical_memory_used_pct, RAM_used, RAM_used_pct, disk_usage, disk_usage_pct, disk_read_count, disk_write_count, disk_read_bytes, disk_write_bytes, disk_read_time, disk_write_time, network_bytes_sent, network_bytes_recv) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO task (job_id, name, description, workspace, operator, module, input_kind, input_id, output_kind, output_id, start, end, duration, cpu_user_time, cpu_percent, physical_memory_total, physical_memory_available, physical_memory_used, physical_memory_used_pct, RAM_used, RAM_used_pct, disk_usage, disk_usage_pct, disk_read_count, disk_write_count, disk_read_bytes, disk_write_bytes, disk_read_time, disk_write_time, network_bytes_sent, network_bytes_recv) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
 
 
 def __post_init__(self) -> None:
@@ -83,6 +83,7 @@ def __post_init__(self) -> None:
         self.dto.job_id,
         self.dto.name,
         self.dto.description,
+        self.dto.workspace,
         self.dto.operator,
         self.dto.module,
         self.dto.input_kind,
@@ -119,7 +120,7 @@ def __post_init__(self) -> None:
 @dataclass
 class UpdateTask(SQL):
     dto: DTO
-    sql: str = """UPDATE task SET job_id = ?, name = ?, description = ?, operator = ?, module = ?, input_kind = ?, input_id = ?, output_kind = ?, output_id = ?, start = ?, end = ?, duration = ?, cpu_user_time = ?, cpu_percent = ?, physical_memory_total = ?, physical_memory_available = ?, physical_memory_used = ?, physical_memory_used_pct = ?, RAM_used = ?, RAM_used_pct = ?, disk_usage = ?, disk_usage_pct = ?, disk_read_count = ?, disk_write_count = ?, disk_read_bytes = ?, disk_write_bytes = ?, disk_read_time = ?, disk_write_time = ?, network_bytes_sent = ?, network_bytes_recv = ? WHERE id = ?;"""
+    sql: str = """UPDATE task SET job_id = ?, name = ?, description = ?, workspace = ?, operator = ?, module = ?, input_kind = ?, input_id = ?, output_kind = ?, output_id = ?, start = ?, end = ?, duration = ?, cpu_user_time = ?, cpu_percent = ?, physical_memory_total = ?, physical_memory_available = ?, physical_memory_used = ?, physical_memory_used_pct = ?, RAM_used = ?, RAM_used_pct = ?, disk_usage = ?, disk_usage_pct = ?, disk_read_count = ?, disk_write_count = ?, disk_read_bytes = ?, disk_write_bytes = ?, disk_read_time = ?, disk_write_time = ?, network_bytes_sent = ?, network_bytes_recv = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -127,6 +128,7 @@ class UpdateTask(SQL):
             self.dto.job_id,
             self.dto.name,
             self.dto.description,
+            self.dto.workspace,
             self.dto.operator,
             self.dto.module,
             self.dto.input_kind,

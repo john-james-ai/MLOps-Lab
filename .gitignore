@@ -17,6 +17,12 @@ __pycache__/
 /logs
 tests/tests.log
 
+# Notes
+notes/*.*
+resources
+resources/
+lab/
+
 # Wandb
 *wandb*.*
 *.wandb

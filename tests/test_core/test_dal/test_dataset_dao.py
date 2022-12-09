@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Monday December 5th 2022 03:01:09 am                                                #
+# Modified   : Thursday December 8th 2022 06:01:49 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,7 @@ import logging
 from recsys.__main__ import main
 from recsys.containers import Recsys
 from recsys.core.dal.dto import DatasetDTO
-import tests.containers  # noqa F401
+
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -159,7 +159,6 @@ class TestDatasetDAO:  # pragma: no cover
             assert dto.ncols == i
             assert dto.null_counts == i + i
             assert dto.task_id == i + i
-            assert isinstance(dto.creator, str)
             assert isinstance(dto.created, str)
             assert isinstance(dto.modified, str)
         # ---------------------------------------------------------------------------------------- #

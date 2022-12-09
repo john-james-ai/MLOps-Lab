@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Tuesday December 6th 2022 06:07:24 am                                               #
+# Modified   : Thursday December 8th 2022 04:44:41 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDataSourceTable(SQL):
     name: str = "source"
-    sql: str = """CREATE TABLE IF NOT EXISTS source (id INTEGER PRIMARY KEY, kind TEXT NOT NULL, name TEXT NOT NULL, description TEXT, website TEXT NOT NULL, link TEXT NOT NULL, filepath TEXT NOT NULL);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS source (id INTEGER PRIMARY KEY, name TEXT NOT NULL, publisher TEXT NOT NULL, description TEXT NOT NULL, website TEXT NOT NULL, url TEXT NOT NULL);"""
     args: tuple = ()
 
 
@@ -73,18 +73,17 @@ class DataSourceDDL(DDL):
 @dataclass
 class InsertDataSource(SQL):
     dto: DTO
-
-    sql: str = """INSERT INTO source (kind, name, description, website, link, filepath) VALUES (?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO source (id, name, publisher, description, website, uri) VALUES (?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
-            self.dto.kind,
+            self.dto.id,
             self.dto.name,
+            self.dto.publisher,
             self.dto.description,
             self.dto.website,
-            self.dto.link,
-            self.dto.filepath,
+            self.dto.url,
         )
 
 
@@ -94,17 +93,16 @@ class InsertDataSource(SQL):
 @dataclass
 class UpdateDataSource(SQL):
     dto: DTO
-    sql: str = """UPDATE source SET kind = ?, name = ?, description = ?, website = ?, link = ?, filepath = ? WHERE id = ?;"""
+    sql: str = """UPDATE source SET name = ?, publisher = ?, description = ?, website = ?, url = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
-            self.dto.kind,
             self.dto.name,
+            self.dto.publisher,
             self.dto.description,
             self.dto.website,
-            self.dto.link,
-            self.dto.filepath,
+            self.dto.url,
             self.dto.id,
         )
 

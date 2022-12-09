@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Tuesday December 6th 2022 06:05:03 am                                               #
+# Modified   : Thursday December 8th 2022 05:02:36 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDatasetTable(SQL):
     name: str = "dataset"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, source TEXT NOT NULL, workspace TEXT NOT NULL, stage TEXT NOT NULL, version INTEGER NOT NULL, cost INTEGER NOT NULL, nrows INTEGER NOT NULL, ncols INTEGER NOT NULL, null_counts INTEGER NOT NULL, memory_size_mb REAL NOT NULL, filename TEXT NOT NULL, filepath TEXT NOT NULL, task_id INTEGER DEFAULT (0), creator TEXT NOT NULL, created TEXT DEFAULT (datetime('now')), modified TEXT DEFAULT (datetime('now')));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, source TEXT NOT NULL, workspace TEXT NOT NULL, stage TEXT NOT NULL, version INTEGER NOT NULL, cost INTEGER NOT NULL, nrows INTEGER NOT NULL, ncols INTEGER NOT NULL, null_counts INTEGER NOT NULL, memory_size_mb REAL NOT NULL, filename TEXT NOT NULL, filepath TEXT NOT NULL, task_id INTEGER DEFAULT (0), created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -75,14 +75,14 @@ class InsertDataset(SQL):
 
     dto: DTO
 
-    sql: str = """INSERT INTO dataset (name, description, source, workspace, stage, version, cost, nrows, ncols, null_counts, memory_size_mb, filename, filepath, task_id, creator, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO dataset (name, description, source, workspace, stage, version, cost, nrows, ncols, null_counts, memory_size_mb, filename, filepath, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.source,
+            self.dto.datasource,
             self.dto.workspace,
             self.dto.stage,
             self.dto.version,
@@ -94,7 +94,6 @@ class InsertDataset(SQL):
             self.dto.filename,
             self.dto.filepath,
             self.dto.task_id,
-            self.dto.creator,
             self.dto.created,
             self.dto.modified,
         )
@@ -106,14 +105,14 @@ class InsertDataset(SQL):
 @dataclass
 class UpdateDataset(SQL):
     dto: DTO
-    sql: str = """UPDATE dataset SET name = ?, description = ?, source = ?, workspace = ?, stage = ?, version = ?, cost = ?, nrows = ?, ncols = ?, null_counts = ?, memory_size_mb = ?, filename = ?, filepath = ?, task_id = ?, creator = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE dataset SET name = ?, description = ?, source = ?, workspace = ?, stage = ?, version = ?, cost = ?, nrows = ?, ncols = ?, null_counts = ?, memory_size_mb = ?, filename = ?, filepath = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.source,
+            self.dto.datasource,
             self.dto.workspace,
             self.dto.stage,
             self.dto.version,
@@ -125,7 +124,6 @@ class UpdateDataset(SQL):
             self.dto.filename,
             self.dto.filepath,
             self.dto.task_id,
-            self.dto.creator,
             self.dto.created,
             self.dto.modified,
             self.dto.id,

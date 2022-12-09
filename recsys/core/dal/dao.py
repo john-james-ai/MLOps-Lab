@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Tuesday December 6th 2022 05:52:20 am                                               #
+# Modified   : Thursday December 8th 2022 04:43:32 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,7 +22,9 @@ from collections import OrderedDict
 from typing import Dict, Tuple, List
 
 from recsys.core.data.database import Database
-from .dto import DTO, FilesetDTO, DatasetDTO, JobDTO, OperatorDTO, DataSourceDTO, TaskDTO
+from .dto import (
+    DTO, FilesetDTO, DatasetDTO, JobDTO, DataSourceDTO, TaskDTO,
+    TimeDTO, CPUDTO, MemoryDTO, DiskDTO, NetworkDTO, ProfileDTO)
 from .base import DML
 from recsys.core import Service
 
@@ -117,6 +119,10 @@ class DAO(Service):
         with self._database as db:
             db.delete(cmd.sql, cmd.args)
 
+    def save(self) -> None:
+        """Commits the changes to the database."""
+        self._database.save()
+
     def _results_to_dict(self, results: List) -> Dict:
         """Converts the results to a dictionary of DTO objects."""
         results_dict = OrderedDict()
@@ -142,13 +148,13 @@ class DatasetDAO(DAO):
     def _row_to_dto(self, row: Tuple) -> DatasetDTO:
         try:
             return DatasetDTO(
-                id=row[0],
+                id=int(row[0]),
                 name=row[1],
                 description=row[2],
                 source=row[3],
                 workspace=row[4],
                 stage=row[5],
-                version=row[6],
+                version=int(row[6]),
                 cost=row[7],
                 nrows=row[8],
                 ncols=row[9],
@@ -156,10 +162,9 @@ class DatasetDAO(DAO):
                 memory_size_mb=row[11],
                 filename=row[12],
                 filepath=row[13],
-                task_id=row[14],
-                creator=row[15],
-                created=row[16],
-                modified=row[17],
+                task_id=int(row[14]),
+                created=row[15],
+                modified=row[16],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -180,13 +185,13 @@ class FilesetDAO(DAO):
     def _row_to_dto(self, row: Tuple) -> FilesetDTO:
         try:
             return FilesetDTO(
-                id=row[0],
+                id=int(row[0]),
                 name=row[1],
                 description=row[2],
                 source=row[3],
                 filepath=row[4],
                 filesize=row[5],
-                task_id=row[6],
+                task_id=int(row[6]),
                 created=row[7],
                 modified=row[8],
             )
@@ -208,60 +213,55 @@ class JobDAO(DAO):
 
     def _row_to_dto(self, row: Tuple) -> JobDTO:
         try:
+            time = TimeDTO(
+                start=row[5],
+                end=row[6],
+                duration=row[7],
+            )
+
+            cpu = CPUDTO(
+                user_time=row[8],
+                percent_cpu_used=row[9],
+            )
+
+            memory = MemoryDTO(
+                total_physical_memory=row[10],
+                physical_memory_available=row[11],
+                physical_memory_used=row[12],
+                percent_physical_memory_used=row[13],
+                active_memory_used=row[14],
+            )
+
+            disk = DiskDTO(
+                disk_usage=row[15],
+                percent_disk_usage=row[16],
+                read_count=row[17],
+                write_count=row[18],
+                read_bytes=row[19],
+                write_bytes=row[20],
+                read_time=row[21],
+                write_time=row[22],
+            )
+
+            network = NetworkDTO(
+                bytes_sent=row[23],
+                bytes_recv=row[24],
+            )
+
+            profile = ProfileDTO(
+                time=time,
+                cpu=cpu,
+                memory=memory,
+                disk=disk,
+                network=network
+            )
             return JobDTO(
-                id=row[0],
+                id=int(row[0]),
                 name=row[1],
                 description=row[2],
                 source=row[3],
                 workspace=row[4],
-                start=row[5],
-                end=row[6],
-                duration=row[7],
-                cpu_user_time=row[8],
-                cpu_percent=row[9],
-                physical_memory_total=row[10],
-                physical_memory_available=row[11],
-                physical_memory_used=row[12],
-                physical_memory_used_pct=row[13],
-                RAM_used=row[14],
-                RAM_used_pct=row[15],
-                disk_usage=row[16],
-                disk_usage_pct=row[17],
-                disk_read_count=row[18],
-                disk_write_count=row[19],
-                disk_read_bytes=row[20],
-                disk_write_bytes=row[21],
-                disk_read_time=row[22],
-                disk_write_time=row[23],
-                network_bytes_sent=row[24],
-                network_bytes_recv=row[25],
-            )
-
-        except IndexError as e:  # pragma: no cover
-            msg = f"Index error in_row_to_dto method.\n{e}"
-            self._logger.error(msg)
-            raise IndexError(msg)
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                  OPERATOR DATA ACCESS OBJECT                                     #
-# ------------------------------------------------------------------------------------------------ #
-class OperatorDAO(DAO):
-    """Data Access Object for Operators"""
-
-    def __init__(self, database: Database, dml: DML) -> None:
-        super().__init__(database=database, dml=dml)
-
-    def _row_to_dto(self, row: Tuple) -> OperatorDTO:
-        try:
-            return OperatorDTO(
-                id=row[0],
-                name=row[1],
-                description=row[2],
-                module=row[3],
-                classname=row[4],
-                filepath=row[5],
-            )
+                profile=profile)
 
         except IndexError as e:  # pragma: no cover
             msg = f"Index error in_row_to_dto method.\n{e}"
@@ -281,13 +281,12 @@ class DataSourceDAO(DAO):
     def _row_to_dto(self, row: Tuple) -> DataSourceDTO:
         try:
             return DataSourceDTO(
-                id=row[0],
-                kind=row[1],
-                name=row[2],
-                description=row[3],
+                id=int(row[0]),
+                name=row[1],
+                description=row[2],
+                publisher=row[3],
                 website=row[4],
-                link=row[5],
-                filepath=row[6],
+                url=row[5],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -307,39 +306,61 @@ class TaskDAO(DAO):
 
     def _row_to_dto(self, row: Tuple) -> TaskDTO:
         try:
+            time = TimeDTO(
+                start=row[11],
+                end=row[12],
+                duration=row[13],
+            )
+
+            cpu = CPUDTO(
+                user_time=row[14],
+                percent_cpu_used=row[15],
+            )
+
+            memory = MemoryDTO(
+                total_physical_memory=row[16],
+                physical_memory_available=row[17],
+                physical_memory_used=row[18],
+                percent_physical_memory_used=row[19],
+                active_memory_used=row[20],
+            )
+
+            disk = DiskDTO(
+                disk_usage=row[21],
+                percent_disk_usage=row[22],
+                read_count=row[23],
+                write_count=row[24],
+                read_bytes=row[25],
+                write_bytes=row[26],
+                read_time=row[27],
+                write_time=row[28],
+            )
+
+            network = NetworkDTO(
+                bytes_sent=row[29],
+                bytes_recv=row[30],
+            )
+
+            profile = ProfileDTO(
+                time=time,
+                cpu=cpu,
+                memory=memory,
+                disk=disk,
+                network=network
+            )
             return TaskDTO(
-                id=row[0],
-                job_id=row[1],
+                id=int(row[0]),
+                job_id=int(row[1]),
                 name=row[2],
                 description=row[3],
-                operator=row[4],
-                module=row[5],
-                input_kind=row[6],
-                input_id=row[7],
-                output_kind=row[8],
-                output_id=row[9],
-                start=row[10],
-                end=row[11],
-                duration=row[12],
-                cpu_user_time=row[13],
-                cpu_percent=row[14],
-                physical_memory_total=row[15],
-                physical_memory_available=row[16],
-                physical_memory_used=row[17],
-                physical_memory_used_pct=row[18],
-                RAM_used=row[19],
-                RAM_used_pct=row[20],
-                disk_usage=row[21],
-                disk_usage_pct=row[22],
-                disk_read_count=row[23],
-                disk_write_count=row[24],
-                disk_read_bytes=row[25],
-                disk_write_bytes=row[26],
-                disk_read_time=row[27],
-                disk_write_time=row[28],
-                network_bytes_sent=row[29],
-                network_bytes_recv=row[30],
-            )
+                workspace=row[4],
+                operator=row[5],
+                module=row[6],
+                input_kind=row[7],
+                input_id=int(row[8]),
+                output_kind=row[9],
+                output_id=int(row[10]),
+                profile=profile)
 
         except IndexError as e:  # pragma: no cover
             msg = f"Index error in_row_to_dto method.\n{e}"

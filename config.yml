@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 1st 2022 05:01:51 pm                                              #
-# Modified   : Tuesday December 6th 2022 06:16:00 am                                               #
+# Modified   : Thursday December 8th 2022 05:56:52 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -55,34 +55,3 @@ data:
   database:
     sqlite:
       location: data/recsys.sqlite3
-
-
-data_sources:
-- id: 1
-  kind: websource
-  name: movielens25m
-  description: Grouplens' MovieLens 25M Dataset
-  website: https://grouplens.org/datasets/movielens/
-  link: https://files.grouplens.org/datasets/movielens/ml-25m.zip
-  filepath: data/movielens25m/ext/ml-25m.zip
-- id: 2
-  kind: websource
-  name: spotify_million_playlist_dataset
-  description: The dataset contains 1,000,000 playlists, including playlist titles and track titles, created by users on the Spotify platform between January 2010 and October 2017
-  website: https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge
-  link: https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge/dataset_files?unique_download_uri=182817&challenge_id=277
-  filepath: data/spotify/ext/spotify_million_playlist_dataset.zip
-- id: 3
-  kind: websource
-  name: spotify_million_playlist_dataset_challenge
-  description: The dataset contains 1,000,000 playlists, including playlist titles and track titles, created by users on the Spotify platform between January 2010 and October 2017
-  website: https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge
-  link: https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge/dataset_files?unique_download_uri=182818&challenge_id=277
-  filepath: data/spotify/ext/spotify_million_playlist_dataset_challenge.zip
-- id: 4
-  kind: websource
-  name: tenrec
-  description: Large-scale, Diverse, Multipurpose, Recommendation System Benchmark Dataset
-  website: https://github.com/yuangh-x/2022-NIPS-Tenrec
-  link: https://drive.google.com/file/d/1R1JhdT9CHzT3qBJODz09pVpHMzShcQ7a/view?usp=sharing
-  filepath: data/tenrec/ext/Tenrec.zip

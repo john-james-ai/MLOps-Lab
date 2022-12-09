@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /database.py                                                                        #
+# Filename   : /recsys/core/data/database.py                                                       #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Saturday December 3rd 2022 11:14:55 am                                              #
+# Modified   : Thursday December 8th 2022 06:15:36 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -75,11 +75,14 @@ class SQLiteConnection(Connection):
 
     def __init__(self, connector: sqlite3.connect, location: str) -> None:
         self._location = location
+        logger.debug(f"Location is {self._location}")
+        os.makedirs(os.path.dirname(self._location), exist_ok=True)
         super().__init__(connector=connector)
 
     def connect(self) -> sqlite3.Connection:
-        os.makedirs(os.path.dirname(self._location), exist_ok=True)
-        self._connection = self._connector(self._location)
+        self._connection = self._connector(
+            self._location, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
+        )
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -116,17 +119,14 @@ class Database(ABC):
 
     def create_table(self, sql: str, args: tuple = None) -> None:
         cursor = self.query(sql, args)
-        self._connection.commit()
         cursor.close()
 
     def drop_table(self, sql: str, args: tuple = None) -> None:
         cursor = self.query(sql, args)
-        self._connection.commit()
         cursor.close()
 
     def insert(self, sql, args):
         cursor = self.query(sql, args)
-        self._connection.commit()
         cursor.close()
         return self._get_last_insert_rowid()
 
@@ -138,7 +138,6 @@ class Database(ABC):
 
     def update(self, sql: str, args: tuple = None) -> None:
         cursor = self.query(sql, args)
-        self._connection.commit()
         cursor.close()
 
     def count(self, sql: str, args: tuple = None) -> int:
@@ -149,7 +148,6 @@ class Database(ABC):
 
     def delete(self, sql: str, args: tuple = None) -> None:
         cursor = self.query(sql, args)
-        self._connection.commit()
         cursor.close()
 
     def exists(self, sql: str, args: tuple = None) -> bool:
@@ -157,6 +155,9 @@ class Database(ABC):
         rows = cursor.fetchall()
         cursor.close()
         return rows[0][0] > 0
+
+    def save(self) -> None:
+        self._connection.commit()
 
 
 # ------------------------------------------------------------------------------------------------ #

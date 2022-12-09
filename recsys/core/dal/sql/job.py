@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Tuesday December 6th 2022 06:14:38 am                                               #
+# Modified   : Thursday December 8th 2022 02:50:32 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateJobTable(SQL):
     name: str = "job"
-    sql: str = """CREATE TABLE IF NOT EXISTS job (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, source TEXT NOT NULL, workspace TEXT NOT NULL, start TEXT, end TEXT, duration INTEGER DEFAULT (0), cpu_user_time INTEGER DEFAULT (0), cpu_percent REAL NOT NULL, physical_memory_total INTEGER DEFAULT (0), physical_memory_available INTEGER DEFAULT (0), physical_memory_used INTEGER DEFAULT (0), physical_memory_used_pct REAL NOT NULL, RAM_used INTEGER DEFAULT (0), RAM_used_pct REAL NOT NULL, disk_usage INTEGER DEFAULT (0), disk_usage_pct REAL NOT NULL, disk_read_count INTEGER DEFAULT (0), disk_write_count INTEGER DEFAULT (0), disk_read_bytes INTEGER DEFAULT (0), disk_write_bytes INTEGER DEFAULT (0), disk_read_time INTEGER DEFAULT (0), disk_write_time INTEGER DEFAULT (0), network_bytes_sent INTEGER DEFAULT (0), network_bytes_recv INTEGER DEFAULT (0));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS job (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, workspace TEXT NOT NULL, start TEXT, end TEXT, duration INTEGER DEFAULT (0), cpu_user_time INTEGER DEFAULT (0), cpu_percent REAL NOT NULL, physical_memory_total INTEGER DEFAULT (0), physical_memory_available INTEGER DEFAULT (0), physical_memory_used INTEGER DEFAULT (0), physical_memory_used_pct REAL NOT NULL, RAM_used INTEGER DEFAULT (0), RAM_used_pct REAL NOT NULL, disk_usage INTEGER DEFAULT (0), disk_usage_pct REAL NOT NULL, disk_read_count INTEGER DEFAULT (0), disk_write_count INTEGER DEFAULT (0), disk_read_bytes INTEGER DEFAULT (0), disk_write_bytes INTEGER DEFAULT (0), disk_read_time INTEGER DEFAULT (0), disk_write_time INTEGER DEFAULT (0), network_bytes_sent INTEGER DEFAULT (0), network_bytes_recv INTEGER DEFAULT (0));"""
     args: tuple = ()
 
 
@@ -74,14 +74,13 @@ class JobDDL(DDL):
 class InsertJob(SQL):
     dto: DTO
 
-    sql: str = """INSERT INTO job (name, description, source, workspace, start, end, duration, cpu_user_time, cpu_percent, physical_memory_total, physical_memory_available, physical_memory_used, physical_memory_used_pct, RAM_used, RAM_used_pct, disk_usage, disk_usage_pct, disk_read_count, disk_write_count, disk_read_bytes, disk_write_bytes, disk_read_time, disk_write_time, network_bytes_sent, network_bytes_recv) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO job (name, description, workspace, start, end, duration, cpu_user_time, cpu_percent, physical_memory_total, physical_memory_available, physical_memory_used, physical_memory_used_pct, RAM_used, RAM_used_pct, disk_usage, disk_usage_pct, disk_read_count, disk_write_count, disk_read_bytes, disk_write_bytes, disk_read_time, disk_write_time, network_bytes_sent, network_bytes_recv) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.source,
             self.dto.workspace,
             self.dto.start,
             self.dto.end,
@@ -113,14 +112,13 @@ class InsertJob(SQL):
 @dataclass
 class UpdateJob(SQL):
     dto: DTO
-    sql: str = """UPDATE job SET name = ?, description = ?, source = ?, workspace = ?, start = ?, end = ?, duration = ?, cpu_user_time = ?, cpu_percent = ?, physical_memory_total = ?, physical_memory_available = ?, physical_memory_used = ?, physical_memory_used_pct = ?, RAM_used = ?, RAM_used_pct = ?, disk_usage = ?, disk_usage_pct = ?, disk_read_count = ?, disk_write_count = ?, disk_read_bytes = ?, disk_write_bytes = ?, disk_read_time = ?, disk_write_time = ?, network_bytes_sent = ?, network_bytes_recv = ?  WHERE id = ?;"""
+    sql: str = """UPDATE job SET name = ?, description = ?, workspace = ?, start = ?, end = ?, duration = ?, cpu_user_time = ?, cpu_percent = ?, physical_memory_total = ?, physical_memory_available = ?, physical_memory_used = ?, physical_memory_used_pct = ?, RAM_used = ?, RAM_used_pct = ?, disk_usage = ?, disk_usage_pct = ?, disk_read_count = ?, disk_write_count = ?, disk_read_bytes = ?, disk_write_bytes = ?, disk_read_time = ?, disk_write_time = ?, network_bytes_sent = ?, network_bytes_recv = ?  WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.source,
             self.dto.workspace,
             self.dto.start,
             self.dto.end,

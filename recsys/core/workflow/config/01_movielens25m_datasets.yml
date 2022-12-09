@@ -37,7 +37,7 @@ pipeline:
           destination: data/movielens25m/ext
         input:
         - id: 1
-          kind: websource
+          kind: fileset
           name: movielens25m_download_link
           description: Grouplens' MovieLens 25M Dataset
           url: https://files.grouplens.org/datasets/movielens/ml-25m.zip

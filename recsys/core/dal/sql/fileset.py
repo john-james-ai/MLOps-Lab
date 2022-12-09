@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Tuesday December 6th 2022 06:06:40 am                                               #
+# Modified   : Thursday December 8th 2022 05:02:36 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateFilesetTable(SQL):
     name: str = "fileset"
-    sql: str = """CREATE TABLE IF NOT EXISTS fileset (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, source TEXT NOT NULL, filesize REAL NOT NULL, filepath TEXT NOT NULL, task_id INTEGER DEFAULT (0), creator TEXT NOT NULL, created TEXT DEFAULT (datetime('now')), modified TEXT DEFAULT (datetime('now')));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS fileset (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, source TEXT NOT NULL, filepath TEXT NOT NULL, filesize INTEGER NOT NULL, task_id INTEGER DEFAULT (0), created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -74,18 +74,17 @@ class FilesetDDL(DDL):
 class InsertFileset(SQL):
     dto: DTO
 
-    sql: str = """INSERT INTO fileset (name, description, source, filesize, filepath, task_id, creator, created, modified) VALUES (?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO fileset (name, description, source, filepath, filesize, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.source,
+            self.dto.datasource,
+            self.dto.uri,
             self.dto.filesize,
-            self.dto.filepath,
             self.dto.task_id,
-            self.dto.creator,
             self.dto.created,
             self.dto.modified,
         )
@@ -97,18 +96,17 @@ class InsertFileset(SQL):
 @dataclass
 class UpdateFileset(SQL):
     dto: DTO
-    sql: str = """UPDATE fileset SET name = ?, description = ?, source = ?, filesize = ?, filepath = ?, task_id = ?, creator = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE fileset SET name = ?, description = ?, source = ?, filepath = ?, filesize = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.source,
+            self.dto.datasource,
+            self.dto.uri,
             self.dto.filesize,
-            self.dto.filepath,
             self.dto.task_id,
-            self.dto.creator,
             self.dto.created,
             self.dto.modified,
             self.dto.id,
