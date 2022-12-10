@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Friday December 9th 2022 07:11:53 am                                                #
+# Modified   : Friday December 9th 2022 07:38:04 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -36,19 +36,19 @@ class TableService(Service):
 
     def create(self) -> None:
         self._logger.debug(self._database)
-        with self._database() as db:
+        with self._database as db:
             db.create_table(self._ddl.create.sql, self._ddl.create.args)
             self._logger.info(f"Created {self._ddl.create.name} table.")
 
     def drop(self) -> None:
         self._logger.debug(self._database)
-        with self._database() as db:
+        with self._database as db:
             db.drop_table(self._ddl.drop.sql, self._ddl.drop.args)
             self._logger.info(f"Dropped {self._ddl.drop.name} table.")
 
     def exists(self) -> bool:
         self._logger.debug(self._database)
-        with self._database() as db:
+        with self._database as db:
             exists = db.exists(self._ddl.exists.sql, self._ddl.exists.args)
             does = " does " if exists else " does not "
             msg = f"Table {self._ddl.exists.name}{does} exist."
@@ -57,7 +57,7 @@ class TableService(Service):
 
     def save(self) -> None:
         self._logger.debug(self._database)
-        with self._database() as db:
+        with self._database as db:
             db.save()
 
     def reset(self) -> None:

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Friday December 9th 2022 07:16:00 pm                                                #
+# Modified   : Friday December 9th 2022 08:20:21 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,7 @@ import pandas as pd
 import recsys
 from recsys.containers import Recsys
 from recsys.core.services.io import IOService
-from recsys.core.dal.dao import DatasetDTO, FilesetDTO, DataSourceDTO
+from recsys.core.dal.dao import DatasetDTO, FilesetDTO, DataSourceDTO, ProfileDTO
 from recsys.core.data.database import SQLiteConnection, SQLiteDatabase
 from recsys.core.entity.datasource import DataSource
 
@@ -119,6 +119,42 @@ def datasource_dtos():
             description=f"Datasource Description DTO {i}",
             website="www.somewebsite.com",
             url="www.someurl.com",
+            created=datetime.now(),
+            modified=datetime.now(),
+        )
+        dtos.append(dto)
+    return dtos
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def profile_dtos():
+    dtos = []
+    for i in range(1, 6):
+        dto = ProfileDTO(
+            id=None,
+            name=f"profile_{i}",
+            description=f"Description for Profile {i}",
+            start=datetime.now(),
+            end=datetime.now(),
+            duration=i + 1000,
+            user_cpu_time=i + 2000,
+            percent_cpu_used=i + 3000,
+            total_physical_memory=i + 4000,
+            physical_memory_available=i + 5000,
+            physical_memory_used=i + 6000,
+            percent_physical_memory_used=i + 7000,
+            active_memory_used=i + 8000,
+            disk_usage=i + 9000,
+            percent_disk_usage=i + 10000,
+            read_count=i + 11000,
+            write_count=i + 12000,
+            read_bytes=i + 13000,
+            write_bytes=i + 14000,
+            read_time=i + 15000,
+            write_time=i + 16000,
+            bytes_sent=i + 17000,
+            bytes_recv=i + 18000,
             created=datetime.now(),
             modified=datetime.now(),
         )

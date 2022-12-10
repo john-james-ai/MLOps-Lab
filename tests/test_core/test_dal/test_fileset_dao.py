@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Friday December 9th 2022 06:58:55 pm                                                #
+# Modified   : Friday December 9th 2022 07:39:34 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,8 +22,6 @@ import pytest
 import logging
 
 from recsys.core.dal.dto import FilesetDTO
-from recsys.core.dal.sql.fileset import FilesetDDL
-from recsys.core.dal.ddo import TableService
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -45,7 +43,7 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ts = TableService(database=container.data.database, ddl=FilesetDDL)
+        ts = ts = container.table.fileset()
         ts.reset()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

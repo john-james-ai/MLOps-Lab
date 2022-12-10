@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 02:32:23 pm                                              #
-# Modified   : Friday December 9th 2022 06:36:37 pm                                                #
+# Modified   : Friday December 9th 2022 08:28:18 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -55,12 +55,26 @@ def build_task_table(task_table: TableService = Provide[Recsys.table.task]) -> N
     assert task_table.exists()
 
 
+@inject
+def build_task_resource_table(task_table: TableService = Provide[Recsys.table.task_resource]) -> None:
+    task_table.create()
+    assert task_table.exists()
+
+
+@inject
+def build_profile_table(task_table: TableService = Provide[Recsys.table.profile]) -> None:
+    task_table.create()
+    assert task_table.exists()
+
+
 def build_tables():
     build_dataset_table()
     build_fileset_table()
     build_job_table()
     build_datasource_table()
     build_task_table()
+    build_task_resource_table()
+    build_profile_table()
 
 
 def wireup():

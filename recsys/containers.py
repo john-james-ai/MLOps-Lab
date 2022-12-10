@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Friday December 9th 2022 02:52:49 pm                                                #
+# Modified   : Friday December 9th 2022 08:29:34 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,13 +22,15 @@ import sqlite3
 from dependency_injector import containers, providers  # pragma: no cover
 
 from recsys.core.services.io import IOService
-from recsys.core.dal.dao import DatasetDAO, FilesetDAO, JobDAO, DataSourceDAO, TaskDAO
+from recsys.core.dal.dao import DatasetDAO, FilesetDAO, JobDAO, DataSourceDAO, TaskDAO, TaskResourceDAO, ProfileDAO
 from recsys.core.dal.ddo import TableService
 from recsys.core.dal.sql.dataset import DatasetDDL, DatasetDML
 from recsys.core.dal.sql.fileset import FilesetDDL, FilesetDML
 from recsys.core.dal.sql.job import JobDDL, JobDML
 from recsys.core.dal.sql.datasource import DataSourceDDL, DataSourceDML
+from recsys.core.dal.sql.profile import ProfileDDL, ProfileDML
 from recsys.core.dal.sql.task import TaskDDL, TaskDML
+from recsys.core.dal.sql.task_resource import TaskResourceDDL, TaskResourceDML
 from recsys.core.data.database import SQLiteDatabase, SQLiteConnection
 
 # ------------------------------------------------------------------------------------------------ #
@@ -73,6 +75,10 @@ class TableContainer(containers.DeclarativeContainer):
 
     task = providers.Factory(TableService, database=database, ddl=TaskDDL)
 
+    task_resource = providers.Factory(TableService, database=database, ddl=TaskResourceDDL)
+
+    profile = providers.Factory(TableService, database=database, ddl=ProfileDDL)
+
 
 class DAOContainer(containers.DeclarativeContainer):
 
@@ -87,6 +93,10 @@ class DAOContainer(containers.DeclarativeContainer):
     datasource = providers.Factory(DataSourceDAO, database=database, dml=DataSourceDML)
 
     task = providers.Factory(TaskDAO, database=database, dml=TaskDML)
+
+    task_resource = providers.Factory(TaskResourceDAO, database=database, dml=TaskResourceDML)
+
+    profile = providers.Factory(ProfileDAO, database=database, dml=ProfileDML)
 
 
 class Recsys(containers.DeclarativeContainer):
