@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Friday December 9th 2022 08:39:28 pm                                                #
+# Modified   : Friday December 9th 2022 09:22:34 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,7 @@ import pandas as pd
 import recsys
 from recsys.containers import Recsys
 from recsys.core.services.io import IOService
-from recsys.core.dal.dao import DatasetDTO, FilesetDTO, DataSourceDTO, ProfileDTO, TaskDTO
+from recsys.core.dal.dao import DatasetDTO, FilesetDTO, DataSourceDTO, ProfileDTO, TaskDTO, TaskResourceDTO, JobDTO
 from recsys.core.data.database import SQLiteConnection, SQLiteDatabase
 from recsys.core.entity.datasource import DataSource
 
@@ -175,6 +175,45 @@ def task_dtos():
             operator="some_operator",
             module="some.module",
             job_id=i * 10,
+            profile_id=i + 10,
+            created=datetime.now(),
+            modified=datetime.now(),
+        )
+        dtos.append(dto)
+    return dtos
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def task_resource_dtos():
+    dtos = []
+    for i in range(1, 6):
+        dto = TaskResourceDTO(
+            id=None,
+            name=f"task_resource_{i}",
+            description=f"Description for Task Resource # {i}",
+            task_id=i + 10,
+            resource_kind="Dataset",
+            resource_id=i * 10,
+            resource_context="input",
+            created=datetime.now(),
+            modified=datetime.now(),
+        )
+        dtos.append(dto)
+    return dtos
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def job_dtos():
+    dtos = []
+    for i in range(1, 6):
+        dto = JobDTO(
+            id=None,
+            name=f"job_{i}",
+            description=f"Description for Job # {i}",
+            pipeline=f"pipeline_{i}",
+            workspace="test",
             profile_id=i + 10,
             created=datetime.now(),
             modified=datetime.now(),

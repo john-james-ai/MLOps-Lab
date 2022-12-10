@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
+# Modified   : Friday December 9th 2022 09:18:04 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -286,12 +286,14 @@ class TaskResourceDAO(DAO):
         try:
             return TaskResourceDTO(
                 id=int(row[0]),
-                task_id=int(row[1]),
-                resource_kind=row[2],
-                resource_id=int(row[3]),
-                resource_context=row[4],
-                created=row[5],
-                modified=row[6],
+                name=row[1],
+                description=row[2],
+                task_id=int(row[3]),
+                resource_kind=row[4],
+                resource_id=int(row[5]),
+                resource_context=row[6],
+                created=row[7],
+                modified=row[8],
             )
 
         except IndexError as e:  # pragma: no cover

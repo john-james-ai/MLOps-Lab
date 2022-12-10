@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday December 9th 2022 05:01:15 pm                                                #
+# Modified   : Friday December 9th 2022 09:13:43 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateTaskResourceTable(SQL):
     name: str = "task_resource"
-    sql: str = """CREATE TABLE IF NOT EXISTS task_resource (id INTEGER PRIMARY KEY, task_id INTEGER NOT NULL, resource_kind TEXT NOT NULL, resource_id INTEGER NOT NULL, resource_context TEXT NOT NULL, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS task_resource (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, task_id INTEGER NOT NULL, resource_kind TEXT NOT NULL, resource_id INTEGER NOT NULL, resource_context TEXT NOT NULL, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -72,18 +72,20 @@ class TaskResourceDDL(DDL):
 @dataclass
 class InsertTaskResource(SQL):
     dto: DTO
-    sql: str = """INSERT INTO task_resource (task_id, resource_kind, resource_id, resource_context, created, modified) VALUES (?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO task_resource (name, description, task_id, resource_kind, resource_id, resource_context, created, modified) VALUES (?,?,?,?,?,?,?,?);"""
+    args: tuple = ()
 
-
-def __post_init__(self) -> None:
-    self.args = (
-        self.dto.task_id,
-        self.dto.resource_kind,
-        self.dto.resource_id,
-        self.dto.resource_context,
-        self.dto.created,
-        self.dto.modified,
-    )
+    def __post_init__(self) -> None:
+        self.args = (
+            self.dto.name,
+            self.dto.description,
+            self.dto.task_id,
+            self.dto.resource_kind,
+            self.dto.resource_id,
+            self.dto.resource_context,
+            self.dto.created,
+            self.dto.modified,
+        )
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -92,11 +94,13 @@ def __post_init__(self) -> None:
 @dataclass
 class UpdateTaskResource(SQL):
     dto: DTO
-    sql: str = """UPDATE task_resource SET task_id = ?, resource_kind = ?, resource_id = ?, resource_context = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE task_resource SET name = ?, description = ?, task_id = ?,  resource_kind = ?, resource_id = ?, resource_context = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
+            self.dto.name,
+            self.dto.description,
             self.dto.task_id,
             self.dto.resource_kind,
             self.dto.resource_id,

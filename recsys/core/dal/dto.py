@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
+# Modified   : Friday December 9th 2022 09:14:13 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -153,6 +153,8 @@ class TaskDTO(DTO):
 @dataclass
 class TaskResourceDTO(DTO):
     id: int
+    name: str
+    description: str
     task_id: int
     resource_kind: str
     resource_id: int

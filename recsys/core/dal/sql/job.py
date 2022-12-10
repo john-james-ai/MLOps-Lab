@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday December 9th 2022 05:39:46 pm                                                #
+# Modified   : Friday December 9th 2022 09:25:43 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -74,7 +74,7 @@ class JobDDL(DDL):
 class InsertJob(SQL):
     dto: DTO
 
-    sql: str = """INSERT INTO job (name, description, pipeline, workspace, profile_id, created, modified) VALUES (?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO job (name, description, pipeline, workspace, profile_id, created, modified) VALUES (?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
