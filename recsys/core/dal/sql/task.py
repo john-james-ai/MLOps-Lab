@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday December 9th 2022 05:16:02 pm                                                #
+# Modified   : Friday December 9th 2022 08:50:45 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -72,24 +72,22 @@ class TaskDDL(DDL):
 @dataclass
 class InsertTask(SQL):
     """All attributes of a Task are included; however, two are not used - namely id, and data."""
-
     dto: DTO
-
     sql: str = """INSERT INTO task (name, description, workspace, operator, module, job_id, profile_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?);"""
+    args: tuple = ()
 
-
-def __post_init__(self) -> None:
-    self.args = (
-        self.dto.name,
-        self.dto.description,
-        self.dto.workspace,
-        self.dto.operator,
-        self.dto.module,
-        self.dto.job_id,
-        self.dto.profile_id,
-        self.dto.created,
-        self.dto.modified,
-    )
+    def __post_init__(self) -> None:
+        self.args = (
+            self.dto.name,
+            self.dto.description,
+            self.dto.workspace,
+            self.dto.operator,
+            self.dto.module,
+            self.dto.job_id,
+            self.dto.profile_id,
+            self.dto.created,
+            self.dto.modified,
+        )
 
 
 # ------------------------------------------------------------------------------------------------ #

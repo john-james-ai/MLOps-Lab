@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Friday December 9th 2022 08:20:21 pm                                                #
+# Modified   : Friday December 9th 2022 08:39:28 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,7 @@ import pandas as pd
 import recsys
 from recsys.containers import Recsys
 from recsys.core.services.io import IOService
-from recsys.core.dal.dao import DatasetDTO, FilesetDTO, DataSourceDTO, ProfileDTO
+from recsys.core.dal.dao import DatasetDTO, FilesetDTO, DataSourceDTO, ProfileDTO, TaskDTO
 from recsys.core.data.database import SQLiteConnection, SQLiteDatabase
 from recsys.core.entity.datasource import DataSource
 
@@ -155,6 +155,27 @@ def profile_dtos():
             write_time=i + 16000,
             bytes_sent=i + 17000,
             bytes_recv=i + 18000,
+            created=datetime.now(),
+            modified=datetime.now(),
+        )
+        dtos.append(dto)
+    return dtos
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def task_dtos():
+    dtos = []
+    for i in range(1, 6):
+        dto = TaskDTO(
+            id=None,
+            name=f"task_dto_{i}",
+            description=f"Task Description DTO {i}",
+            workspace="test",
+            operator="some_operator",
+            module="some.module",
+            job_id=i * 10,
+            profile_id=i + 10,
             created=datetime.now(),
             modified=datetime.now(),
         )
