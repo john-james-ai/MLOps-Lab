@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:26:05 am                                              #
-# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
+# Modified   : Friday December 9th 2022 11:46:24 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -45,7 +45,7 @@ class DataSource(Entity):
         return f"\n\nDatasource Id: {self._id}\n\tName: {self._name}\n\tPublisher: {self._publisher}\n\tDescription: {self._description}\n\tWebsite: {self._website}\n\tURL: {self._url}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._name}, {self._description}, {self._website}, {self._created}, {self._modified}"
+        return f"{self._id}, {self._name},  {self._publisher}, {self._description}, {self._website}, {self._url}, {self._created}, {self._modified}"
 
     def __eq__(self, other) -> bool:
         if isinstance(other, DataSource):
@@ -106,9 +106,7 @@ class DataSource(Entity):
     def _from_dto(self, dto: DataSourceDTO) -> Entity:
         super().__init__(name=dto.name, description=dto.description)
         self._id = dto.id
-        self._name = dto.name
         self._publisher = dto.publisher
-        self._description = dto.description
         self._website = dto.website
         self._url = dto.url
         self._created = dto.created

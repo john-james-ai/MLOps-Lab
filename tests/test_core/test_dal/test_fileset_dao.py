@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Friday December 9th 2022 07:39:34 pm                                                #
+# Modified   : Saturday December 10th 2022 04:17:50 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -91,6 +91,68 @@ class TestFilesetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
+    def test_select_all_names(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        dao = container.dao.fileset()
+        names = dao.read_all_names()
+        logger.debug(f"\n\nNames currently in the database: {names}")
+        assert 'fileset_dto_1' in names
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_duplicate_names(self, container, fileset_dtos, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+
+        # ---------------------------------------------------------------------------------------- #
+        dao = container.dao.fileset()
+        dto = fileset_dtos[0]
+        with pytest.raises(ValueError):
+            dao.create(dto)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
     def test_read(self, fileset_dtos, container, caplog):
         start = datetime.now()
         logger.info(
@@ -146,8 +208,9 @@ class TestFilesetDAO:  # pragma: no cover
             assert dto.name == f"fileset_dto_{i}"
             assert dto.description == f"Fileset Description DTO {i}"
             assert dto.datasource == "movielens25m"
-            assert dto.filesize == 501
-            assert dto.filepath == "tests/file/" + f"dataset_dto_{i}" + ".pkl"
+            assert dto.workspace == "test"
+            assert dto.stage == "interim"
+            assert dto.filepath == "tests/file/" + f"fileset_dto_{i}" + ".pkl"
             assert dto.task_id == i + i
             assert isinstance(dto.created, datetime)
             assert isinstance(dto.modified, datetime)
@@ -180,12 +243,12 @@ class TestFilesetDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.fileset()
         for i, dto in enumerate(fileset_dtos, start=1):
-            dto.filesize = i * 100
+            dto.stage = "final"
             dao.update(dto)
 
         for i in range(1, 6):
             dto = dao.read(i)
-            assert dto.filesize == i * 100
+            assert dto.stage == "final"
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

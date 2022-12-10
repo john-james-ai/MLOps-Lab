@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Friday December 9th 2022 09:14:13 pm                                                #
+# Modified   : Saturday December 10th 2022 04:01:01 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,8 +30,8 @@ class ProfileDTO(DTO):
     id: int
     name: str
     description: str
-    start: datetime
-    end: datetime
+    started: datetime
+    ended: datetime
     duration: int
     user_cpu_time: int
     percent_cpu_used: float
@@ -67,12 +67,6 @@ class DatasetDTO(DTO):
     datasource: str
     workspace: str
     stage: str
-    version: int
-    cost: int
-    nrows: int
-    ncols: int
-    null_counts: int
-    memory_size_mb: float
     filepath: str
     task_id: int
     created: datetime
@@ -90,8 +84,9 @@ class FilesetDTO(DTO):
     name: str
     description: str
     datasource: str
+    workspace: str
+    stage: str
     filepath: str
-    filesize: int
     task_id: int
     created: datetime
     modified: datetime

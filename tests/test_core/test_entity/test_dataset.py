@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 10:37:56 am                                             #
-# Modified   : Friday December 9th 2022 06:50:29 pm                                                #
+# Modified   : Saturday December 10th 2022 03:38:02 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -55,11 +55,6 @@ class TestDatasetEntity:  # pragma: no cover
         assert ds.description == f"Description of {inspect.stack()[0][3]}"
         assert ds.datasource == "movielens25m"
         assert ds.task_id == 22
-        assert ds.cost is None
-        assert ds.nrows is None
-        assert ds.ncols is None
-        assert ds.null_counts is None
-        assert ds.memory_size_mb is None
         assert isinstance(ds.created, datetime)
 
         ds.cost = 23902
@@ -103,11 +98,6 @@ class TestDatasetEntity:  # pragma: no cover
         assert ds.description == f"Description of {inspect.stack()[0][3]}"
         assert ds.datasource == "movielens25m"
         assert ds.task_id == 22
-        assert ds.cost is None
-        assert ds.nrows is not None
-        assert ds.ncols is not None
-        assert ds.null_counts is not None
-        assert ds.memory_size_mb is not None
         assert isinstance(ds.created, datetime)
 
         # ---------------------------------------------------------------------------------------- #
@@ -203,12 +193,6 @@ class TestDatasetEntity:  # pragma: no cover
             assert ds.datasource == "movielens25m"
             assert ds.workspace == "test"
             assert ds.stage == "staged"
-            assert ds.version == i + 1
-            assert ds.cost == 1000 * i
-            assert ds.nrows == 100 * i
-            assert ds.ncols == i
-            assert ds.null_counts == i + i
-            assert ds.memory_size_mb == 100 * i
             assert ds.filepath == "tests/file/" + f"dataset_dto_{i}" + ".pkl"
             assert ds.task_id == i + i
             assert isinstance(ds.created, datetime)
@@ -309,12 +293,6 @@ class TestDatasetEntity:  # pragma: no cover
         assert d["datasource"] == "movielens25m"
         assert d["workspace"] == "test"
         assert d["stage"] == "staged"
-        assert d["version"] == 1
-        assert d["cost"] is None
-        assert d["nrows"] is not None
-        assert d["ncols"] is not None
-        assert d["null_counts"] is not None
-        assert d["memory_size_mb"] is not None
         assert d["filepath"] is None
         assert d["task_id"] == 22
         assert isinstance(d["created"], datetime)
@@ -362,12 +340,6 @@ class TestDatasetEntity:  # pragma: no cover
         assert dto.datasource == "movielens25m"
         assert dto.workspace == "test"
         assert dto.stage == "staged"
-        assert dto.version == 1
-        assert dto.cost is None
-        assert dto.nrows is not None
-        assert dto.ncols is not None
-        assert dto.null_counts is not None
-        assert dto.memory_size_mb is not None
         assert dto.filepath is None
         assert dto.task_id == 22
         assert isinstance(dto.created, datetime)

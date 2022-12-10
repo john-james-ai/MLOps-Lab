@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Friday December 9th 2022 09:24:44 pm                                                #
+# Modified   : Saturday December 10th 2022 03:18:43 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -125,6 +125,68 @@ class TestJobDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
+    def test_select_all_names(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        dao = container.dao.job()
+        names = dao.read_all_names()
+        logger.debug(f"\n\nNames currently in the database: {names}")
+        assert 'job_dto_1' in names
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_duplicate_names(self, container, job_dtos, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+
+        # ---------------------------------------------------------------------------------------- #
+        dao = container.dao.job()
+        dto = job_dtos[0]
+        with pytest.raises(ValueError):
+            dao.create(dto)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
     def test_read_all(self, container, caplog):
         start = datetime.now()
         logger.info(
@@ -143,7 +205,7 @@ class TestJobDAO:  # pragma: no cover
         for i, dto in dtos.items():
             assert isinstance(dto, JobDTO)
             assert dto.id == i
-            assert dto.name == f"job_{i}"
+            assert dto.name == f"job_dto_{i}"
             assert dto.description == f"Description for Job # {i}"
             assert dto.pipeline == f"pipeline_{i}"
             assert dto.workspace == "test"

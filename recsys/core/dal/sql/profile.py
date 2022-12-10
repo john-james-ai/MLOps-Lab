@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Friday December 9th 2022 02:21:12 pm                                                #
+# Modified   : Saturday December 10th 2022 02:44:34 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateProfileTable(SQL):
     name: str = "profile"
-    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, start timestamp, end timestamp, duration INTEGER DEFAULT 0, user_cpu_time INTEGER DEFAULT 0, percent_cpu_used REAL NOT NULL, total_physical_memory INTEGER DEFAULT 0, physical_memory_available INTEGER DEFAULT 0, physical_memory_used INTEGER DEFAULT 0, percent_physical_memory_used REAL NOT NULL, active_memory_used INTEGER DEFAULT 0, disk_usage INTEGER DEFAULT 0, percent_disk_usage REAL NOT NULL, read_count INTEGER DEFAULT 0, write_count INTEGER DEFAULT 0, read_bytes INTEGER DEFAULT 0, write_bytes INTEGER DEFAULT 0, read_time INTEGER DEFAULT 0, write_time INTEGER DEFAULT 0, bytes_sent INTEGER DEFAULT 0, bytes_recv INTEGER DEFAULT 0, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, started timestamp, ended timestamp, duration INTEGER DEFAULT 0, user_cpu_time INTEGER DEFAULT 0, percent_cpu_used REAL NOT NULL, total_physical_memory INTEGER DEFAULT 0, physical_memory_available INTEGER DEFAULT 0, physical_memory_used INTEGER DEFAULT 0, percent_physical_memory_used REAL NOT NULL, active_memory_used INTEGER DEFAULT 0, disk_usage INTEGER DEFAULT 0, percent_disk_usage REAL NOT NULL, read_count INTEGER DEFAULT 0, write_count INTEGER DEFAULT 0, read_bytes INTEGER DEFAULT 0, write_bytes INTEGER DEFAULT 0, read_time INTEGER DEFAULT 0, write_time INTEGER DEFAULT 0, bytes_sent INTEGER DEFAULT 0, bytes_recv INTEGER DEFAULT 0, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -72,15 +72,15 @@ class ProfileDDL(DDL):
 @dataclass
 class InsertProfile(SQL):
     dto: DTO
-    sql: str = """INSERT INTO profile (name, description, start, end, duration, user_cpu_time, percent_cpu_used, total_physical_memory, physical_memory_available, physical_memory_used, percent_physical_memory_used, active_memory_used, disk_usage, percent_disk_usage, read_count, write_count, read_bytes, write_bytes, read_time, write_time, bytes_sent, bytes_recv, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO profile (name, description, started, ended, duration, user_cpu_time, percent_cpu_used, total_physical_memory, physical_memory_available, physical_memory_used, percent_physical_memory_used, active_memory_used, disk_usage, percent_disk_usage, read_count, write_count, read_bytes, write_bytes, read_time, write_time, bytes_sent, bytes_recv, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.start,
-            self.dto.end,
+            self.dto.started,
+            self.dto.ended,
             self.dto.duration,
             self.dto.user_cpu_time,
             self.dto.percent_cpu_used,
@@ -110,15 +110,15 @@ class InsertProfile(SQL):
 @dataclass
 class UpdateProfile(SQL):
     dto: DTO
-    sql: str = """UPDATE profile SET name = ?, description = ?, start = ?, end = ?, duration = ?, user_cpu_time = ?, percent_cpu_used = ?, total_physical_memory = ?, physical_memory_available = ?, physical_memory_used = ?, percent_physical_memory_used = ?, active_memory_used = ?, disk_usage = ?, percent_disk_usage = ?, read_count = ?, write_count = ?, read_bytes = ?, write_bytes = ?, read_time = ?, write_time = ?, bytes_sent = ?, bytes_recv = ?, created = ?, modified = ?  WHERE id = ?;"""
+    sql: str = """UPDATE profile SET name = ?, description = ?, started = ?, ended = ?, duration = ?, user_cpu_time = ?, percent_cpu_used = ?, total_physical_memory = ?, physical_memory_available = ?, physical_memory_used = ?, percent_physical_memory_used = ?, active_memory_used = ?, disk_usage = ?, percent_disk_usage = ?, read_count = ?, write_count = ?, read_bytes = ?, write_bytes = ?, read_time = ?, write_time = ?, bytes_sent = ?, bytes_recv = ?, created = ?, modified = ?  WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.start,
-            self.dto.end,
+            self.dto.started,
+            self.dto.ended,
             self.dto.duration,
             self.dto.user_cpu_time,
             self.dto.percent_cpu_used,
@@ -169,6 +169,15 @@ class SelectAllProfiles(SQL):
 
 
 @dataclass
+class SelectAllProfileNames(SQL):
+    sql: str = """SELECT name FROM profile;"""
+    args: tuple = ()
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
 class ProfileExists(SQL):
     id: int
     sql: str = """SELECT COUNT(*) FROM profile WHERE id = ?;"""
@@ -196,5 +205,6 @@ class ProfileDML(DML):
     update: type(SQL) = UpdateProfile
     select: type(SQL) = SelectProfile
     select_all: type(SQL) = SelectAllProfiles
+    select_all_names: type(SQL) = SelectAllProfileNames
     exists: type(SQL) = ProfileExists
     delete: type(SQL) = DeleteProfile

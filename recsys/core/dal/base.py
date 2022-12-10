@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 12:44:06 pm                                              #
-# Modified   : Friday December 9th 2022 08:30:20 am                                                #
+# Modified   : Friday December 9th 2022 11:39:52 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -79,8 +79,6 @@ class Service(ABC):  # pragma: no cover
 @dataclass
 class DTO(ABC):  # pragma: no cover
     """Data Transfer Object"""
-    created: datetime
-    modified: datetime
 
     def as_dict(self) -> dict:
         """Returns a dictionary representation of the the Config object."""

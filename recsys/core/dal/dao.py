@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Friday December 9th 2022 09:18:04 pm                                                #
+# Modified   : Saturday December 10th 2022 04:03:05 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -53,7 +53,13 @@ class DAO(Service):
 
         Returns: DTO with id set.
         """
+        if self._duplicate_name(dto):
+            msg = f"Item named {dto.name} already exists."
+            self._logger.error(msg)
+            raise ValueError(msg)
+
         cmd = self._dml.insert(dto)
+
         with self._database as db:
             dto.id = db.insert(cmd.sql, cmd.args)
             self._logger.debug(f"Inserted {dto.name} with id={dto.id}")
@@ -87,6 +93,13 @@ class DAO(Service):
                 return None
             else:
                 return self._results_to_dict(results)
+
+    def read_all_names(self) -> list:
+        """Returns a list of names for entities in the Database."""
+        cmd = self._dml.select_all_names()
+        with self._database as db:
+            names = db.select(cmd.sql, cmd.args)
+            return [name for t in names for name in t]
 
     def update(self, dto: DTO) -> None:
         """Updates an existing entity.
@@ -130,6 +143,9 @@ class DAO(Service):
             results_dict[dto.id] = dto
         return results_dict
 
+    def _duplicate_name(self, dto: DTO) -> bool:
+        return dto.name in self.read_all_names()
+
     @abstractmethod
     def _row_to_dto(self, row: Tuple) -> DTO:
         """Reformats a row of output to a DTO object."""
@@ -153,16 +169,10 @@ class DatasetDAO(DAO):
                 datasource=row[3],
                 workspace=row[4],
                 stage=row[5],
-                version=int(row[6]),
-                cost=int(row[7]),
-                nrows=int(row[8]),
-                ncols=int(row[9]),
-                null_counts=int(row[10]),
-                memory_size_mb=float(row[11]),
-                filepath=row[12],
-                task_id=int(row[13]),
-                created=row[14],
-                modified=row[15],
+                filepath=row[6],
+                task_id=int(row[7]),
+                created=row[8],
+                modified=row[9],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -187,11 +197,12 @@ class FilesetDAO(DAO):
                 name=row[1],
                 description=row[2],
                 datasource=row[3],
-                filepath=row[4],
-                filesize=int(row[5]),
-                task_id=int(row[6]),
-                created=row[7],
-                modified=row[8],
+                workspace=row[4],
+                stage=row[5],
+                filepath=row[6],
+                task_id=int(row[7]),
+                created=row[8],
+                modified=row[9],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -215,8 +226,8 @@ class ProfileDAO(DAO):
                 id=int(row[0]),
                 name=row[1],
                 description=row[2],
-                start=row[3],
-                end=row[4],
+                started=row[3],
+                ended=row[4],
                 duration=int(row[5]),
                 user_cpu_time=int(row[6]),
                 percent_cpu_used=float(row[7]),

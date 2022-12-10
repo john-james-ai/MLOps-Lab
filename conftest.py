@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Friday December 9th 2022 09:22:34 pm                                                #
+# Modified   : Saturday December 10th 2022 04:14:50 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -72,12 +72,6 @@ def dataset_dtos():
             datasource="movielens25m",
             workspace="test",
             stage="staged",
-            version=i + 1,
-            cost=1000 * i,
-            nrows=100 * i,
-            ncols=i,
-            null_counts=i + i,
-            memory_size_mb=100 * i,
             filepath="tests/file/" + f"dataset_dto_{i}" + ".pkl",
             task_id=i + i,
             created=datetime.now(),
@@ -97,8 +91,9 @@ def fileset_dtos():
             name=f"fileset_dto_{i}",
             description=f"Fileset Description DTO {i}",
             datasource="movielens25m",
-            filesize=501,
-            filepath="tests/file/" + f"dataset_dto_{i}" + ".pkl",
+            workspace="test",
+            stage="interim",
+            filepath="tests/file/" + f"fileset_dto_{i}" + ".pkl",
             task_id=i + i,
             created=datetime.now(),
             modified=datetime.now(),
@@ -133,10 +128,10 @@ def profile_dtos():
     for i in range(1, 6):
         dto = ProfileDTO(
             id=None,
-            name=f"profile_{i}",
+            name=f"profile_dto_{i}",
             description=f"Description for Profile {i}",
-            start=datetime.now(),
-            end=datetime.now(),
+            started=datetime.now(),
+            ended=datetime.now(),
             duration=i + 1000,
             user_cpu_time=i + 2000,
             percent_cpu_used=i + 3000,
@@ -190,7 +185,7 @@ def task_resource_dtos():
     for i in range(1, 6):
         dto = TaskResourceDTO(
             id=None,
-            name=f"task_resource_{i}",
+            name=f"task_resource_dto_{i}",
             description=f"Description for Task Resource # {i}",
             task_id=i + 10,
             resource_kind="Dataset",
@@ -210,7 +205,7 @@ def job_dtos():
     for i in range(1, 6):
         dto = JobDTO(
             id=None,
-            name=f"job_{i}",
+            name=f"job_dto_{i}",
             description=f"Description for Job # {i}",
             pipeline=f"pipeline_{i}",
             workspace="test",

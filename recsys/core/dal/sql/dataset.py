@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
+# Modified   : Saturday December 10th 2022 03:30:02 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDatasetTable(SQL):
     name: str = "dataset"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, workspace TEXT NOT NULL, stage TEXT NOT NULL, version INTEGER DEFAULT 1, cost INTEGER DEFAULT 0, nrows INTEGER DEFAULT 0, ncols INTEGER DEFAULT 0, null_counts INTEGER DEFAULT 0, memory_size_mb REAL DEFAULT 0, filepath TEXT, task_id INTEGER NOT NULL, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, workspace TEXT NOT NULL, stage TEXT NOT NULL, filepath TEXT, task_id INTEGER NOT NULL, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -72,7 +72,7 @@ class DatasetDDL(DDL):
 @dataclass
 class InsertDataset(SQL):
     dto: DTO
-    sql: str = """INSERT INTO dataset (name, description, datasource, workspace, stage, version, cost, nrows, ncols, null_counts, memory_size_mb, filepath, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO dataset (name, description, datasource, workspace, stage, filepath, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -82,12 +82,6 @@ class InsertDataset(SQL):
             self.dto.datasource,
             self.dto.workspace,
             self.dto.stage,
-            self.dto.version,
-            self.dto.cost,
-            self.dto.nrows,
-            self.dto.ncols,
-            self.dto.null_counts,
-            self.dto.memory_size_mb,
             self.dto.filepath,
             self.dto.task_id,
             self.dto.created,
@@ -101,7 +95,7 @@ class InsertDataset(SQL):
 @dataclass
 class UpdateDataset(SQL):
     dto: DTO
-    sql: str = """UPDATE dataset SET name = ?, description = ?, datasource = ?, workspace = ?, stage = ?, version = ?, cost = ?, nrows = ?, ncols = ?, null_counts = ?, memory_size_mb = ?, filepath = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE dataset SET name = ?, description = ?, datasource = ?, workspace = ?, stage = ?, filepath = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -111,12 +105,6 @@ class UpdateDataset(SQL):
             self.dto.datasource,
             self.dto.workspace,
             self.dto.stage,
-            self.dto.version,
-            self.dto.cost,
-            self.dto.nrows,
-            self.dto.ncols,
-            self.dto.null_counts,
-            self.dto.memory_size_mb,
             self.dto.filepath,
             self.dto.task_id,
             self.dto.created,
@@ -151,6 +139,15 @@ class SelectAllDatasets(SQL):
 
 
 @dataclass
+class SelectAllDatasetNames(SQL):
+    sql: str = """SELECT name FROM dataset;"""
+    args: tuple = ()
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
 class DatasetExists(SQL):
     id: int
     sql: str = """SELECT COUNT(*) FROM dataset WHERE id = ?;"""
@@ -178,5 +175,6 @@ class DatasetDML(DML):
     update: type(SQL) = UpdateDataset
     select: type(SQL) = SelectDataset
     select_all: type(SQL) = SelectAllDatasets
+    select_all_names: type(SQL) = SelectAllDatasetNames
     exists: type(SQL) = DatasetExists
     delete: type(SQL) = DeleteDataset

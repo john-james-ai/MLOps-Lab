@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Friday December 9th 2022 08:30:49 pm                                                #
+# Modified   : Saturday December 10th 2022 03:20:59 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -91,6 +91,68 @@ class TestProfileDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
+    def test_select_all_names(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        dao = container.dao.profile()
+        names = dao.read_all_names()
+        logger.debug(f"\n\nNames currently in the database: {names}")
+        assert 'profile_dto_1' in names
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_duplicate_names(self, container, profile_dtos, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+
+        # ---------------------------------------------------------------------------------------- #
+        dao = container.dao.profile()
+        dto = profile_dtos[0]
+        with pytest.raises(ValueError):
+            dao.create(dto)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
     def test_read(self, profile_dtos, container, caplog):
         start = datetime.now()
         logger.info(
@@ -143,10 +205,10 @@ class TestProfileDAO:  # pragma: no cover
         for i, dto in dtos.items():
             assert isinstance(dto, ProfileDTO)
             assert dto.id == i
-            assert dto.name == f"profile_{i}"
+            assert dto.name == f"profile_dto_{i}"
             assert dto.description == f"Description for Profile {i}"
-            assert isinstance(dto.start, datetime)
-            assert isinstance(dto.end, datetime)
+            assert isinstance(dto.started, datetime)
+            assert isinstance(dto.ended, datetime)
             assert dto.duration == i + 1000
             assert dto.user_cpu_time == i + 2000
             assert dto.percent_cpu_used == i + 3000

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Friday December 9th 2022 06:50:29 pm                                                #
+# Modified   : Friday December 9th 2022 10:46:13 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -125,11 +125,11 @@ class Entity(ABC):
                 raise TypeError(msg)
 
         if hasattr(self, "datasource"):
-            if self. _datasource is None:
+            if self._datasource is None:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is required for {self.__class__.__name__} objects."
                 self._logger.error(msg)
                 raise TypeError(msg)
-            elif self. _datasource not in SOURCES:
+            elif self._datasource not in SOURCES:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is invalid. Must be one of {SOURCES}."
                 self._logger.error(msg)
                 raise ValueError(msg)

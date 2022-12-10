@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 10:37:56 am                                             #
-# Modified   : Friday December 9th 2022 06:50:29 pm                                                #
+# Modified   : Saturday December 10th 2022 04:23:28 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -47,6 +47,8 @@ class TestFilesetEntity:  # pragma: no cover
             name="fileset_test",
             description="Fileset Test",
             datasource="spotify",
+            workspace="test",
+            stage="raw",
             filepath="tests/file/fileset_test.pkl",
             task_id=122,
         )
@@ -56,8 +58,9 @@ class TestFilesetEntity:  # pragma: no cover
         assert fs.name == "fileset_test"
         assert fs.description == "Fileset Test"
         assert fs.datasource == "spotify"
+        assert fs.workspace == "test"
+        assert fs.stage == "raw"
         assert fs.filepath == "tests/file/fileset_test.pkl"
-        assert fs.filesize is None
         assert fs.task_id == 122
         assert isinstance(fs.created, datetime)
         assert fs.modified is None
@@ -67,8 +70,9 @@ class TestFilesetEntity:  # pragma: no cover
         assert fs.name == "fileset_test"
         assert fs.description == "Fileset Test"
         assert fs.datasource == "spotify"
+        assert fs.workspace == "test"
+        assert fs.stage == "raw"
         assert fs.filepath == "tests/file/fileset_test.pkl"
-        assert fs.filesize is None
         assert fs.task_id == 122
         assert isinstance(fs.created, datetime)
         assert isinstance(fs.modified, datetime)
@@ -146,6 +150,8 @@ class TestFilesetEntity:  # pragma: no cover
             name="fileset_test",
             description="Fileset Test",
             datasource="spotify",
+            workspace="test",
+            stage="raw",
             filepath="tests/file/fileset_test.pkl",
             task_id=122,
         )
@@ -156,8 +162,9 @@ class TestFilesetEntity:  # pragma: no cover
         assert fs.name == dto.name
         assert fs.description == dto.description
         assert fs.datasource == dto.datasource
+        assert fs.workspace == "test"
+        assert fs.stage == "raw"
         assert fs.filepath == dto.filepath
-        assert fs.filesize == dto.filesize
         assert fs.task_id == dto.task_id
         assert fs.created == dto.created
         assert fs.modified == dto.modified
@@ -169,8 +176,9 @@ class TestFilesetEntity:  # pragma: no cover
         assert fs.name == dto.name
         assert fs.description == dto.description
         assert fs.datasource == dto.datasource
+        assert fs.workspace == dto.workspace
+        assert fs.stage == dto.stage
         assert fs.filepath == dto.filepath
-        assert fs.filesize == dto.filesize
         assert fs.task_id == dto.task_id
         assert fs.created == dto.created
         assert fs.modified == dto.modified
@@ -215,6 +223,8 @@ class TestFilesetEntity:  # pragma: no cover
             name="fileset_test",
             description="Fileset Test",
             datasource="spotify",
+            workspace="prod",
+            stage="interim",
             filepath="data/movielens25m/raw/ratings.csv",
             task_id=122,
         )
@@ -222,8 +232,9 @@ class TestFilesetEntity:  # pragma: no cover
         assert fs.name == "fileset_test"
         assert fs.description == "Fileset Test"
         assert fs.datasource == "spotify"
+        assert fs.workspace == "prod"
+        assert fs.stage == "interim"
         assert fs.filepath == "data/movielens25m/raw/ratings.csv"
-        assert fs.filesize is not None
         assert fs.task_id == 122
         assert isinstance(fs.created, datetime)
         assert fs.modified is None
@@ -293,6 +304,8 @@ class TestFilesetEntity:  # pragma: no cover
             name="fileset_test",
             description="Fileset Test",
             datasource="spotify",
+            workspace="prod",
+            stage="interim",
             filepath="tests/file/fileset_test.pkl",
             task_id=122,
         )
@@ -302,6 +315,8 @@ class TestFilesetEntity:  # pragma: no cover
         assert d["name"] == "fileset_test"
         assert d["description"] == "Fileset Test"
         assert d["datasource"] == "spotify"
+        assert d["workspace"] == "prod"
+        assert d["stage"] == "interim"
         assert d["filepath"] == "tests/file/fileset_test.pkl"
         assert d["task_id"] == 122
 
@@ -371,6 +386,8 @@ class TestFilesetEntity:  # pragma: no cover
             name="fileset_test",
             description="Fileset Test",
             datasource="spotify",
+            workspace="prod",
+            stage="interim",
             filepath="data/movielens25m/raw/ratings.csv",
             task_id=122,
         )
@@ -378,6 +395,8 @@ class TestFilesetEntity:  # pragma: no cover
             name="fileset_test",
             description="Fileset Test",
             datasource="spotify",
+            workspace="prod",
+            stage="interim",
             filepath="data/movielens25m/raw/ratings.csv",
             task_id=122,
         )
@@ -385,13 +404,15 @@ class TestFilesetEntity:  # pragma: no cover
             name="fileset_test",
             description="Fileset Test",
             datasource="spotify",
+            workspace="prod",
+            stage="interim",
             filepath="data/movielens25m/raw",
             task_id=122,
         )
         assert fs1 == fs2
-        assert fs1.filesize is not None
+        assert fs1.workspace is not None
         assert not fs1 == fs3
-        assert fs3.filesize is None
+        assert fs3.stage == "interim"
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
