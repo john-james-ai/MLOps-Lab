@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Friday December 9th 2022 06:50:29 pm                                                #
+# Modified   : Friday December 9th 2022 07:16:00 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,7 @@ import pandas as pd
 import recsys
 from recsys.containers import Recsys
 from recsys.core.services.io import IOService
-from recsys.core.dal.dao import DatasetDTO, FilesetDTO
+from recsys.core.dal.dao import DatasetDTO, FilesetDTO, DataSourceDTO
 from recsys.core.data.database import SQLiteConnection, SQLiteDatabase
 from recsys.core.entity.datasource import DataSource
 
@@ -100,6 +100,25 @@ def fileset_dtos():
             filesize=501,
             filepath="tests/file/" + f"dataset_dto_{i}" + ".pkl",
             task_id=i + i,
+            created=datetime.now(),
+            modified=datetime.now(),
+        )
+        dtos.append(dto)
+    return dtos
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def datasource_dtos():
+    dtos = []
+    for i in range(1, 6):
+        dto = DataSourceDTO(
+            id=None,
+            name=f"datasource_dto_{i}",
+            publisher=f"Publisher {i}",
+            description=f"Datasource Description DTO {i}",
+            website="www.somewebsite.com",
+            url="www.someurl.com",
             created=datetime.now(),
             modified=datetime.now(),
         )
