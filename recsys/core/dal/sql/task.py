@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Saturday December 10th 2022 02:44:57 am                                             #
+# Modified   : Saturday December 10th 2022 10:46:35 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateTaskTable(SQL):
     name: str = "task"
-    sql: str = """CREATE TABLE IF NOT EXISTS task (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, workspace TEXT NOT NULL, operator TEXT NOT NULL, module TEXT NOT NULL, job_id INTEGER NOT NULL, profile_id INTEGER NOT NULL, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS task (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, workspace TEXT NOT NULL, operator TEXT NOT NULL, module TEXT NOT NULL, job_id INTEGER DEFAULT 0, profile_id INTEGER DEFAULT 0, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 

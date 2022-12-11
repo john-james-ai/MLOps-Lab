@@ -11,12 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday December 10th 2022 04:16:09 am                                             #
+# Modified   : Saturday December 10th 2022 06:40:23 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Fileset Entity Module"""
+import os
 
 from recsys.core.dal.dto import FilesetDTO
 from .base import Entity
@@ -32,7 +33,7 @@ class Fileset(Entity):
         datasource (str): The data datasource
         workspace (str): Either ['data','prod','dev','test']
         stage (str): The data processing stage
-        filepath (str): The path to the file relative to the project root directory.
+        uri (str): The path to the file relative to the project root directory.
         task_id (int): The step within a pipeline task that produced the Fileset object.
 
     """
@@ -42,7 +43,7 @@ class Fileset(Entity):
         name: str,
         datasource: str,
         stage: str,
-        filepath: str,
+        uri: str,
         task_id: int,
         workspace: str = None,
         description: str = None,
@@ -51,16 +52,18 @@ class Fileset(Entity):
         self._stage = stage
         self._workspace = workspace
         self._datasource = datasource
-        self._filepath = filepath
+        self._uri = uri
         self._task_id = task_id
+        self._filesize = None
 
         self._validate()
+        self._set_metadata()
 
     def __str__(self) -> str:
-        return f"\n\nFileset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._datasource}\n\tWorkspace: {self._workspace}\n\tStage: {self._stage}\n\tFilepath: {self._filepath}\n\tTask Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"\n\nFileset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._datasource}\n\tWorkspace: {self._workspace}\n\tStage: {self._stage}\n\tFilepath: {self._uri}\n\tTask Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id},{self._name},{self._description},{self._datasource},{self._workspace}, {self._stage}, {self._filepath},{self._task_id},{self._created},{self._modified}"
+        return f"{self._id},{self._name},{self._description},{self._datasource},{self._workspace}, {self._stage}, {self._uri},{self._task_id},{self._created},{self._modified}"
 
     def __eq__(self, other) -> bool:
         """Compares two Filesets for equality.
@@ -69,10 +72,8 @@ class Fileset(Entity):
         if isinstance(other, Fileset):
             return (
                 self._name == other.name
-                and self._description == other.description
                 and self._datasource == other.datasource
-
-
+                and self._filesize == other.filesize
             )
         else:
             return False
@@ -91,21 +92,16 @@ class Fileset(Entity):
         return self._stage
 
     @property
-    def filepath(self) -> str:
-        return self._filepath
+    def uri(self) -> str:
+        return self._uri
+
+    @property
+    def filesize(self) -> str:
+        return self._filesize
 
     @property
     def task_id(self) -> int:
         return self._task_id
-
-    @task_id.setter
-    def task_id(self, task_id: int) -> None:
-        if self._task_id is None:
-            self._task_id = task_id
-        elif not self._task_id == task_id:
-            msg = "Item reassignment is not supported for the 'task_id' member."
-            self._logger.error(msg)
-            raise TypeError(msg)
 
     # ------------------------------------------------------------------------------------------------ #
 
@@ -117,7 +113,8 @@ class Fileset(Entity):
             datasource=self._datasource,
             workspace=self._workspace,
             stage=self._stage,
-            filepath=self._filepath,
+            uri=self._uri,
+            filesize=self._filesize,
             task_id=self._task_id,
             created=self._created,
             modified=self._modified,
@@ -131,8 +128,16 @@ class Fileset(Entity):
         self._datasource = dto.datasource
         self._workspace = dto.workspace
         self._stage = dto.stage
-        self._filepath = dto.filepath
+        self._uri = dto.uri
+        self._filesize = dto.filesize
         self._task_id = dto.task_id
         self._created = dto.created
         self._modified = dto.modified
         self._validate()
+
+    # ------------------------------------------------------------------------------------------------ #
+    def _set_metadata(self) -> None:
+        if self._uri is not None:
+            if os.path.isfile(self._uri):
+                if os.path.exists(self._uri):
+                    self._filesize = os.path.getsize(self._uri)

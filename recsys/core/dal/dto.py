@@ -11,13 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Saturday December 10th 2022 04:01:01 am                                             #
+# Modified   : Saturday December 10th 2022 08:36:12 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 from datetime import datetime
 from dataclasses import dataclass
+from typing import List
 
 from .base import DTO
 
@@ -86,7 +87,8 @@ class FilesetDTO(DTO):
     datasource: str
     workspace: str
     stage: str
-    filepath: str
+    uri: str
+    filesize: int
     task_id: int
     created: datetime
     modified: datetime
@@ -120,7 +122,7 @@ class DataSourceDTO(DTO):
     publisher: str
     description: str
     website: str
-    url: str
+    filesets: List[FilesetDTO]
     created: datetime
     modified: datetime
 

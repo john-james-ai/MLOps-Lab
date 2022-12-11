@@ -11,15 +11,17 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:26:05 am                                              #
-# Modified   : Friday December 9th 2022 11:46:24 pm                                                #
+# Modified   : Saturday December 10th 2022 08:47:17 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-from datetime import datetime
-
+"""DataSource Entity Module"""
 from recsys.core.dal.dto import DataSourceDTO
+from .fileset import Fileset
 from .base import Entity
+
+import recsys
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -31,21 +33,20 @@ class DataSource(Entity):
         publisher (str): The publisher of the data datasource
         description (str): Description of the datasource
         website (str): The base website for the datasource.
-        url (str): The download link
     """
-    def __init__(self, name: str, publisher: str, website: str, url: str, description: str = None) -> None:
+    def __init__(self, name: str, publisher: str, website: str, description: str = None) -> None:
         super().__init__(name=name, description=description)
         self._website = website
         self._publisher = publisher
-        self._url = url
+        self._filesets = []
 
         self._validate()
 
     def __str__(self) -> str:
-        return f"\n\nDatasource Id: {self._id}\n\tName: {self._name}\n\tPublisher: {self._publisher}\n\tDescription: {self._description}\n\tWebsite: {self._website}\n\tURL: {self._url}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"\n\nDatasource Id: {self._id}\n\tName: {self._name}\n\tPublisher: {self._publisher}\n\tDescription: {self._description}\n\tWebsite: {self._website}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._name},  {self._publisher}, {self._description}, {self._website}, {self._url}, {self._created}, {self._modified}"
+        return f"{self._id}, {self._name},  {self._publisher}, {self._description}, {self._website}, {self._created}, {self._modified}"
 
     def __eq__(self, other) -> bool:
         if isinstance(other, DataSource):
@@ -54,7 +55,6 @@ class DataSource(Entity):
                 and self._publisher == other._publisher
                 and self._description == other.description
                 and self._website == other.website
-                and self._url == other.url
             )
         else:
             return False
@@ -64,30 +64,14 @@ class DataSource(Entity):
     def publisher(self) -> str:
         return self._publisher
 
-    @publisher.setter
-    def publisher(self, publisher: str) -> None:
-        self._publisher = publisher
-        self._modified = datetime.now()
-
     # ------------------------------------------------------------------------------------------------ #
     @property
     def website(self) -> str:
         return self._website
 
-    @website.setter
-    def website(self, website: str) -> None:
-        self._website = website
-        self._modified = datetime.now()
-
     # ------------------------------------------------------------------------------------------------ #
-    @property
-    def url(self) -> str:
-        return self._url
-
-    @url.setter
-    def url(self, url: str) -> None:
-        self._url = url
-        self._modified = datetime.now()
+    def add_fileset(self, fileset: Fileset) -> None:
+        self._filesets.append(fileset)
 
     # ------------------------------------------------------------------------------------------------ #
     def as_dto(self) -> DataSourceDTO:
@@ -97,7 +81,7 @@ class DataSource(Entity):
             publisher=self._publisher,
             description=self._description,
             website=self._website,
-            url=self._url,
+            filesets=self._filesets,
             created=self._created,
             modified=self._modified,
         )
@@ -108,7 +92,16 @@ class DataSource(Entity):
         self._id = dto.id
         self._publisher = dto.publisher
         self._website = dto.website
-        self._url = dto.url
+        self._filesets = dto.filesets
         self._created = dto.created
         self._modified = dto.modified
         self._validate()
+
+    # ------------------------------------------------------------------------------------------------ #
+    def _validate(self) -> None:
+        super()._validate()
+
+        if self._name not in recsys.SOURCES:
+            msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is invalid. Must be one of {recsys.SOURCES}."
+            self._logger.error(msg)
+            raise ValueError(msg)

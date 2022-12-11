@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 10:37:56 am                                             #
-# Modified   : Saturday December 10th 2022 04:23:28 am                                             #
+# Modified   : Saturday December 10th 2022 06:39:42 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -49,7 +49,7 @@ class TestFilesetEntity:  # pragma: no cover
             datasource="spotify",
             workspace="test",
             stage="raw",
-            filepath="tests/file/fileset_test.pkl",
+            uri="tests/file/fileset_test.pkl",
             task_id=122,
         )
         modified = fs.modified
@@ -60,7 +60,7 @@ class TestFilesetEntity:  # pragma: no cover
         assert fs.datasource == "spotify"
         assert fs.workspace == "test"
         assert fs.stage == "raw"
-        assert fs.filepath == "tests/file/fileset_test.pkl"
+        assert fs.uri == "tests/file/fileset_test.pkl"
         assert fs.task_id == 122
         assert isinstance(fs.created, datetime)
         assert fs.modified is None
@@ -72,7 +72,7 @@ class TestFilesetEntity:  # pragma: no cover
         assert fs.datasource == "spotify"
         assert fs.workspace == "test"
         assert fs.stage == "raw"
-        assert fs.filepath == "tests/file/fileset_test.pkl"
+        assert fs.uri == "tests/file/fileset_test.pkl"
         assert fs.task_id == 122
         assert isinstance(fs.created, datetime)
         assert isinstance(fs.modified, datetime)
@@ -113,11 +113,14 @@ class TestFilesetEntity:  # pragma: no cover
             _ = Fileset(name="test", datasource="spotify")  # Filepath missing
 
         with pytest.raises(TypeError):
-            _ = Fileset(name="test", datasource="spotify", filepath="/test/filepath")  # Task_id missing
+            _ = Fileset(name="test", datasource="spotify", uri="/test/uri")  # Task_id missing
+
+        with pytest.raises(TypeError):
+            _ = Fileset(name="test", datasource="spotify", uri="/test/uri", task_id=23)  # stage missing
 
         with pytest.raises(ValueError):
             _ = Fileset(
-                name="test", datasource="asa", filepath="/test/filepath", task_id=22
+                name="test", datasource="asa", uri="/test/uri", task_id=22, stage="ext"
             )  # Invalid datasource
 
         # ---------------------------------------------------------------------------------------- #
@@ -152,7 +155,7 @@ class TestFilesetEntity:  # pragma: no cover
             datasource="spotify",
             workspace="test",
             stage="raw",
-            filepath="tests/file/fileset_test.pkl",
+            uri="tests/file/fileset_test.pkl",
             task_id=122,
         )
         # AS DTO
@@ -164,7 +167,7 @@ class TestFilesetEntity:  # pragma: no cover
         assert fs.datasource == dto.datasource
         assert fs.workspace == "test"
         assert fs.stage == "raw"
-        assert fs.filepath == dto.filepath
+        assert fs.uri == dto.uri
         assert fs.task_id == dto.task_id
         assert fs.created == dto.created
         assert fs.modified == dto.modified
@@ -178,7 +181,7 @@ class TestFilesetEntity:  # pragma: no cover
         assert fs.datasource == dto.datasource
         assert fs.workspace == dto.workspace
         assert fs.stage == dto.stage
-        assert fs.filepath == dto.filepath
+        assert fs.uri == dto.uri
         assert fs.task_id == dto.task_id
         assert fs.created == dto.created
         assert fs.modified == dto.modified
@@ -208,7 +211,7 @@ class TestFilesetEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_filepath(self, caplog):
+    def test_uri(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -225,7 +228,7 @@ class TestFilesetEntity:  # pragma: no cover
             datasource="spotify",
             workspace="prod",
             stage="interim",
-            filepath="data/movielens25m/raw/ratings.csv",
+            uri="data/movielens25m/raw/ratings.csv",
             task_id=122,
         )
         assert fs.id is None
@@ -234,7 +237,7 @@ class TestFilesetEntity:  # pragma: no cover
         assert fs.datasource == "spotify"
         assert fs.workspace == "prod"
         assert fs.stage == "interim"
-        assert fs.filepath == "data/movielens25m/raw/ratings.csv"
+        assert fs.uri == "data/movielens25m/raw/ratings.csv"
         assert fs.task_id == 122
         assert isinstance(fs.created, datetime)
         assert fs.modified is None
@@ -267,8 +270,10 @@ class TestFilesetEntity:  # pragma: no cover
         fs = Fileset(
             name="fileset_test",
             description="Fileset Test",
+            workspace="test",
             datasource="spotify",
-            filepath="tests/file/fileset_test.pkl",
+            uri="tests/file/fileset_test.pkl",
+            stage="interim",
             task_id=122,
         )
         fs.id = 501
@@ -306,7 +311,7 @@ class TestFilesetEntity:  # pragma: no cover
             datasource="spotify",
             workspace="prod",
             stage="interim",
-            filepath="tests/file/fileset_test.pkl",
+            uri="tests/file/fileset_test.pkl",
             task_id=122,
         )
         d = fs.as_dict()
@@ -317,7 +322,7 @@ class TestFilesetEntity:  # pragma: no cover
         assert d["datasource"] == "spotify"
         assert d["workspace"] == "prod"
         assert d["stage"] == "interim"
-        assert d["filepath"] == "tests/file/fileset_test.pkl"
+        assert d["uri"] == "tests/file/fileset_test.pkl"
         assert d["task_id"] == 122
 
         # ---------------------------------------------------------------------------------------- #
@@ -349,8 +354,10 @@ class TestFilesetEntity:  # pragma: no cover
         fs = Fileset(
             name="fileset_test",
             description="Fileset Test",
+            workspace="test",
+            stage="interim",
             datasource="spotify",
-            filepath="tests/file/fileset_test.pkl",
+            uri="tests/file/fileset_test.pkl",
             task_id=122,
         )
         logger.info(fs)
@@ -388,7 +395,7 @@ class TestFilesetEntity:  # pragma: no cover
             datasource="spotify",
             workspace="prod",
             stage="interim",
-            filepath="data/movielens25m/raw/ratings.csv",
+            uri="data/movielens25m/raw/ratings.csv",
             task_id=122,
         )
         fs2 = Fileset(
@@ -397,7 +404,7 @@ class TestFilesetEntity:  # pragma: no cover
             datasource="spotify",
             workspace="prod",
             stage="interim",
-            filepath="data/movielens25m/raw/ratings.csv",
+            uri="data/movielens25m/raw/ratings.csv",
             task_id=122,
         )
         fs3 = Fileset(
@@ -406,13 +413,15 @@ class TestFilesetEntity:  # pragma: no cover
             datasource="spotify",
             workspace="prod",
             stage="interim",
-            filepath="data/movielens25m/raw",
+            uri="data/movielens25m/raw/links.csv",
             task_id=122,
         )
+        fs4 = {"some": "dictionary"}
         assert fs1 == fs2
         assert fs1.workspace is not None
         assert not fs1 == fs3
         assert fs3.stage == "interim"
+        assert not fs1 == fs4
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Dataname   : /tests/test_core/test_entity/test_dataset.py                                        #
+# Dataname   : /tests/test_core/test_entity/test_datasource.py                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 10:37:56 am                                             #
-# Modified   : Saturday December 10th 2022 10:29:39 am                                             #
+# Modified   : Saturday December 10th 2022 10:14:07 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,8 +22,8 @@ import pandas as pd
 import pytest
 import logging
 
-from recsys.core.entity.dataset import Dataset
-from recsys.core.dal.dto import DatasetDTO
+from recsys.core.entity.datasource import DataSource
+from recsys.core.dal.dto import DataSourceDTO
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.dse
-class TestDatasetEntity:  # pragma: no cover
+class TestDataSourceEntity:  # pragma: no cover
     # ============================================================================================ #
     def test_instantiation_no_data(self, caplog):
         start = datetime.now()
@@ -44,59 +44,17 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        ds = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            stage="staged",
+            publisher="GroupLens",
+            website="https://grouplens.org/datasets/movielens/"
         )
         assert ds.name == inspect.stack()[0][3]
         assert ds.description == f"Description of {inspect.stack()[0][3]}"
-        assert ds.datasource == "movielens25m"
-        assert ds.task_id == 22
+        assert ds.publisher == "GroupLens"
+        assert ds.website == "https://grouplens.org/datasets/movielens/"
         assert isinstance(ds.created, datetime)
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_instantiation_with_data(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            data=ratings,
-            task_id=22,
-            stage="staged",
-        )
-        assert ds.name == inspect.stack()[0][3]
-        assert ds.description == f"Description of {inspect.stack()[0][3]}"
-        assert ds.datasource == "movielens25m"
-        assert ds.task_id == 22
-        assert isinstance(ds.created, datetime)
-        assert isinstance(ds.data, pd.DataFrame)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -125,31 +83,16 @@ class TestDatasetEntity:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         with pytest.raises(TypeError):  # No name
-            _ = Dataset()
+            _ = DataSource()
 
-        with pytest.raises(TypeError):  # No datasource
-            _ = Dataset(name="johosephat")
-
-        with pytest.raises(TypeError):
-            _ = Dataset(name="johosephat", datasource="spotify")  # No task_id
+        with pytest.raises(TypeError):  # No publisher
+            _ = DataSource(name="johosephat")
 
         with pytest.raises(TypeError):
-            _ = Dataset(name="johosephat", datasource="spotify", task_id=232)  # No stage
+            _ = DataSource(name="johosephat", publisher="spotify")  # website
 
         with pytest.raises(ValueError):
-            _ = Dataset(
-                name="johosephat", datasource="spotify", task_id=232, stage="rafas"
-            )  # Invalid stage
-
-        with pytest.raises(TypeError):
-            _ = Dataset(
-                name="johosephat", datasource="spotify", task_id="232", stage="raw"
-            )  # Invalid task_id
-
-        with pytest.raises(ValueError):
-            _ = Dataset(
-                name="johosephat", datasource="dfas", task_id=232, stage="raw"
-            )  # Invalid datasource
+            _ = DataSource(name="johosephat", publisher="spotify", website="https://grouplens.org/datasets/movielens/")  # Invalid publisher
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -166,7 +109,7 @@ class TestDatasetEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_dto_instantiation(self, dataset_dtos, caplog):
+    def test_dto_instantiation(self, datasource_dtos, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -177,16 +120,16 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        for i, dto in enumerate(dataset_dtos, start=1):
-            ds = Dataset.from_dto(dto)
+        for i, dto in enumerate(datasource_dtos, start=1):
+            ds = DataSource.from_dto(dto)
+
             assert ds.id == i
-            assert ds.id == i
-            assert ds.name == f"dataset_dto_{i}"
-            assert ds.description == f"Description for Dataset DTO {i}"
+            assert ds.name == f"datasource_dto_{i}"
+            assert ds.description == f"Description for DataSource DTO {i}"
             assert ds.datasource == "movielens25m"
             assert ds.workspace == "test"
             assert ds.stage == "staged"
-            assert ds.filepath == "tests/file/" + f"dataset_dto_{i}" + ".pkl"
+            assert ds.filepath == "tests/file/" + f"datasource_dto_{i}" + ".pkl"
             assert ds.task_id == i + i
             assert isinstance(ds.created, datetime)
             assert isinstance(ds.modified, datetime)
@@ -206,7 +149,7 @@ class TestDatasetEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_dto_instantiation_validation(self, dataset_dtos, caplog):
+    def test_dto_instantiation_validation(self, datasource_dtos, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -217,32 +160,32 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        for i, dto in enumerate(dataset_dtos, start=1):
+        for i, dto in enumerate(datasource_dtos, start=1):
             if i == 1:
                 dto.name = None  # Name
                 with pytest.raises(TypeError):
-                    Dataset.from_dto(dto)
+                    DataSource.from_dto(dto)
             if i == 2:
                 dto.datasource = None  # no datasource
                 with pytest.raises(TypeError):
-                    Dataset.from_dto(dto)
+                    DataSource.from_dto(dto)
                 dto.datasource = "dssds"  # Invalid datasource
                 with pytest.raises(ValueError):
-                    Dataset.from_dto(dto)
+                    DataSource.from_dto(dto)
             if i == 3:
                 dto.stage = None  # no stage
                 with pytest.raises(TypeError):
-                    Dataset.from_dto(dto)
+                    DataSource.from_dto(dto)
                 dto.stage = "dsaa"  # invalid stage
                 with pytest.raises(ValueError):
-                    Dataset.from_dto(dto)
+                    DataSource.from_dto(dto)
             if i == 4:
                 dto.task_id = None  # no task_id
                 with pytest.raises(TypeError):
-                    Dataset.from_dto(dto)
+                    DataSource.from_dto(dto)
                 dto.stage = "222"  # invalid task_id
                 with pytest.raises(ValueError):
-                    Dataset.from_dto(dto)
+                    DataSource.from_dto(dto)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -270,7 +213,7 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        ds = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
             datasource="movielens25m",
@@ -317,7 +260,7 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        ds = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
             datasource="movielens25m",
@@ -326,7 +269,7 @@ class TestDatasetEntity:  # pragma: no cover
             stage="staged",
         )
         dto = ds.as_dto()
-        assert isinstance(dto, DatasetDTO)
+        assert isinstance(dto, DataSourceDTO)
         assert dto.id is None
         assert dto.name == inspect.stack()[0][3]
         assert dto.description == f"Description of {inspect.stack()[0][3]}"
@@ -364,7 +307,7 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        ds = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
             datasource="movielens25m",
@@ -401,7 +344,7 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        ds = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
             datasource="movielens25m",
@@ -438,7 +381,7 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        ds = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
             datasource="movielens25m",
@@ -479,7 +422,7 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        ds = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
             datasource="movielens25m",
@@ -525,7 +468,7 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        ds = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
             datasource="movielens25m",
@@ -561,7 +504,7 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds1 = Dataset(
+        ds1 = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
             datasource="movielens25m",
@@ -569,7 +512,7 @@ class TestDatasetEntity:  # pragma: no cover
             stage="staged",
             data=ratings,
         )
-        ds2 = Dataset(
+        ds2 = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
             datasource="movielens25m",
@@ -604,7 +547,7 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds1 = Dataset(
+        ds1 = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
             datasource="movielens25m",
@@ -614,7 +557,7 @@ class TestDatasetEntity:  # pragma: no cover
         )
         assert isinstance(ds1.data, pd.DataFrame)
 
-        ds2 = Dataset(
+        ds2 = DataSource(
             name=inspect.stack()[0][3],
             description=f"Description of {inspect.stack()[0][3]}",
             datasource="movielens25m",

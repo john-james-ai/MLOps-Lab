@@ -11,33 +11,32 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 10:28:41 pm                                                #
-# Modified   : Monday December 5th 2022 10:33:36 pm                                                #
+# Modified   : Saturday December 10th 2022 10:44:51 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """IO Utils"""
+from abc import ABC, abstractmethod
 import os
-import sys
+import logging
 import yaml
 import pickle
-import logging
 import pandas as pd
 from typing import Any, Union, List
-from abc import ABC, abstractmethod
 
 # ------------------------------------------------------------------------------------------------ #
-logger = logging.getLogger(__name__)
-# ------------------------------------------------------------------------------------------------ #
 
 
-class IO(ABC):
+class IO(ABC):    # pragma: no cover
+
+    _logger = logging.getLogger(
+        f"{__module__}.{__name__}",
+    )
+
     @classmethod
     def read(cls, filepath: str, *args, **kwargs) -> Any:
-        logger.debug("Reading from {}".format(filepath))
-
         data = cls._read(filepath, **kwargs)
-        logger.debug("Read {} bytes.".format(sys.getsizeof(data)))
         return data
 
     @classmethod
@@ -47,16 +46,53 @@ class IO(ABC):
 
     @classmethod
     def write(cls, filepath: str, data: Any, *args, **kwargs) -> None:
-        logger.debug("Writing to {}".format(filepath))
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
-
         cls._write(filepath, data, **kwargs)
-        logger.debug("Writing complete.")
 
     @classmethod
     @abstractmethod
     def _write(cls, filepath: str, data: Any, **kwargs) -> None:
         pass
+
+# ------------------------------------------------------------------------------------------------ #
+#                                         EXCEL IO                                                 #
+# ------------------------------------------------------------------------------------------------ #
+
+
+class ExcelIO(IO):
+    @classmethod
+    def _read(
+        cls,
+        filepath: str,
+        sheet_name: Union[str, int, list, None] = 0,
+        header: Union[int, None] = 0,
+        names: list = None,
+        index_col: Union[int, str] = None,
+        usecols: List[str] = None,
+        **kwargs,
+    ) -> pd.DataFrame:
+
+        return pd.read_excel(
+            filepath,
+            sheet_name=sheet_name,
+            header=header,
+            index_col=index_col,
+            usecols=usecols,
+            **kwargs,
+        )
+
+    @classmethod
+    def _write(
+        cls,
+        filepath: str,
+        data: pd.DataFrame,
+        sheet_name: str = "Sheet1",
+        columns: Union[str, list] = None,
+        header: Union[bool, list] = True,
+        index: bool = False,
+        **kwargs,
+    ) -> None:
+        data.to_excel(excel_writer=filepath, sheet_name=sheet_name, columns=columns, header=header, index=index, **kwargs)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -112,8 +148,8 @@ class YamlIO(IO):
         with open(filepath, "r") as f:
             try:
                 return yaml.safe_load(f)
-            except yaml.YAMLError as e:
-                logger.error(e)
+            except yaml.YAMLError as e:  # pragma: no cover
+                cls._logger.error(e)
                 raise IOError(e)
             finally:
                 f.close()
@@ -123,8 +159,8 @@ class YamlIO(IO):
         with open(filepath, "w") as f:
             try:
                 yaml.dump(data, f)
-            except yaml.YAMLError as e:
-                logger.error(e)
+            except yaml.YAMLError as e:  # pragma: no cover
+                cls._logger.error(e)
                 raise IOError(e)
             finally:
                 f.close()
@@ -142,8 +178,8 @@ class PickleIO(IO):
         with open(filepath, "rb") as f:
             try:
                 return pickle.load(f)
-            except pickle.PickleError() as e:
-                logger.error(e)
+            except pickle.PickleError() as e:  # pragma: no cover
+                cls._logger.error(e)
                 raise IOError(e)
             finally:
                 f.close()
@@ -155,8 +191,8 @@ class PickleIO(IO):
         with open(filepath, write_mode) as f:
             try:
                 pickle.dump(data, f)
-            except pickle.PickleError() as e:
-                logger.error(e)
+            except pickle.PickleError() as e:  # pragma: no cover
+                cls._logger.error(e)
                 raise (e)
             finally:
                 f.close()
@@ -167,7 +203,10 @@ class PickleIO(IO):
 # ------------------------------------------------------------------------------------------------ #
 class IOService:
 
-    __io = {"csv": CSVIO, "yaml": YamlIO, "yml": YamlIO, "pkl": PickleIO, "pickle": PickleIO}
+    __io = {"csv": CSVIO, "yaml": YamlIO, "yml": YamlIO, "pkl": PickleIO, "pickle": PickleIO, "xlsx": ExcelIO, "xls": ExcelIO}
+    _logger = logging.getLogger(
+        f"{__module__}.{__name__}",
+    )
 
     @classmethod
     def read(cls, filepath: str, **kwargs) -> Any:
@@ -181,16 +220,15 @@ class IOService:
 
     @classmethod
     def _get_io(cls, filepath: str) -> IO:
-        file_format = os.path.splitext(filepath)[1].replace(".", "")
         try:
-            logger.debug("Getting io for {} files".format(file_format))
+            file_format = os.path.splitext(filepath)[1].replace(".", "")
             return IOService.__io[file_format]
         except TypeError:
             if filepath is None:
                 msg = "Filepath is None"
-                logger.error(msg)
+                cls._logger.error(msg)
                 raise ValueError(msg)
         except KeyError:
             msg = "File type {} is not supported.".format(file_format)
-            logger.error(msg)
+            cls._logger.error(msg)
             raise ValueError(msg)

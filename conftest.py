@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Saturday December 10th 2022 04:14:50 am                                             #
+# Modified   : Saturday December 10th 2022 09:59:28 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,16 +22,17 @@ from datetime import datetime
 import pandas as pd
 
 import recsys
-from recsys.containers import Recsys
+from tests.containers import Recsys
 from recsys.core.services.io import IOService
 from recsys.core.dal.dao import DatasetDTO, FilesetDTO, DataSourceDTO, ProfileDTO, TaskDTO, TaskResourceDTO, JobDTO
 from recsys.core.data.database import SQLiteConnection, SQLiteDatabase
-from recsys.core.entity.datasource import DataSource
+# from recsys.core.entity.datasource import DataSource
 
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
-RATINGS_FILEPATH = "tests/data/movielens25m/ratings.pkl"
+RATINGS_FILEPATH = "tests/data/movielens25m/raw/ratings.pkl"
 DATA_SOURCE_FILEPATH = "data/sources.csv"
+
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -93,7 +94,7 @@ def fileset_dtos():
             datasource="movielens25m",
             workspace="test",
             stage="interim",
-            filepath="tests/file/" + f"fileset_dto_{i}" + ".pkl",
+            uri="tests/file/" + f"fileset_dto_{i}" + ".pkl",
             task_id=i + i,
             created=datetime.now(),
             modified=datetime.now(),
@@ -246,7 +247,7 @@ def fileset_dicts():
             "name": f"fileset_{i}",
             "description": f"Description for fileset_{i}",
             "datasource": "movielens25m",
-            "filepath": "tests/file/" + f"fileset_dto_{i}" + ".pkl",
+            "uri": "tests/file/" + f"fileset_dto_{i}" + ".pkl",
             "task_id": i + i,
         }
         lod.append(d)
@@ -255,16 +256,19 @@ def fileset_dicts():
 
 
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def datasources():
-    """Provide a list of DataSource objects."""
-    datasources = []
-    df = pd.read_csv(DATA_SOURCE_FILEPATH)
-    for idx in df.index:
-        ds = DataSource(name=df['name'][idx], publisher=df['publisher'][idx], description=df['description'][idx], website=df['website'][idx], url=df['url'][idx])
-        datasources.append(ds)
+# @pytest.fixture(scope="module")
+# def datasources():
+#     """Provide a list of DataSource objects."""
+#     datasources = []
+#     df = pd.read_csv(DATA_SOURCE_FILEPATH)
+#     for idx in df.index:
+#         ds = DataSource(name=df['name'][idx], publisher=df['publisher'][idx], description=df['description'][idx], website=df['website'][idx])
+#         filesets = []
+#         for fileset in ds.filesets:
 
-    return datasources
+#         datasources.append(ds)
+
+#     return datasources
 
 
 # ------------------------------------------------------------------------------------------------ #

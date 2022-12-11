@@ -11,17 +11,16 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Friday December 9th 2022 10:46:13 pm                                                #
+# Modified   : Saturday December 10th 2022 08:45:50 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from datetime import datetime
 import logging
 
-from recsys import IMMUTABLE_TYPES, SEQUENCE_TYPES, SOURCES, STAGES, WORKSPACES
+import recsys
 from recsys.core.dal.base import DTO
 
 # ------------------------------------------------------------------------------------------------ #
@@ -104,9 +103,9 @@ class Entity(ABC):
     @classmethod
     def _export_config(cls, v):
         """Returns v with Configs converted to dicts, recursively."""
-        if isinstance(v, IMMUTABLE_TYPES):
+        if isinstance(v, recsys.IMMUTABLE_TYPES):
             return v
-        elif isinstance(v, SEQUENCE_TYPES):
+        elif isinstance(v, recsys.SEQUENCE_TYPES):
             return type(v)(map(cls._export_config, v))
         elif isinstance(v, datetime):
             return v
@@ -129,8 +128,8 @@ class Entity(ABC):
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is required for {self.__class__.__name__} objects."
                 self._logger.error(msg)
                 raise TypeError(msg)
-            elif self._datasource not in SOURCES:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is invalid. Must be one of {SOURCES}."
+            elif self._datasource not in recsys.SOURCES:
+                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is invalid. Must be one of {recsys.SOURCES}."
                 self._logger.error(msg)
                 raise ValueError(msg)
 
@@ -139,8 +138,8 @@ class Entity(ABC):
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'workspace' is required for {self.__class__.__name__} objects."
                 self._logger.error(msg)
                 raise TypeError(msg)
-            elif self._workspace not in WORKSPACES:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'workspace' is invalid. Must be one of {WORKSPACES}."
+            elif self._workspace not in recsys.WORKSPACES:
+                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'workspace' is invalid. Must be one of {recsys.WORKSPACES}."
                 self._logger.error(msg)
                 raise ValueError(msg)
 
@@ -149,29 +148,7 @@ class Entity(ABC):
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'stage' is required for {self.__class__.__name__} objects."
                 self._logger.error(msg)
                 raise TypeError(msg)
-            elif self._stage not in STAGES:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'stage' is invalid. Must be one of {STAGES}."
+            elif self._stage not in recsys.STAGES:
+                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'stage' is invalid. Must be one of {recsys.STAGES}."
                 self._logger.error(msg)
                 raise ValueError(msg)
-
-
-@dataclass
-class DataEntity(ABC):
-
-    def as_dict(self) -> dict:
-        """Returns a dictionary representation of the the Config object."""
-        return {k.replace("_", "", 1) if k[0] == "_" else k: self._export_config(v) for k, v in self.__dict__.items()}
-
-    @classmethod
-    def _export_config(cls, v):
-        """Returns v with Configs converted to dicts, recursively."""
-        if isinstance(v, IMMUTABLE_TYPES):
-            return v
-        elif isinstance(v, SEQUENCE_TYPES):
-            return type(v)(map(cls._export_config, v))
-        elif isinstance(v, datetime):
-            return v
-        elif isinstance(v, dict):
-            return {kk: cls._export_config(vv) for kk, vv in v}
-        else:
-            pass
