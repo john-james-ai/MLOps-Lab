@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Saturday December 10th 2022 03:40:57 am                                             #
+# Modified   : Sunday December 11th 2022 04:33:25 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -73,71 +73,10 @@ class TestDatasetDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.dataset()
         for i, dto in enumerate(dataset_dtos, start=1):
+            logger.debug(f"\n\nTest Create DTO {i}\n\t{dto}")
             dto = dao.create(dto)
             assert dto.id == i
             assert dao.exists(i)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_select_all_names(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        names = dao.read_all_names()
-        logger.debug(f"\n\nNames currently in the database: {names}")
-        assert 'dataset_dto_1' in names
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_duplicate_names(self, container, dataset_dtos, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        dto = dataset_dtos[0]
-        with pytest.raises(ValueError):
-            dao.create(dto)
-
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -166,6 +105,7 @@ class TestDatasetDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.dataset()
         for i, dataset_dto in enumerate(dataset_dtos, start=1):
+            logger.debug(f"\n\nDataset DTO\n{dataset_dto}")
             dto = dao.read(i)
             assert dto == dataset_dto
             j = i + 10

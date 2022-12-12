@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 9th 2022 10:54:47 pm                                                #
-# Modified   : Friday December 9th 2022 11:46:59 pm                                                #
+# Modified   : Sunday December 11th 2022 02:30:32 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -20,7 +20,7 @@ import psutil
 import statistics
 from datetime import datetime
 
-from .base import Entity
+from .base import Entity, DTO
 from recsys.core.dal.dto import ProfileDTO
 # ------------------------------------------------------------------------------------------------ #
 
@@ -33,8 +33,9 @@ class Profile(Entity):
         description (str): Description of job or task being profiled.
     """
 
-    def __init__(self, name: str, description: str = None) -> None:
+    def __init__(self, name: str, task_id: int, description: str = None) -> None:
         super().__init__(name=name, description=description)
+        self._task_id = task_id
         self._started = None
         self._ended = None
         self._duration = None
@@ -206,12 +207,13 @@ class Profile(Entity):
             write_time=self._write_time,
             bytes_sent=self._bytes_sent,
             bytes_recv=self._bytes_recv,
+            task_id=self._task_id,
             created=self._created,
             modified=self._modified,
         )
 
     # -------------------------------------------------------------------------------------------- #
-    def _from_dto(self, dto: ProfileDTO) -> None:
+    def _from_dto(self, dto: DTO) -> None:
         super().__init__(name=dto.name, description=dto.description)
         self._id = dto.id
         self._start = dto.start
@@ -234,6 +236,7 @@ class Profile(Entity):
         self._write_time = dto.write_time
         self._bytes_sent = dto.bytes_sent
         self._bytes_recv = dto.bytes_recv
+        self._task_id = dto.task_id
         self._created = dto.created
         self._modified = dto.modified
 

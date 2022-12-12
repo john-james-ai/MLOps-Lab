@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday December 10th 2022 03:36:07 am                                             #
+# Modified   : Sunday December 11th 2022 07:50:23 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,13 +19,21 @@
 """Dataset Entity Module"""
 import os
 import dotenv
+from dataclasses import dataclass
 from datetime import datetime
 import pandas as pd
 
 from recsys.core.dal.dto import DatasetDTO
-from .base import Entity
+from .base import Entity, DTO
 
 # ------------------------------------------------------------------------------------------------ #
+
+@dataclass
+class DatasetSpec:
+    name: str
+    description: str
+    workspace: str
+    stage: str
 
 
 class Dataset(Entity):
@@ -55,7 +63,7 @@ class Dataset(Entity):
         name: str,
         datasource: str,
         stage: str,
-        task_id: int,
+        task_id: int = None,
         data: pd.DataFrame = None,
         workspace: str = None,
         description: str = None,
@@ -67,6 +75,13 @@ class Dataset(Entity):
         self._stage = stage
         self._data = data
         self._task_id = task_id
+
+        # Assigned by repo
+        self._size = None
+        self._nrows = None
+        self._ncols = None
+        self._nulls = None
+        self._pct_nulls = None
 
         # Assigned by repo
         self._filepath = None
@@ -145,6 +160,25 @@ class Dataset(Entity):
         self._filepath = filepath
         self._update_and_validate()
 
+    @property
+    def size(self) -> int:
+        return self._size
+
+    @property
+    def nrows(self) -> int:
+        return self._nrows
+
+    @property
+    def ncols(self) -> int:
+        return self._ncols
+
+    @property
+    def nulls(self) -> int:
+        return self._nulls
+
+    @property
+    def pct_nulls(self) -> int:
+        return self._pct_nulls
     # ------------------------------------------------------------------------------------------------ #
     # Data Access methods
 
@@ -180,12 +214,17 @@ class Dataset(Entity):
             stage=self._stage,
             filepath=self._filepath,
             task_id=self._task_id,
+            size=self._size,
+            nrows=self._nrows,
+            ncols=self._ncols,
+            nulls=self._nulls,
+            pct_nulls=self._pct_nulls,
             created=self._created,
             modified=self._modified,
         )
 
     # ------------------------------------------------------------------------------------------------ #
-    def _from_dto(self, dto: DatasetDTO) -> None:
+    def _from_dto(self, dto: DTO) -> None:
         super().__init__(name=dto.name, description=dto.description)
         self._id = dto.id
         self._datasource = dto.datasource
@@ -193,10 +232,14 @@ class Dataset(Entity):
         self._stage = dto.stage
         self._filepath = dto.filepath
         self._task_id = dto.task_id
+        self._size = dto.size
+        self._nrows = dto.nrows
+        self._ncols = dto.ncols
+        self._nulls = dto.nulls
+        self._pct_nulls = dto.pct_nulls
         self._created = dto.created
         self._modified = dto.modified
-        self._data = None  # DTO's don't carry the actual data. It is stored at filepath.
-
+        self._data = None
         self._validate()
 
     # ------------------------------------------------------------------------------------------------ #
@@ -205,6 +248,14 @@ class Dataset(Entity):
         dotenv.load_dotenv()
         self._workspace = self._workspace or os.getenv("WORKSPACE")
         self._description = self._description or f"{self.__class__.__name__}.{self._name}"
+
+        if self._data is not None:
+            if isinstance(self._data, pd.DataFrame):
+                self._size = self._data.memory_usage(deep=True).sum()
+                self._nrows = self._data.shape[0]
+                self._ncols = self._data.shape[1]
+                self._nulls = self._data.isnull().sum().sum()
+                self._pct_nulls = (self._nulls / (self._nrows * self._ncols)) * 100
 
     def _update_and_validate(self) -> None:
         self._modified = datetime.now()
@@ -218,8 +269,8 @@ class Dataset(Entity):
                 msg = f"The data member must be a pandas Dataframe, not {type(self._data)}."
                 self._logger.error(msg)
                 raise TypeError(msg)
-
-        if not isinstance(self._task_id, int):
-            msg = f"Task_id must be an integer, not {type(self._task_id)}"
-            self._logger.error(msg)
-            raise TypeError(msg)
+        if self._task_id is not None:
+            if not isinstance(self._task_id, int):
+                msg = f"Task_id must be an integer, not {type(self._task_id)}"
+                self._logger.error(msg)
+                raise TypeError(msg)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Saturday December 10th 2022 08:36:12 pm                                             #
+# Modified   : Sunday December 11th 2022 06:18:23 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -51,6 +51,7 @@ class ProfileDTO(DTO):
     write_time: int
     bytes_sent: int
     bytes_recv: int
+    task_id: int
     created: datetime
     modified: datetime
 
@@ -69,10 +70,14 @@ class DatasetDTO(DTO):
     workspace: str
     stage: str
     filepath: str
+    size: int
+    nrows: int
+    ncols: int
+    nulls: int
+    pct_nulls: float
     task_id: int
     created: datetime
     modified: datetime
-
 
 # ------------------------------------------------------------------------------------------------ #
 #                               FILESET DATA TRANSFER OBJECT                                       #
@@ -88,10 +93,10 @@ class FilesetDTO(DTO):
     workspace: str
     stage: str
     uri: str
-    filesize: int
     task_id: int
     created: datetime
     modified: datetime
+    filesize: int = None
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -104,9 +109,11 @@ class JobDTO(DTO):
     id: int
     name: str
     description: str
-    pipeline: str
     workspace: str
-    profile_id: int
+    started: datetime
+    ended: datetime
+    duration: int
+    tasks_completed: int
     created: datetime
     modified: datetime
 
@@ -122,9 +129,9 @@ class DataSourceDTO(DTO):
     publisher: str
     description: str
     website: str
-    filesets: List[FilesetDTO]
     created: datetime
     modified: datetime
+    filesets: List[FilesetDTO] = None
 
 
 # ------------------------------------------------------------------------------------------------ #

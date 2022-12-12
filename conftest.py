@@ -11,18 +11,21 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Saturday December 10th 2022 09:59:28 pm                                             #
+# Modified   : Sunday December 11th 2022 06:26:38 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import pytest
+import numpy as np
 import sqlite3
+from copy import deepcopy
 from datetime import datetime
-import pandas as pd
 
 import recsys
 from tests.containers import Recsys
+from recsys.core.entity.fileset import Fileset
+from recsys.core.entity.datasource import DataSource
 from recsys.core.services.io import IOService
 from recsys.core.dal.dao import DatasetDTO, FilesetDTO, DataSourceDTO, ProfileDTO, TaskDTO, TaskResourceDTO, JobDTO
 from recsys.core.data.database import SQLiteConnection, SQLiteDatabase
@@ -31,7 +34,8 @@ from recsys.core.data.database import SQLiteConnection, SQLiteDatabase
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
 RATINGS_FILEPATH = "tests/data/movielens25m/raw/ratings.pkl"
-DATA_SOURCE_FILEPATH = "data/sources.csv"
+DATA_SOURCE_FILEPATH = "tests/data/datasources.xlsx"
+
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -63,7 +67,12 @@ def database(connection):
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def dataset_dtos():
+def dataset_dtos(ratings):
+    size = ratings.memory_usage(deep=True).sum().astype(np.int64)
+    nrows = ratings.shape[0]
+    ncols = ratings.shape[1]
+    nulls = ratings.isnull().sum().sum()
+    pct_nulls = (ratings.isnull().sum().sum() / (ratings.shape[0] * ratings.shape[1])) * 100
     dtos = []
     for i in range(1, 6):
         dto = DatasetDTO(
@@ -73,7 +82,12 @@ def dataset_dtos():
             datasource="movielens25m",
             workspace="test",
             stage="staged",
-            filepath="tests/file/" + f"dataset_dto_{i}" + ".pkl",
+            filepath=f"tests/file/dataset_dto_{i}.pkl",
+            size=size,
+            nrows=nrows,
+            ncols=ncols,
+            nulls=nulls,
+            pct_nulls=pct_nulls,
             task_id=i + i,
             created=datetime.now(),
             modified=datetime.now(),
@@ -84,7 +98,35 @@ def dataset_dtos():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def fileset_dtos():
+def datasource_dto():
+
+    fileset_dtos = []
+
+    for i in range(1, 6):
+        dto = FilesetDTO(
+            id=i,
+            name=f"fileset_dto_{i}",
+            description=f"Description of fileset_dto_{i}",
+            datasource="movielens25m",
+            workspace="remote",
+            stage="staged",
+            uri="tests/data/movielens25m/raw/ratings.pkl",
+            task_id=26,
+            created=datetime.now(),
+            modified=datetime.now()
+        )
+        fileset_dtos.append(dto)
+
+    dto = DataSourceDTO(id=None, name="movielens25m", publisher="GroupLens", description="MovieLens25M Dataset",
+                        website="wwww.grouplens.com/movielens/", created=datetime.now(), modified=None,
+                        filesets=fileset_dtos)
+
+    return dto
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def filesets():
     dtos = []
     for i in range(1, 6):
         dto = FilesetDTO(
@@ -105,19 +147,11 @@ def fileset_dtos():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def datasource_dtos():
+def datasource_dtos(datasource_dto):
     dtos = []
     for i in range(1, 6):
-        dto = DataSourceDTO(
-            id=None,
-            name=f"datasource_dto_{i}",
-            publisher=f"Publisher {i}",
-            description=f"Datasource Description DTO {i}",
-            website="www.somewebsite.com",
-            url="www.someurl.com",
-            created=datetime.now(),
-            modified=datetime.now(),
-        )
+        dto = deepcopy(datasource_dto)
+        dto.id = i
         dtos.append(dto)
     return dtos
 
@@ -151,6 +185,7 @@ def profile_dtos():
             write_time=i + 16000,
             bytes_sent=i + 17000,
             bytes_recv=i + 18000,
+            task_id=i * 20,
             created=datetime.now(),
             modified=datetime.now(),
         )
@@ -208,9 +243,11 @@ def job_dtos():
             id=None,
             name=f"job_dto_{i}",
             description=f"Description for Job # {i}",
-            pipeline=f"pipeline_{i}",
             workspace="test",
-            profile_id=i + 10,
+            started=datetime.now(),
+            ended=datetime.now(),
+            duration=123,
+            tasks_completed=5,
             created=datetime.now(),
             modified=datetime.now(),
         )
@@ -256,19 +293,21 @@ def fileset_dicts():
 
 
 # ------------------------------------------------------------------------------------------------ #
-# @pytest.fixture(scope="module")
-# def datasources():
-#     """Provide a list of DataSource objects."""
-#     datasources = []
-#     df = pd.read_csv(DATA_SOURCE_FILEPATH)
-#     for idx in df.index:
-#         ds = DataSource(name=df['name'][idx], publisher=df['publisher'][idx], description=df['description'][idx], website=df['website'][idx])
-#         filesets = []
-#         for fileset in ds.filesets:
+@pytest.fixture(scope="module")
+def datasources():
+    """Provide a list of DataSource objects."""
+    ds_list = []
+    datasources = IOService.read(DATA_SOURCE_FILEPATH, sheet_name="datasource")
+    filesets = IOService.read(DATA_SOURCE_FILEPATH, sheet_name="fileset")
+    for idx in datasources.index:
+        ds = DataSource(name=datasources['name'][idx], publisher=datasources['publisher'][idx], description=datasources['description'][idx], website=datasources['website'][idx])
+        fs = filesets.loc[filesets["datasource"] == ds.name]
+        for idx2 in fs.index:
+            fileset = Fileset(name=fs["name"][idx2], description=fs["description"][idx2], datasource=fs["datasource"][idx2], stage=fs["stage"][idx2], workspace=fs["workspace"][idx2], uri=fs["uri"][idx2], task_id=fs["task_id"][idx2])
+            ds.add_fileset(fileset)
+        ds_list.append(ds)
 
-#         datasources.append(ds)
-
-#     return datasources
+    return ds_list
 
 
 # ------------------------------------------------------------------------------------------------ #

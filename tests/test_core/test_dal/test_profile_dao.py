@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Saturday December 10th 2022 03:20:59 am                                             #
+# Modified   : Sunday December 11th 2022 03:01:05 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -76,68 +76,6 @@ class TestProfileDAO:  # pragma: no cover
             dto = dao.create(dto)
             assert dto.id == i
             assert dao.exists(i)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_select_all_names(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.profile()
-        names = dao.read_all_names()
-        logger.debug(f"\n\nNames currently in the database: {names}")
-        assert 'profile_dto_1' in names
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_duplicate_names(self, container, profile_dtos, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.profile()
-        dto = profile_dtos[0]
-        with pytest.raises(ValueError):
-            dao.create(dto)
-
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -227,6 +165,7 @@ class TestProfileDAO:  # pragma: no cover
             assert dto.write_time == i + 16000
             assert dto.bytes_sent == i + 17000
             assert dto.bytes_recv == i + 18000
+            assert dto.task_id == i * 20
             assert isinstance(dto.created, datetime)
             assert isinstance(dto.modified, datetime)
 

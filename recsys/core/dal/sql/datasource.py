@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Saturday December 10th 2022 07:33:35 pm                                             #
+# Modified   : Sunday December 11th 2022 02:53:10 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -134,15 +134,6 @@ class SelectAllDataSource(SQL):
 # ------------------------------------------------------------------------------------------------ #
 
 @dataclass
-class SelectAllDataSourceNames(SQL):
-    sql: str = """SELECT name FROM datasource;"""
-    args: tuple = ()
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
 class DataSourceExists(SQL):
     id: int
     sql: str = """SELECT COUNT(*) FROM datasource WHERE id = ?;"""
@@ -170,6 +161,5 @@ class DataSourceDML(DML):
     update: type(SQL) = UpdateDataSource
     select: type(SQL) = SelectDataSource
     select_all: type(SQL) = SelectAllDataSource
-    select_all_names: type(SQL) = SelectAllDataSourceNames
     exists: type(SQL) = DataSourceExists
     delete: type(SQL) = DeleteDataSource

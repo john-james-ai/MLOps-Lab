@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:31:12 am                                                #
-# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
+# Modified   : Sunday December 11th 2022 10:19:05 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,149 +19,35 @@
 """Operator Entity Module"""
 import os
 import pandas as pd
-from dataclasses import dataclass
-from abc import ABC, abstractmethod
-from urllib.request import urlopen
+import numpy as np
+from abc import abstractmethod
+import urllib
+import tarfile
 from zipfile import ZipFile
+from typing import Dict
 
-
-from recsys.core.dal.dto import OperatorDTO
-from .base import Entity
-
-
-# ================================================================================================ #
-#                                    PARAMETER OBJECTS                                             #
-# ================================================================================================ #
-#                                  TASK PARAMETER OBJECT                                           #
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class TaskPO(ABC):
-    """Base class for parameters that control operator behavior"""
-
-    force: bool = False
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                  INPUT PARAMETER OBJECTS                                         #
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class InputPO(ABC):
-    """Base class for parameters that specify operator input."""
-
-
-@dataclass
-class RemoteInputPO(InputPO):
-    url: str
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
-class FilesetInputPO(InputPO):
-    id: int
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
-class DatasetInputPO(InputPO):
-    id: int
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                  OUTPUT PARAMETER OBJECTS                                        #
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class OutputPO(ABC):
-    """Base class that specifies the parameters for operator output."""
-
-
-@dataclass
-class FilesetOutputPO(OutputPO):
-    name: str
-    datasource: str
-    filepath: str
-    description: str = None
-
-
-@dataclass
-class DatasetOutputPO(OutputPO):
-    name: str
-    datasource: str
-    workspace: str
-    stage: str
-    description: str = None
-
+from recsys.core.services.base import Service
+from recsys.core.services.io import IOService
 
 # ================================================================================================ #
 #                                    OPERATOR BASE CLASS                                           #
 # ================================================================================================ #
 
 
-class Operator(Entity):
-    """Operator Base Class
-
-    Args:
-        id (int): Id for the operator
-        name (str): Name for the operator
-        description (str): Describes the operation
-        module (str): Operator's module
-        classname (str): Operator's class name
-        filepath (str): Operator's filepath
-        task_po (TaskPO): The parameters that specify operator behavior
-        input_po (InputPO): The input into the operator
-        output_po (OutputPO): The specification for operator output.
-
-    """
-
-    def __init__(
-        self,
-        id: int,
-        name: str,
-        module: str,
-        classname: str,
-        filepath: str,
-        task_po: TaskPO,
-        input_po: InputPO,
-        output_po: OutputPO,
-        description: str = None,
-    ) -> None:
-        self._id = id
-        self._name = name
-        self._module = module
-        self._classname = classname
-        self._filepath = filepath
-        self._task_po = task_po
-        self._input_po = input_po
-        self._output_po = output_po
-        self._description = description
-
+class Operator(Service):
+    """Operator Base Class"""
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__()
 
     def __str__(self) -> str:
-        return f"\n\nOperator Id: {self._id}\n\tName: {self._name}\n\tModule: {self._module}n\tClass: {self._classname}\n\tFilepath: {self._filepath}\n\tDescription: {self._description}"
+        return f"Operator Name: {self.__class__.__name__}, Module: {self.__module__}"
 
     def __repr__(self) -> str:
-        return f"{self._id},{self._name},{self._module},{self._clasname},{self._filepath},{self._description}"
+        return f"{self.__class__.__name__},{self.__module__}"
 
     @abstractmethod
-    def execute(self, data: pd.DataFrame = None) -> None:
+    def execute(self, *args, **kwargs) -> None:
         """Executes the operation."""
-
-    def as_dto(self) -> OperatorDTO:
-        return OperatorDTO(
-            id=self._id,
-            name=self._name,
-            description=self._description,
-            module=self._module,
-            classname=self._classname,
-            filepath=self._filepath,
-            created=self._created,
-            modified=self._modified,
-        )
-
 
 # ================================================================================================ #
 #                                    DOWNLOAD OPERATOR                                             #
@@ -172,127 +58,60 @@ class Downloader(Operator):
     """Downloads Dataset from a website using urllib
     Args:
         url (str): The URL to the web resource
-        destination (str): The file into which the data will be downloaded.
+        destination (str): For compressed file sources, this must be the directory into which
+            the data is to land. For non-compressed sources, this must be a path to thee
+            file to be downloaded.
     """
 
-    def __init__(
-        self,
-        id: int,
-        name: str,
-        module: str,
-        classname: str,
-        filepath: str,
-        task_po: TaskPO,
-        input_po: RemoteInputPO,
-        output_po: FilesetOutputPO,
-        description: str,
-    ) -> None:
+    def __init__(self, url: str, destination: str) -> None:
+        super().__init__()
+        self._url = url
+        self._destination = destination
 
-        name = name or self.__class__.__name__.lower()
-        description = (
-            description
-            or self.__class__.__name__ + " from " + input_po.url + " to " + output_po.filepath
-        )
-
-        super().__init__(
-            id=id,
-            name=name,
-            module=module,
-            classname=classname,
-            filepath=filepath,
-            task_po=task_po,
-            input_po=input_po,
-            output_po=output_po,
-            description=description,
-        )
-
-    @abstractmethod
-    def execute(self, data: pd.DataFrame = None) -> None:
+    def execute(self, *args, **kwargs) -> None:
         """Download file."""
-
-        if self._proceed():
-            os.makedirs(os.path.dirname(self._output_po.filepath), exist_ok=True)
-
-            zipresp = urlopen(self.url)
-            # Create a new file on the hard drive
-            tempzip = open("/tmp/tempfile.zip", "wb")
-            # Write the contents of the downloaded file into the new file
-            tempzip.write(zipresp.read())
-            # Close the newly-created file
-            tempzip.close()
-            # Re-open the newly-created file with ZipFile()
-            zf = ZipFile("/tmp/tempfile.zip")
-            # Extract its contents into <extraction_path>
-            # note that extractall will automatically create the path
-            zf.extractall(path=self._output_po.filepath)
-            # close the ZipFile instance
-            zf.close()
-
-    def _proceed(self) -> bool:
-        if self.task_po.force:
-            return True
-        elif os.path.exists(self._output_po.filepath):
-            return False
+        if ".zip" in self._url:
+            self._execute_download_zip()
+        elif ".tar.gz" in self._url:
+            self._execute_download_tar_gz()
         else:
-            return True
+            self._execute_download()
 
+    def _execute_download_zip(self) -> None:
+        """Downloads and extracts the data from a zip file."""
+        # Open the url
+        zipresp = urllib.request.urlopen(self._url)
+        # Create a new file on the hard drive
+        tempzip = open("/tmp/tempfile.zip", "wb")
+        # Write the contents of the downloaded file into the new file
+        tempzip.write(zipresp.read())
+        # Close the newly-created file
+        tempzip.close()
+        # Re-open the newly-created file with ZipFile()
+        zf = ZipFile("/tmp/tempfile.zip")
+        # Extract its contents into <extraction_path>
+        # note that extractall will automatically create the path
+        zf.extractall(path=self._destination)
+        # close the ZipFile instance
+        zf.close()
 
-# ------------------------------------------------------------------------------------------------ #
-#                                     DEZIPPER - EXTRACT ZIPFILE                                   #
-# ------------------------------------------------------------------------------------------------ #
+    def _execute_download_tar_gz(self) -> None:
+        """Downloads and extracts the data from a .tar.gz file."""
+        # Open the url
+        ftpstream = urllib.request.urlopen(self._url)
+        # Create a new file on the hard drive
+        targz_file = tarfile.open(fileobj=ftpstream, mode="r|gz")
+        # Extract its contents into <extraction_path>
+        targz_file.extractall(path=self._destination)
 
-
-class DeZipper(Operator):
-    """Unzipps a ZipFile archive
-    Args:
-        zipfilepath (str): The path to the Zipfile to be extracted.
-        destination (str): The directory into which the zipfiles shall be extracted
-        members (list): Optional, list of members to be extracted
-        force (bool): If True, unzip will overwrite existing file(s) if present.
-    """
-
-    def __init__(
-        self,
-        id: int,
-        name: str,
-        module: str,
-        classname: str,
-        filepath: str,
-        task_po: TaskPO,
-        input_po: RemoteInputPO,
-        output_po: FilesetOutputPO,
-        description: str,
-    ) -> None:
-        name = name or self.__class__.__name__
-        description = description or self.__str__()
-        super().__init__(
-            name=name,
-            module=module,
-            classname=classname,
-            filepath=filepath,
-            task_po=task_po,
-            input_po=input_po,
-            output_po=output_po,
-            description=description,
-        )
-
-    def execute(self, data: pd.DataFrame = None) -> None:
-        os.makedirs(self._output_po.filepath, exist_ok=True)
-
-        if self._proceed():
-            with ZipFile(self._input_po.filepath, "r") as zipobj:
-                zipobj.extractall(path=self._output_po.filepath, members=self._output_po.members)
-
-    def _proceed(self) -> bool:
-        if self.force:
-            return True
-        elif os.path.exists(os.path.join(self._output_po.filepath, self._output_po.members[0])):
-            zipfilename = os.path.basename(self._input_po.filepath)
-            self._logger.info("DeZip skipped as {} already exists.".format(zipfilename))
-            return False
-        else:
-            return True
-
+    def _execute_download(self) -> None:
+        """Downloads a file from a remote source."""
+        try:
+            _ = urllib.request.urlretrieve(url=self._url, filename=self._destination)
+        except IsADirectoryError:
+            msg = "The destination parameter is a directory. For download, this must be a path to a file."
+            self._logger.error(msg)
+            raise IsADirectoryError(msg)
 
 # ------------------------------------------------------------------------------------------------ #
 #                                          PICKLER                                                 #
@@ -300,129 +119,24 @@ class DeZipper(Operator):
 
 
 class Pickler(Operator):
-    """Converts a file to pickle format and optionally removes the original file.
+    """Creates a pickled version of the source file.
     Args:
-        infilepath (str): Path to file being converted
-        outfilepath (str): Path to the converted file
-        infile_format(str): The format of the input file
-        infile_params (dict): Optional. Dictionary containing additional keyword arguments for reading the infile.
-        usecols (list): List of columns to select.
-        outfile_params (dict): Optional. Dictionary containing additional keyword arguments for writing the outfile.
-        force (bool): If True, overwrite existing file if it exists.
-        kwargs (dict): Additional keyword arguments to be passed to io object.
+        source (str): Path to file being converted
+        destination (str): Optional. Path to the converted file. Defaults to the same directory
+            and base filename as source. Extention must be '.pkl' or '.pickle'
+        kwargs (dict): Keyword arguments to be passed to the pandas read method.
     """
 
-    def __init__(
-        self,
-        infilepath: str,
-        outfilepath: str,
-        infile_format: str = "csv",
-        usecols: list = [],
-        index_col: bool = False,
-        encoding: str = "utf-8",
-        low_memory: bool = False,
-        name: str = None,
-        description: str = None,
-        force: bool = False,
-    ) -> None:
-        name = self.__class__.__name__ if name is None else name
-        description = self.__str__()
+    def __init__(self, source: str, destination: str = None, **kwargs) -> None:
+        super().__init__()
+        self._source = source
+        self._destination = destination or os.path.join(os.path.dirname(self._source), os.path.basename(self._source) + ".pkl")
 
-        super().__init__(
-            name=name,
-            description=description,
-            infilepath=infilepath,
-            outfilepath=outfilepath,
-            infile_format=infile_format,
-            usecols=usecols,
-            index_col=index_col,
-            encoding=encoding,
-            low_memory=low_memory,
-            force=force,
-        )
-
-    # @profiler
-    def execute(self, data: pd.DataFrame = None, context: Context = None, *args, **kwargs) -> None:
-        """Executes the operation
-        Args:
-            context (Context): Context object containing the name
-                and description of Pipeline, and the io object as well.
-        """
-        if self._proceed():
-            io = context.io
-            data = io.read(
-                filepath=self.infilepath,
-                usecols=self.usecols,
-                index_col=self.index_col,
-                low_memory=self.low_memory,
-                encoding=self.encoding,
-            )
-            os.makedirs(os.path.dirname(self.outfilepath), exist_ok=True)
-            io.write(self.outfilepath, data)
-
-    def _proceed(self) -> bool:
-        if self.force:
-            return True
-        elif os.path.exists(self.outfilepath):
-            outfilename = os.path.basename(self.outfilepath)
-            logger.info("Pickler skipped as {} already exists.".format(outfilename))
-            return False
-        else:
-            return True
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                           COPY                                                   #
-# ------------------------------------------------------------------------------------------------ #
-
-
-class Copier(Operator):
-    """Copies a file from datasource to destination
-    Args:
-        infilepath (str): Path to file being copied
-        outfilepath (str): The destination filepath
-        force (bool): If True, overwrite existing file if it exists.
-    """
-
-    def __init__(
-        self,
-        infilepath: str,
-        outfilepath: str,
-        name: str = None,
-        description: str = None,
-        force: bool = False,
-    ) -> None:
-        name = self.__class__.__name__ if name is None else name
-        description = self.__str__()
-
-        super().__init__(
-            name=name,
-            description=description,
-            infilepath=infilepath,
-            outfilepath=outfilepath,
-            force=force,
-        )
-
-    # @profiler
-    def execute(self, data: pd.DataFrame = None, context: Context = None, *args, **kwargs) -> None:
-        """Executes the operation
-        Args:
-            context (Context): Context object containing the name
-                and description of Pipeline, and the io object as well.
-        """
-        if self._proceed():
-            shutil.copy(src=self.infilepath, dst=self.outfilepath)
-
-    def _proceed(self) -> bool:
-        if self.force:
-            return True
-        elif os.path.exists(self.outfilepath):
-            outfilename = os.path.basename(self.outfilepath)
-            logger.info("Copier skipped as {} already exists.".format(outfilename))
-            return False
-        else:
-            return True
-
+    def execute(self, *args, **kwargs) -> None:
+        """Executes the operation"""
+        data = IOService.read(filepath=self._source, **kwargs)
+        os.makedirs(os.path.dirname(self._destination), exist_ok=True)
+        IOService.write(self._destination, data)
 
 # ------------------------------------------------------------------------------------------------ #
 #                                          SAMPLER                                                 #
@@ -432,66 +146,187 @@ class Copier(Operator):
 class Sampler(Operator):
     """Copies a file from datasource to destination
     Args:
-        infilepath (str): Path to file being copied
-        outfilepath (str): The destination filepath
-        clustered (bool): Conduct clustered sampling if True. Otherwise, simple random sampling.
-        clustered_by (str): The column name to cluster by.
+        source (str): Path to file being copied
+        destination (str): The destination filepath
+        cluster (bool): Conduct cluster sampling if True. Otherwise, simple random sampling.
+        cluster_by (str): The column name to cluster by.
         frac (float): The proportion of the data to return as sample.
+        replace (bool): Whether to sample with replacement. Default = False.
+        shuffle (bool): Whether to shuffle before sampling. Default = True.
         random_state (int): The pseudo random seed for reproducibility.
-        force (bool): If True, overwrite existing file if it exists.
     """
 
-    def __init__(
-        self,
-        infilepath: str,
-        outfilepath: str,
-        clustered: bool = False,
-        clustered_by: str = None,
-        frac: float = None,
-        random_state: int = None,
-        name: str = None,
-        description: str = None,
-        force: bool = False,
-    ) -> None:
-        name = self.__class__.__name__ if name is None else name
-        description = self.__str__()
+    def __init__(self, source: str, destination: str, cluster: bool = False, cluster_by: str = None, frac: float = None, replace: bool = False, shuffle: bool = True,
+                 random_state: int = None) -> None:
+        super().__init__()
+        self._source = source
+        self._destination = destination
+        self._cluster = cluster
+        self._cluster_by = cluster_by
+        self._frac = frac
+        self._replace = replace
+        self._shuffle = shuffle
+        self._random_state = random_state
 
-        super().__init__(
-            name=name,
-            description=description,
-            infilepath=infilepath,
-            outfilepath=outfilepath,
-            clustered=clustered,
-            clustered_by=clustered_by,
-            frac=frac,
-            random_state=random_state,
-            force=force,
+    def execute(self, data: pd.DataFrame, *args, **kwargs) -> None:
+        """Executes the operation on the DataFrame
+        Args:
+            data (pd.DataFrame): The DataFrame to be sampled.
+        """
+
+        if self._cluster:
+            data = self._sample_by_cluster(data)
+        else:
+            data = data.sample(frac=self._frac, random_state=self._random_state)
+        IOService.write(filepath=self._destination, data=data)
+
+    def _sample_by_cluster(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Returns a sample of clusters."""
+        if self._frac == 1:
+            return data
+        elif self._frac > 1:
+            msg = "The frac parameter must be in (0,1]"
+            self._logger.error(msg)
+            raise ValueError(msg)
+
+        rng = np.random.default_rng(self._random_state)
+
+        try:
+            clusters = data[self._cluster_by].unique()
+            n_clusters = len(clusters)
+            size = int(n_clusters * self._frac)
+            sample_clusters = rng.choice(a=clusters, size=size, replace=self._replace, shuffle=self._shuffle)
+            sample = data.loc[data[self._cluster_by].isin(sample_clusters)]
+            return sample
+        except KeyError:
+            msg = "The dataframe has no column {}".format(self._cluster_by)
+            self._logger.error(msg)
+            raise KeyError(msg)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                               TRAIN TEST SPLIT OPERATOR                                          #
+# ------------------------------------------------------------------------------------------------ #
+class TrainTestSplit(Operator):
+    """Splits the dataset into to training and test sets by user
+    Args:
+        train_size (float): The proportion of the data to allocate to the training set.
+        shuffle (bool): Whether to shuffle the data prior to sampling. Default = True
+        cluster (bool): Whether to sample by cluster. Default = True
+        cluster_by (str): The column to cluster by
+        replace (bool): Whether to sample with replacement. Default = False.
+        random_state (int): The seed for pseudo-random sampling.
+
+    Returns: Dictionary of Train and Test Dataset objects.
+    """
+
+    def __init__(self, train_size: float = 0.25, shuffle: bool = True, cluster: bool = True, cluster_by: str = None, replace: bool = False, random_state: int = None) -> None:
+        super().__init__()
+        self._train_size = train_size
+        self._shuffle = shuffle
+        self._cluster = cluster
+        self._cluster_by = cluster_by
+        self._replace = replace
+        self._random_state = random_state
+
+    def execute(self, data: pd.DataFrame, *args, **kwargs) -> Dict[str, pd.DataFrame]:
+
+        if self._cluster:
+
+            rng = np.random.default_rng(self._random_state)
+
+            clusters = data[self._cluster_by].unique()
+            train_set_size = int(len(clusters) * self._train_size)
+
+            train_clusters = rng.choice(
+                a=clusters, size=train_set_size, replace=False, shuffle=True
+            )
+            test_clusters = np.setdiff1d(clusters, train_clusters)
+
+            train_set = data.loc[data[self._cluster_by].isin(train_clusters)]
+            test_set = data.loc[data[self._cluster_by].isin(test_clusters)]
+
+        else:
+            # Get all indices
+            index = np.array(data.index.to_numpy())
+
+            # Split the training set by the train proportion
+            train_set = data.sample(
+                frac=self._train_size,
+                replace=self._replace,
+                axis=0,
+                random_state=self._random_state,
+            )
+
+            # Obtain training indices and perform setdiff to get test indices
+            train_idx = train_set.index
+            test_idx = np.setdiff1d(index, train_idx)
+
+            # Extract test data
+            test_set = data.loc[test_idx]
+
+        # Create train and test Dataset objects.
+        result = {"train": train_set, "test": test_set}
+
+        return result
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                               DATA CENTRALIZER OPERATOR                                          #
+# ------------------------------------------------------------------------------------------------ #
+
+
+class DataCentralizer(Operator):
+    """Centers the a continuous variable by the mean of a centering variable.
+
+    Args:
+        var (str): The name of the column to center by subtracting the mean by group_var.
+        group_var (str): The name of the column upon which the data are grouped
+        out_var (str): The name of the column to contain the centered var values.
+
+    Returns: pd.DataFrame
+    """
+
+    def __init__(self, var: str, group_var: str, out_var: str) -> None:
+        super().__init__()
+        self._var = var
+        self._group_var = group_var
+        self._out_var = out_var
+
+    def execute(self, data: pd.DataFrame, *args, **kwargs) -> pd.DataFrame:
+
+        data[self._out_var] = data[self._var].sub(
+            data.groupby(self._group_var)[self._var].transform("mean")
         )
 
-    # @profiler
-    def execute(self, data: pd.DataFrame = None, context: Context = None, *args, **kwargs) -> None:
-        """Executes the operation
-        Args:
-            context (Context): Context object containing the name
-                and description of Pipeline, and the io object as well.
-        """
-        if self._proceed():
-            io = context.io
-            data = io.read(self.infilepath)
-            if self.clustered:
-                data = clustered_sample(
-                    df=data, by=self.clustered_by, frac=self.frac, random_state=self.random_state
-                )
-            else:
-                data = data.sample(frac=self.frac, random_state=self.random_state)
-            io.write(filepath=self.outfilepath, data=data)
+        return data
 
-    def _proceed(self) -> bool:
-        if self.force:
-            return True
-        elif os.path.exists(self.outfilepath):
-            outfilename = os.path.basename(self.outfilepath)
-            logger.info("Sampler skipped as {} already exists.".format(outfilename))
-            return False
-        else:
-            return True
+
+# ------------------------------------------------------------------------------------------------ #
+#                                DATA AGGREGATOR OPERATOR                                          #
+# ------------------------------------------------------------------------------------------------ #
+
+
+class MeanAggregator(Operator):
+    """Aggregates data by computing the mean of a variable by a grouping another variable.
+
+    Args:
+        var (str): The name of the variable to which the mean statistic is applied.
+        group_var (str): The name of the column upon which the data are grouped
+        out_var (str): The name of the column to hold the aggregated mean.
+
+    Returns: pd.DataFrame
+    """
+
+    def __init__(self, var: str, group_var: str, out_var: str) -> None:
+        super().__init__()
+        self._var = var
+        self._group_var = group_var
+        self._out_var = out_var
+
+    def execute(self, data: pd.DataFrame, *args, **kwargs) -> pd.DataFrame:
+
+        result = data.groupby(self._group_var)[self._var].mean().reset_index()
+        result.columns = [self._group_var, self._out_var]
+
+        return result

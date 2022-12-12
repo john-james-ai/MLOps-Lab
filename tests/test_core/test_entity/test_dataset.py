@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 10:37:56 am                                             #
-# Modified   : Saturday December 10th 2022 10:29:39 am                                             #
+# Modified   : Sunday December 11th 2022 09:16:48 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -54,6 +54,11 @@ class TestDatasetEntity:  # pragma: no cover
         assert ds.name == inspect.stack()[0][3]
         assert ds.description == f"Description of {inspect.stack()[0][3]}"
         assert ds.datasource == "movielens25m"
+        assert ds.size is None
+        assert ds.nrows is None
+        assert ds.ncols is None
+        assert ds.nulls is None
+        assert ds.pct_nulls is None
         assert ds.task_id == 22
         assert isinstance(ds.created, datetime)
 
@@ -95,6 +100,11 @@ class TestDatasetEntity:  # pragma: no cover
         assert ds.description == f"Description of {inspect.stack()[0][3]}"
         assert ds.datasource == "movielens25m"
         assert ds.task_id == 22
+        assert ds.size is not None
+        assert ds.nrows is not None
+        assert ds.ncols is not None
+        assert ds.nulls is not None
+        assert ds.pct_nulls is not None
         assert isinstance(ds.created, datetime)
         assert isinstance(ds.data, pd.DataFrame)
 
@@ -237,11 +247,8 @@ class TestDatasetEntity:  # pragma: no cover
                 with pytest.raises(ValueError):
                     Dataset.from_dto(dto)
             if i == 4:
-                dto.task_id = None  # no task_id
+                dto.task_id = "8dj"  # invalid task_id
                 with pytest.raises(TypeError):
-                    Dataset.from_dto(dto)
-                dto.stage = "222"  # invalid task_id
-                with pytest.raises(ValueError):
                     Dataset.from_dto(dto)
 
         # ---------------------------------------------------------------------------------------- #
@@ -623,6 +630,43 @@ class TestDatasetEntity:  # pragma: no cover
         )
         with pytest.raises(TypeError):
             ds2.data = {'some': 'dictionary'}
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_task_id_assignment(self, ratings, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        ds1 = Dataset(
+            name=inspect.stack()[0][3],
+            description=f"Description of {inspect.stack()[0][3]}",
+            datasource="movielens25m",
+            stage="staged",
+            data=ratings,
+        )
+        ds1.task_id = 75
+        with pytest.raises(TypeError):
+            ds1.task_id = 76
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

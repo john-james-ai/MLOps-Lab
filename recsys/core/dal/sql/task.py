@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Saturday December 10th 2022 10:46:35 am                                             #
+# Modified   : Sunday December 11th 2022 02:55:24 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -138,16 +138,6 @@ class SelectAllTasks(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 
-
-@dataclass
-class SelectAllTaskNames(SQL):
-    sql: str = """SELECT name FROM task;"""
-    args: tuple = ()
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
 @dataclass
 class TaskExists(SQL):
     id: int
@@ -176,6 +166,5 @@ class TaskDML(DML):
     update: type(SQL) = UpdateTask
     select: type(SQL) = SelectTask
     select_all: type(SQL) = SelectAllTasks
-    select_all_names: type(SQL) = SelectAllTaskNames
     exists: type(SQL) = TaskExists
     delete: type(SQL) = DeleteTask

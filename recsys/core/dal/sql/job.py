@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Saturday December 10th 2022 02:44:21 am                                             #
+# Modified   : Sunday December 11th 2022 06:15:45 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateJobTable(SQL):
     name: str = "job"
-    sql: str = """CREATE TABLE IF NOT EXISTS job (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, pipeline TEXT NOT NULL, workspace TEXT NOT NULL, profile_id INTEGER NOT NULL, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS job (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, workspace TEXT NOT NULL, started timestamp, ended timestamp, duration INTEGER DEFAULT 0, tasks_completed INTEGER DEFAULT 0, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -74,16 +74,18 @@ class JobDDL(DDL):
 class InsertJob(SQL):
     dto: DTO
 
-    sql: str = """INSERT INTO job (name, description, pipeline, workspace, profile_id, created, modified) VALUES (?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO job (name, description, workspace, started, ended, duration, tasks_completed, created, modified) VALUES (?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.pipeline,
             self.dto.workspace,
-            self.dto.profile_id,
+            self.dto.started,
+            self.dto.ended,
+            self.dto.duration,
+            self.dto.tasks_completed,
             self.dto.created,
             self.dto.modified,
         )
@@ -95,16 +97,18 @@ class InsertJob(SQL):
 @dataclass
 class UpdateJob(SQL):
     dto: DTO
-    sql: str = """UPDATE job SET name = ?, description = ?, pipeline = ?, workspace = ?, profile_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE job SET name = ?, description = ?, workspace = ?, started = ?, ended = ?, duration = ?, tasks_completed = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.pipeline,
             self.dto.workspace,
-            self.dto.profile_id,
+            self.dto.started,
+            self.dto.ended,
+            self.dto.duration,
+            self.dto.tasks_completed,
             self.dto.created,
             self.dto.modified,
             self.dto.id,
@@ -131,15 +135,6 @@ class SelectJob(SQL):
 class SelectAllJob(SQL):
     sql: str = """SELECT * FROM job;"""
     args: tuple = ()
-
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
-class SelectAllJobNames(SQL):
-    sql: str = """SELECT name FROM job;"""
-    args: tuple = ()
-
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -172,6 +167,5 @@ class JobDML(DML):
     update: type(SQL) = UpdateJob
     select: type(SQL) = SelectJob
     select_all: type(SQL) = SelectAllJob
-    select_all_names: type(SQL) = SelectAllJobNames
     exists: type(SQL) = JobExists
     delete: type(SQL) = DeleteJob

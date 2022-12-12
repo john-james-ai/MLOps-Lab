@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Saturday December 10th 2022 06:31:39 pm                                             #
+# Modified   : Sunday December 11th 2022 02:53:25 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -142,15 +142,6 @@ class SelectAllFilesets(SQL):
 
 
 @dataclass
-class SelectAllFilesetNames(SQL):
-    sql: str = """SELECT name FROM fileset;"""
-    args: tuple = ()
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
 class FilesetExists(SQL):
     id: int
     sql: str = """SELECT COUNT(*) FROM fileset WHERE id = ?;"""
@@ -178,6 +169,5 @@ class FilesetDML(DML):
     update: type(SQL) = UpdateFileset
     select: type(SQL) = SelectFileset
     select_all: type(SQL) = SelectAllFilesets
-    select_all_names: type(SQL) = SelectAllFilesetNames
     exists: type(SQL) = FilesetExists
     delete: type(SQL) = DeleteFileset

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Friday December 9th 2022 07:13:49 am                                                #
+# Modified   : Sunday December 11th 2022 04:41:11 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,6 +19,7 @@
 import os
 import logging
 import sqlite3
+import numpy as np
 from typing import Any
 from abc import ABC, abstractmethod
 
@@ -75,6 +76,8 @@ class SQLiteConnection(Connection):
 
     def __init__(self, connector: sqlite3.connect, location: str) -> None:
         self._location = location
+        sqlite3.register_adapter(np.int64, lambda val: int(val))
+        sqlite3.register_adapter(np.int32, lambda val: int(val))
         os.makedirs(os.path.dirname(self._location), exist_ok=True)
         super().__init__(connector=connector)
 

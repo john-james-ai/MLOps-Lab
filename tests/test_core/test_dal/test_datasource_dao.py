@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Saturday December 10th 2022 03:11:20 am                                             #
+# Modified   : Sunday December 11th 2022 05:12:48 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -74,70 +74,9 @@ class TestDataSourceDAO:  # pragma: no cover
         dao = container.dao.datasource()
         for i, dto in enumerate(datasource_dtos, start=1):
             dto = dao.create(dto)
+            logger.debug(f"\n\nDataSource - Test Create DTO:\n\t{dto}")
             assert dto.id == i
             assert dao.exists(i)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_select_all_names(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.datasource()
-        names = dao.read_all_names()
-        logger.debug(f"\n\nNames currently in the database: {names}")
-        assert 'datasource_dto_1' in names
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_duplicate_names(self, container, datasource_dtos, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.datasource()
-        dto = datasource_dtos[0]
-        with pytest.raises(ValueError):
-            dao.create(dto)
-
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -167,7 +106,10 @@ class TestDataSourceDAO:  # pragma: no cover
         dao = container.dao.datasource()
         for i, datasource_dto in enumerate(datasource_dtos, start=1):
             dto = dao.read(i)
-            assert dto == datasource_dto
+            assert dto.id == datasource_dto.id
+            assert dto.name == datasource_dto.name
+            assert dto.publisher == datasource_dto.publisher
+            assert dto.website == datasource_dto.website
             j = i + 10
             with pytest.raises(FileNotFoundError):
                 _ = dao.read(j)
@@ -205,13 +147,12 @@ class TestDataSourceDAO:  # pragma: no cover
         for i, dto in dtos.items():
             assert isinstance(dto, DataSourceDTO)
             assert dto.id == i
-            assert dto.name == f"datasource_dto_{i}"
-            assert dto.publisher == f"Publisher {i}"
-            assert dto.description == f"Datasource Description DTO {i}"
-            assert dto.website == "www.somewebsite.com"
-            assert dto.url == "www.someurl.com"
+            assert dto.name == "movielens25m"
+            assert dto.publisher == "GroupLens"
+            assert dto.description == "MovieLens25M Dataset"
+            assert dto.website == "wwww.grouplens.com/movielens/"
             assert isinstance(dto.created, datetime)
-            assert isinstance(dto.modified, datetime)
+            assert dto.modified is None
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday December 10th 2022 06:40:23 pm                                             #
+# Modified   : Sunday December 11th 2022 01:03:47 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -20,7 +20,7 @@
 import os
 
 from recsys.core.dal.dto import FilesetDTO
-from .base import Entity
+from .base import Entity, DTO
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -122,7 +122,7 @@ class Fileset(Entity):
 
     # ------------------------------------------------------------------------------------------------ #
 
-    def _from_dto(self, dto: FilesetDTO) -> None:
+    def _from_dto(self, dto: DTO) -> None:
         super().__init__(name=dto.name, description=dto.description)
         self._id = dto.id
         self._datasource = dto.datasource

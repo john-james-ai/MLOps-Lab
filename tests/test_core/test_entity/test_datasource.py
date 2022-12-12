@@ -11,29 +11,51 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 10:37:56 am                                             #
-# Modified   : Saturday December 10th 2022 10:14:07 pm                                             #
+# Modified   : Sunday December 11th 2022 03:25:47 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import inspect
 from datetime import datetime
-import pandas as pd
 import pytest
 import logging
 
 from recsys.core.entity.datasource import DataSource
-from recsys.core.dal.dto import DataSourceDTO
+from recsys.core.entity.fileset import Fileset
+from recsys.core.dal.dto import DataSourceDTO, FilesetDTO
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-@pytest.mark.dse
+@pytest.mark.source
 class TestDataSourceEntity:  # pragma: no cover
+    def build_datasource(self, method):
+        ds = DataSource(
+            name="spotify",
+            description=f"Description of datasource_{method}",
+            publisher="GroupLens",
+            website="https://grouplens.org/datasets/movielens/"
+        )
+
+        for i in range(1, 6):
+            fs = Fileset(
+                name=f"datasource_{method}_fileset_{i}",
+                description=f"Description of datasource_{method}_fileset_{i}",
+                datasource="movielens25m",
+                uri="www.movielens.com",
+                workspace="remote",
+                stage="ext",
+                task_id=0,
+            )
+            ds.add_fileset(fs)
+
+        return ds
+
     # ============================================================================================ #
-    def test_instantiation_no_data(self, caplog):
+    def test_datasource_build(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -44,17 +66,24 @@ class TestDataSourceEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            publisher="GroupLens",
-            website="https://grouplens.org/datasets/movielens/"
-        )
-        assert ds.name == inspect.stack()[0][3]
-        assert ds.description == f"Description of {inspect.stack()[0][3]}"
+        ds = self.build_datasource(method=inspect.stack()[0][3])
+
+        assert ds.name == "spotify"
+        assert ds.description == f"Description of datasource_{inspect.stack()[0][3]}"
         assert ds.publisher == "GroupLens"
         assert ds.website == "https://grouplens.org/datasets/movielens/"
+        assert isinstance(ds.filesets, list)
+        assert len(ds.filesets) == 5
         assert isinstance(ds.created, datetime)
+
+        for i, fs in enumerate(ds.filesets, start=1):
+            assert fs.name == f"datasource_{inspect.stack()[0][3]}_fileset_{i}"
+            assert fs.description == f"Description of datasource_{inspect.stack()[0][3]}_fileset_{i}"
+            assert fs.datasource == "movielens25m"
+            assert fs.uri == "www.movielens.com"
+            assert fs.workspace == "remote"
+            assert fs.stage == "ext"
+            assert fs.task_id == 0
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -109,7 +138,7 @@ class TestDataSourceEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_dto_instantiation(self, datasource_dtos, caplog):
+    def test_dto_conversion(self, datasource_dtos, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -120,19 +149,67 @@ class TestDataSourceEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        for i, dto in enumerate(datasource_dtos, start=1):
-            ds = DataSource.from_dto(dto)
+        ds = self.build_datasource(method=inspect.stack()[0][3])
 
-            assert ds.id == i
-            assert ds.name == f"datasource_dto_{i}"
-            assert ds.description == f"Description for DataSource DTO {i}"
-            assert ds.datasource == "movielens25m"
-            assert ds.workspace == "test"
-            assert ds.stage == "staged"
-            assert ds.filepath == "tests/file/" + f"datasource_dto_{i}" + ".pkl"
-            assert ds.task_id == i + i
-            assert isinstance(ds.created, datetime)
-            assert isinstance(ds.modified, datetime)
+        dto = ds.as_dto()
+        assert dto.name == "spotify"
+        assert dto.description == f"Description of datasource_{inspect.stack()[0][3]}"
+        assert dto.publisher == "GroupLens"
+        assert dto.website == "https://grouplens.org/datasets/movielens/"
+        assert isinstance(dto.created, datetime)
+        assert isinstance(dto.filesets, list)
+        assert len(dto.filesets) == 5
+        assert isinstance(dto, DataSourceDTO)
+
+        for i, dto in enumerate(dto.filesets, start=1):
+            assert isinstance(dto, FilesetDTO)
+            assert dto.name == f"datasource_{inspect.stack()[0][3]}_fileset_{i}"
+            assert dto.description == f"Description of datasource_{inspect.stack()[0][3]}_fileset_{i}"
+            assert dto.datasource == "movielens25m"
+            assert dto.uri == "www.movielens.com"
+            assert dto.workspace == "remote"
+            assert dto.stage == "ext"
+            assert dto.task_id == 0
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_dto_instantiation(self, datasource_dto, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        ds = DataSource.from_dto(datasource_dto)
+        logger.debug(f"\n\n\tDataSource has {len(ds.filesets)} filesets.")
+
+        assert ds.id == datasource_dto.id
+        assert ds.name == datasource_dto.name
+        assert ds.publisher == datasource_dto.publisher
+        assert ds.description == datasource_dto.description
+        assert ds.website == datasource_dto.website
+        assert ds.created == datasource_dto.created
+        assert ds.modified == datasource_dto.modified
+
+        for i in range(len(ds.filesets)):
+            logger.debug(f"\t\tEvaluating the {i}th Fileset.")
+            assert ds.filesets[i] == Fileset.from_dto(datasource_dto.filesets[i])
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -165,27 +242,6 @@ class TestDataSourceEntity:  # pragma: no cover
                 dto.name = None  # Name
                 with pytest.raises(TypeError):
                     DataSource.from_dto(dto)
-            if i == 2:
-                dto.datasource = None  # no datasource
-                with pytest.raises(TypeError):
-                    DataSource.from_dto(dto)
-                dto.datasource = "dssds"  # Invalid datasource
-                with pytest.raises(ValueError):
-                    DataSource.from_dto(dto)
-            if i == 3:
-                dto.stage = None  # no stage
-                with pytest.raises(TypeError):
-                    DataSource.from_dto(dto)
-                dto.stage = "dsaa"  # invalid stage
-                with pytest.raises(ValueError):
-                    DataSource.from_dto(dto)
-            if i == 4:
-                dto.task_id = None  # no task_id
-                with pytest.raises(TypeError):
-                    DataSource.from_dto(dto)
-                dto.stage = "222"  # invalid task_id
-                with pytest.raises(ValueError):
-                    DataSource.from_dto(dto)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -213,26 +269,11 @@ class TestDataSourceEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            data=ratings,
-            stage="staged",
-        )
+        ds = self.build_datasource(method=inspect.stack()[0][3])
         d = ds.as_dict()
         assert isinstance(d, dict)
-        assert d["id"] is None
-        assert d["name"] == inspect.stack()[0][3]
-        assert d["description"] == f"Description of {inspect.stack()[0][3]}"
-        assert d["datasource"] == "movielens25m"
-        assert d["workspace"] == "test"
-        assert d["stage"] == "staged"
-        assert d["filepath"] is None
-        assert d["task_id"] == 22
-        assert isinstance(d["created"], datetime)
-        assert d["modified"] is None
+        for fileset in d['filesets']:
+            assert isinstance(fileset, dict)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -249,7 +290,7 @@ class TestDataSourceEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_as_dto(self, ratings, caplog):
+    def test_magic(self, datasources, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -260,221 +301,7 @@ class TestDataSourceEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            data=ratings,
-            stage="staged",
-        )
-        dto = ds.as_dto()
-        assert isinstance(dto, DataSourceDTO)
-        assert dto.id is None
-        assert dto.name == inspect.stack()[0][3]
-        assert dto.description == f"Description of {inspect.stack()[0][3]}"
-        assert dto.datasource == "movielens25m"
-        assert dto.workspace == "test"
-        assert dto.stage == "staged"
-        assert dto.filepath is None
-        assert dto.task_id == 22
-        assert isinstance(dto.created, datetime)
-        assert dto.modified is None
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_access_methods(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            data=ratings,
-            stage="staged",
-        )
-        logger.info(ds.info())
-        assert isinstance(ds.head(), pd.DataFrame)
-        assert isinstance(ds.tail(), pd.DataFrame)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_access_methods_no_data(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            stage="staged",
-        )
-
-        assert ds.info() is None
-        assert ds.head() is None
-        assert ds.tail() is None
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_set_once(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            stage="staged",
-        )
-        ds.id = 5
-        with pytest.raises(TypeError):
-            ds.id = 6
-
-        ds.data = ratings
-        with pytest.raises(TypeError):
-            ds.data = ratings
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_modified(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            stage="staged",
-        )
-        modified = ds.modified
-        ds.id = 9
-        assert ds.modified != modified
-        modified = ds.modified
-
-        ds.data = ratings
-        assert ds.modified != modified
-        modified = ds.modified
-
-        ds.filepath = "t/ests"
-        assert ds.modified != modified
-        modified = ds.modified
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_magic(self, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            stage="staged",
-        )
+        ds = datasources[0]
         assert isinstance(ds.__str__(), str)
         assert isinstance(ds.__repr__(), str)
 
@@ -493,7 +320,7 @@ class TestDataSourceEntity:  # pragma: no cover
         )
     # ============================================================================================ #
 
-    def test_equality(self, ratings, caplog):
+    def test_equality(self, datasources, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -504,68 +331,14 @@ class TestDataSourceEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds1 = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            stage="staged",
-            data=ratings,
-        )
-        ds2 = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            stage="staged",
-        )
-        assert not ds1 == ds2
+        ds1 = datasources[0]
+        ds2 = datasources[0]
+        ds3 = datasources[1]
+        ds4 = {'d': "somedict"}
+        assert ds1 == ds2
+        assert not ds1 == ds3
+        assert not ds1 == ds4
 
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_data(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds1 = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            stage="staged",
-            data=ratings,
-        )
-        assert isinstance(ds1.data, pd.DataFrame)
-
-        ds2 = DataSource(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            stage="staged",
-        )
-        with pytest.raises(TypeError):
-            ds2.data = {'some': 'dictionary'}
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

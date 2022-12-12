@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 08:03:23 pm                                             #
-# Modified   : Saturday December 10th 2022 04:16:37 am                                             #
+# Modified   : Sunday December 11th 2022 01:03:47 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -20,7 +20,7 @@
 from typing import Union
 
 from recsys.core.dal.dto import TaskDTO, FilesetDTO, DatasetDTO
-from .base import Entity, Profile
+from .base import Entity, Profile, DTO
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -127,7 +127,7 @@ class Task(Entity):  # pragma: no cover
         self._output_id = output_data.id
 
     # ------------------------------------------------------------------------------------------------ #
-    def _from_dto(self, dto: TaskDTO) -> Entity:
+    def _from_dto(self, dto: DTO) -> Entity:
         self._id = dto.id
         self._job_id = dto.job_id
         self._name = dto.name

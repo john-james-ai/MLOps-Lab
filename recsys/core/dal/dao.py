@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Saturday December 10th 2022 07:34:09 pm                                             #
+# Modified   : Sunday December 11th 2022 06:18:03 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -53,16 +53,10 @@ class DAO(Service):
 
         Returns: DTO with id set.
         """
-        if self._duplicate_name(dto):
-            msg = f"Item named {dto.name} already exists."
-            self._logger.error(msg)
-            raise ValueError(msg)
-
         cmd = self._dml.insert(dto)
 
         with self._database as db:
             dto.id = db.insert(cmd.sql, cmd.args)
-            self._logger.debug(f"Inserted {dto.name} with id={dto.id}")
             return dto
 
     def read(self, id: int) -> DTO:
@@ -93,13 +87,6 @@ class DAO(Service):
                 return None
             else:
                 return self._results_to_dict(results)
-
-    def read_all_names(self) -> list:
-        """Returns a list of names for entities in the Database."""
-        cmd = self._dml.select_all_names()
-        with self._database as db:
-            names = db.select(cmd.sql, cmd.args)
-            return [name for t in names for name in t]
 
     def update(self, dto: DTO) -> None:
         """Updates an existing entity.
@@ -143,9 +130,6 @@ class DAO(Service):
             results_dict[dto.id] = dto
         return results_dict
 
-    def _duplicate_name(self, dto: DTO) -> bool:
-        return dto.name in self.read_all_names()
-
     @abstractmethod
     def _row_to_dto(self, row: Tuple) -> DTO:
         """Reformats a row of output to a DTO object."""
@@ -163,16 +147,21 @@ class DatasetDAO(DAO):
     def _row_to_dto(self, row: Tuple) -> DatasetDTO:
         try:
             return DatasetDTO(
-                id=int(row[0]),
+                id=row[0],
                 name=row[1],
                 description=row[2],
                 datasource=row[3],
                 workspace=row[4],
                 stage=row[5],
                 filepath=row[6],
-                task_id=int(row[7]),
-                created=row[8],
-                modified=row[9],
+                size=row[7],
+                nrows=row[8],
+                ncols=row[9],
+                nulls=row[10],
+                pct_nulls=row[11],
+                task_id=row[12],
+                created=row[13],
+                modified=row[14],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -193,16 +182,17 @@ class FilesetDAO(DAO):
     def _row_to_dto(self, row: Tuple) -> FilesetDTO:
         try:
             return FilesetDTO(
-                id=int(row[0]),
+                id=row[0],
                 name=row[1],
                 description=row[2],
                 datasource=row[3],
                 workspace=row[4],
                 stage=row[5],
                 uri=row[6],
-                task_id=int(row[7]),
-                created=row[8],
-                modified=row[9],
+                filesize=row[7],
+                task_id=row[8],
+                created=row[9],
+                modified=row[10],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -223,31 +213,32 @@ class ProfileDAO(DAO):
     def _row_to_dto(self, row: Tuple) -> ProfileDTO:
         try:
             return ProfileDTO(
-                id=int(row[0]),
+                id=row[0],
                 name=row[1],
                 description=row[2],
                 started=row[3],
                 ended=row[4],
-                duration=int(row[5]),
-                user_cpu_time=int(row[6]),
-                percent_cpu_used=float(row[7]),
-                total_physical_memory=int(row[8]),
-                physical_memory_available=int(row[9]),
-                physical_memory_used=int(row[10]),
-                percent_physical_memory_used=float(row[11]),
-                active_memory_used=int(row[12]),
-                disk_usage=int(row[13]),
-                percent_disk_usage=float(row[14]),
-                read_count=int(row[15]),
-                write_count=int(row[16]),
-                read_bytes=int(row[17]),
-                write_bytes=int(row[18]),
-                read_time=int(row[19]),
-                write_time=int(row[20]),
-                bytes_sent=int(row[21]),
-                bytes_recv=int(row[22]),
-                created=row[23],
-                modified=row[24],
+                duration=row[5],
+                user_cpu_time=row[6],
+                percent_cpu_used=row[7],
+                total_physical_memory=row[8],
+                physical_memory_available=row[9],
+                physical_memory_used=row[10],
+                percent_physical_memory_used=row[11],
+                active_memory_used=row[12],
+                disk_usage=row[13],
+                percent_disk_usage=row[14],
+                read_count=row[15],
+                write_count=row[16],
+                read_bytes=row[17],
+                write_bytes=row[18],
+                read_time=row[19],
+                write_time=row[20],
+                bytes_sent=row[21],
+                bytes_recv=row[22],
+                task_id=row[23],
+                created=row[24],
+                modified=row[25],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -268,7 +259,7 @@ class DataSourceDAO(DAO):
     def _row_to_dto(self, row: Tuple) -> DataSourceDTO:
         try:
             return DataSourceDTO(
-                id=int(row[0]),
+                id=row[0],
                 name=row[1],
                 publisher=row[2],
                 description=row[3],
@@ -295,12 +286,12 @@ class TaskResourceDAO(DAO):
     def _row_to_dto(self, row: Tuple) -> TaskResourceDTO:
         try:
             return TaskResourceDTO(
-                id=int(row[0]),
+                id=row[0],
                 name=row[1],
                 description=row[2],
-                task_id=int(row[3]),
+                task_id=row[3],
                 resource_kind=row[4],
-                resource_id=int(row[5]),
+                resource_id=row[5],
                 resource_context=row[6],
                 created=row[7],
                 modified=row[8],
@@ -324,14 +315,14 @@ class TaskDAO(DAO):
     def _row_to_dto(self, row: Tuple) -> TaskDTO:
         try:
             return TaskDTO(
-                id=int(row[0]),
+                id=row[0],
                 name=row[1],
                 description=row[2],
                 workspace=row[3],
                 operator=row[4],
                 module=row[5],
-                job_id=int(row[6]),
-                profile_id=int(row[7]),
+                job_id=row[6],
+                profile_id=row[7],
                 created=row[8],
                 modified=row[9],
             )
@@ -354,14 +345,16 @@ class JobDAO(DAO):
     def _row_to_dto(self, row: Tuple) -> JobDTO:
         try:
             return JobDTO(
-                id=int(row[0]),
+                id=row[0],
                 name=row[1],
                 description=row[2],
-                pipeline=row[3],
-                workspace=row[4],
-                profile_id=int(row[5]),
-                created=row[6],
-                modified=row[7],
+                workspace=row[3],
+                started=row[4],
+                ended=row[5],
+                duration=row[6],
+                tasks_completed=row[7],
+                created=row[8],
+                modified=row[9],
             )
 
         except IndexError as e:  # pragma: no cover

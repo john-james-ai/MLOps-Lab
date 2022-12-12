@@ -11,17 +11,20 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:26:05 am                                              #
-# Modified   : Saturday December 10th 2022 08:47:17 pm                                             #
+# Modified   : Sunday December 11th 2022 02:51:38 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """DataSource Entity Module"""
-from recsys.core.dal.dto import DataSourceDTO
-from .fileset import Fileset
-from .base import Entity
+from typing import List
 
 import recsys
+from recsys.core.dal.dto import DataSourceDTO
+from .fileset import Fileset
+from .base import Entity, DTO
+
+
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -70,31 +73,49 @@ class DataSource(Entity):
         return self._website
 
     # ------------------------------------------------------------------------------------------------ #
+    @property
+    def filesets(self) -> List[Fileset]:
+        return self._filesets
+
+    # ------------------------------------------------------------------------------------------------ #
     def add_fileset(self, fileset: Fileset) -> None:
         self._filesets.append(fileset)
 
     # ------------------------------------------------------------------------------------------------ #
     def as_dto(self) -> DataSourceDTO:
+        """Converts the DataSource object to a DataSourceDTO object."""
+
+        # Convert filesets to a list of fileset DTOs.
+        filesets = []
+        for fileset in self._filesets:
+            dto = fileset.as_dto()
+            filesets.append(dto)
+
         return DataSourceDTO(
             id=self._id,
             name=self._name,
             publisher=self._publisher,
             description=self._description,
             website=self._website,
-            filesets=self._filesets,
             created=self._created,
             modified=self._modified,
+            filesets=filesets,
         )
 
     # ------------------------------------------------------------------------------------------------ #
-    def _from_dto(self, dto: DataSourceDTO) -> Entity:
+    def _from_dto(self, dto: DTO) -> Entity:
         super().__init__(name=dto.name, description=dto.description)
+        self._filesets = []
         self._id = dto.id
         self._publisher = dto.publisher
         self._website = dto.website
-        self._filesets = dto.filesets
         self._created = dto.created
         self._modified = dto.modified
+
+        for dto in dto.filesets:
+            fileset = Fileset.from_dto(dto)
+            self._filesets.append(fileset)
+
         self._validate()
 
     # ------------------------------------------------------------------------------------------------ #
