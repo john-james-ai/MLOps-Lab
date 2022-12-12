@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /sql.py                                                                             #
+# Filename   : /tests/test_core/test_data/sql.py                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:09:28 am                                              #
-# Modified   : Saturday December 3rd 2022 11:13:45 am                                              #
+# Modified   : Monday December 12th 2022 01:31:53 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ from dataclasses import dataclass
 
 @dataclass
 class CreateTestTable:
-    sql: str = """CREATE TABLE IF NOT EXISTS test_table ( id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS test_table ( id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT NOT NULL);"""
     args: tuple = ()
 
 

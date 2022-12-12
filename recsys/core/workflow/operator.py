@@ -11,13 +11,12 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:31:12 am                                                #
-# Modified   : Sunday December 11th 2022 10:19:05 pm                                               #
+# Modified   : Monday December 12th 2022 02:46:51 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Operator Entity Module"""
-import os
 import pandas as pd
 import numpy as np
 from abc import abstractmethod
@@ -27,7 +26,6 @@ from zipfile import ZipFile
 from typing import Dict
 
 from recsys.core.services.base import Service
-from recsys.core.services.io import IOService
 
 # ================================================================================================ #
 #                                    OPERATOR BASE CLASS                                           #
@@ -54,12 +52,12 @@ class Operator(Service):
 # ================================================================================================ #
 
 
-class Downloader(Operator):
-    """Downloads Dataset from a website using urllib
+class DownloadExtractor(Operator):
+    """Downloads and if compressed, extracts data from a website.
     Args:
         url (str): The URL to the web resource
         destination (str): For compressed file sources, this must be the directory into which
-            the data is to land. For non-compressed sources, this must be a path to thee
+            the data is to land. For non-compressed sources, this must be a path to the
             file to be downloaded.
     """
 
@@ -118,25 +116,16 @@ class Downloader(Operator):
 # ------------------------------------------------------------------------------------------------ #
 
 
-class Pickler(Operator):
-    """Creates a pickled version of the source file.
-    Args:
-        source (str): Path to file being converted
-        destination (str): Optional. Path to the converted file. Defaults to the same directory
-            and base filename as source. Extention must be '.pkl' or '.pickle'
-        kwargs (dict): Keyword arguments to be passed to the pandas read method.
+class NullOperator(Operator):
+    """Null Operator does nothing. Returns the data it receives from the Environment.
     """
 
-    def __init__(self, source: str, destination: str = None, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__()
-        self._source = source
-        self._destination = destination or os.path.join(os.path.dirname(self._source), os.path.basename(self._source) + ".pkl")
 
-    def execute(self, *args, **kwargs) -> None:
+    def execute(self, data: pd.DataFrame, *args, **kwargs) -> None:
         """Executes the operation"""
-        data = IOService.read(filepath=self._source, **kwargs)
-        os.makedirs(os.path.dirname(self._destination), exist_ok=True)
-        IOService.write(self._destination, data)
+        return data
 
 # ------------------------------------------------------------------------------------------------ #
 #                                          SAMPLER                                                 #
@@ -146,8 +135,6 @@ class Pickler(Operator):
 class Sampler(Operator):
     """Copies a file from datasource to destination
     Args:
-        source (str): Path to file being copied
-        destination (str): The destination filepath
         cluster (bool): Conduct cluster sampling if True. Otherwise, simple random sampling.
         cluster_by (str): The column name to cluster by.
         frac (float): The proportion of the data to return as sample.
@@ -156,11 +143,9 @@ class Sampler(Operator):
         random_state (int): The pseudo random seed for reproducibility.
     """
 
-    def __init__(self, source: str, destination: str, cluster: bool = False, cluster_by: str = None, frac: float = None, replace: bool = False, shuffle: bool = True,
+    def __init__(self, cluster: bool = False, cluster_by: str = None, frac: float = None, replace: bool = False, shuffle: bool = True,
                  random_state: int = None) -> None:
         super().__init__()
-        self._source = source
-        self._destination = destination
         self._cluster = cluster
         self._cluster_by = cluster_by
         self._frac = frac
@@ -178,7 +163,7 @@ class Sampler(Operator):
             data = self._sample_by_cluster(data)
         else:
             data = data.sample(frac=self._frac, random_state=self._random_state)
-        IOService.write(filepath=self._destination, data=data)
+        return data
 
     def _sample_by_cluster(self, data: pd.DataFrame) -> pd.DataFrame:
         """Returns a sample of clusters."""
@@ -276,7 +261,7 @@ class TrainTestSplit(Operator):
 # ------------------------------------------------------------------------------------------------ #
 
 
-class DataCentralizer(Operator):
+class DataCenterizer(Operator):
     """Centers the a continuous variable by the mean of a centering variable.
 
     Args:

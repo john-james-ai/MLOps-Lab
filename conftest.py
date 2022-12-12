@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Sunday December 11th 2022 06:26:38 pm                                               #
+# Modified   : Monday December 12th 2022 12:32:01 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -82,7 +82,7 @@ def dataset_dtos(ratings):
             datasource="movielens25m",
             workspace="test",
             stage="staged",
-            filepath=f"tests/file/dataset_dto_{i}.pkl",
+            uri=f"tests/file/dataset_dto_{i}.pkl",
             size=size,
             nrows=nrows,
             ncols=ncols,

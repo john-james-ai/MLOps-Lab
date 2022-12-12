@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Sunday December 11th 2022 07:50:23 pm                                               #
+# Modified   : Monday December 12th 2022 12:30:39 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -27,6 +27,7 @@ from recsys.core.dal.dto import DatasetDTO
 from .base import Entity, DTO
 
 # ------------------------------------------------------------------------------------------------ #
+
 
 @dataclass
 class DatasetSpec:
@@ -47,7 +48,7 @@ class Dataset(Entity):
         workspace (str): One of ['prod', 'dev', 'test']
         stage (str): The stage of the data processing lifecycle to which the Dataset belongs.
         data (pd.DataFrame): A pandas DataFrame containing the data.
-        filepath (str): The location for persistence
+        uri (str): The location for persistence
         task_id (int): The step within a pipeline task that produced the Dataset object.
         *created (datetime): Datetime the Dataset was created
         **modified (datetime): Datetime the Dataset was modified.
@@ -84,7 +85,7 @@ class Dataset(Entity):
         self._pct_nulls = None
 
         # Assigned by repo
-        self._filepath = None
+        self._uri = None
 
         # Set metadata
         self._set_metadata()
@@ -93,10 +94,10 @@ class Dataset(Entity):
         self._validate()
 
     def __str__(self) -> str:
-        return f"\n\nDataset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._datasource}\n\tWorkspace: {self._workspace}\n\tStage: {self._stage}\n\tFilepath: {self._filepath}\n\tStep_Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"\n\nDataset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._datasource}\n\tWorkspace: {self._workspace}\n\tStage: {self._stage}\n\tFilepath: {self._uri}\n\tStep_Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id},{self._name},{self._description},{self._datasource},{self._workspace},{self._stage},{self._filepath},{self._task_id},{self._created},{self._modified}"
+        return f"{self._id},{self._name},{self._description},{self._datasource},{self._workspace},{self._stage},{self._uri},{self._task_id},{self._created},{self._modified}"
 
     def __eq__(self, other) -> bool:
         """Compares two Datasets for equality.
@@ -152,12 +153,12 @@ class Dataset(Entity):
             raise TypeError(msg)
 
     @property
-    def filepath(self) -> str:
-        return self._filepath
+    def uri(self) -> str:
+        return self._uri
 
-    @filepath.setter
-    def filepath(self, filepath: int) -> None:
-        self._filepath = filepath
+    @uri.setter
+    def uri(self, uri: int) -> None:
+        self._uri = uri
         self._update_and_validate()
 
     @property
@@ -212,7 +213,7 @@ class Dataset(Entity):
             datasource=self._datasource,
             workspace=self._workspace,
             stage=self._stage,
-            filepath=self._filepath,
+            uri=self._uri,
             task_id=self._task_id,
             size=self._size,
             nrows=self._nrows,
@@ -230,7 +231,7 @@ class Dataset(Entity):
         self._datasource = dto.datasource
         self._workspace = dto.workspace
         self._stage = dto.stage
-        self._filepath = dto.filepath
+        self._uri = dto.uri
         self._task_id = dto.task_id
         self._size = dto.size
         self._nrows = dto.nrows

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Sunday December 11th 2022 06:18:03 pm                                               #
+# Modified   : Monday December 12th 2022 12:28:47 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -153,7 +153,7 @@ class DatasetDAO(DAO):
                 datasource=row[3],
                 workspace=row[4],
                 stage=row[5],
-                filepath=row[6],
+                uri=row[6],
                 size=row[7],
                 nrows=row[8],
                 ncols=row[9],
