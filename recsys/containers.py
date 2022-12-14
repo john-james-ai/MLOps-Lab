@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Friday December 9th 2022 08:29:34 pm                                                #
+# Modified   : Tuesday December 13th 2022 03:16:27 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.sql.datasource import DataSourceDDL, DataSourceDML
 from recsys.core.dal.sql.profile import ProfileDDL, ProfileDML
 from recsys.core.dal.sql.task import TaskDDL, TaskDML
 from recsys.core.dal.sql.task_resource import TaskResourceDDL, TaskResourceDML
-from recsys.core.data.database import SQLiteDatabase, SQLiteConnection
+from recsys.core.database.sqlite import SQLiteDatabase, SQLiteConnection
 
 # ------------------------------------------------------------------------------------------------ #
 

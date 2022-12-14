@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Monday December 12th 2022 01:31:53 am                                               #
+# Modified   : Tuesday December 13th 2022 02:33:57 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -127,6 +127,18 @@ class SelectJob(SQL):
     def __post_init__(self) -> None:
         self.args = (self.id,)
 
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class SelectJobByName(SQL):
+    name: str
+    sql: str = """SELECT * FROM job WHERE name = ?;"""
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.args = (self.name,)
+
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -166,6 +178,7 @@ class JobDML(DML):
     insert: type(SQL) = InsertJob
     update: type(SQL) = UpdateJob
     select: type(SQL) = SelectJob
+    select_by_name: type(SQL) = SelectJobByName
     select_all: type(SQL) = SelectAllJob
     exists: type(SQL) = JobExists
     delete: type(SQL) = DeleteJob

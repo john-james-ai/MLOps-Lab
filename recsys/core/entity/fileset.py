@@ -11,17 +11,18 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Sunday December 11th 2022 01:03:47 am                                               #
+# Modified   : Tuesday December 13th 2022 07:37:25 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Fileset Entity Module"""
 import os
+import pandas as pd
 
 from recsys.core.dal.dto import FilesetDTO
 from .base import Entity, DTO
-
+from recsys.core.services.io import IOService
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -33,7 +34,7 @@ class Fileset(Entity):
         datasource (str): The data datasource
         workspace (str): Either ['data','prod','dev','test']
         stage (str): The data processing stage
-        uri (str): The path to the file relative to the project root directory.
+        dataset_id (int): The ID for the associated Dataset object.
         task_id (int): The step within a pipeline task that produced the Fileset object.
 
     """
@@ -44,6 +45,7 @@ class Fileset(Entity):
         datasource: str,
         stage: str,
         uri: str,
+        dataset_id: int,
         task_id: int,
         workspace: str = None,
         description: str = None,
@@ -53,6 +55,7 @@ class Fileset(Entity):
         self._workspace = workspace
         self._datasource = datasource
         self._uri = uri
+        self._dataset_id = dataset_id
         self._task_id = task_id
         self._filesize = None
 
@@ -60,10 +63,10 @@ class Fileset(Entity):
         self._set_metadata()
 
     def __str__(self) -> str:
-        return f"\n\nFileset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._datasource}\n\tWorkspace: {self._workspace}\n\tStage: {self._stage}\n\tFilepath: {self._uri}\n\tTask Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"\n\nFileset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._datasource}\n\tWorkspace: {self._workspace}\n\tStage: {self._stage}\n\tFilepath: {self._uri}\n\tDataset Id: {self._dataset_id}\n\tTask Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id},{self._name},{self._description},{self._datasource},{self._workspace}, {self._stage}, {self._uri},{self._task_id},{self._created},{self._modified}"
+        return f"{self._id},{self._name},{self._description},{self._datasource},{self._workspace}, {self._stage}, {self._uri}, {self._dataset_id}, {self._task_id},{self._created},{self._modified}"
 
     def __eq__(self, other) -> bool:
         """Compares two Filesets for equality.
@@ -100,8 +103,20 @@ class Fileset(Entity):
         return self._filesize
 
     @property
+    def dataset_id(self) -> str:
+        return self._dataset_id
+
+    @property
     def task_id(self) -> int:
         return self._task_id
+
+    # ------------------------------------------------------------------------------------------------ #
+    def read(self) -> pd.DataFrame:
+        return IOService.read(self._uri)
+
+    # ------------------------------------------------------------------------------------------------ #
+    def write(self, data: pd.DataFrame) -> None:
+        IOService.write(filepath=self._uri, data=data)
 
     # ------------------------------------------------------------------------------------------------ #
 
@@ -115,6 +130,7 @@ class Fileset(Entity):
             stage=self._stage,
             uri=self._uri,
             filesize=self._filesize,
+            dataset_id=self._dataset_id,
             task_id=self._task_id,
             created=self._created,
             modified=self._modified,
@@ -130,6 +146,7 @@ class Fileset(Entity):
         self._stage = dto.stage
         self._uri = dto.uri
         self._filesize = dto.filesize
+        self._dataset_id = dto.dataset_id
         self._task_id = dto.task_id
         self._created = dto.created
         self._modified = dto.modified

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:31:12 am                                                #
-# Modified   : Monday December 12th 2022 02:46:51 am                                               #
+# Modified   : Monday December 12th 2022 11:44:09 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -193,65 +193,29 @@ class Sampler(Operator):
 #                               TRAIN TEST SPLIT OPERATOR                                          #
 # ------------------------------------------------------------------------------------------------ #
 class TrainTestSplit(Operator):
-    """Splits the dataset into to training and test sets by user
+    """Splits the dataset into to training and test sets using global
     Args:
+        split_var (str): The variable containing the temporal value.
         train_size (float): The proportion of the data to allocate to the training set.
-        shuffle (bool): Whether to shuffle the data prior to sampling. Default = True
-        cluster (bool): Whether to sample by cluster. Default = True
-        cluster_by (str): The column to cluster by
-        replace (bool): Whether to sample with replacement. Default = False.
-        random_state (int): The seed for pseudo-random sampling.
 
     Returns: Dictionary of Train and Test Dataset objects.
     """
 
-    def __init__(self, train_size: float = 0.25, shuffle: bool = True, cluster: bool = True, cluster_by: str = None, replace: bool = False, random_state: int = None) -> None:
+    def __init__(self, split_var: str, train_size: float = 0.80) -> None:
         super().__init__()
+        self._split_var = split_var
         self._train_size = train_size
-        self._shuffle = shuffle
-        self._cluster = cluster
-        self._cluster_by = cluster_by
-        self._replace = replace
-        self._random_state = random_state
 
     def execute(self, data: pd.DataFrame, *args, **kwargs) -> Dict[str, pd.DataFrame]:
 
-        if self._cluster:
+        sorted_data = data.sort_values(by=self._split_var, ascending=True).reset_index()
+        train_idx = sorted_data.index < sorted_data.shape[0] * self._train_size
+        test_idx = sorted_data.index >= sorted_data.shape[0] * self._train_size
 
-            rng = np.random.default_rng(self._random_state)
+        train = sorted_data[train_idx]
+        test = sorted_data[test_idx]
 
-            clusters = data[self._cluster_by].unique()
-            train_set_size = int(len(clusters) * self._train_size)
-
-            train_clusters = rng.choice(
-                a=clusters, size=train_set_size, replace=False, shuffle=True
-            )
-            test_clusters = np.setdiff1d(clusters, train_clusters)
-
-            train_set = data.loc[data[self._cluster_by].isin(train_clusters)]
-            test_set = data.loc[data[self._cluster_by].isin(test_clusters)]
-
-        else:
-            # Get all indices
-            index = np.array(data.index.to_numpy())
-
-            # Split the training set by the train proportion
-            train_set = data.sample(
-                frac=self._train_size,
-                replace=self._replace,
-                axis=0,
-                random_state=self._random_state,
-            )
-
-            # Obtain training indices and perform setdiff to get test indices
-            train_idx = train_set.index
-            test_idx = np.setdiff1d(index, train_idx)
-
-            # Extract test data
-            test_set = data.loc[test_idx]
-
-        # Create train and test Dataset objects.
-        result = {"train": train_set, "test": test_set}
+        result = {"train": train, "test": test}
 
         return result
 

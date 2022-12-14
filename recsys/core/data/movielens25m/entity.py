@@ -4,48 +4,15 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /config.yml                                                                         #
+# Filename   : /recsys/core/data/movielens25m/entity.py                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday December 1st 2022 05:01:51 pm                                              #
-# Modified   : Tuesday December 13th 2022 04:56:25 am                                              #
+# Created    : Tuesday December 13th 2022 01:17:14 am                                              #
+# Modified   : Tuesday December 13th 2022 01:17:14 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-core:
-  logging:
-    version: 1
-    formatters:
-      console:
-        format: "[%(asctime)s] [%(levelname)s] [%(name)s] [%(funcName)s] : %(message)s"
-        datefmt: "%m/%d/%Y %I:%M:%S %p"
-      file:
-        format: "[%(asctime)s] [%(levelname)s] [%(name)s] [%(module)s] [%(funcName)s] : %(message)s"
-        datefmt: "%m/%d/%Y %I:%M:%S %p"
-    handlers:
-      console:
-        class: "logging.StreamHandler"
-        level: "DEBUG"
-        formatter: "console"
-        stream: "ext://sys.stderr"
-      file:
-        class: logging.handlers.TimedRotatingFileHandler
-        formatter: file
-        when: midnight
-        interval: 1
-        backupCount: 0
-        level: "DEBUG"
-        filename: logs/recsys.log
-    root:
-      level: "DEBUG"
-      handlers: ["console", "file"]
-    disable_existing_loggers: False
-
-data:
-  database:
-    sqlite:
-      location: data/recsys.sqlite3

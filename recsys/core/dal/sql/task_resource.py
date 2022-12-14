@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Monday December 12th 2022 01:31:53 am                                               #
+# Modified   : Tuesday December 13th 2022 02:34:12 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -123,6 +123,18 @@ class SelectTaskResource(SQL):
     def __post_init__(self) -> None:
         self.args = (self.id,)
 
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class SelectTaskResourceByName(SQL):
+    name: str
+    sql: str = """SELECT * FROM task_resource WHERE name = ?;"""
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.args = (self.name,)
+
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -162,6 +174,7 @@ class TaskResourceDML(DML):
     insert: type(SQL) = InsertTaskResource
     update: type(SQL) = UpdateTaskResource
     select: type(SQL) = SelectTaskResource
+    select_by_name: type(SQL) = SelectTaskResourceByName
     select_all: type(SQL) = SelectAllTaskResources
     exists: type(SQL) = TaskResourceExists
     delete: type(SQL) = DeleteTaskResource

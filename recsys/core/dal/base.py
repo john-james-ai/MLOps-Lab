@@ -11,16 +11,16 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 12:44:06 pm                                              #
-# Modified   : Friday December 9th 2022 11:39:52 pm                                                #
+# Modified   : Tuesday December 13th 2022 02:42:34 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Base Data Access Module"""
+from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from abc import ABC
 
 from recsys import IMMUTABLE_TYPES, SEQUENCE_TYPES
 

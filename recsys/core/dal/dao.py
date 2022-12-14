@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Monday December 12th 2022 12:28:47 am                                               #
+# Modified   : Tuesday December 13th 2022 07:06:05 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ from abc import abstractmethod
 from collections import OrderedDict
 from typing import Dict, Tuple, List
 
-from recsys.core.data.database import Database
+from recsys.core.database.base import Database
 from .dto import DTO, FilesetDTO, DatasetDTO, DataSourceDTO, ProfileDTO, TaskResourceDTO, TaskDTO, JobDTO
 from .base import DML
 from recsys.core import Service
@@ -71,6 +71,23 @@ class DAO(Service):
             row = db.select(cmd.sql, cmd.args)
             if len(row) == 0:
                 msg = f"{self.__class__.__name__}.{id} does not exist."
+                self._logger.info(msg)
+                raise FileNotFoundError(msg)
+            else:
+                return self._row_to_dto(row[0])
+
+    def read_by_name(self, name: str) -> DTO:
+        """Retrieves an entity from the database, based upon name
+        Args:
+            name (str): The name assigned to the entity.
+
+        Returns a Data Transfer Object (DTO)
+        """
+        cmd = self._dml.select_by_name(name)
+        with self._database as db:
+            row = db.select(cmd.sql, cmd.args)
+            if len(row) == 0:
+                msg = f"{self.__class__.__name__}.{name} does not exist."
                 self._logger.info(msg)
                 raise FileNotFoundError(msg)
             else:
@@ -190,9 +207,10 @@ class FilesetDAO(DAO):
                 stage=row[5],
                 uri=row[6],
                 filesize=row[7],
-                task_id=row[8],
-                created=row[9],
-                modified=row[10],
+                dataset_id=row[8],
+                task_id=row[9],
+                created=row[10],
+                modified=row[11],
             )
 
         except IndexError as e:  # pragma: no cover

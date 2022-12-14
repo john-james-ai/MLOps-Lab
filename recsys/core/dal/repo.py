@@ -4,65 +4,71 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/repo/datasource.py                                                     #
+# Filename   : /recsys/core/dal/repo.py                                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday December 8th 2022 04:07:04 pm                                              #
-# Modified   : Friday December 9th 2022 06:48:43 pm                                                #
+# Created    : Tuesday December 13th 2022 04:39:34 am                                              #
+# Modified   : Tuesday December 13th 2022 02:43:41 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import pandas as pd
-from dependency_injector.wiring import Provide, inject
 
-from .base import Repo
-from recsys.core.dal.dao import DAO
-from recsys.core.entity.datasource import DataSource
-from recsys.containers import Recsys
+from recsys.core.dal.base import DAO
+from recsys.core.entity.base import Entity
+from .base import Service
 # ------------------------------------------------------------------------------------------------ #
 
 
-class DataSourceRepo(Repo):
-    """Repository base class"""
+class Repo(Service):
+    """Entity Repository
 
-    @inject
-    def __init__(self, dao: DAO = Provide[Recsys.dao.datasource]) -> None:
+        Args:
+            entity (str): The entity for which the repository has been instantiated.
+        dao (DAO): Database Access Object for the Entity
+    """
+    def __init__(self, entity: type(Entity), dao: DAO) -> None:
+        self._entity = entity
         self._dao = dao
 
     def __len__(self) -> int:
-        return len(self._dao)
+        return len(self._dao())
 
-    def add(self, datasource: DataSource) -> DataSource:
-        """Adds an entity to the repository and returns the DataSource with the id added."""
-        dto = datasource.as_dto()
+    def add(self, entity: Entity) -> Entity:
+        """Adds an entity to the repository and returns the Entity with the id added."""
+        dto = entity.as_dto()
         dto = self._dao.create(dto)
-        datasource = DataSource.from_dto(dto)
-        return datasource
+        return self._entity.from_dto(dto)
 
-    def get(self, id: str) -> DataSource:
+    def get(self, id: int) -> Entity:
         "Returns an entity with the designated id"
         dto = self._dao.read(id)
-        return DataSource.from_dto(dto)
+        return self._entity.from_dto(dto)
 
-    def update(self, datasource: DataSource) -> None:
-        """Updates a DataSource in the databases."""
-        dto = datasource.as_dto()
+    def get_by_name(self, name: str) -> Entity:
+        "Returns an entity with the designated id"
+        dto = self._dao.read_by_name(name)
+        return self._entity.from_dto(dto)
+
+    def update(self, entity: Entity) -> None:
+        """Updates an entity in the databases."""
+        dto = entity.as_dto()
         self._dao.update(dto=dto)
 
-    def remove(self, id: str) -> None:
+    def remove(self, id: int) -> None:
         """Removes an entity with id from repository."""
         self._dao.delete(id)
 
-    def exists(self, id: str) -> bool:
+    def exists(self, id: int) -> bool:
         """Returns True if entity with id exists in the repository."""
         return self._dao.exists(id)
 
     def print(self) -> None:
         """Prints the repository contents as a DataFrame."""
-        datasources = self._dao.read_all()
-        df = pd.DataFrame.from_dict(data=sources, orient='index', columns=['id', 'name', 'description', 'publisher', 'website', 'url'])
+        entities = self._dao.read_all()
+        df = pd.DataFrame.from_dict(data=entities, orient='index')
         print(df)

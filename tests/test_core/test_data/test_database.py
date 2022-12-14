@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 07:39:50 am                                              #
-# Modified   : Thursday December 8th 2022 06:01:27 pm                                              #
+# Modified   : Tuesday December 13th 2022 01:12:19 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -34,7 +34,7 @@ from .sql import (
     DeleteTest,
     ExistsTest,
 )
-from recsys.core.data.database import SQLiteConnection
+from recsys.core.database.sqlite import SQLiteConnection
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Monday December 12th 2022 12:30:39 am                                               #
+# Modified   : Tuesday December 13th 2022 07:37:37 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -47,6 +47,7 @@ class Dataset(Entity):
         datasource (str): The data datasource
         workspace (str): One of ['prod', 'dev', 'test']
         stage (str): The stage of the data processing lifecycle to which the Dataset belongs.
+        fileset_id (int): The id for the associated Fileset object.
         data (pd.DataFrame): A pandas DataFrame containing the data.
         uri (str): The location for persistence
         task_id (int): The step within a pipeline task that produced the Dataset object.
@@ -64,6 +65,7 @@ class Dataset(Entity):
         name: str,
         datasource: str,
         stage: str,
+        fileset_id: int = None,
         task_id: int = None,
         data: pd.DataFrame = None,
         workspace: str = None,
@@ -77,15 +79,15 @@ class Dataset(Entity):
         self._data = data
         self._task_id = task_id
 
+        # Added by user
+        self._fileset = None
+
         # Assigned by repo
         self._size = None
         self._nrows = None
         self._ncols = None
         self._nulls = None
         self._pct_nulls = None
-
-        # Assigned by repo
-        self._uri = None
 
         # Set metadata
         self._set_metadata()
@@ -147,19 +149,26 @@ class Dataset(Entity):
             self._update_and_validate()
         else:
             msg = (
-                f"The 'data' attribute on  Dataset {self._id} does not support item re-assignment."
+                f"The 'data'attribute on Dataset {self._id} does not support item re-assignment."
             )
             self._logger.error(msg)
             raise TypeError(msg)
 
     @property
-    def uri(self) -> str:
-        return self._uri
+    def fileset(self) -> str:
+        return self._fileset
 
-    @uri.setter
-    def uri(self, uri: int) -> None:
-        self._uri = uri
-        self._update_and_validate()
+    @fileset.setter
+    def fileset(self, fileset: int) -> None:
+        if self._fileset is None:
+            self._fileset = fileset
+            self._update_and_validate()
+        else:
+            msg = (
+                f"The 'fileset' attribute on Dataset {self._id} does not support item re-assignment."
+            )
+            self._logger.error(msg)
+            raise TypeError(msg)
 
     @property
     def size(self) -> int:
@@ -213,7 +222,6 @@ class Dataset(Entity):
             datasource=self._datasource,
             workspace=self._workspace,
             stage=self._stage,
-            uri=self._uri,
             task_id=self._task_id,
             size=self._size,
             nrows=self._nrows,
@@ -231,7 +239,6 @@ class Dataset(Entity):
         self._datasource = dto.datasource
         self._workspace = dto.workspace
         self._stage = dto.stage
-        self._uri = dto.uri
         self._task_id = dto.task_id
         self._size = dto.size
         self._nrows = dto.nrows

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Monday December 12th 2022 01:31:53 am                                               #
+# Modified   : Tuesday December 13th 2022 02:33:45 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -121,6 +121,18 @@ class SelectDataSource(SQL):
     def __post_init__(self) -> None:
         self.args = (self.id,)
 
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class SelectDataSourceByName(SQL):
+    name: str
+    sql: str = """SELECT * FROM datasource WHERE name = ?;"""
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.args = (self.name,)
+
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -160,6 +172,7 @@ class DataSourceDML(DML):
     insert: type(SQL) = InsertDataSource
     update: type(SQL) = UpdateDataSource
     select: type(SQL) = SelectDataSource
+    select_by_name: type(SQL) = SelectDataSourceByName
     select_all: type(SQL) = SelectAllDataSource
     exists: type(SQL) = DataSourceExists
     delete: type(SQL) = DeleteDataSource
