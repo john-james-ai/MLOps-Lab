@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Tuesday December 13th 2022 07:06:05 pm                                              #
+# Modified   : Thursday December 15th 2022 03:18:29 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,7 +22,7 @@ from collections import OrderedDict
 from typing import Dict, Tuple, List
 
 from recsys.core.database.base import Database
-from .dto import DTO, FilesetDTO, DatasetDTO, DataSourceDTO, ProfileDTO, TaskResourceDTO, TaskDTO, JobDTO
+from .dto import DTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO
 from .base import DML
 from recsys.core import Service
 
@@ -54,6 +54,7 @@ class DAO(Service):
         Returns: DTO with id set.
         """
         cmd = self._dml.insert(dto)
+        self._logger.debug(f"\n\n{dto}")
 
         with self._database as db:
             dto.id = db.insert(cmd.sql, cmd.args)
@@ -170,47 +171,16 @@ class DatasetDAO(DAO):
                 datasource=row[3],
                 workspace=row[4],
                 stage=row[5],
-                uri=row[6],
-                size=row[7],
-                nrows=row[8],
-                ncols=row[9],
-                nulls=row[10],
-                pct_nulls=row[11],
-                task_id=row[12],
-                created=row[13],
-                modified=row[14],
-            )
-
-        except IndexError as e:  # pragma: no cover
-            msg = f"Index error in_row_to_dto method.\n{e}"
-            self._logger.error(msg)
-            raise IndexError(msg)
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                 FILESET DATA ACCESS OBJECT                                       #
-# ------------------------------------------------------------------------------------------------ #
-class FilesetDAO(DAO):
-    """Data Access Object for Filesets"""
-
-    def __init__(self, database: Database, dml: DML) -> None:
-        super().__init__(database=database, dml=dml)
-
-    def _row_to_dto(self, row: Tuple) -> FilesetDTO:
-        try:
-            return FilesetDTO(
-                id=row[0],
-                name=row[1],
-                description=row[2],
-                datasource=row[3],
-                workspace=row[4],
-                stage=row[5],
-                uri=row[6],
-                filesize=row[7],
-                dataset_id=row[8],
-                task_id=row[9],
-                created=row[10],
-                modified=row[11],
+                filename=row[6],
+                uri=row[7],
+                size=row[8],
+                nrows=row[9],
+                ncols=row[10],
+                nulls=row[11],
+                pct_nulls=row[12],
+                task_id=row[13],
+                created=row[14],
+                modified=row[15],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -223,7 +193,7 @@ class FilesetDAO(DAO):
 #                                 PROFILE DATA ACCESS OBJECT                                       #
 # ------------------------------------------------------------------------------------------------ #
 class ProfileDAO(DAO):
-    """Data Access Object for Filesets"""
+    """Profile for Tasks"""
 
     def __init__(self, database: Database, dml: DML) -> None:
         super().__init__(database=database, dml=dml)
@@ -257,62 +227,6 @@ class ProfileDAO(DAO):
                 task_id=row[23],
                 created=row[24],
                 modified=row[25],
-            )
-
-        except IndexError as e:  # pragma: no cover
-            msg = f"Index error in_row_to_dto method.\n{e}"
-            self._logger.error(msg)
-            raise IndexError(msg)
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                  DATASOURCE DATA ACCESS OBJECT                                   #
-# ------------------------------------------------------------------------------------------------ #
-class DataSourceDAO(DAO):
-    """Data Access Object for DataSources"""
-
-    def __init__(self, database: Database, dml: DML) -> None:
-        super().__init__(database=database, dml=dml)
-
-    def _row_to_dto(self, row: Tuple) -> DataSourceDTO:
-        try:
-            return DataSourceDTO(
-                id=row[0],
-                name=row[1],
-                publisher=row[2],
-                description=row[3],
-                website=row[4],
-                created=row[5],
-                modified=row[6],
-            )
-
-        except IndexError as e:  # pragma: no cover
-            msg = f"Index error in_row_to_dto method.\n{e}"
-            self._logger.error(msg)
-            raise IndexError(msg)
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                              TASK_RESOURCE DATA ACCESS OBJECT                                    #
-# ------------------------------------------------------------------------------------------------ #
-class TaskResourceDAO(DAO):
-    """TaskResource Data Access Object"""
-
-    def __init__(self, database: Database, dml: DML) -> None:
-        super().__init__(database=database, dml=dml)
-
-    def _row_to_dto(self, row: Tuple) -> TaskResourceDTO:
-        try:
-            return TaskResourceDTO(
-                id=row[0],
-                name=row[1],
-                description=row[2],
-                task_id=row[3],
-                resource_kind=row[4],
-                resource_id=row[5],
-                resource_context=row[6],
-                created=row[7],
-                modified=row[8],
             )
 
         except IndexError as e:  # pragma: no cover

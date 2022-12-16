@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 12th 2022 12:58:00 pm                                               #
-# Modified   : Tuesday December 13th 2022 04:22:02 am                                              #
+# Modified   : Tuesday December 13th 2022 09:26:49 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -25,9 +25,6 @@ from recsys.core.workflow.operator import Operator
 # ------------------------------------------------------------------------------------------------ #
 
 
-
-# ------------------------------------------------------------------------------------------------ #
-
 class Task(Service):
     """Base Class for objects responsible for performing a single task within a pipeline job.
 
@@ -36,7 +33,7 @@ class Task(Service):
         description (str): Description of task.
         operator (Operator): An instance of the operator that executes the task.
         input_params (dict): Dictionary describing the input data required. Optional
-        output_params (dict): The specification for the output Fileset or Dataset
+        output_params (dict): The specification for the output Dataset
         operator_params (dict): Dictionary containing the parameters passed to the operator.
     """
 

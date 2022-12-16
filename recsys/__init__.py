@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 13th 2022 05:00:30 pm                                               #
-# Modified   : Monday December 12th 2022 02:33:08 am                                               #
+# Modified   : Tuesday December 13th 2022 09:24:45 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -43,7 +43,3 @@ WORKSPACES = ["remote", "data", "prod", "dev", "test"]
 #                                         STAGES                                                   #
 # ------------------------------------------------------------------------------------------------ #
 STAGES = ["datasource", "ext", "raw", "input", "split", "interim", "final"]
-# ------------------------------------------------------------------------------------------------ #
-#                                        RESOURCES                                                 #
-# ------------------------------------------------------------------------------------------------ #
-RESOURCES = ["Dataset", "Fileset", "DataSource"]

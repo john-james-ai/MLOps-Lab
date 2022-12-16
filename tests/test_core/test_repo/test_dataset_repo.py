@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_core/test_dal/test_fileset_dao.py                                       #
+# Filename   : /tests/test_core/test_repo/test_dataset_repo.py                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Sunday December 11th 2022 05:16:45 pm                                               #
+# Created    : Tuesday December 13th 2022 10:50:34 pm                                              #
+# Modified   : Wednesday December 14th 2022 03:28:00 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,18 +21,18 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.dal.dto import FilesetDTO
+from recsys.core.entity.dataset import Dataset
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-@pytest.mark.dao
-@pytest.mark.fileset_dao
-class TestFilesetDAO:  # pragma: no cover
+@pytest.mark.repo
+@pytest.mark.dataset_repo
+class TestDatasetRepo:  # pragma: no cover
     # ============================================================================================ #
-    def test_setup(self, container, caplog):
+    def test_add(self, container, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -43,8 +43,13 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ts = ts = container.table.fileset()
-        ts.reset()
+        container.table.dataset().reset()
+        repo = container.repo.dataset()
+        for i, dataset in enumerate(datasets, start=1):
+            dataset = repo.add(dataset)
+            assert dataset.id == i
+            assert isinstance(dataset, Dataset)
+        assert len(repo) == len(datasets)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -60,7 +65,7 @@ class TestFilesetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create(self, filesets, container, caplog):
+    def test_get(self, container, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -71,11 +76,14 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.fileset()
-        for i, dto in enumerate(filesets, start=1):
-            dto = dao.create(dto)
-            assert dto.id == i
-            assert dao.exists(i)
+        repo = container.repo.dataset()
+        for i in range(1, len(datasets) + 1):
+            dataset = repo.get(i)
+            assert isinstance(dataset, Dataset)
+            assert dataset.id == i
+
+        with pytest.raises(FileNotFoundError):
+            _ = repo.get(92)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -91,7 +99,7 @@ class TestFilesetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_read(self, filesets, container, caplog):
+    def test_get_by_name(self, container, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -102,19 +110,12 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.fileset()
-        for i, fileset_dto in enumerate(filesets, start=1):
-            dto = dao.read(i)
-            assert dto.name == fileset_dto.name
-            assert dto.description == fileset_dto.description
-            assert dto.uri == fileset_dto.uri
-            assert dto.filesize == fileset_dto.filesize
-            assert dto.workspace == fileset_dto.workspace
-            assert dto.stage == fileset_dto.stage
-            j = i + 10
-            with pytest.raises(FileNotFoundError):
-                _ = dao.read(j)
+        repo = container.repo.dataset()
+        dataset = repo.get_by_name("dataset_dto_2")
+        assert isinstance(dataset, Dataset)
 
+        with pytest.raises(FileNotFoundError):
+            _ = repo.get_by_name("joe")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -130,7 +131,7 @@ class TestFilesetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_read_all(self, container, caplog):
+    def test_remove(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -141,57 +142,14 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.fileset()
-        dtos = dao.read_all()
-        assert len(dtos) == 5
-        assert isinstance(dtos, dict)
-        for i, dto in dtos.items():
-            assert isinstance(dto, FilesetDTO)
-            assert dto.id == i
-            assert dto.name == f"fileset_dto_{i}"
-            assert dto.description == f"Fileset Description DTO {i}"
-            assert dto.datasource == "movielens25m"
-            assert dto.workspace == "test"
-            assert dto.stage == "interim"
-            assert dto.uri == "tests/file/" + f"fileset_dto_{i}" + ".pkl"
-            assert dto.task_id == i + i
-            assert isinstance(dto.created, datetime)
-            assert isinstance(dto.modified, datetime)
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_update(self, filesets, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.fileset()
-        for i, dto in enumerate(filesets, start=1):
-            dto.stage = "final"
-            dao.update(dto)
-
+        repo = container.repo.dataset()
+        b4 = len(repo)
         for i in range(1, 6):
-            dto = dao.read(i)
-            assert dto.stage == "final"
+            if i % 2 == 0:
+                repo.remove(i)
+                repo.save()
+
+        assert len(repo) != b4
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -208,7 +166,41 @@ class TestFilesetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_delete(self, container, caplog):
+    def test_exists(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+
+        # ---------------------------------------------------------------------------------------- #
+        repo = container.repo.dataset()
+        for i in range(1, 6):
+            if i % 2 == 0:
+                assert repo.exists(i) is False
+            else:
+                assert repo.exists(i) is True
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_print(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -219,12 +211,9 @@ class TestFilesetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.fileset()
-        for i in range(1, 6):
-            dao.delete(i)
-
-        assert len(dao) == 0
-
+        repo = container.repo.dataset()
+        logger.debug(print(repo.print(1)))
+        logger.debug(print(repo.print()))
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -238,5 +227,3 @@ class TestFilesetDAO:  # pragma: no cover
                 end.strftime("%m/%d/%Y"),
             )
         )
-
-    # ============================================================================================ #

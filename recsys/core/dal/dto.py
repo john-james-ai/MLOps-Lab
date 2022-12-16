@@ -11,14 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Tuesday December 13th 2022 08:31:45 pm                                              #
+# Modified   : Thursday December 15th 2022 03:18:40 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 from datetime import datetime
 from dataclasses import dataclass
-from typing import List
 
 from .base import DTO
 
@@ -69,6 +68,7 @@ class DatasetDTO(DTO):
     datasource: str
     workspace: str
     stage: str
+    filename: str
     uri: str
     size: int
     nrows: int
@@ -78,27 +78,6 @@ class DatasetDTO(DTO):
     task_id: int
     created: datetime
     modified: datetime
-
-# ------------------------------------------------------------------------------------------------ #
-#                               FILESET DATA TRANSFER OBJECT                                       #
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
-class FilesetDTO(DTO):
-    id: int
-    name: str
-    description: str
-    datasource: str
-    workspace: str
-    stage: str
-    uri: str
-    created: datetime
-    modified: datetime
-    task_id: int = None
-    dataset_id: int = None
-    filesize: int = None
-
 
 # ------------------------------------------------------------------------------------------------ #
 #                                   JOB DATA TRANSFER OBJECT                                       #
@@ -120,21 +99,6 @@ class JobDTO(DTO):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                               DATASOURCE DATA TRANSFER OBJECT                                    #
-# ------------------------------------------------------------------------------------------------ #
-
-@dataclass
-class DataSourceDTO(DTO):
-    id: int
-    name: str
-    publisher: str
-    description: str
-    website: str
-    created: datetime
-    modified: datetime
-
-
-# ------------------------------------------------------------------------------------------------ #
 #                               TASK DATA TRANSFER OBJECT                                          #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
@@ -147,21 +111,5 @@ class TaskDTO(DTO):
     module: str
     job_id: int
     profile_id: int
-    created: datetime
-    modified: datetime
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                               TASK RESOURCE DATA TRANSFER OBJECT                                 #
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class TaskResourceDTO(DTO):
-    id: int
-    name: str
-    description: str
-    task_id: int
-    resource_kind: str
-    resource_id: int
-    resource_context: str
     created: datetime
     modified: datetime

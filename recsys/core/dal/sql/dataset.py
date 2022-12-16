@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Tuesday December 13th 2022 07:31:03 pm                                              #
+# Modified   : Wednesday December 14th 2022 01:49:05 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDatasetTable(SQL):
     name: str = "dataset"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataset (name TEXT NOT NULL UNIQUE, description TEXT, datasource TEXT NOT NULL, workspace TEXT NOT NULL, stage TEXT NOT NULL, size INTEGER, nrows INTEGER, ncols INTEGER, nulls INTEGER, pct_nulls REAL, fileset_id INTEGER, task_id INTEGER, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT, datasource TEXT NOT NULL, workspace TEXT NOT NULL, stage TEXT NOT NULL, filename TEXT NOT NULL, uri TEXT NOT NULL, size INTEGER, nrows INTEGER, ncols INTEGER, nulls INTEGER, pct_nulls REAL, task_id INTEGER, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -72,7 +72,7 @@ class DatasetDDL(DDL):
 @dataclass
 class InsertDataset(SQL):
     dto: DTO
-    sql: str = """INSERT INTO dataset (name, description, datasource, workspace, stage, size, nrows, ncols, nulls, pct_nulls, fileset_id, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO dataset (name, description, datasource, workspace, stage, filename, uri, size, nrows, ncols, nulls, pct_nulls, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -82,12 +82,13 @@ class InsertDataset(SQL):
             self.dto.datasource,
             self.dto.workspace,
             self.dto.stage,
+            self.dto.filename,
+            self.dto.uri,
             self.dto.size,
             self.dto.nrows,
             self.dto.ncols,
             self.dto.nulls,
             self.dto.pct_nulls,
-            self.dto.fileset_id,
             self.dto.task_id,
             self.dto.created,
             self.dto.modified,
@@ -100,7 +101,7 @@ class InsertDataset(SQL):
 @dataclass
 class UpdateDataset(SQL):
     dto: DTO
-    sql: str = """UPDATE dataset SET name = ?, description = ?, datasource = ?, workspace = ?, stage = ?, size = ?, nrows = ?, ncols = ?, nulls = ?, pct_nulls = ?, fileset_id = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE dataset SET name = ?, description = ?, datasource = ?, workspace = ?, stage = ?, filename = ?, uri = ?, size = ?, nrows = ?, ncols = ?, nulls = ?, pct_nulls = ?, task_id = ?, created = ?, modified = ?  WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -110,12 +111,13 @@ class UpdateDataset(SQL):
             self.dto.datasource,
             self.dto.workspace,
             self.dto.stage,
+            self.dto.filename,
+            self.dto.uri,
             self.dto.size,
             self.dto.nrows,
             self.dto.ncols,
             self.dto.nulls,
             self.dto.pct_nulls,
-            self.dto.fileset_id,
             self.dto.task_id,
             self.dto.created,
             self.dto.modified,

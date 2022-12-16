@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 02:32:23 pm                                              #
-# Modified   : Friday December 9th 2022 08:28:18 pm                                                #
+# Modified   : Tuesday December 13th 2022 10:16:47 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,23 +30,9 @@ def build_dataset_table(dataset_table: TableService = Provide[Recsys.table.datas
 
 
 @inject
-def build_fileset_table(fileset_table: TableService = Provide[Recsys.table.fileset]) -> None:
-    fileset_table.create()
-    assert fileset_table.exists()
-
-
-@inject
 def build_job_table(job_table: TableService = Provide[Recsys.table.job]) -> None:
     job_table.create()
     assert job_table.exists()
-
-
-@inject
-def build_datasource_table(
-    datasource_table: TableService = Provide[Recsys.table.datasource],
-) -> None:
-    datasource_table.create()
-    assert datasource_table.exists()
 
 
 @inject
@@ -56,7 +42,7 @@ def build_task_table(task_table: TableService = Provide[Recsys.table.task]) -> N
 
 
 @inject
-def build_task_resource_table(task_table: TableService = Provide[Recsys.table.task_resource]) -> None:
+def build_task_dataset_table(task_table: TableService = Provide[Recsys.table.task_dataset]) -> None:
     task_table.create()
     assert task_table.exists()
 
@@ -69,11 +55,9 @@ def build_profile_table(task_table: TableService = Provide[Recsys.table.profile]
 
 def build_tables():
     build_dataset_table()
-    build_fileset_table()
     build_job_table()
-    build_datasource_table()
     build_task_table()
-    build_task_resource_table()
+    build_task_dataset_table()
     build_profile_table()
 
 

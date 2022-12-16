@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Tuesday December 13th 2022 01:12:19 am                                              #
+# Modified   : Thursday December 15th 2022 03:22:17 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,17 +19,14 @@
 import pytest
 import numpy as np
 import sqlite3
-from copy import deepcopy
 from datetime import datetime
 
 import recsys
 from tests.containers import Recsys
-from recsys.core.entity.fileset import Fileset
-from recsys.core.entity.datasource import DataSource
 from recsys.core.services.io import IOService
-from recsys.core.dal.dao import DatasetDTO, FilesetDTO, DataSourceDTO, ProfileDTO, TaskDTO, TaskResourceDTO, JobDTO
+from recsys.core.entity.dataset import Dataset
+from recsys.core.dal.dao import DatasetDTO, ProfileDTO, TaskDTO, JobDTO
 from recsys.core.database.sqlite import SQLiteConnection, SQLiteDatabase
-# from recsys.core.entity.datasource import DataSource
 
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
@@ -81,8 +78,9 @@ def dataset_dtos(ratings):
             description=f"Description for Dataset DTO {i}",
             datasource="movielens25m",
             workspace="test",
-            stage="staged",
-            uri=f"tests/file/dataset_dto_{i}.pkl",
+            stage="interim",
+            filename=f"test_file_{i}.pkl",
+            uri=f"tests/data/dataset_dto_{i}.pkl",
             size=size,
             nrows=nrows,
             ncols=ncols,
@@ -98,62 +96,14 @@ def dataset_dtos(ratings):
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def datasource_dto():
-
-    fileset_dtos = []
-
-    for i in range(1, 6):
-        dto = FilesetDTO(
-            id=i,
-            name=f"fileset_dto_{i}",
-            description=f"Description of fileset_dto_{i}",
-            datasource="movielens25m",
-            workspace="remote",
-            stage="staged",
-            uri="tests/data/movielens25m/raw/ratings.pkl",
-            task_id=26,
-            created=datetime.now(),
-            modified=datetime.now()
-        )
-        fileset_dtos.append(dto)
-
-    dto = DataSourceDTO(id=None, name="movielens25m", publisher="GroupLens", description="MovieLens25M Dataset",
-                        website="wwww.grouplens.com/movielens/", created=datetime.now(), modified=None,
-                        filesets=fileset_dtos)
-
-    return dto
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def filesets():
-    dtos = []
-    for i in range(1, 6):
-        dto = FilesetDTO(
-            id=None,
-            name=f"fileset_dto_{i}",
-            description=f"Fileset Description DTO {i}",
-            datasource="movielens25m",
-            workspace="test",
-            stage="interim",
-            uri="tests/file/" + f"fileset_dto_{i}" + ".pkl",
-            task_id=i + i,
-            created=datetime.now(),
-            modified=datetime.now(),
-        )
-        dtos.append(dto)
-    return dtos
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def datasource_dtos(datasource_dto):
-    dtos = []
-    for i in range(1, 6):
-        dto = deepcopy(datasource_dto)
-        dto.id = i
-        dtos.append(dto)
-    return dtos
+def datasets(dataset_dtos, ratings):
+    datasets = []
+    for i, dto in enumerate(dataset_dtos):
+        dataset = Dataset.from_dto(dto)
+        if i % 1 == 0:
+            dataset.data = ratings
+        datasets.append(dataset)
+    return datasets
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -216,26 +166,6 @@ def task_dtos():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def task_resource_dtos():
-    dtos = []
-    for i in range(1, 6):
-        dto = TaskResourceDTO(
-            id=None,
-            name=f"task_resource_dto_{i}",
-            description=f"Description for Task Resource # {i}",
-            task_id=i + 10,
-            resource_kind="Dataset",
-            resource_id=i * 10,
-            resource_context="input",
-            created=datetime.now(),
-            modified=datetime.now(),
-        )
-        dtos.append(dto)
-    return dtos
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
 def job_dtos():
     dtos = []
     for i in range(1, 6):
@@ -272,42 +202,6 @@ def dataset_dicts():
         lod.append(d)
 
     return lod
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def fileset_dicts():
-    """List of dictionaries that can be used to instantiate Fileset."""
-    lod = []
-    for i in range(1, 6):
-        d = {
-            "name": f"fileset_{i}",
-            "description": f"Description for fileset_{i}",
-            "datasource": "movielens25m",
-            "uri": "tests/file/" + f"fileset_dto_{i}" + ".pkl",
-            "task_id": i + i,
-        }
-        lod.append(d)
-
-    return lod
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def datasources():
-    """Provide a list of DataSource objects."""
-    ds_list = []
-    datasources = IOService.read(DATA_SOURCE_FILEPATH, sheet_name="datasource")
-    filesets = IOService.read(DATA_SOURCE_FILEPATH, sheet_name="fileset")
-    for idx in datasources.index:
-        ds = DataSource(name=datasources['name'][idx], publisher=datasources['publisher'][idx], description=datasources['description'][idx], website=datasources['website'][idx])
-        fs = filesets.loc[filesets["datasource"] == ds.name]
-        for idx2 in fs.index:
-            fileset = Fileset(name=fs["name"][idx2], description=fs["description"][idx2], datasource=fs["datasource"][idx2], stage=fs["stage"][idx2], workspace=fs["workspace"][idx2], uri=fs["uri"][idx2], task_id=fs["task_id"][idx2])
-            ds.add_fileset(fileset)
-        ds_list.append(ds)
-
-    return ds_list
 
 
 # ------------------------------------------------------------------------------------------------ #

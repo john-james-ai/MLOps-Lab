@@ -11,19 +11,23 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:23:19 pm                                              #
-# Modified   : Friday December 9th 2022 07:46:08 am                                                #
+# Modified   : Wednesday December 14th 2022 03:18:10 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 from recsys.core.entity.base import Entity
+from recsys.core.services.base import Service
 # ------------------------------------------------------------------------------------------------ #
 
 
-class Repo(ABC):
+class Repo(Service):
     """Repository base class"""
+
+    def __init__(self) -> None:
+        super().__init__()
 
     @abstractmethod
     def add(self, entity: Entity) -> Entity:

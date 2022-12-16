@@ -11,15 +11,15 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 08:03:23 pm                                             #
-# Modified   : Sunday December 11th 2022 01:03:47 am                                               #
+# Modified   : Tuesday December 13th 2022 09:35:03 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-"""Fileset Entity Module"""
+"""Task Entity Module"""
 from typing import Union
 
-from recsys.core.dal.dto import TaskDTO, FilesetDTO, DatasetDTO
+from recsys.core.dal.dto import TaskDTO, DatasetDTO
 from .base import Entity, Profile, DTO
 
 # ------------------------------------------------------------------------------------------------ #
@@ -30,7 +30,7 @@ class Task(Entity):  # pragma: no cover
 
     Args:
         job_id (int): The id for the job of which, the task is a part.
-        name (str): Short, yet descriptive lowercase name for Fileset object.
+        name (str): Short, yet descriptive lowercase name for Task object.
         description (str): Description of fileset
         workspace (str): The workspace in which the task is performed.
         operator (str): The class name for the operator performing the task.
@@ -60,7 +60,7 @@ class Task(Entity):  # pragma: no cover
         return f"{self._id}, {self._job_id}, {self._name}, {self._description}, {self._workspace}, {self._operator}, {self._module}, {self._input_kind}, {self._input_id}, {self._output_kind}, {self._output_id}"
 
     def __eq__(self, other) -> bool:
-        """Compares two Filesets for equality."""
+        """Compares two Tasks for equality."""
 
         if isinstance(other, Task):
             return (
@@ -118,11 +118,11 @@ class Task(Entity):  # pragma: no cover
         self._profile = profile
 
     # ------------------------------------------------------------------------------------------------ #
-    def add_input(self, input_data: Union[FilesetDTO, DatasetDTO]) -> None:
+    def add_input(self, input_data: Union[TaskDTO, DatasetDTO]) -> None:
         self._input_kind = input_data.__class__.__name__
         self._input_id = input_data.id
 
-    def add_output(self, output_data: Union[FilesetDTO, DatasetDTO]) -> None:
+    def add_output(self, output_data: Union[TaskDTO, DatasetDTO]) -> None:
         self._output_kind = output_data.__class__.__name__
         self._output_id = output_data.id
 
