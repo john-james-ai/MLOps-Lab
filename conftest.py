@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Thursday December 15th 2022 03:22:17 pm                                             #
+# Modified   : Friday December 16th 2022 11:45:59 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,14 +19,15 @@
 import pytest
 import numpy as np
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import recsys
 from tests.containers import Recsys
 from recsys.core.services.io import IOService
 from recsys.core.entity.dataset import Dataset
 from recsys.core.dal.dao import DatasetDTO, ProfileDTO, TaskDTO, JobDTO
-from recsys.core.database.sqlite import SQLiteConnection, SQLiteDatabase
+from recsys.core.data.database import Database
+from recsys.core.data.connection import SQLiteConnection
 
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
@@ -59,7 +60,7 @@ def connection():
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
 def database(connection):
-    return SQLiteDatabase(connection=connection)
+    return Database(connection=connection)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -149,14 +150,15 @@ def task_dtos():
     dtos = []
     for i in range(1, 6):
         dto = TaskDTO(
-            id=None,
+            id=i,
             name=f"task_dto_{i}",
             description=f"Task Description DTO {i}",
             workspace="test",
             operator="some_operator",
-            module="some.module",
+            started=datetime.now() - timedelta(hours=i),
+            ended=datetime.now(),
+            duration=(datetime.now() - (datetime.now() - timedelta(hours=i))).total_seconds(),
             job_id=i * 10,
-            profile_id=i + 10,
             created=datetime.now(),
             modified=datetime.now(),
         )
@@ -170,14 +172,16 @@ def job_dtos():
     dtos = []
     for i in range(1, 6):
         dto = JobDTO(
-            id=None,
+            id=i,
             name=f"job_dto_{i}",
             description=f"Description for Job # {i}",
             workspace="test",
-            started=datetime.now(),
+            n_tasks=i * 10,
+            n_tasks_completed=i * 8,
+            pct_tasks_completed=(i * 8) / (i * 10),
+            started=datetime.now() - timedelta(hours=i),
             ended=datetime.now(),
-            duration=123,
-            tasks_completed=5,
+            duration=(datetime.now() - (datetime.now() - timedelta(hours=i))).total_seconds(),
             created=datetime.now(),
             modified=datetime.now(),
         )

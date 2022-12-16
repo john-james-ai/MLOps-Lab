@@ -11,13 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Tuesday December 13th 2022 02:34:04 pm                                              #
+# Modified   : Friday December 16th 2022 03:09:36 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 from dataclasses import dataclass
-from recsys.core.dal.base import SQL, DDL, DML
+from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
 
 # ================================================================================================ #

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Thursday December 15th 2022 03:18:29 pm                                             #
+# Modified   : Friday December 16th 2022 11:30:42 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ from abc import abstractmethod
 from collections import OrderedDict
 from typing import Dict, Tuple, List
 
-from recsys.core.database.base import Database
+from recsys.core.data.database import Database
 from .dto import DTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO
 from .base import DML
 from recsys.core import Service
@@ -45,6 +45,11 @@ class DAO(Service):
         length = 0 if result is None else len(result)
         return length
 
+    def begin(self) -> None:
+        """Begins a transaction."""
+        cmd = self._dml.begin()
+        self._database.begin(cmd.sql, cmd.args)
+
     def create(self, dto: DTO) -> DTO:
         """Adds an entity to the database.
 
@@ -54,11 +59,8 @@ class DAO(Service):
         Returns: DTO with id set.
         """
         cmd = self._dml.insert(dto)
-        self._logger.debug(f"\n\n{dto}")
-
-        with self._database as db:
-            dto.id = db.insert(cmd.sql, cmd.args)
-            return dto
+        dto.id = self._database.insert(cmd.sql, cmd.args)
+        return dto
 
     def read(self, id: int) -> DTO:
         """Retrieves an entity from the database, based upon id
@@ -68,14 +70,13 @@ class DAO(Service):
         Returns a Data Transfer Object (DTO)
         """
         cmd = self._dml.select(id)
-        with self._database as db:
-            row = db.select(cmd.sql, cmd.args)
-            if len(row) == 0:
-                msg = f"{self.__class__.__name__}.{id} does not exist."
-                self._logger.info(msg)
-                raise FileNotFoundError(msg)
-            else:
-                return self._row_to_dto(row[0])
+        row = self._database.select(cmd.sql, cmd.args)
+        if len(row) == 0:
+            msg = f"{self.__class__.__name__}.{id} does not exist."
+            self._logger.info(msg)
+            raise FileNotFoundError(msg)
+        else:
+            return self._row_to_dto(row[0])
 
     def read_by_name(self, name: str) -> DTO:
         """Retrieves an entity from the database, based upon name
@@ -85,26 +86,26 @@ class DAO(Service):
         Returns a Data Transfer Object (DTO)
         """
         cmd = self._dml.select_by_name(name)
-        with self._database as db:
-            row = db.select(cmd.sql, cmd.args)
-            if len(row) == 0:
-                msg = f"{self.__class__.__name__}.{name} does not exist."
-                self._logger.info(msg)
-                raise FileNotFoundError(msg)
-            else:
-                return self._row_to_dto(row[0])
+
+        row = self._database.select(cmd.sql, cmd.args)
+        if len(row) == 0:
+            msg = f"{self.__class__.__name__}.{name} does not exist."
+            self._logger.info(msg)
+            raise FileNotFoundError(msg)
+        else:
+            return self._row_to_dto(row[0])
 
     def read_all(self) -> Dict[int, DTO]:
         """Returns a dictionary of Data Transfer Objects."""
         cmd = self._dml.select_all()
-        with self._database as db:
-            results = db.select(cmd.sql, cmd.args)
-            if len(results) == 0:
-                msg = f"There are no Entities in the {self.__class__.__name__} database."
-                self._logger.info(msg)
-                return None
-            else:
-                return self._results_to_dict(results)
+
+        results = self._database.select(cmd.sql, cmd.args)
+        if len(results) == 0:
+            msg = f"There are no Entities in the {self.__class__.__name__} database."
+            self._logger.info(msg)
+            return None
+        else:
+            return self._results_to_dict(results)
 
     def update(self, dto: DTO) -> None:
         """Updates an existing entity.
@@ -113,8 +114,7 @@ class DAO(Service):
             dto (DTO): Data Transfer Object
         """
         cmd = self._dml.update(dto)
-        with self._database as db:
-            db.update(cmd.sql, cmd.args)
+        self._database.update(cmd.sql, cmd.args)
 
     def exists(self, id: int) -> bool:
         """Returns True if the entity with id exists in the database.
@@ -123,8 +123,7 @@ class DAO(Service):
             id (int): id for the entity
         """
         cmd = self._dml.exists(id)
-        with self._database as db:
-            return db.exists(cmd.sql, cmd.args)
+        return self._database.exists(cmd.sql, cmd.args)
 
     def delete(self, id: int) -> None:
         """Deletes a Entity from the registry, given an id.
@@ -132,13 +131,11 @@ class DAO(Service):
             id (int): The id for the entity to delete.
         """
         cmd = self._dml.delete(id)
-        with self._database as db:
-            db.delete(cmd.sql, cmd.args)
+        self._database.delete(cmd.sql, cmd.args)
 
     def save(self) -> None:
         """Commits the changes to the database."""
-        with self._database as db:
-            db.save()
+        self._database.save()
 
     def _results_to_dict(self, results: List) -> Dict:
         """Converts the results to a dictionary of DTO objects."""
@@ -150,14 +147,12 @@ class DAO(Service):
 
     @abstractmethod
     def _row_to_dto(self, row: Tuple) -> DTO:
-        """Reformats a row of output to a DTO object."""
+        """Converts a row from the Database into a Data Transfer Object."""
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                 DATASET DATA ACCESS OBJECT                                       #
 # ------------------------------------------------------------------------------------------------ #
-
-
 class DatasetDAO(DAO):
     def __init__(self, database: Database, dml: DML) -> None:
         super().__init__(database=database, dml=dml)
@@ -252,11 +247,12 @@ class TaskDAO(DAO):
                 description=row[2],
                 workspace=row[3],
                 operator=row[4],
-                module=row[5],
-                job_id=row[6],
-                profile_id=row[7],
-                created=row[8],
-                modified=row[9],
+                started=row[5],
+                ended=row[6],
+                duration=row[7],
+                job_id=row[8],
+                created=row[9],
+                modified=row[10],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -281,12 +277,14 @@ class JobDAO(DAO):
                 name=row[1],
                 description=row[2],
                 workspace=row[3],
-                started=row[4],
-                ended=row[5],
-                duration=row[6],
-                tasks_completed=row[7],
-                created=row[8],
-                modified=row[9],
+                n_tasks=row[4],
+                n_tasks_completed=row[5],
+                pct_tasks_completed=row[6],
+                started=row[7],
+                ended=row[8],
+                duration=row[9],
+                created=row[10],
+                modified=row[11],
             )
 
         except IndexError as e:  # pragma: no cover

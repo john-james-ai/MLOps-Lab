@@ -4,65 +4,20 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/database/base.py                                                       #
+# Filename   : /recsys/core/data/database.py                                                       #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Tuesday December 13th 2022 03:57:27 am                                              #
+# Modified   : Friday December 16th 2022 02:45:45 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-from typing import Any
-from abc import abstractmethod
 from recsys.core.services.base import Service
-# ------------------------------------------------------------------------------------------------ #
-#                                    CONNECTION                                                    #
-# ------------------------------------------------------------------------------------------------ #
-
-
-class Connection(Service):
-    """Abstract base class for DBMS connections."""
-
-    def __init__(self, connector: Any, *args, **kwargs) -> None:
-        super().__init__()
-        self._connector = connector
-        self._connection = None
-        self.connect()
-
-    @abstractmethod
-    def connect(self) -> Any:
-        """Connects to the underlying database"""
-
-    def is_connected(self) -> bool:
-        try:
-            self._connection.cursor()
-            return True
-        except Exception:
-            return False
-
-    def close(self) -> None:
-        """Closes the connection."""
-        self._connection.close()
-
-    def commit(self) -> None:  # pragma: no cover
-        """Commits the connection"""
-        self._connection.commit()
-
-    def cursor(self) -> None:  # pragma: no cover
-        """Returns a the connection cursor"""
-        return self._connection.cursor()
-
-    def rollback(self) -> None:  # pragma: no cover
-        """Rolls back the database to the last commit."""
-        self._connection.rollback()
-
-    def start_transaction(self) -> None:  # pragma: no cover
-        """Starts transaction on the underlying connection."""
-        self._connection.start_transaction()
+from .connection import Connection
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -89,10 +44,6 @@ class Database(Service):
         if self._connection.is_connected():
             self._connection.close()
 
-    @abstractmethod
-    def _get_last_insert_rowid(self) -> int:
-        """Returns the last inserted id. Implemented differently in databases."""
-
     def query(self, sql: str, args: tuple = None):
         cursor = self._connection.cursor()
         cursor.execute(sql, args)
@@ -106,10 +57,15 @@ class Database(Service):
         cursor = self.query(sql, args)
         cursor.close()
 
-    def insert(self, sql, args):
+    def begin(self, sql, args):
         cursor = self.query(sql, args)
         cursor.close()
-        return self._get_last_insert_rowid()
+
+    def insert(self, sql, args):
+        cursor = self.query(sql, args)
+        id = cursor.lastrowid
+        cursor.close()
+        return id
 
     def select(self, sql: str, args: tuple = None) -> list:
         cursor = self.query(sql, args)

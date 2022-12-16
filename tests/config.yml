@@ -11,17 +11,11 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 1st 2022 05:01:51 pm                                              #
-# Modified   : Saturday December 10th 2022 10:58:40 am                                             #
+# Modified   : Friday December 16th 2022 06:40:47 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-app:
-  envs:
-    - prod
-    - dev
-    - test
-
 core:
   logging:
     version: 1
@@ -45,7 +39,7 @@ core:
         interval: 1
         backupCount: 0
         level: "DEBUG"
-        filename: logs/recsys.log
+        filename: tests/logs/recsys.log
     root:
       level: "DEBUG"
       handlers: ["console", "file"]

@@ -11,15 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Tuesday December 13th 2022 02:33:57 pm                                              #
+# Modified   : Friday December 16th 2022 10:38:08 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 from dataclasses import dataclass
-from recsys.core.dal.base import SQL, DDL, DML
+from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
-
 
 # ================================================================================================ #
 #                                         JOB                                                      #
@@ -32,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateJobTable(SQL):
     name: str = "job"
-    sql: str = """CREATE TABLE IF NOT EXISTS job (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT, workspace TEXT NOT NULL, started timestamp, ended timestamp, duration INTEGER DEFAULT 0, tasks_completed INTEGER DEFAULT 0, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS job (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT, workspace TEXT NOT NULL, n_tasks INTEGER, n_tasks_completed INTEGER, pct_tasks_completed REAL, started timestamp, ended timestamp, duration REAL, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -74,7 +73,7 @@ class JobDDL(DDL):
 class InsertJob(SQL):
     dto: DTO
 
-    sql: str = """INSERT INTO job (name, description, workspace, started, ended, duration, tasks_completed, created, modified) VALUES (?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO job (name, description, workspace, n_tasks, n_tasks_completed, pct_tasks_completed, started, ended, duration, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -82,10 +81,12 @@ class InsertJob(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.workspace,
+            self.dto.n_tasks,
+            self.dto.n_tasks_completed,
+            self.dto.pct_tasks_completed,
             self.dto.started,
             self.dto.ended,
             self.dto.duration,
-            self.dto.tasks_completed,
             self.dto.created,
             self.dto.modified,
         )
@@ -97,7 +98,7 @@ class InsertJob(SQL):
 @dataclass
 class UpdateJob(SQL):
     dto: DTO
-    sql: str = """UPDATE job SET name = ?, description = ?, workspace = ?, started = ?, ended = ?, duration = ?, tasks_completed = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE job SET name = ?, description = ?, workspace = ?, n_tasks = ?, n_tasks_completed = ?, pct_tasks_completed = ?, started = ?, ended = ?, duration = ?, created = ?, modified = ?  WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -105,10 +106,12 @@ class UpdateJob(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.workspace,
+            self.dto.n_tasks,
+            self.dto.n_tasks_completed,
+            self.dto.pct_tasks_completed,
             self.dto.started,
             self.dto.ended,
             self.dto.duration,
-            self.dto.tasks_completed,
             self.dto.created,
             self.dto.modified,
             self.dto.id,

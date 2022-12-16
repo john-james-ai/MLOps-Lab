@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 13th 2022 05:12:39 am                                              #
-# Modified   : Tuesday December 13th 2022 09:34:42 pm                                              #
+# Modified   : Friday December 16th 2022 03:27:58 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ from dependency_injector.wiring import Provide, inject
 
 from .base import Service
 from recsys.containers import Recsys
-from recsys.core.database.sqlite import Database
+from recsys.core.data.connection import Database
 # ------------------------------------------------------------------------------------------------ #
 
 

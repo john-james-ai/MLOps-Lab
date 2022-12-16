@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Thursday December 15th 2022 03:24:07 pm                                             #
+# Modified   : Friday December 16th 2022 06:38:28 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,15 +22,19 @@ import sqlite3
 from dependency_injector import containers, providers  # pragma: no cover
 
 from recsys.core.services.io import IOService
-from recsys.core.repo.dataset import DatasetRepo
+from recsys.core.dal.repo import Repo
 from recsys.core.entity.dataset import Dataset
+from recsys.core.entity.job import Job
+from recsys.core.entity.task import Task
+from recsys.core.entity.profile import Profile
 from recsys.core.dal.dao import DatasetDAO, JobDAO, TaskDAO, ProfileDAO
 from recsys.core.dal.ddo import TableService
 from recsys.core.dal.sql.dataset import DatasetDDL, DatasetDML
 from recsys.core.dal.sql.job import JobDDL, JobDML
 from recsys.core.dal.sql.profile import ProfileDDL, ProfileDML
 from recsys.core.dal.sql.task import TaskDDL, TaskDML
-from recsys.core.database.sqlite import SQLiteDatabase, SQLiteConnection
+from recsys.core.data.connection import SQLiteConnection
+from recsys.core.data.database import Database
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -57,7 +61,7 @@ class DataLayerContainer(containers.DeclarativeContainer):
         location=config.database.sqlite.location,
     )
 
-    database = providers.Factory(SQLiteDatabase, connection=connection)
+    database = providers.Factory(Database, connection=connection)
 
 
 class TableContainer(containers.DeclarativeContainer):
@@ -88,14 +92,13 @@ class DAOContainer(containers.DeclarativeContainer):
 
 class RepoContainer(containers.DeclarativeContainer):
 
-    dataset_entity = providers.Dependency()
-    dataset_dao = providers.Dependency()
+    entity = providers.Dependency()
+    dao = providers.Dependency()
 
-    dataset_repo = providers.Singleton(
-        DatasetRepo,
-        dataset=dataset_entity,
-        dao=dataset_dao,
-        io=IOService,
+    repo = providers.Singleton(
+        Repo,
+        dataset=entity,
+        dao=dao,
     )
 
 
@@ -111,8 +114,10 @@ class Recsys(containers.DeclarativeContainer):
 
     dao = providers.Container(DAOContainer, database=data.database)
 
-    repo = providers.Container(
-        RepoContainer,
-        dataset_entity=Dataset,
-        dataset_dao=dao.dataset,
-    )
+    dataset_repo = providers.Container(RepoContainer, entity=Dataset, dao=dao.dataset)
+
+    job_repo = providers.Container(RepoContainer, entity=Job, dao=dao.job)
+
+    task_repo = providers.Container(RepoContainer, entity=Task, dao=dao.task)
+
+    profile_repo = providers.Container(RepoContainer, entity=Profile, dao=dao.profile)

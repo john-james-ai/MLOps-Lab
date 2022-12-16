@@ -4,42 +4,64 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/__init__.py                                                                 #
+# Filename   : /recsys/core/dal/sql/base.py                                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Sunday November 13th 2022 05:00:30 pm                                               #
-# Modified   : Friday December 16th 2022 12:05:03 am                                               #
+# Created    : Friday December 16th 2022 02:57:58 am                                               #
+# Modified   : Friday December 16th 2022 03:11:35 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+from dataclasses import dataclass
+from abc import ABC
+# ------------------------------------------------------------------------------------------------ #
+
+# ------------------------------------------------------------------------------------------------ #
+#                                  SQL COMMAND ABC                                                 #
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class SQL(ABC):  # pragma: no cover
+    """Base class for SQL Command Objects."""
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                    REPRODUCIBILITY                                               #
+#                             DDL AGGREGATION BASE CLASS                                           #
 # ------------------------------------------------------------------------------------------------ #
-RANDOM_STATE = 55
+@dataclass
+class DDL(ABC):  # pragma: no cover
+    """Base class for entity Data Definition Language (DDL)."""
+
+    create: SQL
+    drop: SQL
+    exists: SQL
+
+
 # ------------------------------------------------------------------------------------------------ #
-#                                    TRAIN/TEST SPLIT                                              #
+#                                 DML TRANSACTION  CLASS                                           #
 # ------------------------------------------------------------------------------------------------ #
-TRAIN_PROPORTION = 0.8
+@dataclass
+class Transaction(SQL):
+    name: str = "begin"
+    sql: str = """BEGIN;"""
+    args: tuple = ()
+
+
 # ------------------------------------------------------------------------------------------------ #
-#                                      DATA TYPES                                                  #
+#                             DML AGGREGATION BASE CLASS                                           #
 # ------------------------------------------------------------------------------------------------ #
-IMMUTABLE_TYPES: tuple = (str, int, float, bool, type(None))
-SEQUENCE_TYPES: tuple = (list, tuple)
-# ------------------------------------------------------------------------------------------------ #
-#                                      DATA SOURCES                                                #
-# ------------------------------------------------------------------------------------------------ #
-SOURCES = ["movielens25m", "spotify", "tenrec"]
-# ------------------------------------------------------------------------------------------------ #
-#                                       WORKSPACES                                                 #
-# ------------------------------------------------------------------------------------------------ #
-WORKSPACES = ["raw", "prod", "dev", "test"]
-# ------------------------------------------------------------------------------------------------ #
-#                                         STAGES                                                   #
-# ------------------------------------------------------------------------------------------------ #
-STAGES = ["extract", "transform", "load", "split", "interim", "final"]
+@dataclass
+class DML(ABC):  # pragma: no cover
+    """Base class for entity Data Manipulation Language (DML)."""
+    insert: type(SQL) = None
+    update: type(SQL) = None
+    select: type(SQL) = None
+    select_all: type(SQL) = None
+    exists: type(SQL) = None
+    delete: type(SQL) = None
+    begin: type(SQL) = Transaction

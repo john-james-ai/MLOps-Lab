@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Tuesday December 13th 2022 10:48:30 pm                                              #
+# Modified   : Thursday December 15th 2022 09:50:59 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -60,7 +60,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create(self, dataset_dtos, container, caplog):
+    def test_create_no_commit(self, dataset_dtos, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -92,7 +92,72 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_read(self, dataset_dtos, container, caplog):
+    def test_read_no_commit(self, dataset_dtos, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        dao = container.dao.dataset()
+        for i, dataset_dto in enumerate(dataset_dtos, start=1):
+            logger.debug(f"\n\nDataset DTO\n{dataset_dto}")
+            with pytest.raises(FileNotFoundError):
+                _ = dao.read(i)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_create_commit(self, dataset_dtos, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        dao = container.dao.dataset()
+        for i, dto in enumerate(dataset_dtos, start=1):
+            logger.debug(f"\n\nTest Create DTO {i}\n\t{dto}")
+            dto = dao.create(dto)
+            dao.save()
+            assert dto.id == i
+            assert dao.exists(i)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_read_commit(self, dataset_dtos, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -107,10 +172,7 @@ class TestDatasetDAO:  # pragma: no cover
         for i, dataset_dto in enumerate(dataset_dtos, start=1):
             logger.debug(f"\n\nDataset DTO\n{dataset_dto}")
             dto = dao.read(i)
-            assert dto == dataset_dto
-            j = i + 10
-            with pytest.raises(FileNotFoundError):
-                _ = dao.read(j)
+            assert dataset_dto == dto
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

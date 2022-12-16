@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Sunday December 11th 2022 01:05:21 am                                               #
+# Modified   : Friday December 16th 2022 06:05:16 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -116,7 +116,7 @@ class Entity(ABC):
         else:
             """Else nothing. What do you want?"""
 
-    def _validate(self) -> None:
+    def _validate(self) -> None:  # noqa C901
         if hasattr(self, "name"):
             if self._name is None:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'name' is required for {self.__class__.__name__} objects."

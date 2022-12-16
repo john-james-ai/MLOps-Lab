@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Tuesday December 13th 2022 04:01:04 am                                              #
+# Modified   : Friday December 16th 2022 03:26:36 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,7 +19,7 @@
 """Data Definition Object Module."""
 
 from recsys.core import Service
-from recsys.core.database.base import Database
+from recsys.core.data.database import Database
 from .base import DDL
 # ------------------------------------------------------------------------------------------------ #
 

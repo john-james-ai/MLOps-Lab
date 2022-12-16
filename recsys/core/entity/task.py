@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 08:03:23 pm                                             #
-# Modified   : Tuesday December 13th 2022 09:35:03 pm                                              #
+# Modified   : Friday December 16th 2022 11:35:06 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -20,7 +20,9 @@
 from typing import Union
 
 from recsys.core.dal.dto import TaskDTO, DatasetDTO
-from .base import Entity, Profile, DTO
+from .base import Entity
+from .profile import Profile
+from recsys.core.dal.base import DTO
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -129,37 +131,30 @@ class Task(Entity):  # pragma: no cover
     # ------------------------------------------------------------------------------------------------ #
     def _from_dto(self, dto: DTO) -> Entity:
         self._id = dto.id
-        self._job_id = dto.job_id
         self._name = dto.name
         self._description = dto.description
         self._workspace = dto.workspace
         self._operator = dto.operator
-        self._module = dto.module
-        self._input_kind = dto.input_kind
-        self._input_id = dto.input_id
-        self._output_kind = dto.output_kind
-        self._output_id = dto.output_id
-        self._profile = dto.profile
+        self._started = dto.started
+        self._ended = dto.ended
+        self._duration = dto.duration
+        self._job_id = dto.job_id
         self._created = dto.created
         self._modified = dto.modified
-
         self._validate()
 
     def as_dto(self) -> TaskDTO:
         """Returns a TaskDTO object."""
         return TaskDTO(
             id=self._id,
-            job_id=self._job_id,
             name=self._name,
             description=self._description,
             workspace=self._workspace,
             operator=self._operator,
-            module=self._module,
-            input_kind=self._input_kind,
-            input_id=self._input_id,
-            output_kind=self._output_kind,
-            output_id=self._output_id,
-            profile=self._profile,
+            started=self._started,
+            ended=self._ended,
+            duration=self._duration,
+            job_id=self._job_id,
             created=self._created,
             modified=self._modified,
         )
@@ -177,24 +172,4 @@ class Task(Entity):  # pragma: no cover
 
         if not isinstance(self._operator, str):
             msg = f"Error instantiating {self.__class__.__name__}. Attribute 'operator' must be of type str,  not {type(self._operator)}."
-            announce_and_raise(msg)
-
-        if not isinstance(self._module, str):
-            msg = f"Error instantiating {self.__class__.__name__}. Attribute 'module' must be of type str,  not {type(self._module)}."
-            announce_and_raise(msg)
-
-        if not isinstance(self._input_kind, str):
-            msg = f"Error instantiating {self.__class__.__name__}. Attribute 'input_kind' must be of type str,  not {type(self._input_kind)}."
-            announce_and_raise(msg)
-
-        if not isinstance(self._input_id, int):
-            msg = f"Error instantiating {self.__class__.__name__}. Attribute 'input_id' must be of type int,  not {type(self._input_id)}."
-            announce_and_raise(msg)
-
-        if not isinstance(self._output_kind, str):
-            msg = f"Error instantiating {self.__class__.__name__}. Attribute 'output_kind' must be of type str,  not {type(self._output_kind)}."
-            announce_and_raise(msg)
-
-        if not isinstance(self._output_id, int):
-            msg = f"Error instantiating {self.__class__.__name__}. Attribute 'output_id' must be of type int,  not {type(self._output_id)}."
             announce_and_raise(msg)

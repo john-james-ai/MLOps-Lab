@@ -4,24 +4,71 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/database/sqlite.py                                                     #
+# Filename   : /recsys/core/data/connection.py                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Tuesday December 13th 2022 01:10:28 am                                              #
+# Modified   : Friday December 16th 2022 02:50:43 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import os
-import sqlite3
 import numpy as np
-from .base import Connection, Database
+import sqlite3
+from typing import Any
+from abc import abstractmethod
+
+from recsys.core.services.base import Service
 # ------------------------------------------------------------------------------------------------ #
 #                                    CONNECTION                                                    #
+# ------------------------------------------------------------------------------------------------ #
+
+
+class Connection(Service):
+    """Abstract base class for DBMS connections."""
+
+    def __init__(self, connector: Any, *args, **kwargs) -> None:
+        super().__init__()
+        self._connector = connector
+        self._connection = None
+        self.connect()
+
+    @abstractmethod
+    def connect(self) -> Any:
+        """Connects to the underlying database"""
+
+    def is_connected(self) -> bool:
+        try:
+            self._connection.cursor()
+            return True
+        except Exception:
+            return False
+
+    def close(self) -> None:
+        """Closes the connection."""
+        self._connection.close()
+        self._logger.debug(f"{self.__class__.__name__}.connection is closed.")
+
+    def commit(self) -> None:
+        """Commits the connection"""
+        self._connection.commit()
+        self._logger.debug(f"{self.__class__.__name__}.connection is committed.")
+
+    def cursor(self) -> None:
+        """Returns a the connection cursor"""
+        return self._connection.cursor()
+
+    def rollback(self) -> None:
+        """Rolls back the database to the last commit."""
+        self._connection.rollback()
+        self._logger.debug(f"{self.__class__.__name__}.connection is rolled back.")
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    SQLITE CONNECTION                                             #
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -39,26 +86,4 @@ class SQLiteConnection(Connection):
         self._connection = self._connector(
             self._location, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
         )
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                       DATABASE                                                   #
-# ------------------------------------------------------------------------------------------------ #
-class SQLiteDatabase(Database):
-    def __init__(self, connection: SQLiteConnection):
-        super().__init__(connection=connection)
-
-    def __enter__(self):
-        return super().__enter__()
-
-    def __exit__(self, ext_type, exc_value, traceback):
-        super().__exit__(ext_type=ext_type, exc_value=exc_value, traceback=traceback)
-
-    def __del__(self):
-        super().__del__()
-
-    def _get_last_insert_rowid(self) -> int:
-        cursor = self.query(sql="SELECT last_insert_rowid();", args=())
-        id = cursor.fetchall()[0][0]
-        cursor.close()
-        return id
+        self._logger.debug(f"{self.__class__.__name__}.connection is connected.")

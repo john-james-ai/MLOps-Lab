@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Sunday December 11th 2022 06:25:21 pm                                               #
+# Modified   : Friday December 16th 2022 10:40:38 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -60,7 +60,7 @@ class TestJobDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create(self, job_dtos, container, caplog):
+    def test_create_no_commit(self, job_dtos, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -73,6 +73,7 @@ class TestJobDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.job()
         for i, dto in enumerate(job_dtos, start=1):
+            logger.debug(f"\n\nTest Create DTO {i}\n\t{dto}")
             dto = dao.create(dto)
             assert dto.id == i
             assert dao.exists(i)
@@ -91,7 +92,7 @@ class TestJobDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_read(self, job_dtos, container, caplog):
+    def test_read_no_commit(self, job_dtos, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -104,11 +105,74 @@ class TestJobDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.job()
         for i, job_dto in enumerate(job_dtos, start=1):
-            dto = dao.read(i)
-            assert dto == job_dto
-            j = i + 10
+            logger.debug(f"\n\nDataset DTO\n{job_dto}")
             with pytest.raises(FileNotFoundError):
-                _ = dao.read(j)
+                _ = dao.read(i)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_create_commit(self, job_dtos, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        dao = container.dao.job()
+        for i, dto in enumerate(job_dtos, start=1):
+            logger.debug(f"\n\nTest Create DTO {i}\n\t{dto}")
+            dto = dao.create(dto)
+            dao.save()
+            assert dto.id == i
+            assert dao.exists(i)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_read_commit(self, job_dtos, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        dao = container.dao.job()
+        for i, job_dto in enumerate(job_dtos, start=1):
+            logger.debug(f"\n\nDataset DTO\n{job_dto}")
+            dto = dao.read(i)
+            assert job_dto == dto
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -148,8 +212,10 @@ class TestJobDAO:  # pragma: no cover
             assert dto.workspace == "test"
             assert isinstance(dto.started, datetime)
             assert isinstance(dto.ended, datetime)
-            assert dto.duration == 123
-            assert dto.tasks_completed == 5
+            assert isinstance(dto.duration, float)
+            assert dto.n_tasks == i * 10
+            assert dto.n_tasks_completed == i * 8
+            assert dto.pct_tasks_completed == (i * 8) / (i * 10)
             assert isinstance(dto.created, datetime)
             assert isinstance(dto.modified, datetime)
 
