@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 10:24:47 pm                                                #
-# Modified   : Friday December 16th 2022 06:12:04 am                                               #
+# Modified   : Friday December 16th 2022 10:08:12 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,8 +19,10 @@
 """Job Module."""
 from datetime import datetime
 from tqdm import tqdm
+from typing import List
 
 from recsys.core.entity.base import Entity
+from recsys.core.entity.task import Task
 from recsys.core.dal.dto import JobDTO
 
 
@@ -48,7 +50,7 @@ class Job(Entity):
         self._n_tasks_completed = 0
         self._pct_tasks_completed = 0.0
 
-        self._tasks = {}
+        self._tasks = []
 
     @property
     def workspace(self) -> str:
@@ -73,6 +75,14 @@ class Job(Entity):
     @property
     def n_tasks_completed(self) -> str:
         return self._n_tasks_completed
+
+    @property
+    def tasks(self) -> List[Task]:
+        return self._tasks
+
+    @tasks.setter
+    def tasks(self, tasks: List[Task]) -> None:
+        self._tasks = tasks
 
     def add_task(self, task) -> None:
         """Adds a task to the Job object.

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Friday December 16th 2022 11:30:42 am                                               #
+# Modified   : Saturday December 17th 2022 01:02:04 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,7 +22,7 @@ from collections import OrderedDict
 from typing import Dict, Tuple, List
 
 from recsys.core.data.database import Database
-from .dto import DTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO
+from .dto import DTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO, OperationDTO
 from .base import DML
 from recsys.core import Service
 
@@ -285,6 +285,35 @@ class JobDAO(DAO):
                 duration=row[9],
                 created=row[10],
                 modified=row[11],
+            )
+
+        except IndexError as e:  # pragma: no cover
+            msg = f"Index error in_row_to_dto method.\n{e}"
+            self._logger.error(msg)
+            raise IndexError(msg)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                 JOB DATA ACCESS OBJECT                                           #
+# ------------------------------------------------------------------------------------------------ #
+class OperationDAO(DAO):
+    """Operation Data Access Object"""
+
+    def __init__(self, database: Database, dml: DML) -> None:
+        super().__init__(database=database, dml=dml)
+
+    def _row_to_dto(self, row: Tuple) -> OperationDTO:
+        try:
+            return OperationDTO(
+                id=row[0],
+                name=row[1],
+                description=row[2],
+                workspace=row[3],
+                stage=row[4],
+                uri=row[5],
+                task_id=row[6],
+                created=row[7],
+                modified=row[8],
             )
 
         except IndexError as e:  # pragma: no cover

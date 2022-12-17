@@ -11,11 +11,12 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 12:28:07 am                                               #
-# Modified   : Friday December 16th 2022 06:33:25 am                                               #
+# Modified   : Friday December 16th 2022 10:18:35 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+from dataclasses import dataclass
 import pandas as pd
 
 from recsys.core.dal.dao import DAO
@@ -68,3 +69,14 @@ class Repo(Service):
         results = self._dao.read_all()
         df = pd.DataFrame.from_dict(results, orient="index")
         print(df)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                        CONTEXT                                                   #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class Context:
+    dataset: Repo
+    task: Repo
+    job: Repo
+    profile: Repo

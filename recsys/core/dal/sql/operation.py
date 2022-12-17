@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/dal/sql/task.py                                                        #
+# Filename   : /recsys/core/dal/sql/operation.py                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Saturday December 17th 2022 12:26:18 am                                             #
+# Modified   : Saturday December 17th 2022 03:38:52 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -29,17 +29,17 @@ from recsys.core.dal.dto import DTO
 #                                            DDL                                                   #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class CreateTaskTable(SQL):
-    name: str = "task"
-    sql: str = """CREATE TABLE IF NOT EXISTS task (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, workspace TEXT NOT NULL, started timestamp, ended timestamp, duration REAL, job_id INTEGER DEFAULT 0, created timestamp, modified timestamp);"""
+class CreateOperationTable(SQL):
+    name: str = "operation"
+    sql: str = """CREATE TABLE IF NOT EXISTS operation (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, workspace TEXT NOT NULL, stage TEXT NOT NULL, uri TEXT NOT NULL, task_id INTEGER, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DropTaskTable(SQL):
-    name: str = "task"
-    sql: str = """DROP TABLE IF EXISTS task;"""
+class DropOperationTable(SQL):
+    name: str = "operation"
+    sql: str = """DROP TABLE IF EXISTS operation;"""
     args: tuple = ()
 
 
@@ -47,8 +47,8 @@ class DropTaskTable(SQL):
 
 
 @dataclass
-class TaskTableExists(SQL):
-    name: str = "task"
+class OperationTableExists(SQL):
+    name: str = "operation"
     sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
     args: tuple = ()
 
@@ -58,10 +58,10 @@ class TaskTableExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class TaskDDL(DDL):
-    create: SQL = CreateTaskTable()
-    drop: SQL = DropTaskTable()
-    exists: SQL = TaskTableExists()
+class OperationDDL(DDL):
+    create: SQL = CreateOperationTable()
+    drop: SQL = DropOperationTable()
+    exists: SQL = OperationTableExists()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -70,10 +70,9 @@ class TaskDDL(DDL):
 
 
 @dataclass
-class InsertTask(SQL):
-    """All attributes of a Task are included; however, two are not used - namely id, and data."""
+class InsertOperation(SQL):
     dto: DTO
-    sql: str = """INSERT INTO task (name, description, workspace, started, ended, duration, job_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO operation (name, description, workspace, stage, uri, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -81,10 +80,9 @@ class InsertTask(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.workspace,
-            self.dto.started,
-            self.dto.ended,
-            self.dto.duration,
-            self.dto.job_id,
+            self.dto.stage,
+            self.dto.uri,
+            self.dto.task_id,
             self.dto.created,
             self.dto.modified,
         )
@@ -94,9 +92,9 @@ class InsertTask(SQL):
 
 
 @dataclass
-class UpdateTask(SQL):
+class UpdateOperation(SQL):
     dto: DTO
-    sql: str = """UPDATE task SET name = ?, description = ?, workspace = ?, started = ?, ended = ?, duration = ?, job_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE operation SET name = ?, description = ?, workspace = ?, stage = ?, uri = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -104,10 +102,9 @@ class UpdateTask(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.workspace,
-            self.dto.started,
-            self.dto.ended,
-            self.dto.duration,
-            self.dto.job_id,
+            self.dto.stage,
+            self.dto.uri,
+            self.dto.task_id,
             self.dto.created,
             self.dto.modified,
             self.dto.id,
@@ -118,9 +115,9 @@ class UpdateTask(SQL):
 
 
 @dataclass
-class SelectTask(SQL):
+class SelectOperation(SQL):
     id: int
-    sql: str = """SELECT * FROM task WHERE id = ?;"""
+    sql: str = """SELECT * FROM operation WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -130,9 +127,9 @@ class SelectTask(SQL):
 
 
 @dataclass
-class SelectTaskByName(SQL):
+class SelectOperationByName(SQL):
     name: str
-    sql: str = """SELECT * FROM task WHERE name = ?;"""
+    sql: str = """SELECT * FROM operation WHERE name = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -143,17 +140,17 @@ class SelectTaskByName(SQL):
 
 
 @dataclass
-class SelectAllTasks(SQL):
-    sql: str = """SELECT * FROM task;"""
+class SelectAllOperations(SQL):
+    sql: str = """SELECT * FROM operation;"""
     args: tuple = ()
 
 
 # ------------------------------------------------------------------------------------------------ #
 
 @dataclass
-class TaskExists(SQL):
+class OperationExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM task WHERE id = ?;"""
+    sql: str = """SELECT COUNT(*) FROM operation WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -162,9 +159,9 @@ class TaskExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DeleteTask(SQL):
+class DeleteOperation(SQL):
     id: int
-    sql: str = """DELETE FROM task WHERE id = ?;"""
+    sql: str = """DELETE FROM operation WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -173,11 +170,11 @@ class DeleteTask(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class TaskDML(DML):
-    insert: type(SQL) = InsertTask
-    update: type(SQL) = UpdateTask
-    select: type(SQL) = SelectTask
-    select_by_name: type(SQL) = SelectTaskByName
-    select_all: type(SQL) = SelectAllTasks
-    exists: type(SQL) = TaskExists
-    delete: type(SQL) = DeleteTask
+class OperationDML(DML):
+    insert: type(SQL) = InsertOperation
+    update: type(SQL) = UpdateOperation
+    select: type(SQL) = SelectOperation
+    select_by_name: type(SQL) = SelectOperationByName
+    select_all: type(SQL) = SelectAllOperations
+    exists: type(SQL) = OperationExists
+    delete: type(SQL) = DeleteOperation

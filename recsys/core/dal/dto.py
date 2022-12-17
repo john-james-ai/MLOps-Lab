@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Friday December 16th 2022 11:31:03 am                                               #
+# Modified   : Saturday December 17th 2022 03:10:34 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -109,10 +109,25 @@ class TaskDTO(DTO):
     name: str
     description: str
     workspace: str
-    operator: str
     started: datetime
     ended: datetime
     duration: float
     job_id: int
+    created: datetime
+    modified: datetime
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                               OPERATION DATA TRANSFER OBJECT                                     #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class OperationDTO(DTO):
+    id: int
+    name: str
+    description: str
+    workspace: str
+    stage: str
+    uri: str
+    task_id: int
     created: datetime
     modified: datetime

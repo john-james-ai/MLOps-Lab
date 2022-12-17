@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Friday December 16th 2022 11:45:59 am                                               #
+# Modified   : Saturday December 17th 2022 03:30:30 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,11 +21,11 @@ import numpy as np
 import sqlite3
 from datetime import datetime, timedelta
 
-import recsys
+import tests.containers
 from tests.containers import Recsys
 from recsys.core.services.io import IOService
 from recsys.core.entity.dataset import Dataset
-from recsys.core.dal.dao import DatasetDTO, ProfileDTO, TaskDTO, JobDTO
+from recsys.core.dal.dao import DatasetDTO, ProfileDTO, TaskDTO, JobDTO, OperationDTO
 from recsys.core.data.database import Database
 from recsys.core.data.connection import SQLiteConnection
 
@@ -191,6 +191,26 @@ def job_dtos():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
+def operation_dtos():
+    dtos = []
+    for i in range(1, 6):
+        dto = OperationDTO(
+            id=i,
+            name=f"operation_dto_{i}",
+            description=f"Description for Operation # {i}",
+            workspace="test",
+            stage="interim",
+            uri=f"tests/operations/operation_dto_{i}.pkl",
+            task_id=i + 22,
+            created=datetime.now(),
+            modified=datetime.now(),
+        )
+        dtos.append(dto)
+    return dtos
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
 def dataset_dicts():
     """List of dictionaries that can be used to instantiate Dataset."""
     lod = []
@@ -213,5 +233,5 @@ def dataset_dicts():
 def container():
     container = Recsys()
     container.init_resources()
-    container.wire(modules=[recsys.__name__])
+    container.wire(modules=[tests.containers])
     return container

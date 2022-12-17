@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 02:32:23 pm                                              #
-# Modified   : Friday December 16th 2022 06:36:01 am                                               #
+# Modified   : Saturday December 17th 2022 12:45:00 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -27,6 +27,12 @@ from recsys.core.dal.ddo import TableService
 def build_dataset_table(dataset_table: TableService = Provide[Recsys.table.dataset]) -> None:
     dataset_table.create()
     assert dataset_table.exists()
+
+
+@inject
+def build_operation_table(operation_table: TableService = Provide[Recsys.table.operation]) -> None:
+    operation_table.create()
+    assert operation_table.exists()
 
 
 @inject
@@ -49,6 +55,7 @@ def build_profile_table(task_table: TableService = Provide[Recsys.table.profile]
 
 def build_tables():
     build_dataset_table()
+    build_operation_table()
     build_job_table()
     build_task_table()
     build_profile_table()

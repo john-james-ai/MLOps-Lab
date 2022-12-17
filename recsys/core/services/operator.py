@@ -4,19 +4,20 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/workflow/operator.py                                                   #
+# Filename   : /recsys/core/services/operator.py                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:31:12 am                                                #
-# Modified   : Monday December 12th 2022 11:44:09 am                                               #
+# Modified   : Friday December 16th 2022 10:30:44 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Operator Entity Module"""
+import time
 import pandas as pd
 import numpy as np
 from abc import abstractmethod
@@ -118,13 +119,19 @@ class DownloadExtractor(Operator):
 
 class NullOperator(Operator):
     """Null Operator does nothing. Returns the data it receives from the Environment.
+
+    Args:
+        seconds (int): Number of seconds the operator should take, i.e. sleep.
+
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, seconds: int = 2, *args, **kwargs) -> None:
         super().__init__()
+        self._seconds = seconds
 
     def execute(self, data: pd.DataFrame, *args, **kwargs) -> None:
         """Executes the operation"""
+        time.sleep(self._seconds)
         return data
 
 # ------------------------------------------------------------------------------------------------ #

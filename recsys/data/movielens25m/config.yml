@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/data/movielens25m/config.yml                                           #
+# Filename   : /recsys/data/movielens25m/config.yml                                                #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:42:49 pm                                                #
-# Modified   : Friday December 16th 2022 12:19:05 am                                               #
+# Modified   : Friday December 16th 2022 08:20:30 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,6 +24,7 @@
 job:
   name: movielens25m_etl
   description: Extracts MovieLens25M data from GroupLens website, transforms data into pickle format, then loads the data into production, development and testing environments.
+  workspace: raw
   tasks:
     # ============================================================================================ #
     #                                    EXTRACT                                                   #
@@ -36,43 +37,37 @@ job:
         destination: data/movielens25m/workspaces/raw
       input: None
       output:
-      - kind: dataset
-        name: movielens25m_genome-scores
+      - name: movielens25m_genome_scores
         description: Contains movie-tag relevance data
         datasource: movielens25m
         workspace: raw
         stage: extract
         filename: genome-scores.csv
-      - kind: dataset
-        name: movielens25m_genome-tags
+      - name: movielens25m_genome_tags
         description: Provides the tag descriptions for the tag IDs in the genome file
         datasource: movielens25m
         workspace: raw
         stage: extract
         filename: genome-tags.csv
-      - kind: dataset
-        name: movielens25m_links
+      - name: movielens25m_links
         description: Identifiers that can be used to link to other sources of movie data.
         datasource: movielens25m
         workspace: raw
         stage: extract
         filename: links.csv
-      - kind: dataset
-        name: movielens25m_movies
+      - name: movielens25m_movies
         description: Movie information
         datasource: movielens25m
         workspace: raw
         stage: extract
         filename: movies.csv
-      - kind: dataset
-        name: movielens25m_ratings
+      - name: movielens25m_ratings
         description: Contains movie ratings, one rating for one movie per row.
         datasource: movielens25m
         workspace: raw
         stage: extract
         filename: ratings.csv
-      - kind: dataset
-        name: movielens25m_tags
+      - name: movielens25m_tags
         description: One tag per one movie per row
         datasource: movielens25m
         workspace: raw
@@ -87,11 +82,9 @@ job:
       description: Transform the ratings data to pickle format for faster downstream loading.
       operator: None
       input:
-        kind: dataset
         name: movielens25m_ratings
       output:
-      - kind: dataset
-        name: movielens25m_ratings_pkl
+      - name: movielens25m_ratings_pkl
         description: Movielens Ratings data in Pickle format.
         datasource: movielens25m
         workspace: raw
@@ -115,11 +108,9 @@ job:
         random_state: 55
         frac: 1
       input:
-        kind: dataset
         name: movielens25m_ratings_pkl
       output:
-      - kind: dataset
-        name: movielens25m_ratings_dataset_prod
+      - name: movielens25m_ratings_dataset_prod
         description: Movielens25M Ratings Dataset - Production Workspace
         datasource: movielens25m
         workspace: prod
@@ -140,11 +131,9 @@ job:
         random_state: 55
         frac: 0.1
       input:
-        kind: dataset
         name: movielens25m_ratings_pkl
       output:
-      - kind: dataset
-        name: movielens25m_ratings_dataset_dev
+      - name: movielens25m_ratings_dataset_dev
         description: Movielens25M Ratings Dataset - Development Workspace
         datasource: movielens25m
         workspace: dev
@@ -165,11 +154,9 @@ job:
         random_state: 55
         frac: 0.1
       input:
-        kind: dataset
         name: movielens25m_ratings_pkl
       output:
-      - kind: dataset
-        name: movielens25m_ratings_dataset_test
+      - name: movielens25m_ratings_dataset_test
         description: Movielens25M Ratings Dataset - Test Workspace
         datasource: movielens25m
         workspace: test

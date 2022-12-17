@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Wednesday December 14th 2022 03:13:40 am                                            #
+# Modified   : Saturday December 17th 2022 01:05:30 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,39 +19,26 @@
 """Dataset Entity Module"""
 import os
 import dotenv
-from dataclasses import dataclass
 from datetime import datetime
 import pandas as pd
 
 from recsys.core.dal.dto import DatasetDTO
 from .base import Entity, DTO
 
+
 # ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
-class DatasetSpec:
-    name: str
-    description: str
-    workspace: str
-    stage: str
-
-
+#                                        DATASET                                                   #
+# ------------------------------------------------------------------------------------------------ #
 class Dataset(Entity):
     """Dataset encapsulates tabular data, metadata, and access behaviors for data used in this package.
 
     Args:
-        id (int): Unique integer identifier for the Dataset object.
         name (str): Short, yet descriptive lowercase name for Dataset object.
         description (str): Describes the Dataset object.
         datasource (str): The data datasource
+        filename (str): Name of file
         workspace (str): One of ['prod', 'dev', 'test']
         stage (str): The stage of the data processing lifecycle to which the Dataset belongs.
-        data (pd.DataFrame): A pandas DataFrame containing the data.
-        uri (str): The location for persistence
-        task_id (int): The step within a pipeline task that produced the Dataset object.
-        created (datetime): Datetime the Dataset was created
-        modified (datetime): Datetime the Dataset was modified.
 
     """
 
@@ -59,21 +46,19 @@ class Dataset(Entity):
         self,
         name: str,
         datasource: str,
+        workspace: str,
         stage: str,
         filename: str,
-        task_id: int = None,
-        data: pd.DataFrame = None,
-        workspace: str = None,
+
         description: str = None,
     ) -> None:
         super().__init__(name=name, description=description)
-        self._id = None
         self._datasource = datasource
         self._workspace = workspace
         self._stage = stage
         self._filename = filename
-        self._data = data
-        self._task_id = task_id
+        self._data = None
+        self._task_id = None
 
         # Assigned by repo
         self._uri = None
@@ -137,11 +122,11 @@ class Dataset(Entity):
         return self._filename
 
     @property
-    def uri(self) -> pd.DataFrame:
+    def uri(self) -> str:
         return self._uri
 
     @uri.setter
-    def uri(self, uri: pd.DataFrame) -> None:
+    def uri(self, uri: str) -> None:
         if self._uri is None:
             self._uri = uri
             self._update_and_validate()

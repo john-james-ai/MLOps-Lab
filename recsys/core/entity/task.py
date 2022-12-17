@@ -11,55 +11,60 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 08:03:23 pm                                             #
-# Modified   : Friday December 16th 2022 11:35:06 am                                               #
+# Modified   : Saturday December 17th 2022 03:22:23 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Task Entity Module"""
-from typing import Union
+from typing import Union, Any
+from datetime import datetime
 
-from recsys.core.dal.dto import TaskDTO, DatasetDTO
+from recsys.core.dal.dto import TaskDTO
+from recsys.core.entity.dataset import Dataset
+from recsys.core.entity.operation import Operation
 from .base import Entity
-from .profile import Profile
 from recsys.core.dal.base import DTO
+from recsys.core.dal.repo import Context
+
 
 # ------------------------------------------------------------------------------------------------ #
 
 
 class Task(Entity):  # pragma: no cover
-    """Task is an atomic unit of work, performed by an operator, given some input to produce an output.
+    """Task is an atomic unit of work, performed by an operation, given some input to produce an output.
 
     Args:
-        job_id (int): The id for the job of which, the task is a part.
         name (str): Short, yet descriptive lowercase name for Task object.
         description (str): Description of fileset
         workspace (str): The workspace in which the task is performed.
-        operator (str): The class name for the operator performing the task.
-        module (str): The module containing the operator.
+        operation (Operation): Operation that executes the task.
+        job_id (int): The id for the job of which, the task is part.
 
 
     Attributes:
         profile (Profile): The profile object containing, cpu, memory, disk and network utilization.
     """
 
-    def __init__(self, job_id: int, name: str, operator: str, module: str, input_kind: str, input_id: int, output_kind: str, output_id: int, workspace: str = None, description: str = None) -> None:
+    def __init__(self, name: str, workspace: str, operation: Operation, job_id: int, description: str = None) -> None:
         super().__init__(self, name=name, description=description)
-        self._job_id = job_id
         self._workspace = workspace
-        self._operator = operator
-        self._module = module
+        self._operation = operation
+        self._job_id = job_id
+        self._id = None
 
-        self._input_id = None
-        self._input_kind = None
-        self._output_id = None
-        self._output_kind = None
+        self._started = None
+        self._ended = None
+        self._duration = None
+
+        self._input = None
+        self._output = None
 
     def __str__(self) -> str:
-        return f"\n\nTask Id: {self._id}\n\tJob Id: {self._job_id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tWorkspace: {self._workspace}\n\tOperator: {self._operator}\n\tModule: {self._module}\n\tInput_kind: {self._input_kind}\n\tInput_id: {self._input_id}\n\tOutput_kind: {self._output_kind}\n\tOutput_id: {self._output_id}"
+        return f"\n\nTask Id: {self._id}\n\tJob Id: {self._job_id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tWorkspace: {self._workspace}\n\tOperation: {self._operation.__class__.__name__}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._job_id}, {self._name}, {self._description}, {self._workspace}, {self._operator}, {self._module}, {self._input_kind}, {self._input_id}, {self._output_kind}, {self._output_id}"
+        return f"{self._id}, {self._job_id}, {self._name}, {self._description}, {self._workspace}, {self._operation.__class__.__name__}"
 
     def __eq__(self, other) -> bool:
         """Compares two Tasks for equality."""
@@ -70,13 +75,12 @@ class Task(Entity):  # pragma: no cover
                 and self._name == other.name
                 and self._description == other.description
                 and self._workspace == other.workspace
-                and self._operator == other.operator
-                and self._module == other.module
-                and self._input_kind == other.input_kind
-                and self._input_id == other.input_id
-                and self._output_kind == other.output_kind
-                and self._output_id == other.output_id
+                and self._operation == other.operation
+                and self._input == other.input
+                and self._output == other.output
             )
+        else:
+            return False
 
     # ------------------------------------------------------------------------------------------------ #
     @property
@@ -88,45 +92,73 @@ class Task(Entity):  # pragma: no cover
         return self._workspace
 
     @property
-    def operator(self) -> str:
-        return self._operator
+    def started(self) -> str:
+        return self._started
 
     @property
-    def module(self) -> str:
-        return self._module
+    def ended(self) -> str:
+        return self._ended
 
     @property
-    def input_kind(self) -> str:
-        return self._input_kind
+    def duration(self) -> str:
+        return self._duration
 
     @property
-    def input_id(self) -> int:
-        return self._input_id
+    def operation(self) -> Operation:
+        return self._operation
+
+    @operation.setter
+    def operation(self, operation: Operation) -> None:
+        if self._operation is None:
+            self._operation = operation
+            self._modified = datetime.now()
+        elif not self._operation == operation:
+            msg = "Item reassignment is not supported for the 'operation' member."
+            self._logger.error(msg)
+            raise TypeError(msg)
 
     @property
-    def output_kind(self) -> str:
-        return self._output_kind
+    def input(self) -> Dataset:
+        return self._input
+
+    @input.setter
+    def input(self, input: Dataset) -> None:
+        if self._input is None:
+            self._input = input
+            self._modified = datetime.now()
+        elif not self._input == input:
+            msg = "Item reassignment is not supported for the 'input' member."
+            self._logger.error(msg)
+            raise TypeError(msg)
 
     @property
-    def output_id(self) -> int:
-        return self._output_id
+    def output(self) -> int:
+        return self._output
 
-    @property
-    def profile(self) -> Profile:
-        self._profile
-
-    @profile.setter
-    def profile(self, profile: Profile) -> None:
-        self._profile = profile
+    @output.setter
+    def output(self, output: Dataset) -> None:
+        if self._output is None:
+            self._output = output
+            self._modified = datetime.now()
+        elif not self._output == output:
+            msg = "Item reassignment is not supported for the 'output' member."
+            self._logger.error(msg)
+            raise TypeError(msg)
 
     # ------------------------------------------------------------------------------------------------ #
-    def add_input(self, input_data: Union[TaskDTO, DatasetDTO]) -> None:
-        self._input_kind = input_data.__class__.__name__
-        self._input_id = input_data.id
+    def run(self, data: Union[None, Dataset] = None, context: Context = None) -> Any:
+        self._setup()
+        result = self._operation.execute(data=data, context=context)
+        data = result or data
+        self._teardown()
 
-    def add_output(self, output_data: Union[TaskDTO, DatasetDTO]) -> None:
-        self._output_kind = output_data.__class__.__name__
-        self._output_id = output_data.id
+    # ------------------------------------------------------------------------------------------------ #
+    def _setup(self) -> None:
+        self._started = datetime.now()
+
+    def _teardown(self) -> None:
+        self._ended = datetime.now()
+        self._duration = (self._ended - self._started).total_seconds()
 
     # ------------------------------------------------------------------------------------------------ #
     def _from_dto(self, dto: DTO) -> Entity:
@@ -134,13 +166,14 @@ class Task(Entity):  # pragma: no cover
         self._name = dto.name
         self._description = dto.description
         self._workspace = dto.workspace
-        self._operator = dto.operator
         self._started = dto.started
         self._ended = dto.ended
         self._duration = dto.duration
         self._job_id = dto.job_id
         self._created = dto.created
         self._modified = dto.modified
+        self._operation = None
+
         self._validate()
 
     def as_dto(self) -> TaskDTO:
@@ -150,7 +183,6 @@ class Task(Entity):  # pragma: no cover
             name=self._name,
             description=self._description,
             workspace=self._workspace,
-            operator=self._operator,
             started=self._started,
             ended=self._ended,
             duration=self._duration,
@@ -170,6 +202,6 @@ class Task(Entity):  # pragma: no cover
             msg = f"Error instantiating {self.__class__.__name__}. Attribute 'job_id' must be of type 'int', not {type(self._job_id)}."
             announce_and_raise(msg)
 
-        if not isinstance(self._operator, str):
-            msg = f"Error instantiating {self.__class__.__name__}. Attribute 'operator' must be of type str,  not {type(self._operator)}."
+        if not isinstance(self._operation, str):
+            msg = f"Error instantiating {self.__class__.__name__}. Attribute 'operation' must be of type str,  not {type(self._operation)}."
             announce_and_raise(msg)
