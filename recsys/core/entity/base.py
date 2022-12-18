@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Saturday December 17th 2022 08:51:08 pm                                             #
+# Modified   : Sunday December 18th 2022 01:01:38 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,7 +19,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 import logging
-from typing import Any
 
 import recsys
 from recsys.core.dal.base import DTO
@@ -94,10 +93,6 @@ class Entity(ABC):
     def _from_dto(self, dto: DTO) -> None:
         """Sets the properties and members on the new Entity."""
 
-    @abstractmethod
-    def save(self) -> None:
-        """Method for persisting underlying objects for reconstitution."""
-
     def as_dict(self) -> dict:
         """Returns a dictionary representation of the the Config object."""
         return {
@@ -123,37 +118,37 @@ class Entity(ABC):
 
     def _validate(self) -> None:  # noqa C901
         if hasattr(self, "name"):
-            if self._name is None:
+            if self.name is None:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'name' is required for {self.__class__.__name__} objects."
                 self._logger.error(msg)
                 raise TypeError(msg)
 
         if hasattr(self, "datasource"):
-            if self._datasource is None:
+            if self.datasource is None:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is required for {self.__class__.__name__} objects."
                 self._logger.error(msg)
                 raise TypeError(msg)
-            elif self._datasource not in recsys.SOURCES:
+            elif self.datasource not in recsys.SOURCES:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is invalid. Must be one of {recsys.SOURCES}."
                 self._logger.error(msg)
                 raise ValueError(msg)
 
         if hasattr(self, "workspace"):
-            if self._workspace is None:
+            if self.workspace is None:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'workspace' is required for {self.__class__.__name__} objects."
                 self._logger.error(msg)
                 raise TypeError(msg)
-            elif self._workspace not in recsys.WORKSPACES:
+            elif self.workspace not in recsys.WORKSPACES:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'workspace' is invalid. Must be one of {recsys.WORKSPACES}."
                 self._logger.error(msg)
                 raise ValueError(msg)
 
         if hasattr(self, "stage"):
-            if self._stage is None:
+            if self.stage is None:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'stage' is required for {self.__class__.__name__} objects."
                 self._logger.error(msg)
                 raise TypeError(msg)
-            elif self._stage not in recsys.STAGES:
+            elif self.stage not in recsys.STAGES:
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'stage' is invalid. Must be one of {recsys.STAGES}."
                 self._logger.error(msg)
                 raise ValueError(msg)

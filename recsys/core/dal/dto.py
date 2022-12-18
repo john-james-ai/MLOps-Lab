@@ -11,11 +11,12 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Saturday December 17th 2022 03:10:34 am                                             #
+# Modified   : Sunday December 18th 2022 12:57:40 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+"""Data Transfer Object (DTO) Module"""
 from datetime import datetime
 from dataclasses import dataclass
 

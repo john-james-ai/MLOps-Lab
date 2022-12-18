@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Saturday December 17th 2022 03:40:06 am                                             #
+# Modified   : Sunday December 18th 2022 01:07:10 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -103,7 +103,7 @@ class RepoContainer(containers.DeclarativeContainer):
 
     repo = providers.Singleton(
         Repo,
-        dataset=entity,
+        entity=entity,
         dao=dao,
     )
 
@@ -142,19 +142,19 @@ class Recsys(containers.DeclarativeContainer):
 
     dao = providers.Container(DAOContainer, database=data.database)
 
-    dataset_repo = providers.Container(RepoContainer, entity=Dataset, dao=dao.dataset)
+    dataset = providers.Container(RepoContainer, entity=Dataset, dao=dao.dataset)
 
-    operation_repo = providers.Container(RepoContainer, entity=Operation, dao=dao.operation)
+    operation = providers.Container(RepoContainer, entity=Operation, dao=dao.operation)
 
-    job_repo = providers.Container(RepoContainer, entity=Job, dao=dao.job)
+    job = providers.Container(RepoContainer, entity=Job, dao=dao.job)
 
-    task_repo = providers.Container(RepoContainer, entity=Task, dao=dao.task)
+    task = providers.Container(RepoContainer, entity=Task, dao=dao.task)
 
-    profile_repo = providers.Container(RepoContainer, entity=Profile, dao=dao.profile)
+    profile = providers.Container(RepoContainer, entity=Profile, dao=dao.profile)
 
     context = providers.Container(ContextContainer,
-                                  dataset_repo=dataset_repo(),
-                                  operation_repo=operation_repo(),
-                                  job_repo=job_repo(),
-                                  task_repo=task_repo(),
-                                  profile_repo=profile_repo())
+                                  dataset_repo=dataset.repo(),
+                                  operation_repo=operation.repo(),
+                                  job_repo=job.repo(),
+                                  task_repo=task.repo(),
+                                  profile_repo=profile.repo())
