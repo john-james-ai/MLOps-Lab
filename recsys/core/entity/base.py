@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Friday December 16th 2022 06:05:16 am                                               #
+# Modified   : Saturday December 17th 2022 08:51:08 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,6 +19,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 import logging
+from typing import Any
 
 import recsys
 from recsys.core.dal.base import DTO
@@ -92,6 +93,10 @@ class Entity(ABC):
     @abstractmethod
     def _from_dto(self, dto: DTO) -> None:
         """Sets the properties and members on the new Entity."""
+
+    @abstractmethod
+    def save(self) -> None:
+        """Method for persisting underlying objects for reconstitution."""
 
     def as_dict(self) -> dict:
         """Returns a dictionary representation of the the Config object."""

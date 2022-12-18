@@ -11,14 +11,12 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday December 17th 2022 04:17:31 am                                             #
+# Modified   : Saturday December 17th 2022 08:50:55 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Operation Entity Module"""
-import os
-
 from recsys.core.dal.dto import OperationDTO
 from recsys.core.services.operator import Operator
 from .base import Entity, DTO
@@ -114,12 +112,6 @@ class Operation(Entity):
     @property
     def operator(self) -> Operator:
         return self._operator
-
-    # ------------------------------------------------------------------------------------------------ #
-
-    def _get_uri(self) -> None:
-        filename = self._name.lower() + ".pkl"
-        return os.path.join("operations", self._workspace, self._stage, filename)
 
     # ------------------------------------------------------------------------------------------------ #
     def as_dto(self) -> OperationDTO:
