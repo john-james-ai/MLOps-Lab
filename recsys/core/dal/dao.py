@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Sunday December 18th 2022 09:31:14 pm                                               #
+# Modified   : Monday December 19th 2022 08:02:13 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -199,11 +199,12 @@ class DatasetCollectionDAO(DAO):
                 id=row[0],
                 name=row[1],
                 description=row[2],
-                mode=row[3],
-                stage=row[4],
-                task_id=row[5],
-                created=row[6],
-                modified=row[7],
+                datasource=row[3],
+                mode=row[4],
+                stage=row[5],
+                task_id=row[6],
+                created=row[7],
+                modified=row[8],
             )
 
         except IndexError as e:  # pragma: no cover

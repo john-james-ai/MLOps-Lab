@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Sunday December 18th 2022 08:43:02 pm                                               #
+# Modified   : Monday December 19th 2022 08:07:03 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,6 +33,7 @@ class DatasetCollection(Entity):
     Args:
         name (str): collection name
         description (str): collection description
+        datasource (str): Source of data for collection.
         mode (str): mode in which the collection is created
         stage (str): Stage in which the collection was created
         task_id (int): Identifier for task that created the collection
@@ -41,6 +42,7 @@ class DatasetCollection(Entity):
     def __init__(
         self,
         name: str,
+        datasource: str,
         mode: str,
         stage: str,
         task_id: int = None,
@@ -48,6 +50,7 @@ class DatasetCollection(Entity):
     ) -> None:
         super().__init__(name=name, description=description)
 
+        self._datasource = datasource
         self._mode = mode
         self._stage = stage
         self._task_id = task_id
@@ -77,6 +80,7 @@ class DatasetCollection(Entity):
 
         if isinstance(other, DatasetCollection):
             return (self._name == other.name
+                    and self._datasource == other.datasource
                     and self._mode == other.mode
                     and self._stage == other.stage
                     and self._datasets == other.datasets
@@ -129,6 +133,7 @@ class DatasetCollection(Entity):
             id=self._id,
             name=self._name,
             description=self._description,
+            datasource=self._datasource,
             mode=self._mode,
             stage=self._stage,
             task_id=self._task_id,
@@ -142,11 +147,13 @@ class DatasetCollection(Entity):
         self._id = dto.id
         self._name = dto.name
         self._description = dto.description
+        self._datasource = dto.datasource
         self._mode = dto.mode
         self._stage = dto.stage
         self._task_id = dto.task_id
         self._created = dto.created
         self._modified = dto.modified
+
         self._datasets = []
         self._validate()
 

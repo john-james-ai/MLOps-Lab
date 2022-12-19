@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday December 18th 2022 08:14:27 pm                                               #
+# Modified   : Monday December 19th 2022 08:00:42 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDatasetCollectionTable(SQL):
     name: str = "operation"
-    sql: str = """CREATE TABLE IF NOT EXISTS operation (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT, mode TEXT NOT NULL, stage TEXT NOT NULL, task_id INTEGER, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS operation (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, task_id INTEGER, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -72,13 +72,14 @@ class DatasetCollectionDDL(DDL):
 @dataclass
 class InsertDatasetCollection(SQL):
     dto: DTO
-    sql: str = """INSERT INTO operation (name, description, mode, stage, task_id, created, modified) VALUES (?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO operation (name, description, datasource, mode, stage, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
+            self.dto.datasource,
             self.dto.mode,
             self.dto.stage,
             self.dto.task_id,
@@ -93,13 +94,14 @@ class InsertDatasetCollection(SQL):
 @dataclass
 class UpdateDatasetCollection(SQL):
     dto: DTO
-    sql: str = """UPDATE operation SET name = ?, description = ?, mode = ?, stage = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE operation SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
+            self.dto.datasource,
             self.dto.mode,
             self.dto.stage,
             self.dto.task_id,

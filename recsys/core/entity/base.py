@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
+# Modified   : Monday December 19th 2022 07:17:59 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -138,8 +138,8 @@ class Entity(ABC):
                 msg = f"Error instantiating {self.__class__.__name__}. Attribute 'mode' is required for {self.__class__.__name__} objects."
                 self._logger.error(msg)
                 raise TypeError(msg)
-            elif self._mode not in recsys.WORKSPACES:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'mode' is invalid. Must be one of {recsys.WORKSPACES}."
+            elif self._mode not in recsys.MODES:
+                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'mode' is invalid. Must be one of {recsys.MODES}."
                 self._logger.error(msg)
                 raise ValueError(msg)
 

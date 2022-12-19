@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
+# Modified   : Monday December 19th 2022 07:18:14 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -241,7 +241,7 @@ class Dataset(Entity):
     def _set_metadata(self) -> None:
 
         dotenv.load_dotenv()
-        self._mode = self._mode or os.getenv("WORKSPACE")
+        self._mode = self._mode or os.getenv("MODE")
         self._description = self._description or f"{self.__class__.__name__}.{self._name}"
 
         if self._data is not None:

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Sunday December 18th 2022 09:36:24 pm                                               #
+# Modified   : Monday December 19th 2022 08:08:07 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -232,7 +232,7 @@ def dataset_dicts():
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
 def dataset_collection(datasets):
-    dsc = DatasetCollection(name="test_dsc", mode="test", stage="interim", description="Test Dataset Collection")
+    dsc = DatasetCollection(name="test_dsc", datasource="spotify", mode="test", stage="interim", description="Test Dataset Collection")
     for dataset in datasets:
         dsc.add(dataset)
 
