@@ -4,40 +4,38 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/entity/operation.py                                                    #
+# Filename   : /recsys/core/entity/dataset_collection.py                                           #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Sunday December 18th 2022 06:53:48 pm                                               #
+# Modified   : Sunday December 18th 2022 08:43:02 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-"""Operation Entity Module"""
-import os
+"""DatasetCollection Entity Module"""
+import pandas as pd
 
-from recsys.core.dal.dto import OperationDTO
-from recsys.core.services.operator import Operator
+from .dataset import Dataset
+from recsys.core.dal.dto import DatasetCollectionDTO
 from .base import Entity, DTO
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                        DATASET                                                   #
 # ------------------------------------------------------------------------------------------------ #
-class Operation(Entity):
-    """Operation encapsulates tabular data, metadata, and access behaviors for data used in this package.
+class DatasetCollection(Entity):
+    """DatasetCollection encapsulates two or more Datasets.
 
     Args:
-        name (str): Short, yet descriptive lowercase name for Operation object.
-        description (str): Describes the Operation object.
-        mode (str): The mode in which the operation is executed.
-        stage (str): The stage in which the operation is executed
-        operator (Operator): The Operator Instance
-        task_id (int): The identifier for the task in which this operation takes place.
-
+        name (str): collection name
+        description (str): collection description
+        mode (str): mode in which the collection is created
+        stage (str): Stage in which the collection was created
+        task_id (int): Identifier for task that created the collection
     """
 
     def __init__(
@@ -45,7 +43,6 @@ class Operation(Entity):
         name: str,
         mode: str,
         stage: str,
-        operator: Operator,
         task_id: int = None,
         description: str = None,
     ) -> None:
@@ -53,34 +50,36 @@ class Operation(Entity):
 
         self._mode = mode
         self._stage = stage
-        self._operator = operator
         self._task_id = task_id
 
-        # Assigned by repo
-        self._uri = self._get_uri()
+        self._datasets = {}
 
         # Validate entity
         self._validate()
 
     def __str__(self) -> str:
-        return f"\n\nOperation Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\t\n\tWorkspace: {self._mode}\n\tStage: {self._stage}\n\tTask Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"\n\nId: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tMode: {self._mode}\n\tStage: {self._stage}\n\tTask_Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}\n\t"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._name}, {self._description}, {self._mode}, {self._stage}, {self._task_id}, {self._created}, {self._modified}"
+        return f"{self._id},{self._name},{self._description},{self._mode},{self._stage},{self._task_id},{self._created},{self._modified}"
+
+    def __len__(self) -> int:
+        """Returns the number of Datasets in the DatasetCollection."""
+        return len(self._datasets)
 
     def __eq__(self, other) -> bool:
-        """Compares two Operations for equality.
-        Operations are considered equal solely if their underlying data are equal.
+        """Compares two DatasetCollections for equality.
+        DatasetCollections are considered equal solely if their underlying data are equal.
 
         Args:
-            other (Operation): The Operation object to compare.
+            other (DatasetCollection): The DatasetCollection object to compare.
         """
 
-        if isinstance(other, Operation):
+        if isinstance(other, DatasetCollection):
             return (self._name == other.name
                     and self._mode == other.mode
                     and self._stage == other.stage
-                    and self._operator == other._operator
+                    and self._datasets == other.datasets
                     and self._task_id == other.task_id)
         else:
             return False
@@ -108,22 +107,25 @@ class Operation(Entity):
         return self._stage
 
     @property
-    def uri(self) -> str:
-        return self._uri
-
-    @property
-    def operator(self) -> Operator:
-        return self._operator
+    def datasets(self) -> str:
+        return self._datasets
 
     # ------------------------------------------------------------------------------------------------ #
+    def add(self, dataset: Dataset) -> None:
+        """Adds a Dataset to the collection."""
+        self._datasets[dataset.id] = dataset
 
-    def _get_uri(self) -> None:
-        filename = self._name.lower() + ".pkl"
-        return os.path.join("operations", self._mode, self._stage, filename)
+    def remove(self, id: int) -> None:
+        """Removes a Dataset from the collection."""
+        del self._datasets[id]
+
+    def print(self) -> None:
+        df = pd.DataFrame.from_dict(data=self._datasets, orient='index')
+        print(df)
 
     # ------------------------------------------------------------------------------------------------ #
-    def as_dto(self) -> OperationDTO:
-        return OperationDTO(
+    def as_dto(self) -> DatasetCollectionDTO:
+        return DatasetCollectionDTO(
             id=self._id,
             name=self._name,
             description=self._description,
@@ -145,17 +147,12 @@ class Operation(Entity):
         self._task_id = dto.task_id
         self._created = dto.created
         self._modified = dto.modified
-        self._operator = None
+        self._datasets = []
         self._validate()
 
     # ------------------------------------------------------------------------------------------------ #
     def _validate(self) -> None:
         super()._validate()
-        if self._operator is not None:
-            if not isinstance(self._operator, Operator):
-                msg = f"operator must be of type Operator, not {type(self._operator)}"
-                self._logger.error(msg)
-                raise TypeError(msg)
         if self._task_id is not None:
             if not isinstance(self._task_id, int):
                 msg = f"task_id must be an integer, not {type(self._task_id)}"

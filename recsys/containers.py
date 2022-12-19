@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Saturday December 17th 2022 03:40:06 am                                             #
+# Modified   : Sunday December 18th 2022 07:25:20 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,13 +24,15 @@ from dependency_injector import containers, providers  # pragma: no cover
 from recsys.core.services.io import IOService
 from recsys.core.dal.repo import Repo, Context
 from recsys.core.entity.dataset import Dataset
+from recsys.core.entity.dataset_collection import DatasetCollection
 from recsys.core.entity.job import Job
 from recsys.core.entity.task import Task
 from recsys.core.entity.operation import Operation
 from recsys.core.entity.profile import Profile
-from recsys.core.dal.dao import DatasetDAO, JobDAO, TaskDAO, ProfileDAO, OperationDAO
+from recsys.core.dal.dao import DatasetDAO, JobDAO, TaskDAO, ProfileDAO, OperationDAO, DatasetCollectionDAO
 from recsys.core.dal.ddo import TableService
 from recsys.core.dal.sql.dataset import DatasetDDL, DatasetDML
+from recsys.core.dal.sql.dataset_collection import DatasetCollectionDDL, DatasetCollectionDML
 from recsys.core.dal.sql.job import JobDDL, JobDML
 from recsys.core.dal.sql.profile import ProfileDDL, ProfileDML
 from recsys.core.dal.sql.task import TaskDDL, TaskDML
@@ -72,6 +74,8 @@ class TableContainer(containers.DeclarativeContainer):
 
     dataset = providers.Factory(TableService, database=database, ddl=DatasetDDL)
 
+    dataset_collection = providers.Factory(TableService, database=database, ddl=DatasetCollectionDDL)
+
     operation = providers.Factory(TableService, database=database, ddl=OperationDDL)
 
     job = providers.Factory(TableService, database=database, ddl=JobDDL)
@@ -86,6 +90,8 @@ class DAOContainer(containers.DeclarativeContainer):
     database = providers.Dependency()
 
     dataset = providers.Factory(DatasetDAO, database=database, dml=DatasetDML)
+
+    dataset_collection = providers.Factory(DatasetCollectionDAO, database=database, dml=DatasetCollectionDML)
 
     operation = providers.Factory(OperationDAO, database=database, dml=OperationDML)
 
@@ -112,6 +118,8 @@ class ContextContainer(containers.DeclarativeContainer):
 
     dataset_repo = providers.Dependency(instance_of=Repo)
 
+    dataset_collection_repo = providers.Dependency(instance_of=Repo)
+
     operation_repo = providers.Dependency(instance_of=Repo)
 
     job_repo = providers.Dependency(instance_of=Repo)
@@ -123,6 +131,7 @@ class ContextContainer(containers.DeclarativeContainer):
     context = providers.Singleton(
         Context,
         dataset=dataset_repo,
+        dataset_collection=dataset_collection_repo,
         operation=operation_repo,
         job=job_repo,
         task=task_repo,
@@ -144,6 +153,8 @@ class Recsys(containers.DeclarativeContainer):
 
     dataset_repo = providers.Container(RepoContainer, entity=Dataset, dao=dao.dataset)
 
+    dataset_collection_repo = providers.Container(RepoContainer, entity=DatasetCollection, dao=dao.dataset_collection)
+
     operation_repo = providers.Container(RepoContainer, entity=Operation, dao=dao.operation)
 
     job_repo = providers.Container(RepoContainer, entity=Job, dao=dao.job)
@@ -154,6 +165,7 @@ class Recsys(containers.DeclarativeContainer):
 
     context = providers.Container(ContextContainer,
                                   dataset_repo=dataset_repo(),
+                                  dataset_collection_repo=dataset_collection_repo(),
                                   operation_repo=operation_repo(),
                                   job_repo=job_repo(),
                                   task_repo=task_repo(),

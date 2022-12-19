@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Friday December 16th 2022 06:05:16 am                                               #
+# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,7 +33,7 @@ class Entity(ABC):
         1. name, datasource, and description are added as private members.
         2. created is initialized to current datetime and private modified member is created.
         3. Properties for id, name, description, and datasource are created.
-        4. Validation is provided for name, datasource, workspace, and stage
+        4. Validation is provided for name, datasource, mode, and stage
 
     It also provides methods to export the Entity as a dictionary.
 
@@ -133,13 +133,13 @@ class Entity(ABC):
                 self._logger.error(msg)
                 raise ValueError(msg)
 
-        if hasattr(self, "workspace"):
-            if self._workspace is None:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'workspace' is required for {self.__class__.__name__} objects."
+        if hasattr(self, "mode"):
+            if self._mode is None:
+                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'mode' is required for {self.__class__.__name__} objects."
                 self._logger.error(msg)
                 raise TypeError(msg)
-            elif self._workspace not in recsys.WORKSPACES:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'workspace' is invalid. Must be one of {recsys.WORKSPACES}."
+            elif self._mode not in recsys.WORKSPACES:
+                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'mode' is invalid. Must be one of {recsys.WORKSPACES}."
                 self._logger.error(msg)
                 raise ValueError(msg)
 

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 10:24:47 pm                                                #
-# Modified   : Friday December 16th 2022 10:08:12 pm                                               #
+# Modified   : Sunday December 18th 2022 06:52:05 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,13 +33,13 @@ class Job(Entity):
     """Base class for Jobs
     Args:
         name (str): Human readable name for the job run.
-        workspace (str): Workspace in which the job runs.
+        mode (str): Workspace in which the job runs.
         description (str): Optional.
     """
 
-    def __init__(self, name: str, workspace: str, description: str = None, **kwargs) -> None:
+    def __init__(self, name: str, mode: str, description: str = None, **kwargs) -> None:
         super().__init__(name=name, description=description)
-        self._workspace = workspace
+        self._mode = mode
 
         self._id = None
         self._data = None
@@ -53,8 +53,8 @@ class Job(Entity):
         self._tasks = []
 
     @property
-    def workspace(self) -> str:
-        return self._workspace
+    def mode(self) -> str:
+        return self._mode
 
     @property
     def started(self) -> str:
@@ -106,7 +106,14 @@ class Job(Entity):
             id=self._id,
             name=self._name,
             description=self._description,
-            workspace=self._workspace,
+            mode=self._mode,
+            stage=self._stage,
+            n_tasks=self._n_tasks,
+            n_tasks_completed=self._n_tasks_completed,
+            pct_tasks_completed=self._pct_tasks_completed,
+            started=self._started,
+            ended=self._ended,
+            duration=self._duration,
             created=self._created,
             modified=self._modified,
         )
@@ -114,7 +121,16 @@ class Job(Entity):
     def _from_dto(self, dto: JobDTO) -> None:
         super().__init__(name=dto.name, description=dto.description)
         self._id = dto.id
-        self._workspace = dto.workspace
+        self._name = dto.name
+        self._description = dto.description
+        self._mode = dto.mode
+        self._stage = dto.stage
+        self._n_tasks = dto.n_tasks
+        self._n_tasks_completed = dto.n_tasks_completed
+        self._pct_tasks_completed = dto.pct_tasks_completed
+        self._started = dto.started
+        self._ended = dto.ended
+        self._duration = dto.duration
         self._created = dto.created
         self._modified = dto.modified
         self._validate()

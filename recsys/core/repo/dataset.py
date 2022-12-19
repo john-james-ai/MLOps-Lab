@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 04:07:04 pm                                              #
-# Modified   : Wednesday December 14th 2022 03:18:51 am                                            #
+# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -40,7 +40,7 @@ class DatasetRepo(Repo):
 
     def add(self, dataset: Dataset) -> Dataset:
         """Adds a Dataset to the repository and returns the Dataset with the id added."""
-        # Set the URI based upon datasource, workspace, stage, and filename.
+        # Set the URI based upon datasource, mode, stage, and filename.
         dataset = self._set_uri(dataset)
         # Persist the data
         if dataset.data is not None:
@@ -65,7 +65,7 @@ class DatasetRepo(Repo):
 
     def update(self, dataset: Dataset) -> None:
         """Updates a Dataset in the databases."""
-        # Set the URI based upon datasource, workspace, stage, and filename.
+        # Set the URI based upon datasource, mode, stage, and filename.
         dataset = self._set_uri(dataset)
         # Persist the data
         if dataset.data is not None:
@@ -109,9 +109,9 @@ class DatasetRepo(Repo):
         print(df)
 
     def _set_uri(self, dataset) -> Dataset:
-        """Sets the URI based upon the datasource, workspace, stage, and filename."""
+        """Sets the URI based upon the datasource, mode, stage, and filename."""
         filename = os.path.basename(dataset.filename) + ".pkl"
-        dataset.uri = os.path.join("data", dataset.datasource, "workspaces", dataset.workspace, dataset.stage, filename)
+        dataset.uri = os.path.join("data", dataset.datasource, "modes", dataset.mode, dataset.stage, filename)
         return dataset
 
     def _get_data_if_exists(self, dataset: Dataset) -> Dataset:

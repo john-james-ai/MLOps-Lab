@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 17th 2022 03:46:34 am                                             #
-# Modified   : Saturday December 17th 2022 04:50:57 am                                             #
+# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -73,10 +73,10 @@ class TestOperation:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        op = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", workspace="test", stage="interim", operator=NullOperator(), task_id=9)
+        op = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", mode="test", stage="interim", operator=NullOperator(), task_id=9)
         assert op.name == inspect.stack()[0][3]
         assert op.description == f"Description of {inspect.stack()[0][3],}"
-        assert op.workspace == 'test'
+        assert op.mode == 'test'
         assert op.stage == 'interim'
         assert isinstance(op.operator, Operator)
         assert op.task_id == 9
@@ -111,13 +111,13 @@ class TestOperation:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        op = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", workspace="test", stage="interim", operator=NullOperator(), task_id=9)
+        op = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", mode="test", stage="interim", operator=NullOperator(), task_id=9)
         dto = op.as_dto()
         assert isinstance(dto, OperationDTO)
         assert dto.id is None
         assert dto.name == inspect.stack()[0][3]
         assert dto.description == f"Description of {inspect.stack()[0][3],}"
-        assert dto.workspace == 'test'
+        assert dto.mode == 'test'
         assert dto.stage == 'interim'
         assert dto.task_id == 9
         assert dto.uri is not None
@@ -147,13 +147,13 @@ class TestOperation:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        op = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", workspace="test", stage="interim", operator=NullOperator(), task_id=9)
+        op = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", mode="test", stage="interim", operator=NullOperator(), task_id=9)
         dto = op.as_dict()
         assert isinstance(dto, dict)
         assert dto['id'] is None
         assert dto['name'] == inspect.stack()[0][3]
         assert dto['description'] == f"Description of {inspect.stack()[0][3],}"
-        assert dto['workspace'] == 'test'
+        assert dto['mode'] == 'test'
         assert dto['stage'] == 'interim'
         assert dto['operator'] is None
         assert dto['task_id'] == 9
@@ -184,13 +184,13 @@ class TestOperation:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        op1 = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", workspace="test", stage="interim", operator=NullOperator(), task_id=9)
+        op1 = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", mode="test", stage="interim", operator=NullOperator(), task_id=9)
         dto = op1.as_dto()
         op2 = Operation.from_dto(dto)
         assert op1.id == op2.id
         assert op1.name == op2.name
         assert op1.description == op2.description
-        assert op1.workspace == op2.workspace
+        assert op1.mode == op2.mode
         assert op1.stage == op2.stage
         assert op1.uri == op2.uri
         assert op1.task_id == op2.task_id
@@ -200,7 +200,7 @@ class TestOperation:  # pragma: no cover
         op3 = {'some': 'dict'}
         assert not op1 == op3
 
-        op4 = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", workspace="test", stage="interim", operator=NullOperator(), task_id=None)
+        op4 = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", mode="test", stage="interim", operator=NullOperator(), task_id=None)
         op4.task_id = 22
         assert not op1 == op4
 
@@ -239,7 +239,7 @@ class TestOperation:  # pragma: no cover
             _ = Operation(
                 name=inspect.stack()[0][3],
                 description=f"Description of {inspect.stack()[0][3],}",
-                workspace="029",
+                mode="029",
                 stage="interim",
                 operator=NullOperator(),
                 task_id=9)
@@ -248,7 +248,7 @@ class TestOperation:  # pragma: no cover
             _ = Operation(
                 name=inspect.stack()[0][3],
                 description=f"Description of {inspect.stack()[0][3],}",
-                workspace="test",
+                mode="test",
                 stage="interim77",
                 operator=NullOperator(),
                 task_id=9)
@@ -257,7 +257,7 @@ class TestOperation:  # pragma: no cover
             _ = Operation(
                 name=inspect.stack()[0][3],
                 description=f"Description of {inspect.stack()[0][3],}",
-                workspace="test",
+                mode="test",
                 stage="interim",
                 operator=9,
                 task_id=9)
@@ -266,7 +266,7 @@ class TestOperation:  # pragma: no cover
             _ = Operation(
                 name=inspect.stack()[0][3],
                 description=f"Description of {inspect.stack()[0][3],}",
-                workspace="test",
+                mode="test",
                 stage="interim",
                 operator=NullOperator(),
                 task_id='a')
@@ -296,7 +296,7 @@ class TestOperation:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        op1 = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", workspace="test", stage="interim", operator=NullOperator(), task_id=9)
+        op1 = Operation(name=inspect.stack()[0][3], description=f"Description of {inspect.stack()[0][3],}", mode="test", stage="interim", operator=NullOperator(), task_id=9)
         assert isinstance(op1.__str__(), str)
         assert isinstance(op1.__repr__(), str)
 

@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/dal/sql/operation.py                                                   #
+# Filename   : /recsys/core/dal/sql/dataset_collection.py                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
+# Modified   : Sunday December 18th 2022 08:14:27 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -29,7 +29,7 @@ from recsys.core.dal.dto import DTO
 #                                            DDL                                                   #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class CreateOperationTable(SQL):
+class CreateDatasetCollectionTable(SQL):
     name: str = "operation"
     sql: str = """CREATE TABLE IF NOT EXISTS operation (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT, mode TEXT NOT NULL, stage TEXT NOT NULL, task_id INTEGER, created timestamp, modified timestamp);"""
     args: tuple = ()
@@ -37,7 +37,7 @@ class CreateOperationTable(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DropOperationTable(SQL):
+class DropDatasetCollectionTable(SQL):
     name: str = "operation"
     sql: str = """DROP TABLE IF EXISTS operation;"""
     args: tuple = ()
@@ -47,7 +47,7 @@ class DropOperationTable(SQL):
 
 
 @dataclass
-class OperationTableExists(SQL):
+class DatasetCollectionTableExists(SQL):
     name: str = "operation"
     sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
     args: tuple = ()
@@ -58,10 +58,10 @@ class OperationTableExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class OperationDDL(DDL):
-    create: SQL = CreateOperationTable()
-    drop: SQL = DropOperationTable()
-    exists: SQL = OperationTableExists()
+class DatasetCollectionDDL(DDL):
+    create: SQL = CreateDatasetCollectionTable()
+    drop: SQL = DropDatasetCollectionTable()
+    exists: SQL = DatasetCollectionTableExists()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -70,7 +70,7 @@ class OperationDDL(DDL):
 
 
 @dataclass
-class InsertOperation(SQL):
+class InsertDatasetCollection(SQL):
     dto: DTO
     sql: str = """INSERT INTO operation (name, description, mode, stage, task_id, created, modified) VALUES (?,?,?,?,?,?,?);"""
     args: tuple = ()
@@ -91,7 +91,7 @@ class InsertOperation(SQL):
 
 
 @dataclass
-class UpdateOperation(SQL):
+class UpdateDatasetCollection(SQL):
     dto: DTO
     sql: str = """UPDATE operation SET name = ?, description = ?, mode = ?, stage = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
@@ -113,7 +113,7 @@ class UpdateOperation(SQL):
 
 
 @dataclass
-class SelectOperation(SQL):
+class SelectDatasetCollection(SQL):
     id: int
     sql: str = """SELECT * FROM operation WHERE id = ?;"""
     args: tuple = ()
@@ -125,7 +125,7 @@ class SelectOperation(SQL):
 
 
 @dataclass
-class SelectOperationByName(SQL):
+class SelectDatasetCollectionByName(SQL):
     name: str
     sql: str = """SELECT * FROM operation WHERE name = ?;"""
     args: tuple = ()
@@ -138,7 +138,7 @@ class SelectOperationByName(SQL):
 
 
 @dataclass
-class SelectAllOperations(SQL):
+class SelectAllDatasetCollections(SQL):
     sql: str = """SELECT * FROM operation;"""
     args: tuple = ()
 
@@ -146,7 +146,7 @@ class SelectAllOperations(SQL):
 # ------------------------------------------------------------------------------------------------ #
 
 @dataclass
-class OperationExists(SQL):
+class DatasetCollectionExists(SQL):
     id: int
     sql: str = """SELECT COUNT(*) FROM operation WHERE id = ?;"""
     args: tuple = ()
@@ -157,7 +157,7 @@ class OperationExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DeleteOperation(SQL):
+class DeleteDatasetCollection(SQL):
     id: int
     sql: str = """DELETE FROM operation WHERE id = ?;"""
     args: tuple = ()
@@ -168,11 +168,11 @@ class DeleteOperation(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class OperationDML(DML):
-    insert: type(SQL) = InsertOperation
-    update: type(SQL) = UpdateOperation
-    select: type(SQL) = SelectOperation
-    select_by_name: type(SQL) = SelectOperationByName
-    select_all: type(SQL) = SelectAllOperations
-    exists: type(SQL) = OperationExists
-    delete: type(SQL) = DeleteOperation
+class DatasetCollectionDML(DML):
+    insert: type(SQL) = InsertDatasetCollection
+    update: type(SQL) = UpdateDatasetCollection
+    select: type(SQL) = SelectDatasetCollection
+    select_by_name: type(SQL) = SelectDatasetCollectionByName
+    select_all: type(SQL) = SelectAllDatasetCollections
+    exists: type(SQL) = DatasetCollectionExists
+    delete: type(SQL) = DeleteDatasetCollection

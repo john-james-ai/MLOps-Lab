@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Friday December 16th 2022 09:06:48 pm                                               #
+# Modified   : Sunday December 18th 2022 09:37:57 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -172,7 +172,7 @@ class TestTaskDAO:  # pragma: no cover
         for i, task_dto in enumerate(task_dtos, start=1):
             logger.debug(f"\n\nDataset DTO\n{task_dto}")
             dto = dao.read(i)
-            assert task_dto == dto
+            assert task_dto.name == dto.name
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -209,8 +209,7 @@ class TestTaskDAO:  # pragma: no cover
             assert dto.id == i
             assert dto.name == f"task_dto_{i}"
             assert dto.description == f"Task Description DTO {i}"
-            assert dto.workspace == "test"
-            assert dto.operator == "some_operator"
+            assert dto.mode == "test"
             assert isinstance(dto.started, datetime)
             assert isinstance(dto.ended, datetime)
             assert isinstance(dto.duration, float)

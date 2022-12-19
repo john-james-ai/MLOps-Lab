@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 12th 2022 12:32:54 am                                               #
-# Modified   : Friday December 16th 2022 08:41:17 pm                                               #
+# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -46,7 +46,7 @@ class ExtractContainer(containers.DeclarativeContainer):
         name=config.output[0].name,
         description=config.output[0].description,
         datasource=config.output[0].datasource,
-        workspace=config.output[0].workspace,
+        mode=config.output[0].mode,
         stage=config.output[0].stage,
         filename=config.output[0].filename,
     )
@@ -55,7 +55,7 @@ class ExtractContainer(containers.DeclarativeContainer):
         name=config.output[1].name,
         description=config.output[1].description,
         datasource=config.output[1].datasource,
-        workspace=config.output[1].workspace,
+        mode=config.output[1].mode,
         stage=config.output[1].stage,
         filename=config.output[1].filename,
     )
@@ -65,7 +65,7 @@ class ExtractContainer(containers.DeclarativeContainer):
         name=config.output[2].name,
         description=config.output[2].description,
         datasource=config.output[2].datasource,
-        workspace=config.output[2].workspace,
+        mode=config.output[2].mode,
         stage=config.output[2].stage,
         filename=config.output[2].filename,
     )
@@ -75,7 +75,7 @@ class ExtractContainer(containers.DeclarativeContainer):
         name=config.output[3].name,
         description=config.output[3].description,
         datasource=config.output[3].datasource,
-        workspace=config.output[3].workspace,
+        mode=config.output[3].mode,
         stage=config.output[3].stage,
         filename=config.output[3].filename,
     )
@@ -85,7 +85,7 @@ class ExtractContainer(containers.DeclarativeContainer):
         name=config.output[4].name,
         description=config.output[4].description,
         datasource=config.output[4].datasource,
-        workspace=config.output[4].workspace,
+        mode=config.output[4].mode,
         stage=config.output[4].stage,
         filename=config.output[4].filename,
     )
@@ -95,7 +95,7 @@ class ExtractContainer(containers.DeclarativeContainer):
         name=config.output[5].name,
         description=config.output[5].description,
         datasource=config.output[5].datasource,
-        workspace=config.output[5].workspace,
+        mode=config.output[5].mode,
         stage=config.output[5].stage,
         filename=config.output[5].filename,
     )
@@ -126,7 +126,7 @@ class TransformContainer(containers.DeclarativeContainer):
         name=config.output[0].name,
         description=config.output[0].description,
         datasource=config.output[0].datasource,
-        workspace=config.output[0].workspace,
+        mode=config.output[0].mode,
         stage=config.output[0].stage,
         filename=config.output[0].filename,
     )
@@ -162,7 +162,7 @@ class LoadContainer(containers.DeclarativeContainer):
         name=config.output[0].name,
         description=config.output[0].description,
         datasource=config.output[0].datasource,
-        workspace=config.output[0].workspace,
+        mode=config.output[0].mode,
         stage=config.output[0].stage,
         filename=config.output[0].filename,
     )
@@ -188,7 +188,7 @@ class JobContainer(containers.DeclarativeContainer):
         Job,
         name=config.name,
         description=config.description,
-        workspace=config.workspace,
+        mode=config.mode,
     )
 
 

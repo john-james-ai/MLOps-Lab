@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Friday December 16th 2022 10:40:38 am                                               #
+# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -209,7 +209,7 @@ class TestJobDAO:  # pragma: no cover
             assert dto.id == i
             assert dto.name == f"job_dto_{i}"
             assert dto.description == f"Description for Job # {i}"
-            assert dto.workspace == "test"
+            assert dto.mode == "test"
             assert isinstance(dto.started, datetime)
             assert isinstance(dto.ended, datetime)
             assert isinstance(dto.duration, float)

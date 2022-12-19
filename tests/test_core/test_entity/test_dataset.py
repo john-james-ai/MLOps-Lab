@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 10:37:56 am                                             #
-# Modified   : Sunday December 11th 2022 09:16:48 am                                               #
+# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -194,7 +194,7 @@ class TestDatasetEntity:  # pragma: no cover
             assert ds.name == f"dataset_dto_{i}"
             assert ds.description == f"Description for Dataset DTO {i}"
             assert ds.datasource == "movielens25m"
-            assert ds.workspace == "test"
+            assert ds.mode == "test"
             assert ds.stage == "staged"
             assert ds.filepath == "tests/file/" + f"dataset_dto_{i}" + ".pkl"
             assert ds.task_id == i + i
@@ -291,7 +291,7 @@ class TestDatasetEntity:  # pragma: no cover
         assert d["name"] == inspect.stack()[0][3]
         assert d["description"] == f"Description of {inspect.stack()[0][3]}"
         assert d["datasource"] == "movielens25m"
-        assert d["workspace"] == "test"
+        assert d["mode"] == "test"
         assert d["stage"] == "staged"
         assert d["filepath"] is None
         assert d["task_id"] == 22
@@ -338,7 +338,7 @@ class TestDatasetEntity:  # pragma: no cover
         assert dto.name == inspect.stack()[0][3]
         assert dto.description == f"Description of {inspect.stack()[0][3]}"
         assert dto.datasource == "movielens25m"
-        assert dto.workspace == "test"
+        assert dto.mode == "test"
         assert dto.stage == "staged"
         assert dto.filepath is None
         assert dto.task_id == 22

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 7th 2022 08:03:23 pm                                             #
-# Modified   : Saturday December 17th 2022 03:22:23 am                                             #
+# Modified   : Sunday December 18th 2022 09:32:37 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -37,7 +37,7 @@ class Task(Entity):  # pragma: no cover
     Args:
         name (str): Short, yet descriptive lowercase name for Task object.
         description (str): Description of fileset
-        workspace (str): The workspace in which the task is performed.
+        mode (str): The mode in which the task is performed.
         operation (Operation): Operation that executes the task.
         job_id (int): The id for the job of which, the task is part.
 
@@ -46,9 +46,9 @@ class Task(Entity):  # pragma: no cover
         profile (Profile): The profile object containing, cpu, memory, disk and network utilization.
     """
 
-    def __init__(self, name: str, workspace: str, operation: Operation, job_id: int, description: str = None) -> None:
+    def __init__(self, name: str, mode: str, operation: Operation, job_id: int, description: str = None) -> None:
         super().__init__(self, name=name, description=description)
-        self._workspace = workspace
+        self._mode = mode
         self._operation = operation
         self._job_id = job_id
         self._id = None
@@ -61,10 +61,10 @@ class Task(Entity):  # pragma: no cover
         self._output = None
 
     def __str__(self) -> str:
-        return f"\n\nTask Id: {self._id}\n\tJob Id: {self._job_id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tWorkspace: {self._workspace}\n\tOperation: {self._operation.__class__.__name__}"
+        return f"\n\nTask Id: {self._id}\n\tJob Id: {self._job_id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tWorkspace: {self._mode}\n\tOperation: {self._operation.__class__.__name__}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._job_id}, {self._name}, {self._description}, {self._workspace}, {self._operation.__class__.__name__}"
+        return f"{self._id}, {self._job_id}, {self._name}, {self._description}, {self._mode}, {self._operation.__class__.__name__}"
 
     def __eq__(self, other) -> bool:
         """Compares two Tasks for equality."""
@@ -74,7 +74,7 @@ class Task(Entity):  # pragma: no cover
                 self._job_id == other.job_id
                 and self._name == other.name
                 and self._description == other.description
-                and self._workspace == other.workspace
+                and self._mode == other.mode
                 and self._operation == other.operation
                 and self._input == other.input
                 and self._output == other.output
@@ -88,8 +88,8 @@ class Task(Entity):  # pragma: no cover
         return self._job_id
 
     @property
-    def workspace(self) -> str:
-        return self._workspace
+    def mode(self) -> str:
+        return self._mode
 
     @property
     def started(self) -> str:
@@ -165,14 +165,18 @@ class Task(Entity):  # pragma: no cover
         self._id = dto.id
         self._name = dto.name
         self._description = dto.description
-        self._workspace = dto.workspace
+        self._mode = dto.mode
+        self._stage = dto.stage
+        self._job_id = dto.job_id
         self._started = dto.started
         self._ended = dto.ended
         self._duration = dto.duration
-        self._job_id = dto.job_id
         self._created = dto.created
         self._modified = dto.modified
+
         self._operation = None
+        self._input = None
+        self._output = None
 
         self._validate()
 
@@ -182,11 +186,12 @@ class Task(Entity):  # pragma: no cover
             id=self._id,
             name=self._name,
             description=self._description,
-            workspace=self._workspace,
+            mode=self._mode,
+            stage=self._stage,
+            job_id=self._job_id,
             started=self._started,
             ended=self._ended,
             duration=self._duration,
-            job_id=self._job_id,
             created=self._created,
             modified=self._modified,
         )

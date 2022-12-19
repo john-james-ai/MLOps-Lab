@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday December 17th 2022 01:05:30 am                                             #
+# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -37,7 +37,7 @@ class Dataset(Entity):
         description (str): Describes the Dataset object.
         datasource (str): The data datasource
         filename (str): Name of file
-        workspace (str): One of ['prod', 'dev', 'test']
+        mode (str): One of ['prod', 'dev', 'test']
         stage (str): The stage of the data processing lifecycle to which the Dataset belongs.
 
     """
@@ -46,7 +46,7 @@ class Dataset(Entity):
         self,
         name: str,
         datasource: str,
-        workspace: str,
+        mode: str,
         stage: str,
         filename: str,
 
@@ -54,7 +54,7 @@ class Dataset(Entity):
     ) -> None:
         super().__init__(name=name, description=description)
         self._datasource = datasource
-        self._workspace = workspace
+        self._mode = mode
         self._stage = stage
         self._filename = filename
         self._data = None
@@ -75,10 +75,10 @@ class Dataset(Entity):
         self._validate()
 
     def __str__(self) -> str:
-        return f"\n\nDataset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._datasource}\n\tWorkspace: {self._workspace}\n\tStage: {self._stage}\n\tFilepath: {self._uri}\n\tStep_Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"\n\nDataset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._datasource}\n\tWorkspace: {self._mode}\n\tStage: {self._stage}\n\tFilepath: {self._uri}\n\tStep_Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id},{self._name},{self._description},{self._datasource},{self._workspace},{self._stage},{self._uri},{self._task_id},{self._created},{self._modified}"
+        return f"{self._id},{self._name},{self._description},{self._datasource},{self._mode},{self._stage},{self._uri},{self._task_id},{self._created},{self._modified}"
 
     def __eq__(self, other) -> bool:
         """Compares two Datasets for equality.
@@ -106,8 +106,8 @@ class Dataset(Entity):
             raise TypeError(msg)
 
     @property
-    def workspace(self) -> str:
-        return self._workspace
+    def mode(self) -> str:
+        return self._mode
 
     @property
     def datasource(self) -> str:
@@ -203,7 +203,7 @@ class Dataset(Entity):
             name=self._name,
             description=self._description,
             datasource=self._datasource,
-            workspace=self._workspace,
+            mode=self._mode,
             stage=self._stage,
             filename=self._filename,
             uri=self._uri,
@@ -222,7 +222,7 @@ class Dataset(Entity):
         super().__init__(name=dto.name, description=dto.description)
         self._id = dto.id
         self._datasource = dto.datasource
-        self._workspace = dto.workspace
+        self._mode = dto.mode
         self._stage = dto.stage
         self._filename = dto.filename
         self._uri = dto.uri
@@ -241,7 +241,7 @@ class Dataset(Entity):
     def _set_metadata(self) -> None:
 
         dotenv.load_dotenv()
-        self._workspace = self._workspace or os.getenv("WORKSPACE")
+        self._mode = self._mode or os.getenv("WORKSPACE")
         self._description = self._description or f"{self.__class__.__name__}.{self._name}"
 
         if self._data is not None:

@@ -1,4 +1,4 @@
-#!/usr/bin/workspace python3
+#!/usr/bin/mode python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Saturday December 17th 2022 03:30:30 am                                             #
+# Modified   : Sunday December 18th 2022 09:36:24 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -25,6 +25,7 @@ import tests.containers
 from tests.containers import Recsys
 from recsys.core.services.io import IOService
 from recsys.core.entity.dataset import Dataset
+from recsys.core.entity.dataset_collection import DatasetCollection
 from recsys.core.dal.dao import DatasetDTO, ProfileDTO, TaskDTO, JobDTO, OperationDTO
 from recsys.core.data.database import Database
 from recsys.core.data.connection import SQLiteConnection
@@ -78,7 +79,7 @@ def dataset_dtos(ratings):
             name=f"dataset_dto_{i}",
             description=f"Description for Dataset DTO {i}",
             datasource="movielens25m",
-            workspace="test",
+            mode="test",
             stage="interim",
             filename=f"test_file_{i}.pkl",
             uri=f"tests/data/dataset_dto_{i}.pkl",
@@ -153,8 +154,8 @@ def task_dtos():
             id=i,
             name=f"task_dto_{i}",
             description=f"Task Description DTO {i}",
-            workspace="test",
-            operator="some_operator",
+            mode="test",
+            stage="extract",
             started=datetime.now() - timedelta(hours=i),
             ended=datetime.now(),
             duration=(datetime.now() - (datetime.now() - timedelta(hours=i))).total_seconds(),
@@ -175,7 +176,8 @@ def job_dtos():
             id=i,
             name=f"job_dto_{i}",
             description=f"Description for Job # {i}",
-            workspace="test",
+            mode="test",
+            stage="extract",
             n_tasks=i * 10,
             n_tasks_completed=i * 8,
             pct_tasks_completed=(i * 8) / (i * 10),
@@ -198,9 +200,8 @@ def operation_dtos():
             id=i,
             name=f"operation_dto_{i}",
             description=f"Description for Operation # {i}",
-            workspace="test",
+            mode="test",
             stage="interim",
-            uri=f"tests/operations/operation_dto_{i}.pkl",
             task_id=i + 22,
             created=datetime.now(),
             modified=datetime.now(),
@@ -219,13 +220,29 @@ def dataset_dicts():
             "name": f"dataset_{i}",
             "description": f"Description for Dataset {i}",
             "datasource": "movielens25m",
-            "workspace": "test",
-            "stage": "staged",
+            "mode": "test",
+            "stage": "interim",
             "task_id": i + i,
         }
         lod.append(d)
 
     return lod
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def dataset_collection(datasets):
+    dsc = DatasetCollection(name="test_dsc", mode="test", stage="interim", description="Test Dataset Collection")
+    for dataset in datasets:
+        dsc.add(dataset)
+
+    return dsc
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def dataset_collection_dto(dataset_collection):
+    return dataset_collection.as_dto()
 
 
 # ------------------------------------------------------------------------------------------------ #
