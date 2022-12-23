@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Monday December 19th 2022 08:02:13 am                                               #
+# Modified   : Monday December 19th 2022 09:14:00 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,7 +22,7 @@ from collections import OrderedDict
 from typing import Dict, Tuple, List
 
 from recsys.core.data.database import Database
-from .dto import DTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO, OperationDTO, DatasetCollectionDTO
+from .dto import DTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO, OperationDTO
 from .base import DML
 from recsys.core import Service
 
@@ -185,35 +185,6 @@ class DatasetDAO(DAO):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                           DATASET COLLECTION DATA ACCESS OBJECT                                  #
-# ------------------------------------------------------------------------------------------------ #
-class DatasetCollectionDAO(DAO):
-    """DatasetCollection Data Access Object"""
-
-    def __init__(self, database: Database, dml: DML) -> None:
-        super().__init__(database=database, dml=dml)
-
-    def _row_to_dto(self, row: Tuple) -> DatasetCollectionDTO:
-        try:
-            return DatasetCollectionDTO(
-                id=row[0],
-                name=row[1],
-                description=row[2],
-                datasource=row[3],
-                mode=row[4],
-                stage=row[5],
-                task_id=row[6],
-                created=row[7],
-                modified=row[8],
-            )
-
-        except IndexError as e:  # pragma: no cover
-            msg = f"Index error in_row_to_dto method.\n{e}"
-            self._logger.error(msg)
-            raise IndexError(msg)
-
-
-# ------------------------------------------------------------------------------------------------ #
 #                                 PROFILE DATA ACCESS OBJECT                                       #
 # ------------------------------------------------------------------------------------------------ #
 class ProfileDAO(DAO):
@@ -306,15 +277,12 @@ class JobDAO(DAO):
                 name=row[1],
                 description=row[2],
                 mode=row[3],
-                stage=row[4],
-                n_tasks=row[5],
-                n_tasks_completed=row[6],
-                pct_tasks_completed=row[7],
-                started=row[8],
-                ended=row[9],
-                duration=row[10],
-                created=row[11],
-                modified=row[12],
+                started=row[4],
+                ended=row[5],
+                duration=row[6],
+                state=row[7],
+                created=row[8],
+                modified=row[9],
             )
 
         except IndexError as e:  # pragma: no cover

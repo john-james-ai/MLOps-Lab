@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_core/test_dal/test_operation_dao.py                                     #
+# Filename   : /tests/test_core/test_workflow/test_task.py                                         #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday December 17th 2022 03:11:34 am                                             #
-# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
+# Created    : Friday December 16th 2022 09:01:22 pm                                               #
+# Modified   : Tuesday December 20th 2022 08:40:39 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,16 +21,16 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.dal.dto import OperationDTO
+from recsys.core.workflow.task import Task
+from recsys.core.workflow.operator import NullOperator
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-@pytest.mark.dao
-@pytest.mark.operation_dao
-class TestOperationDAO:  # pragma: no cover
+@pytest.mark.task
+class TestTask:  # pragma: no cover
     # ============================================================================================ #
     def test_setup(self, container, caplog):
         start = datetime.now()
@@ -43,7 +43,7 @@ class TestOperationDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ts = ts = container.table.operation()
+        ts = container.table.task()
         ts.reset()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -60,7 +60,7 @@ class TestOperationDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create_no_commit(self, operation_dtos, container, caplog):
+    def test_instantiation(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -71,43 +71,17 @@ class TestOperationDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.operation()
-        for i, dto in enumerate(operation_dtos, start=1):
-            logger.debug(f"\n\nTest Create DTO {i}\n\t{dto}")
-            dto = dao.create(dto)
-            assert dto.id == i
-            assert dao.exists(i)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        task = Task(name=inspect.stack()[0][3], mode="test", operator=NullOperator(), job_id=1, description=f"description for {inspect.stack()[0][3]}")
+        assert task.name == inspect.stack()[0][3]
+        assert task.mode == 'test'
+        assert isinstance(task.operator, NullOperator)
+        assert task.job_id == 1
+        assert task.description == f"description for {inspect.stack()[0][3]}"
+        assert isinstance(task.created, datetime)
+        assert not isinstance(task.modified, datetime)
 
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_read_no_commit(self, operation_dtos, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.operation()
-        for i, operation_dto in enumerate(operation_dtos, start=1):
-            logger.debug(f"\n\nDataset DTO\n{operation_dto}")
-            with pytest.raises(FileNotFoundError):
-                _ = dao.read(i)
+        with pytest.raises(ValueError):
+            task = Task(name=inspect.stack()[0][3], mode="928s", operator=NullOperator(), job_id=1, description=f"description for {inspect.stack()[0][3]}")
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -124,7 +98,7 @@ class TestOperationDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create_commit(self, operation_dtos, container, caplog):
+    def test_setters(self, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -135,13 +109,11 @@ class TestOperationDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.operation()
-        for i, dto in enumerate(operation_dtos, start=1):
-            logger.debug(f"\n\nTest Create DTO {i}\n\t{dto}")
-            dto = dao.create(dto)
-            dao.save()
-            assert dto.id == i
-            assert dao.exists(i)
+        task = Task(name=inspect.stack()[0][3], mode="test", operator=NullOperator(), job_id=1, description=f"description for {inspect.stack()[0][3]}")
+        task.input = datasets[0]
+        task.output = datasets
+        assert task.input == datasets[0]
+        assert task.output == datasets
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -157,7 +129,7 @@ class TestOperationDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_read_commit(self, operation_dtos, container, caplog):
+    def test_run(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -168,83 +140,11 @@ class TestOperationDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.operation()
-        for i, operation_dto in enumerate(operation_dtos, start=1):
-            logger.debug(f"\n\nDataset DTO\n{operation_dto}")
-            dto = dao.read(i)
-            assert operation_dto == dto
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_read_by_name(self, container, operation_dtos, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.operation()
-        for i, dto in enumerate(operation_dtos, start=1):
-            op_dto = dao.read_by_name(f"operation_dto_{i}")
-            assert isinstance(op_dto, OperationDTO)
-
-        with pytest.raises(FileNotFoundError):
-            dao.read_by_name("joe")
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_read_all(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.operation()
-        dtos = dao.read_all()
-        assert len(dtos) == 5
-        assert isinstance(dtos, dict)
-        for i, dto in dtos.items():
-            assert isinstance(dto, OperationDTO)
-            assert dto.id == i
-            assert dto.name == f"operation_dto_{i}"
-            assert dto.description == f"Description for Operation # {i}"
-            assert dto.mode == "test"
-            assert isinstance(dto.created, datetime)
-            assert isinstance(dto.modified, datetime)
+        task = Task(name=inspect.stack()[0][3], mode="test", operator=NullOperator(), job_id=1, description=f"description for {inspect.stack()[0][3]}")
+        task.run()
+        assert isinstance(task.started, datetime)
+        assert isinstance(task.ended, datetime)
+        assert isinstance(task.duration, float)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -261,7 +161,7 @@ class TestOperationDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_update(self, operation_dtos, container, caplog):
+    def test_from_dto(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -272,15 +172,9 @@ class TestOperationDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.operation()
-        for i, dto in enumerate(operation_dtos, start=1):
-            dto.description = f"Updated description {i}"
-            dao.update(dto)
-
-        for i in range(1, 6):
-            dto = dao.read(i)
-            assert dto.description == f"Updated description {i}"
-
+        t1 = Task(name=inspect.stack()[0][3], mode="test", operator=NullOperator(), job_id=1, description=f"description for {inspect.stack()[0][3]}")
+        t2 = Task.from_dto(t1.as_dto())
+        assert t1 == t2
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -296,7 +190,7 @@ class TestOperationDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_delete(self, container, caplog):
+    def test_teardown(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -307,11 +201,6 @@ class TestOperationDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.operation()
-        for i in range(1, 6):
-            dao.delete(i)
-
-        assert len(dao) == 0
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -326,5 +215,3 @@ class TestOperationDAO:  # pragma: no cover
                 end.strftime("%m/%d/%Y"),
             )
         )
-
-    # ============================================================================================ #

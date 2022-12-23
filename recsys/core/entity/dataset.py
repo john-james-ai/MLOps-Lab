@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Monday December 19th 2022 07:18:14 am                                               #
+# Modified   : Monday December 19th 2022 07:13:28 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -75,7 +75,7 @@ class Dataset(Entity):
         self._validate()
 
     def __str__(self) -> str:
-        return f"\n\nDataset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._datasource}\n\tWorkspace: {self._mode}\n\tStage: {self._stage}\n\tFilepath: {self._uri}\n\tStep_Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"\n\nDataset Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tData Source: {self._datasource}\n\tMode: {self._mode}\n\tStage: {self._stage}\n\tFilepath: {self._uri}\n\tStep_Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
         return f"{self._id},{self._name},{self._description},{self._datasource},{self._mode},{self._stage},{self._uri},{self._task_id},{self._created},{self._modified}"

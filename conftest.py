@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Monday December 19th 2022 08:08:07 am                                               #
+# Modified   : Wednesday December 21st 2022 02:58:12 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,11 +22,11 @@ import sqlite3
 from datetime import datetime, timedelta
 
 import tests.containers
+import recsys.data.movielens25m.config
 from tests.containers import Recsys
 from recsys.core.services.io import IOService
 from recsys.core.entity.dataset import Dataset
-from recsys.core.entity.dataset_collection import DatasetCollection
-from recsys.core.dal.dao import DatasetDTO, ProfileDTO, TaskDTO, JobDTO, OperationDTO
+from recsys.core.dal.dao import DatasetDTO, ProfileDTO, TaskDTO, JobDTO
 from recsys.core.data.database import Database
 from recsys.core.data.connection import SQLiteConnection
 
@@ -34,6 +34,7 @@ from recsys.core.data.connection import SQLiteConnection
 TEST_LOCATION = "tests/test.sqlite3"
 RATINGS_FILEPATH = "tests/data/movielens25m/raw/ratings.pkl"
 DATA_SOURCE_FILEPATH = "tests/data/datasources.xlsx"
+JOB_CONFIG_FILEPATH = "recsys/data/movielens25m/config.yml"
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -193,25 +194,6 @@ def job_dtos():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def operation_dtos():
-    dtos = []
-    for i in range(1, 6):
-        dto = OperationDTO(
-            id=i,
-            name=f"operation_dto_{i}",
-            description=f"Description for Operation # {i}",
-            mode="test",
-            stage="interim",
-            task_id=i + 22,
-            created=datetime.now(),
-            modified=datetime.now(),
-        )
-        dtos.append(dto)
-    return dtos
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
 def dataset_dicts():
     """List of dictionaries that can be used to instantiate Dataset."""
     lod = []
@@ -231,18 +213,9 @@ def dataset_dicts():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def dataset_collection(datasets):
-    dsc = DatasetCollection(name="test_dsc", datasource="spotify", mode="test", stage="interim", description="Test Dataset Collection")
-    for dataset in datasets:
-        dsc.add(dataset)
-
-    return dsc
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def dataset_collection_dto(dataset_collection):
-    return dataset_collection.as_dto()
+def job_config():
+    """List of dictionaries that can be used to instantiate Dataset."""
+    return IOService.read(JOB_CONFIG_FILEPATH)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -250,5 +223,5 @@ def dataset_collection_dto(dataset_collection):
 def container():
     container = Recsys()
     container.init_resources()
-    container.wire(modules=[tests.containers])
+    container.wire(modules=[tests.containers, recsys.data.movielens25m.config])
     return container

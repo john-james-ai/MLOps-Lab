@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday December 18th 2022 06:52:05 pm                                               #
+# Modified   : Monday December 19th 2022 09:12:38 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateJobTable(SQL):
     name: str = "job"
-    sql: str = """CREATE TABLE IF NOT EXISTS job (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT, mode TEXT NOT NULL, stage TEXT NOT NULL, n_tasks INTEGER, n_tasks_completed INTEGER, pct_tasks_completed REAL, started timestamp, ended timestamp, duration REAL, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS job (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT, mode TEXT NOT NULL, started timestamp, ended timestamp, duration REAL, state TEXT DEFAULT "CREATED", created timestamp, modified timestamp);"""
     args: tuple = ()
 
 
@@ -73,7 +73,7 @@ class JobDDL(DDL):
 class InsertJob(SQL):
     dto: DTO
 
-    sql: str = """INSERT INTO job (name, description, mode, stage, n_tasks, n_tasks_completed, pct_tasks_completed, started, ended, duration, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO job (name, description, mode, started, ended, duration, state, created, modified) VALUES (?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -81,13 +81,10 @@ class InsertJob(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.mode,
-            self.dto.stage,
-            self.dto.n_tasks,
-            self.dto.n_tasks_completed,
-            self.dto.pct_tasks_completed,
             self.dto.started,
             self.dto.ended,
             self.dto.duration,
+            self.dto.state,
             self.dto.created,
             self.dto.modified,
         )
@@ -99,7 +96,7 @@ class InsertJob(SQL):
 @dataclass
 class UpdateJob(SQL):
     dto: DTO
-    sql: str = """UPDATE job SET name = ?, description = ?, mode = ?, stage = ?, n_tasks = ?, n_tasks_completed = ?, pct_tasks_completed = ?, started = ?, ended = ?, duration = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE job SET name = ?, description = ?, mode = ?, started = ?, ended = ?, duration = ?, state = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -107,13 +104,10 @@ class UpdateJob(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.mode,
-            self.dto.stage,
-            self.dto.n_tasks,
-            self.dto.n_tasks_completed,
-            self.dto.pct_tasks_completed,
             self.dto.started,
             self.dto.ended,
             self.dto.duration,
+            self.dto.state,
             self.dto.created,
             self.dto.modified,
             self.dto.id,

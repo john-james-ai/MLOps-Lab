@@ -4,39 +4,40 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/services/operator.py                                                   #
+# Filename   : /recsys/core/workflow/operator.py                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:31:12 am                                                #
-# Modified   : Friday December 16th 2022 10:30:44 pm                                               #
+# Modified   : Monday December 19th 2022 03:32:02 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Operator Entity Module"""
+from abc import ABC, abstractmethod
 import time
 import pandas as pd
 import numpy as np
-from abc import abstractmethod
+import logging
 import urllib
 import tarfile
 from zipfile import ZipFile
 from typing import Dict
-
-from recsys.core.services.base import Service
 
 # ================================================================================================ #
 #                                    OPERATOR BASE CLASS                                           #
 # ================================================================================================ #
 
 
-class Operator(Service):
+class Operator(ABC):
     """Operator Base Class"""
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__()
+        self._logger = logging.getLogger(
+            f"{self.__module__}.{self.__class__.__name__}",
+        )
 
     def __str__(self) -> str:
         return f"Operator Name: {self.__class__.__name__}, Module: {self.__module__}"

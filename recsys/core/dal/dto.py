@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Monday December 19th 2022 08:01:28 am                                               #
+# Modified   : Monday December 19th 2022 09:13:26 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -81,22 +81,6 @@ class DatasetDTO(DTO):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                               DATASET COLLECTION TRANSFER OBJECT                                 #
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class DatasetCollectionDTO(DTO):
-    id: int
-    name: str
-    description: str
-    datasource: str
-    mode: str
-    stage: str
-    task_id: int
-    created: datetime
-    modified: datetime
-
-
-# ------------------------------------------------------------------------------------------------ #
 #                                   JOB DATA TRANSFER OBJECT                                       #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
@@ -105,13 +89,10 @@ class JobDTO(DTO):
     name: str
     description: str
     mode: str
-    stage: str
-    n_tasks: int
-    n_tasks_completed: int
-    pct_tasks_completed: float
     started: datetime
     ended: datetime
     duration: float
+    state: str
     created: datetime
     modified: datetime
 
