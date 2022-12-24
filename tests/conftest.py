@@ -11,24 +11,25 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Wednesday December 21st 2022 02:58:12 pm                                            #
+# Modified   : Saturday December 24th 2022 04:16:18 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import pytest
-import numpy as np
 import sqlite3
 from datetime import datetime, timedelta
 
 import tests.containers
-import recsys.data.movielens25m.config
-from tests.containers import Recsys
+from tests.containers import RecsysTest
 from recsys.core.services.io import IOService
 from recsys.core.entity.dataset import Dataset
-from recsys.core.dal.dao import DatasetDTO, ProfileDTO, TaskDTO, JobDTO
-from recsys.core.data.database import Database
-from recsys.core.data.connection import SQLiteConnection
+from recsys.core.entity.profile import Profile
+from recsys.core.workflow.job import Job
+from recsys.core.workflow.task import Task
+from recsys.core.workflow.operator import NullOperator
+from recsys.core.database.relational import RDB
+from recsys.core.database.connection import SQLiteConnection
 
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
@@ -62,60 +63,34 @@ def connection():
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
 def database(connection):
-    return Database(connection=connection)
+    return RDB(connection=connection)
 
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def dataset_dtos(ratings):
-    size = ratings.memory_usage(deep=True).sum().astype(np.int64)
-    nrows = ratings.shape[0]
-    ncols = ratings.shape[1]
-    nulls = ratings.isnull().sum().sum()
-    pct_nulls = (ratings.isnull().sum().sum() / (ratings.shape[0] * ratings.shape[1])) * 100
-    dtos = []
+def datasets(ratings):
+    datasets = []
     for i in range(1, 6):
-        dto = DatasetDTO(
-            id=i,
-            name=f"dataset_dto_{i}",
+        dataset = Dataset(
+            name=f"dataset_name_{i}",
             description=f"Description for Dataset DTO {i}",
             datasource="movielens25m",
             mode="test",
             stage="interim",
-            filename=f"test_file_{i}.pkl",
-            uri=f"tests/data/dataset_dto_{i}.pkl",
-            size=size,
-            nrows=nrows,
-            ncols=ncols,
-            nulls=nulls,
-            pct_nulls=pct_nulls,
-            task_id=i + i,
-            created=datetime.now(),
-            modified=datetime.now(),
+            data=ratings,
+            task_id=i + 50,
         )
-        dtos.append(dto)
-    return dtos
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def datasets(dataset_dtos, ratings):
-    datasets = []
-    for i, dto in enumerate(dataset_dtos):
-        dataset = Dataset.from_dto(dto)
-        if i % 1 == 0:
-            dataset.data = ratings
+        dataset.id = i
         datasets.append(dataset)
     return datasets
 
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def profile_dtos():
-    dtos = []
+def profiles():
+    profiles = []
     for i in range(1, 6):
-        dto = ProfileDTO(
-            id=None,
+        profile = Profile(
             name=f"profile_dto_{i}",
             description=f"Description for Profile {i}",
             started=datetime.now(),
@@ -142,54 +117,54 @@ def profile_dtos():
             created=datetime.now(),
             modified=datetime.now(),
         )
-        dtos.append(dto)
-    return dtos
+        profiles.append(profile)
+    return profiles
 
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def task_dtos():
-    dtos = []
+def tasks(datasets):
+    tasks = []
     for i in range(1, 6):
-        dto = TaskDTO(
-            id=i,
+        task = Task(
             name=f"task_dto_{i}",
             description=f"Task Description DTO {i}",
             mode="test",
             stage="extract",
+            operator=NullOperator,
+            input=datasets[0],
+            output=datasets[i - 1],
+            job_id=i * 10,
             started=datetime.now() - timedelta(hours=i),
             ended=datetime.now(),
             duration=(datetime.now() - (datetime.now() - timedelta(hours=i))).total_seconds(),
-            job_id=i * 10,
+            state='CREATED',
             created=datetime.now(),
             modified=datetime.now(),
         )
-        dtos.append(dto)
-    return dtos
+        tasks.append(task)
+    return tasks
 
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def job_dtos():
-    dtos = []
+def jobs():
+    jobs = []
     for i in range(1, 6):
-        dto = JobDTO(
-            id=i,
-            name=f"job_dto_{i}",
+        job = Job(
+            name=f"job_name_{i}",
             description=f"Description for Job # {i}",
             mode="test",
-            stage="extract",
-            n_tasks=i * 10,
-            n_tasks_completed=i * 8,
-            pct_tasks_completed=(i * 8) / (i * 10),
+            pipeline={},
             started=datetime.now() - timedelta(hours=i),
             ended=datetime.now(),
             duration=(datetime.now() - (datetime.now() - timedelta(hours=i))).total_seconds(),
+            state="READY",
             created=datetime.now(),
             modified=datetime.now(),
         )
-        dtos.append(dto)
-    return dtos
+        jobs.append(job)
+    return jobs
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -221,7 +196,7 @@ def job_config():
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope='module', autouse=True)
 def container():
-    container = Recsys()
+    container = RecsysTest()
     container.init_resources()
-    container.wire(modules=[tests.containers, recsys.data.movielens25m.config])
+    container.wire(modules=[tests.containers])
     return container

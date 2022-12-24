@@ -11,15 +11,15 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Friday December 16th 2022 03:26:36 am                                               #
+# Modified   : Saturday December 24th 2022 02:44:53 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Data Definition Object Module."""
 
-from recsys.core import Service
-from recsys.core.data.database import Database
+from recsys.core.services.base import Service
+from recsys.core.database.relational import RDB
 from .base import DDL
 # ------------------------------------------------------------------------------------------------ #
 
@@ -29,7 +29,7 @@ from .base import DDL
 
 
 class TableService(Service):
-    def __init__(self, database: Database, ddl: DDL) -> None:
+    def __init__(self, database: RDB, ddl: DDL) -> None:
         self._database = database
         self._ddl = ddl
         super().__init__()

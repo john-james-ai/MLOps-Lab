@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Friday December 16th 2022 03:09:36 am                                               #
+# Modified   : Saturday December 24th 2022 08:49:40 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateProfileTable(SQL):
     name: str = "profile"
-    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT, started timestamp, ended timestamp, duration INTEGER DEFAULT 0, user_cpu_time INTEGER DEFAULT 0, percent_cpu_used REAL NOT NULL, total_physical_memory INTEGER DEFAULT 0, physical_memory_available INTEGER DEFAULT 0, physical_memory_used INTEGER DEFAULT 0, percent_physical_memory_used REAL NOT NULL, active_memory_used INTEGER DEFAULT 0, disk_usage INTEGER DEFAULT 0, percent_disk_usage REAL NOT NULL, read_count INTEGER DEFAULT 0, write_count INTEGER DEFAULT 0, read_bytes INTEGER DEFAULT 0, write_bytes INTEGER DEFAULT 0, read_time INTEGER DEFAULT 0, write_time INTEGER DEFAULT 0, bytes_sent INTEGER DEFAULT 0, bytes_recv INTEGER DEFAULT 0, task_id INTEGER NOT NULL, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('profile_' || id), name TEXT NOT NULL UNIQUE, description TEXT, started timestamp, ended timestamp, duration INTEGER DEFAULT 0, user_cpu_time INTEGER DEFAULT 0, percent_cpu_used REAL NOT NULL, total_physical_memory INTEGER DEFAULT 0, physical_memory_available INTEGER DEFAULT 0, physical_memory_used INTEGER DEFAULT 0, percent_physical_memory_used REAL NOT NULL, active_memory_used INTEGER DEFAULT 0, disk_usage INTEGER DEFAULT 0, percent_disk_usage REAL NOT NULL, read_count INTEGER DEFAULT 0, write_count INTEGER DEFAULT 0, read_bytes INTEGER DEFAULT 0, write_bytes INTEGER DEFAULT 0, read_time INTEGER DEFAULT 0, write_time INTEGER DEFAULT 0, bytes_sent INTEGER DEFAULT 0, bytes_recv INTEGER DEFAULT 0, task_id INTEGER NOT NULL, created timestamp, modified timestamp);"""
     args: tuple = ()
 
 

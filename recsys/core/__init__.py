@@ -11,9 +11,8 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 20th 2022 10:55:22 pm                                               #
-# Modified   : Sunday December 4th 2022 04:10:35 pm                                                #
+# Modified   : Friday December 23rd 2022 02:32:49 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-from recsys.core.dal.base import Service

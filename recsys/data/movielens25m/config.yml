@@ -11,204 +11,205 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:42:49 pm                                                #
-# Modified   : Tuesday December 20th 2022 10:57:29 pm                                              #
+# Modified   : Saturday December 24th 2022 05:53:31 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-
 ---
-
-name: movielens25m_etl
-description: Extracts MovieLens25M data from GroupLens website, transforms data into pickle format, then loads the data into production, development and testing environments.
-mode: input
-stage: etl
-tasks:
-  # ============================================================================================ #
-  #                                      EXTRACT                                                 #
-  # ============================================================================================ #
-  - name: movielens25m_extractor
-    description: Download and Extract MovieLens25M from GroupLens website.
-    mode: input
-    stage: etl
-    operator: DownloadExtractor
-    module: recsys.core.workflow.operator
-    params:
-      url: https://files.grouplens.org/datasets/movielens/ml-25m.zip
-      destination: data/movielens25m/ext
-    force: False
-  # ============================================================================================ #
-  #                                    RAW DATASETS                                              #
-  # ============================================================================================ #
-  - name: generate_genome_scores_dataset
-    description: Generate Genome Scores Dataset from Movielens25m
-    mode: input
-    stage: raw
-    operator: DatasetGenerator
-    module: recsys.core.workflow.operator
-    params:
-      uri: data/movielens25m/ext/genome-scores.csv
-      dataset:
-        name: genome_scores
-        description: Genome scores Dataset
-        datasource: movielens25m
+job:
+  name: movielens25m_etl
+  description: Extracts MovieLens25M data from GroupLens website, transforms data into pickle format, then loads the data into production, development and testing environments.
+  mode: input
+  pipeline:
+    name: DataPipeline
+    module: recsys.core.workflow.pipeline
+    tasks:
+      # ============================================================================================ #
+      #                                      EXTRACT                                                 #
+      # ============================================================================================ #
+      - name: movielens25m_extractor
+        description: Download and Extract MovieLens25M from GroupLens website.
+        mode: input
+        stage: extract
+        operator: DownloadExtractor
+        module: recsys.core.workflow.operator
+        params:
+          url: https://files.grouplens.org/datasets/movielens/ml-25m.zip
+          destination: data/movielens25m/ext
+        force: False
+      # ============================================================================================ #
+      #                                    RAW DATASETS                                              #
+      # ============================================================================================ #
+      - name: generate_genome_scores_dataset
+        description: Generate Genome Scores Dataset from Movielens25m
         mode: input
         stage: raw
-    force: False
+        operator: DatasetGenerator
+        module: recsys.core.workflow.operator
+        params:
+          uri: data/movielens25m/ext/genome-scores.csv
+          dataset:
+            name: genome_scores
+            description: Genome scores Dataset
+            datasource: movielens25m
+            mode: input
+            stage: raw
+        force: False
 
-  - name: generate_genome_tags_dataset
-    description: Generate Genome Tags Dataset from Movielens25m
-    mode: input
-    stage: raw
-    operator: DatasetGenerator
-    module: recsys.core.workflow.operator
-    params:
-      uri: data/movielens25m/ext/genome-tags.csv
-      dataset:
-        name: genome_tags
-        description: Genome Tags Dataset
-        datasource: movielens25m
+      - name: generate_genome_tags_dataset
+        description: Generate Genome Tags Dataset from Movielens25m
         mode: input
         stage: raw
-    force: False
+        operator: DatasetGenerator
+        module: recsys.core.workflow.operator
+        params:
+          uri: data/movielens25m/ext/genome-tags.csv
+          dataset:
+            name: genome_tags
+            description: Genome Tags Dataset
+            datasource: movielens25m
+            mode: input
+            stage: raw
+        force: False
 
-  - name: generate_links_dataset
-    description: Generate Links Dataset from Movielens25m
-    mode: input
-    stage: raw
-    operator: DatasetGenerator
-    module: recsys.core.workflow.operator
-    params:
-      uri: data/movielens25m/ext/links.csv
-      dataset:
-        name: links
-        description: Links Dataset
-        datasource: movielens25m
+      - name: generate_links_dataset
+        description: Generate Links Dataset from Movielens25m
         mode: input
         stage: raw
-    force: False
+        operator: DatasetGenerator
+        module: recsys.core.workflow.operator
+        params:
+          uri: data/movielens25m/ext/links.csv
+          dataset:
+            name: links
+            description: Links Dataset
+            datasource: movielens25m
+            mode: input
+            stage: raw
+        force: False
 
-  - name: generate_movies_dataset
-    description: Generate Movies Dataset from Movielens25m
-    mode: input
-    stage: raw
-    operator: DatasetGenerator
-    module: recsys.core.workflow.operator
-    params:
-      uri: data/movielens25m/ext/movies.csv
-      dataset:
-        name: movies
-        description: Movies Dataset
-        datasource: movielens25m
+      - name: generate_movies_dataset
+        description: Generate Movies Dataset from Movielens25m
         mode: input
         stage: raw
-    force: False
+        operator: DatasetGenerator
+        module: recsys.core.workflow.operator
+        params:
+          uri: data/movielens25m/ext/movies.csv
+          dataset:
+            name: movies
+            description: Movies Dataset
+            datasource: movielens25m
+            mode: input
+            stage: raw
+        force: False
 
-  - name: generate_ratings_dataset
-    description: Generate Ratings Dataset from Movielens25m
-    mode: input
-    stage: raw
-    operator: DatasetGenerator
-    module: recsys.core.workflow.operator
-    params:
-      uri: data/movielens25m/ext/ratings.csv
-      dataset:
-        name: ratings
-        description: Ratings Dataset
-        datasource: movielens25m
+      - name: generate_ratings_dataset
+        description: Generate Ratings Dataset from Movielens25m
         mode: input
         stage: raw
-    force: False
+        operator: DatasetGenerator
+        module: recsys.core.workflow.operator
+        params:
+          uri: data/movielens25m/ext/ratings.csv
+          dataset:
+            name: ratings
+            description: Ratings Dataset
+            datasource: movielens25m
+            mode: input
+            stage: raw
+        force: False
 
-  - name: generate_tags_dataset
-    description: Generate Tags Dataset from Movielens25m
-    mode: input
-    stage: raw
-    operator: DatasetGenerator
-    module: recsys.core.workflow.operator
-    params:
-      uri: data/movielens25m/ext/tags.csv
-      dataset:
-        name: tags
-        description: Tags Dataset
-        datasource: movielens25m
+      - name: generate_tags_dataset
+        description: Generate Tags Dataset from Movielens25m
         mode: input
         stage: raw
-    force: False
+        operator: DatasetGenerator
+        module: recsys.core.workflow.operator
+        params:
+          uri: data/movielens25m/ext/tags.csv
+          dataset:
+            name: tags
+            description: Tags Dataset
+            datasource: movielens25m
+            mode: input
+            stage: raw
+        force: False
 
 
-  # ============================================================================================ #
-  #                                       LOAD                                                   #
-  # ============================================================================================ #
-  # -------------------------------------------------------------------------------------------- #
-  #                                  LOAD PRODUCTION                                             #
-  # -------------------------------------------------------------------------------------------- #
-  - name: load_ratings_prod
-    description: Load MovieLens25M Ratings Dataset into Production Mode
-    mode:  prod
-    stage: raw
-    operator: Sampler
-    module: recsys.core.workflow.operator
-    params:
-      source_dataset: ratings
-      cluster: True
-      cluster_by: userId
-      shuffle: True
-      replace: False
-      random_state: 55
-      frac: 1
-      dataset:
-        name: ratings_prod
-        description: Production Ratings Dataset
-        datasource: movielens25m
-        mode: prod
+      # ============================================================================================ #
+      #                                       LOAD                                                   #
+      # ============================================================================================ #
+      # -------------------------------------------------------------------------------------------- #
+      #                                  LOAD PRODUCTION                                             #
+      # -------------------------------------------------------------------------------------------- #
+      - name: load_ratings_prod
+        description: Load MovieLens25M Ratings Dataset into Production Mode
+        mode:  prod
         stage: raw
-    force: False
-  # -------------------------------------------------------------------------------------------- #
-  #                                  LOAD DEVELOPMENT                                            #
-  # -------------------------------------------------------------------------------------------- #
-  - name: load_ratings_dev
-    description: Load MovieLens25M Ratings Dataset into Development Mode
-    mode:  dev
-    stage: raw
-    operator: Sampler
-    module: recsys.core.workflow.operator
-    params:
-      source_dataset: ratings
-      cluster: True
-      cluster_by: userId
-      shuffle: True
-      replace: False
-      random_state: 55
-      frac: 0.1
-      dataset:
-        name: ratings_dev
-        description: Development Ratings Dataset
-        datasource: movielens25m
-        mode: dev
+        operator: Sampler
+        module: recsys.core.workflow.operator
+        params:
+          source_dataset: ratings
+          cluster: True
+          cluster_by: userId
+          shuffle: True
+          replace: False
+          random_state: 55
+          frac: 1
+          dataset:
+            name: ratings_prod
+            description: Production Ratings Dataset
+            datasource: movielens25m
+            mode: prod
+            stage: raw
+        force: False
+      # -------------------------------------------------------------------------------------------- #
+      #                                  LOAD DEVELOPMENT                                            #
+      # -------------------------------------------------------------------------------------------- #
+      - name: load_ratings_dev
+        description: Load MovieLens25M Ratings Dataset into Development Mode
+        mode:  dev
         stage: raw
-    force: False
-  # -------------------------------------------------------------------------------------------- #
-  #                                      LOAD TEST                                               #
-  # -------------------------------------------------------------------------------------------- #
-  - name: load_ratings_test
-    description: Load MovieLens25M Ratings Dataset into Test Mode
-    mode:  test
-    stage: raw
-    operator: Sampler
-    module: recsys.core.workflow.operator
-    params:
-      source_dataset: ratings
-      cluster: True
-      cluster_by: userId
-      shuffle: True
-      replace: False
-      random_state: 55
-      frac: 0.01
-      dataset:
-        name: ratings_test
-        description: Test Ratings Dataset
-        datasource: movielens25m
-        mode: test
+        operator: Sampler
+        module: recsys.core.workflow.operator
+        params:
+          source_dataset: ratings
+          cluster: True
+          cluster_by: userId
+          shuffle: True
+          replace: False
+          random_state: 55
+          frac: 0.1
+          dataset:
+            name: ratings_dev
+            description: Development Ratings Dataset
+            datasource: movielens25m
+            mode: dev
+            stage: raw
+        force: False
+      # -------------------------------------------------------------------------------------------- #
+      #                                      LOAD TEST                                               #
+      # -------------------------------------------------------------------------------------------- #
+      - name: load_ratings_test
+        description: Load MovieLens25M Ratings Dataset into Test Mode
+        mode:  test
         stage: raw
-    force: False
+        operator: Sampler
+        module: recsys.core.workflow.operator
+        params:
+          source_dataset: ratings
+          cluster: True
+          cluster_by: userId
+          shuffle: True
+          replace: False
+          random_state: 55
+          frac: 0.01
+          dataset:
+            name: ratings_test
+            description: Test Ratings Dataset
+            datasource: movielens25m
+            mode: test
+            stage: raw
+        force: False

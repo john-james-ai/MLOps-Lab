@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 10:24:47 pm                                                #
-# Modified   : Tuesday December 20th 2022 06:30:59 pm                                              #
+# Modified   : Saturday December 24th 2022 09:55:52 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,8 +19,9 @@
 """Job Module."""
 from datetime import datetime
 
+from recsys import STATES
 from recsys.core.dal.dto import JobDTO
-from .base import Process, STATES
+from .base import Process
 from .pipeline import Pipeline
 from recsys.core.dal.repo import Context
 

@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_core/test_dal/test_dataset_dao.py                                       #
+# Filename   : /tests/test_core/test_database/test_odb.py                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Saturday December 24th 2022 12:34:07 pm                                             #
+# Created    : Saturday December 24th 2022 02:13:29 pm                                             #
+# Modified   : Saturday December 24th 2022 04:52:48 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,15 +22,15 @@ import pytest
 import logging
 
 from recsys.core.entity.dataset import Dataset
+import tests.containers    # noqa F401
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-@pytest.mark.dao
-@pytest.mark.dataset_dao
-class TestDatasetDAO:  # pragma: no cover
+@pytest.mark.odb
+class TestODB:  # pragma: no cover
     # ============================================================================================ #
     def test_setup(self, container, caplog):
         start = datetime.now()
@@ -43,10 +43,11 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ts = container.table.dataset()
-        ts.reset()
+        logger.debug(container.config())
         odb = container.data.odb()
-        odb.reset()
+        with odb as db:
+            db.reset()
+            db.save()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -62,7 +63,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create_no_commit(self, datasets, container, caplog):
+    def test_create(self, datasets, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -73,44 +74,22 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
+        odb = container.data.odb()
+        j = 0
         for i, dataset in enumerate(datasets, start=1):
-            logger.debug(f"\n\nTest Create DTO {i}\n\t{dataset}")
-            dataset = dao.create(dataset)
-            assert dataset.id == i
-            assert dataset.oid == f'dataset_{i}'
-            assert dao.exists(i)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+            if i % 2 == 0:
+                j += 1
+                with odb as db:
+                    db.create(dataset)
+                    assert len(odb) == j - 1
 
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
+        assert len(odb) == 2
 
-    # ============================================================================================ #
-    def test_read_no_commit(self, datasets, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
         for i, dataset in enumerate(datasets, start=1):
-            logger.debug(f"\n\nDataset\n{dataset}")
-            with pytest.raises(FileNotFoundError):
-                _ = dao.read(i)
+            if i % 2 == 0:
+                with odb as db:
+                    with pytest.raises(FileExistsError):
+                        db.create(dataset)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -127,7 +106,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create_commit(self, datasets, container, caplog):
+    def test_read(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -138,146 +117,30 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        for i, dataset in enumerate(datasets, start=1):
-            logger.debug(f"\n\nTest Create DTO {i}\n\t{dataset}")
-            dataset = dao.create(dataset)
-            dao.save()
-            assert dataset.id == i
-            assert dao.exists(i)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        odb = container.data.odb()
 
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
+        for i in range(1, 6):
+            oid = f"dataset_{i}"
+            if i % 2 == 0:
+                with odb as db:
+                    dataset = db.read(oid)
+                    assert isinstance(dataset, Dataset)
+                    assert dataset.id == i
+                    assert dataset.datasource == 'movielens25m'
+                    assert dataset.mode == 'test'
+                    assert dataset.stage == 'interim'
+                    assert dataset.ncols > 1
+                    assert dataset.nrows > 100
+                    assert dataset.pct_nulls == 0.0
+                    assert dataset.task_id == i + 50
+                    assert dataset.parent_id == 0
+                    assert isinstance(dataset.created, datetime)
+                    assert isinstance(dataset.modified, datetime)
+            else:
+                with pytest.raises(FileNotFoundError):
+                    with odb as db:
+                        db.read(oid)
 
-    # ============================================================================================ #
-    def test_read_commit(self, datasets, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        for i, dataset in enumerate(datasets, start=1):
-            logger.debug(f"\n\nDataset DTO\n{dataset}")
-            dataset = dao.read(i)
-            assert dataset == dataset
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_read_all(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        datasets = dao.read_all()
-        assert len(datasets) == 5
-        assert isinstance(datasets, dict)
-        for i, dataset in datasets.items():
-            assert isinstance(dataset, Dataset)
-            assert dataset.id == i
-            assert dataset.task_id == i + i
-            assert dataset.oid == f'dataset_{i}'
-            assert isinstance(dataset.created, datetime)
-            assert isinstance(dataset.modified, datetime)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_read_by_name_not_exists(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        with pytest.raises(FileNotFoundError):
-            _ = dao.read_by_name("dataset_22")
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_read_by_name(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        dataset = dao.read_by_name("dataset_3")
-        assert isinstance(dataset, Dataset)
-        assert dataset.task_id == 6
-        assert dataset.ncols == 4
-        assert dataset.nrows == 2500010
-        assert isinstance(dataset.created, datetime)
-        assert isinstance(dataset.modified, datetime)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -304,15 +167,15 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
+        odb = container.data.odb()
         for i, dataset in enumerate(datasets, start=1):
-            dataset.stage = "final"
-            dao.update(dataset)
-
-        for i in range(1, 6):
-            dataset = dao.read(i)
-            assert dataset.stage == "final"
-
+            if i % 2 == 0:
+                with odb as db:
+                    db.update(dataset)
+            else:
+                with pytest.raises(FileNotFoundError):
+                    with odb as db:
+                        db.update(dataset)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -339,11 +202,16 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
+        odb = container.data.odb()
         for i in range(1, 6):
-            dao.delete(i)
-
-        assert len(dao) == 0
+            oid = f"dataset_{i}"
+            if i % 2 == 0:
+                with odb as db:
+                    db.delete(oid)
+            else:
+                with pytest.raises(FileNotFoundError):
+                    with odb as db:
+                        db.delete(oid)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -360,3 +228,37 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
+    def test_save(self, container, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        odb = container.data.odb()
+        for i, dataset in enumerate(datasets, start=1):
+            if i % 2 == 0:
+                size = len(odb)
+                with odb as db:
+                    db.create(dataset)
+                    assert len(db) == size
+                    db.save()
+                    assert len(db) == size + 1
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )

@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_core/test_data/test_database.py                                         #
+# Filename   : /tests/test_core/test_database/test_rdb.py                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 07:39:50 am                                              #
-# Modified   : Friday December 16th 2022 03:27:58 am                                               #
+# Modified   : Saturday December 24th 2022 02:48:18 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -34,7 +34,7 @@ from .sql import (
     DeleteTest,
     ExistsTest,
 )
-from recsys.core.data.connection import SQLiteConnection
+from recsys.core.database.connection import SQLiteConnection
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Monday December 19th 2022 07:17:59 am                                               #
+# Modified   : Saturday December 24th 2022 12:27:02 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -29,20 +29,18 @@ from recsys.core.dal.base import DTO
 class Entity(ABC):
     """Abstract base class for entity classes.
 
-    It provides several services for the subclasses.
-        1. name, datasource, and description are added as private members.
-        2. created is initialized to current datetime and private modified member is created.
-        3. Properties for id, name, description, and datasource are created.
-        4. Validation is provided for name, datasource, mode, and stage
-
-    It also provides methods to export the Entity as a dictionary.
+    name (str): Name of entity
+    description (str): Optional description of entity
+    mode (str): One of the registered modes, i.e. ['input','test', 'dev', 'prod']
 
     """
 
-    def __init__(self, name: str, description: str) -> None:
+    def __init__(self, name: str, mode: str, description: str = None) -> None:
         self._id = None
+        self._oid = None
         self._name = name
         self._description = description
+        self._mode = mode
         self._created = datetime.now()
         self._modified = None
         self._logger = logging.getLogger(
@@ -55,13 +53,13 @@ class Entity(ABC):
 
     @id.setter
     def id(self, id: int) -> None:
-        if self._id is None:
-            self._id = id
-            self._modified = datetime.now()
-        elif not self._id == id:
-            msg = "Item reassignment is not supported for the 'id' member."
-            self._logger.error(msg)
-            raise TypeError(msg)
+        self._id = id
+        self._oid = f"{self.__class__.__name__.lower()}_{id}"
+        self._modified = datetime.now()
+
+    @property
+    def oid(self) -> str:
+        return self._oid
 
     @property
     def name(self) -> str:
@@ -70,6 +68,10 @@ class Entity(ABC):
     @property
     def description(self) -> str:
         return self._description
+
+    @property
+    def mode(self) -> str:
+        return self._mode
 
     @property
     def created(self) -> str:
@@ -82,16 +84,6 @@ class Entity(ABC):
     @abstractmethod
     def as_dto(self) -> DTO:
         """Returns a Data Transfer Object representation of the entity."""
-
-    @classmethod
-    def from_dto(cls, dto: DTO):
-        self = cls.__new__(cls)
-        self._from_dto(dto)
-        return self
-
-    @abstractmethod
-    def _from_dto(self, dto: DTO) -> None:
-        """Sets the properties and members on the new Entity."""
 
     def as_dict(self) -> dict:
         """Returns a dictionary representation of the the Config object."""

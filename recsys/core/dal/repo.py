@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 12:28:07 am                                               #
-# Modified   : Friday December 16th 2022 10:18:35 pm                                               #
+# Modified   : Saturday December 24th 2022 11:19:15 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,15 +30,13 @@ from recsys.core.services.base import Service
 class Repo(Service):
     """Repository base class"""
 
-    def __init__(self, entity: type(Entity), dao: DAO) -> None:
+    def __init__(self,dao: DAO) -> None:
         super().__init__()
-        self._entity = entity
         self._dao = dao
 
     def add(self, entity: Entity) -> Entity:
         """Adds an entity to the repository and returns the Entity with the id added."""
-        dto = entity.as_dto()
-        dto = self._dao.create(dto)
+        self._dao.create(entity)
         # Convert the dto with id, back to a Dataset and return.
         return self._entity.from_dto(dto)
 

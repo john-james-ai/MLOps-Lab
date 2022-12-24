@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 19th 2022 03:34:43 pm                                               #
-# Modified   : Wednesday December 21st 2022 02:58:44 pm                                            #
+# Modified   : Saturday December 24th 2022 11:18:46 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,18 +19,16 @@
 """Job Module"""
 from abc import ABC, abstractmethod
 import importlib
-# from types import SimpleNamespace
+from types import SimpleNamespace
 import logging
 
-from dependency_injector import providers
 from dependency_injector.wiring import Provide, inject
 
-from tests.containers import Recsys
-from recsys.data.movielens25m.config import MovieLens25M
+from recsys.containers import Recsys
 from .task import Task
 from .pipeline import Pipeline
-from .base import Process
 from .job import Job
+from recsys.core.services.io import IOService
 from recsys.core.dal.repo import Context
 from recsys.core.workflow.operator import Operator
 
@@ -41,35 +39,33 @@ from recsys.core.workflow.operator import Operator
 class Builder(ABC):
     """Constructs complex objects"""
 
-    def __init__(self) -> None:
+    @inject
+    def __init__(self, context: Context = Provide[Recsys.context]) -> None:
+        self._context = context
         self._logger = logging.getLogger(
             f"{self.__module__}.{self.__class__.__name__}",
         )
 
     @property
     @abstractmethod
-    def process(self) -> Process:
-        """Returns a Process object."""
+    def job(self) -> Job:
+        """Returns a Job object."""
 
     @abstractmethod
-    def set_config(self, config: dict) -> None:
-        """Sets the pipeline configuration."""
+    def build_config(self, config: dict) -> None:
+        """Build the configuration namesspace object."""
 
     @abstractmethod
-    def set_context(self, context: Context) -> None:
-        """Sets the repository context."""
+    def build_job(self, job_config: SimpleNamespace) -> None:
+        """Builds the job object."""
 
     @abstractmethod
-    def set_pipeline(self, pipeline: Pipeline) -> None:
-        """Sets the Pipeline object."""
+    def build_pipeline(self, pipeline: Pipeline) -> None:
+        """Builds the pipeline object."""
 
     @abstractmethod
-    def build_process(self) -> None:
-        """Sets the Process object."""
-
-    @abstractmethod
-    def build_tasks(self) -> None:
-        """Constructs Task objects and adds to process"""
+    def build_tasks(self, tasks_config: SimpleNamespace) -> None:
+        """Constructs Task objects and adds to the pipeline"""
 
     @abstractmethod
     def save(self) -> None:
@@ -85,40 +81,36 @@ class JobBuilder(Builder):
     def __init__(self) -> None:
         super().__init__()
         self.reset()
-        self._context = None
-        self._config = None
         self._pipeline = None
 
     def reset(self) -> None:
         self._job = Job()
 
     @property
-    def process(self) -> Process:
+    def job(self) -> Job:
         job = self._job
         self.reset()
         return job
 
-    def set_config(self, config: Provide) -> None:
-        self._logger.debug(config)
-        self._config = config()
+    def build_config(self, config: dict) -> None:
+        self._config = SimpleNamespace(**config)
 
-    def set_context(self, context: Context) -> None:
-        self._context = context
-
-    def set_pipeline(self, pipeline: Pipeline) -> None:
-        self._pipeline = pipeline
-
-    def build_process(self) -> None:
+    def build_job(self) -> None:
         self._job.name = self._config.name
         self._job.description = self._config.description
         self._job.mode = self._config.mode
         self._job.context = self._context
-        self._job.pipeline = self._pipeline
         self._job = self._context.job.add(self._job)
+
+    def build_pipeline(self) -> None:
+        module = importlib.import_module(name=self._config.pipeline.module)
+        pipeline = getattr(module, self._config.pipeline.name)
+        self._job.pipeline = pipeline()
+        self._context.job.update(self._job)
 
     def build_tasks(self) -> None:
         """Iterates through task and returns a list of task objects."""
-        for task_config in self._config.job.tasks:
+        for task_config in self._config.job.pipeline.tasks:
             operator = self._build_operator(task_config)
             task = Task()
             task.name = task_config.name
@@ -128,12 +120,14 @@ class JobBuilder(Builder):
             task.operator = operator
             task.force = task_config.force
             task.job_id = self._job.id
+            self._context.task.add(task)
 
             self._job.pipeline.add_task(task)
 
-    def save(self) -> None:
-        """Updates the job in the repository and saves."""
         self._context.job.update(self._job)
+
+    def save(self) -> None:
+        """Saves context."""
         self._context.save()
 
     def _build_operator(self, config) -> Operator:
@@ -154,12 +148,9 @@ class JobBuilder(Builder):
 class Director:
     """The Director is responsible for executing the building steps in a particular sequence. """
 
-
-    def __init__(self, context: Context = Provide[Recsys.context],
-                 config: providers.Configuration = Provide[MovieLens25M.config]) -> None:
+    def __init__(self, io: IOService = IOService) -> None:
         self._builder = None
-        self._config = config
-        self._context = context
+        self._config = None
 
     @property
     def builder(self) -> Builder:
@@ -174,37 +165,10 @@ class Director:
         """
         self._builder = builder
 
-    @property
-    def process(self) -> Builder:
-        return self._process
-
-    @process.setter
-    def process(self, process: Process) -> None:
-        """The Director works with any process instance.
-
-        Args:
-            process (Process): Process instance.
-        """
-        self._process = process
-
-    @property
-    def pipeline(self) -> Pipeline:
-        """Pipeline instance."""
-        return self._pipeline
-
-    @pipeline.setter
-    def pipeline(self, pipeline: Pipeline) -> None:
-        """An instance of the Pipeline the job will execute.
-
-        Args:
-            pipeline (Pipeline): Pipeline instance.
-        """
-        self._pipeline = pipeline
-
-    def build_job(self) -> None:
-        self._builder.set_config(self._config)  # Class type from container.
-        self._builder.set_context(self._context)  # Class type from container.
-        self._builder.set_pipeline(self._pipeline)  # Instance
-        self._builder.build_process()
+    def build_job(self, config_filepath: str) -> None:
+        config = IOService.read(config_filepath)
+        self._builder.build_config(config["job"])
+        self._builder.build_job()
+        self._builder.build_pipeline()
         self._builder.build_tasks()
         self._builder.save()
