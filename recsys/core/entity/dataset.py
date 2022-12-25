@@ -11,25 +11,206 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday December 24th 2022 02:31:46 pm                                             #
+# Modified   : Sunday December 25th 2022 12:38:58 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Dataset Entity Module"""
+from abc import abstractmethod
 import os
 import dotenv
 from datetime import datetime
 import pandas as pd
+from typing import Union, Dict
 
 from .base import Entity
-from recsys.core.dal.dto import DatasetDTO
+from recsys.core.dal.dto import DatasetDTO, DatasetsDTO
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    DATASET COMPONENT                                             #
+# ------------------------------------------------------------------------------------------------ #
+class DatasetComponent(Entity):
+    """Base component class from which Dataset (Leaf) and Datasets (Composite) objects derive.
+    Args:
+        name (str): Short, yet descriptive lowercase name for Dataset object.
+        description (str): Describes the Dataset object.
+        datasource (str): The data datasource.
+        mode (str): One of the registered modes, ie. 'input', 'prod', 'dev', or 'test'.
+        stage (str): The stage of the data processing lifecycle to which the Dataset belongs.
+        task_id (int): The identifier for the Task that is creating the Dataset.
+        parent_id (int): The identifier for the Dataset to which this Dataset belongs if any. Default = 0"""
+
+    def __init__(
+        self,
+        name: str,
+        datasource: str,
+        mode: str,
+        stage: str,
+        description: str = None,
+        task_id: int = None,
+        parent: Entity = None,
+    ) -> None:
+        super().__init__(name=name, mode=mode, description=description)
+        self._id = None
+        self._datasource = datasource
+        self._stage = stage
+        self._task_id = task_id
+        self._parent = parent
+        self._is_composite = False
+
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def task_id(self) -> int:
+        return self._task_id
+
+    @task_id.setter
+    def task_id(self, task_id: int) -> None:
+        if self._task_id is None:
+            self._task_id = task_id
+            self._validate()
+            self._modified = datetime.now()
+        elif not self._task_id == task_id:
+            msg = "Item reassignment is not supported for the 'task_id' member."
+            self._logger.error(msg)
+            raise TypeError(msg)
+
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def parent(self) -> Entity:
+        return self._parent
+
+    @parent.setter
+    def parent(self, parent: Entity) -> None:
+        if self._parent is None:
+            self._parent = parent
+        else:
+            msg = "Item reassignment is not supported for the 'parent' member."
+            self._logger.error(msg)
+            raise TypeError(msg)
+
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def datasource(self) -> str:
+        return self._datasource
+
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def stage(self) -> str:
+        return self._stage
+
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def is_composite(self) -> str:
+        return self._is_composite
+
+    # -------------------------------------------------------------------------------------------- #
+    @abstractmethod
+    def as_dto(self) -> Union[DatasetDTO, Dict[int, DatasetDTO]]:
+        """Creates a dto or a dictionary of dtos for child objects."""
+    # -------------------------------------------------------------------------------------------- #
+    def _set_metadata(self) -> None:
+
+        dotenv.load_dotenv()
+        self._mode = self._mode or os.getenv("MODE")
+        self._description = self._description or f"{self.__class__.__name__}.{self._name}"
+
+    # ------------------------------------------------------------------------------------------------ #
+    def _validate(self) -> None:
+        super()._validate()
+        if self._task_id is not None:
+            if not isinstance(self._task_id, int):
+                msg = f"Task_id must be an integer, not {type(self._task_id)}"
+                self._logger.error(msg)
+                raise TypeError(msg)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                        DATASETS                                                  #
+# ------------------------------------------------------------------------------------------------ #
+class Datasets(DatasetComponent):
+    """Composite collection of Dataset or Datasets objects.
+
+    Args:
+        name (str): Short, yet descriptive lowercase name for Dataset object.
+        description (str): Describes the Dataset object.
+        datasource (str): The data datasource.
+        mode (str): One of the registered modes, ie. 'input', 'prod', 'dev', or 'test'.
+        stage (str): The stage of the data processing lifecycle to which the Dataset belongs.
+        task_id (int): The identifier for the Task that is creating the Dataset.
+        parent_id (int): The identifier for the Dataset to which this Dataset belongs if any. Default = 0"""
+
+    def __init__(
+        self,
+        name: str,
+        datasource: str,
+        mode: str,
+        stage: str,
+        description: str = None,
+        task_id: int = None,
+        parent: DatasetComponent = None,
+    ) -> None:
+        super().__init__(name=name, datasource=datasource, mode=mode, stage=stage, description=description, task_id=task_id, parent=parent)
+
+        self._children = []
+        self._is_composite = True
+
+        self._set_metadata()
+
+    def __eq__(self, other: DatasetComponent) -> bool:
+        if self.__class__.__name__ == other.__class__.__name__:
+            return (self.is_composite == other.is_composite
+                    and self.name == other.name
+                    and self.description == other.description
+                    and self.datasource == other.datasource
+                    and self.mode == other.mode
+                    and self.stage == other.stage
+                    and self.task_id == other.task_id
+                    and self.parent == other.parent)
+        else:
+            return False
+
+    def __len__(self) -> int:
+        return len(self._children)
+
+    # -------------------------------------------------------------------------------------------- #
+    def add(self, component: DatasetComponent) -> None:
+        component.parent = self
+        self._children.append(component)
+
+    # -------------------------------------------------------------------------------------------- #
+    def remove(self, component: DatasetComponent) -> None:
+        self._children.remove(component)
+
+    # -------------------------------------------------------------------------------------------- #
+    def as_dto(self) -> dict:
+        dtos = []
+
+        dto = DatasetsDTO(
+            id=self._id,
+            oid=self._oid,
+            name=self._name,
+            description=self._description,
+            datasource=self._datasource,
+            mode=self._mode,
+            stage=self._stage,
+            task_id=self._task_id,
+            parent_id=self._parent.id if self._parent else None,
+            created=self._created,
+            modified=self._modified,
+        )
+        dtos.append(dto)
+        for component in self._children:
+            dtos.append(component.as_dto())
+
+        return dtos
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                        DATASET                                                   #
 # ------------------------------------------------------------------------------------------------ #
-class Dataset(Entity):
+class Dataset(DatasetComponent):
     """Dataset encapsulates tabular data, metadata, and access behaviors for data used in this package.
 
     Args:
@@ -53,14 +234,13 @@ class Dataset(Entity):
         data: pd.DataFrame = None,
         description: str = None,
         task_id: int = None,
-        parent_id: int = 0,
+        parent: DatasetComponent = None,
     ) -> None:
-        super().__init__(name=name, mode=mode, description=description)
-        self._datasource = datasource
-        self._stage = stage
+        super().__init__(name=name, datasource=datasource, mode=mode, stage=stage, description=description, task_id=task_id, parent=parent)
+
+        self._is_composite = False
+
         self._data = data
-        self._task_id = task_id
-        self._parent_id = parent_id
 
         # Assigned by repo
         self._size = None
@@ -75,12 +255,6 @@ class Dataset(Entity):
         # Validate entity
         self._validate()
 
-    def __str__(self) -> str:
-        return f"\n\nId: {self._id}\n\tOid: {self._oid}\n\tName: {self._name}\n\tDescription: {self._description}\n\tDatasource: {self._datasource}\n\tMode: {self._mode}\n\tStage: {self._stage}\n\tSize: {self._size}\n\tNrows: {self._nrows}\n\tNcols: {self._ncols}\n\tNulls: {self._nulls}\n\tPct_Nulls: {self._pct_nulls}\n\tTask_Id: {self._task_id}\n\tParent_Id: {self._parent_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
-
-    def __repr__(self) -> str:
-        return f"{self._id}, {self._oid}, {self._name}, {self._description}, {self._datasource}, {self._mode}, {self._stage}, {self._size}, {self._nrows}, {self._ncols}, {self._nulls}, {self._pct_nulls}, {self._task_id}, {self._parent_id}, {self._created}, {self._modified}"
-
     def __eq__(self, other) -> bool:
         """Compares two Datasets for equality.
         Datasets are considered equal solely if their underlying data are equal.
@@ -92,32 +266,8 @@ class Dataset(Entity):
         if isinstance(other, Dataset):
             return self._data.equals(other.data)
 
-    # ------------------------------------------------------------------------------------------------ #
-    @property
-    def task_id(self) -> int:
-        return self._task_id
-
-    @task_id.setter
-    def task_id(self, task_id: int) -> None:
-        if self._task_id is None:
-            self._task_id = task_id
-        elif not self._task_id == task_id:
-            msg = "Item reassignment is not supported for the 'task_id' member."
-            self._logger.error(msg)
-            raise TypeError(msg)
-
-    # ------------------------------------------------------------------------------------------------ #
-    @property
-    def parent_id(self) -> int:
-        return self._parent_id
-
-    @property
-    def datasource(self) -> str:
-        return self._datasource
-
-    @property
-    def stage(self) -> str:
-        return self._stage
+    def __len__(self) -> int:
+        return 0
 
     @property
     def data(self) -> pd.DataFrame:
@@ -194,7 +344,7 @@ class Dataset(Entity):
             nulls=self._nulls,
             pct_nulls=self._pct_nulls,
             task_id=self._task_id,
-            parent_id=self._parent_id,
+            parent_id=self._parent.id if self._parent else None,
             created=self._created,
             modified=self._modified,
         )
@@ -227,7 +377,7 @@ class Dataset(Entity):
                 self._logger.error(msg)
                 raise TypeError(msg)
         if self._task_id is not None:
-            if not isinstance(self._task_id, int):
+            if not isinstance(self._task_id, int):  # pragma: no cover
                 msg = f"Task_id must be an integer, not {type(self._task_id)}"
                 self._logger.error(msg)
                 raise TypeError(msg)

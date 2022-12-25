@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 12:28:07 am                                               #
-# Modified   : Saturday December 24th 2022 11:19:15 am                                             #
+# Modified   : Saturday December 24th 2022 05:36:59 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,29 +30,24 @@ from recsys.core.services.base import Service
 class Repo(Service):
     """Repository base class"""
 
-    def __init__(self,dao: DAO) -> None:
+    def __init__(self, dao: DAO) -> None:
         super().__init__()
         self._dao = dao
 
     def add(self, entity: Entity) -> Entity:
         """Adds an entity to the repository and returns the Entity with the id added."""
-        self._dao.create(entity)
-        # Convert the dto with id, back to a Dataset and return.
-        return self._entity.from_dto(dto)
+        return self._dao.create(entity)
 
     def get(self, id: str) -> Entity:
         "Returns an entity with the designated id"
-        dto = self._dao.get(id)
-        return self._entity.from_dto(dto)
+        return self._dao.read(id)
 
     def get_by_name(self, name: str) -> Entity:
-        dto = self._dao.get_by_name(name)
-        return self._entity.from_dto(dto)
+        return self._dao.read_by_name(name)
 
     def update(self, entity: Entity) -> None:
         """Updates an entity in the database."""
-        dto = entity.as_dto()
-        self._dao.update(dto)
+        self._dao.update(entity)
 
     def remove(self, id: str) -> None:
         """Removes an entity with id from repository."""

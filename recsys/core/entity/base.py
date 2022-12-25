@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Saturday December 24th 2022 12:27:02 pm                                             #
+# Modified   : Saturday December 24th 2022 11:50:06 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -53,9 +53,16 @@ class Entity(ABC):
 
     @id.setter
     def id(self, id: int) -> None:
-        self._id = id
-        self._oid = f"{self.__class__.__name__.lower()}_{id}"
-        self._modified = datetime.now()
+        if self._id is None:
+            self._id = id
+            self._oid = f"{self.__class__.__name__.lower()}_{id}"
+            self._modified = datetime.now()
+        else:
+            msg = (
+                "The 'id' property does not support item re-assignment."
+            )
+            self._logger.error(msg)
+            raise TypeError(msg)
 
     @property
     def oid(self) -> str:

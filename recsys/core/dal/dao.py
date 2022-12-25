@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Saturday December 24th 2022 02:43:48 pm                                             #
+# Modified   : Saturday December 24th 2022 08:19:03 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -64,9 +64,13 @@ class DAO(ABC):
         Returns: entity with id set.
         """
         dto = entity.as_dto()
-        cmd = self._dml.insert(dto)
-        entity.id = self._rdb.insert(cmd.sql, cmd.args)
-        self._odb.create(entity)
+        if isinstance(dto, dict):
+            for _, entity in dto.items():
+                entity = self.create(entity)
+        else:
+            cmd = self._dml.insert(dto)
+            entity.id = self._rdb.insert(cmd.sql, cmd.args)
+            self._odb.create(entity)
         return entity
 
     def read(self, id: int) -> Entity:

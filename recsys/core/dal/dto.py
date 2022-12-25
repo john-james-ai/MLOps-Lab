@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Saturday December 24th 2022 12:25:20 pm                                             #
+# Modified   : Sunday December 25th 2022 12:12:59 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -81,6 +81,25 @@ class DatasetDTO(DTO):
 
 
 # ------------------------------------------------------------------------------------------------ #
+#                               DATASETS DATA TRANSFER OBJECT                                      #
+# ------------------------------------------------------------------------------------------------ #
+
+@dataclass
+class DatasetsDTO(DTO):
+    id: int
+    oid: str
+    name: str
+    description: str
+    datasource: str
+    mode: str
+    stage: str
+    task_id: int
+    parent_id: int
+    created: datetime
+    modified: datetime
+
+
+# ------------------------------------------------------------------------------------------------ #
 #                                   JOB DATA TRANSFER OBJECT                                       #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
@@ -111,20 +130,5 @@ class TaskDTO(DTO):
     started: datetime
     ended: datetime
     duration: float
-    created: datetime
-    modified: datetime
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                               OPERATION DATA TRANSFER OBJECT                                     #
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class OperationDTO(DTO):
-    id: int
-    name: str
-    description: str
-    mode: str
-    stage: str
-    task_id: int
     created: datetime
     modified: datetime
