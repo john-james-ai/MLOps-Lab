@@ -11,154 +11,105 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Sunday December 25th 2022 12:38:58 am                                               #
+# Modified   : Wednesday December 28th 2022 06:31:31 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-"""Dataset Entity Module"""
+"""DataFrame Entity Module"""
 from abc import abstractmethod
-import os
-import dotenv
-from datetime import datetime
 import pandas as pd
 from typing import Union, Dict
 
-from .base import Entity
-from recsys.core.dal.dto import DatasetDTO, DatasetsDTO
+from recsys.core.entity.base import Entity
+from recsys.core.dal.dto import DataFrameDTO, DatasetDTO
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                    DATASET COMPONENT                                             #
 # ------------------------------------------------------------------------------------------------ #
-class DatasetComponent(Entity):
-    """Base component class from which Dataset (Leaf) and Datasets (Composite) objects derive.
-    Args:
-        name (str): Short, yet descriptive lowercase name for Dataset object.
-        description (str): Describes the Dataset object.
-        datasource (str): The data datasource.
-        mode (str): One of the registered modes, ie. 'input', 'prod', 'dev', or 'test'.
-        stage (str): The stage of the data processing lifecycle to which the Dataset belongs.
-        task_id (int): The identifier for the Task that is creating the Dataset.
-        parent_id (int): The identifier for the Dataset to which this Dataset belongs if any. Default = 0"""
+class DataComponent(Entity):
+    """Base component class from which DataFrame (Leaf) and Dataset (Composite) objects derive."""
 
-    def __init__(
-        self,
-        name: str,
-        datasource: str,
-        mode: str,
-        stage: str,
-        description: str = None,
-        task_id: int = None,
-        parent: Entity = None,
-    ) -> None:
-        super().__init__(name=name, mode=mode, description=description)
-        self._id = None
-        self._datasource = datasource
-        self._stage = stage
-        self._task_id = task_id
-        self._parent = parent
-        self._is_composite = False
+    def __init__(self, name: str, description: str = None, mode: str = None) -> None:
+        super().__init__(name=name, description=description, mode=mode)
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def task_id(self) -> int:
-        return self._task_id
-
-    @task_id.setter
-    def task_id(self, task_id: int) -> None:
-        if self._task_id is None:
-            self._task_id = task_id
-            self._validate()
-            self._modified = datetime.now()
-        elif not self._task_id == task_id:
-            msg = "Item reassignment is not supported for the 'task_id' member."
-            self._logger.error(msg)
-            raise TypeError(msg)
-
-    # -------------------------------------------------------------------------------------------- #
-    @property
-    def parent(self) -> Entity:
-        return self._parent
-
-    @parent.setter
-    def parent(self, parent: Entity) -> None:
-        if self._parent is None:
-            self._parent = parent
-        else:
-            msg = "Item reassignment is not supported for the 'parent' member."
-            self._logger.error(msg)
-            raise TypeError(msg)
-
-    # -------------------------------------------------------------------------------------------- #
-    @property
+    @abstractmethod
     def datasource(self) -> str:
-        return self._datasource
+        """Datasource from which the Dataset Component has derived."""
 
     # -------------------------------------------------------------------------------------------- #
     @property
+    @abstractmethod
     def stage(self) -> str:
-        return self._stage
+        """Data processing stage in which the Dataset Component is created."""
 
     # -------------------------------------------------------------------------------------------- #
     @property
+    @abstractmethod
     def is_composite(self) -> str:
-        return self._is_composite
+        """True for Datasets and False for DataFrames."""
 
     # -------------------------------------------------------------------------------------------- #
     @abstractmethod
-    def as_dto(self) -> Union[DatasetDTO, Dict[int, DatasetDTO]]:
-        """Creates a dto or a dictionary of dtos for child objects."""
+    def as_dto(self) -> Union[DataFrameDTO, Dict[int, DataFrameDTO]]:
+        """Creates a dto representation of the Dataset Component."""
     # -------------------------------------------------------------------------------------------- #
-    def _set_metadata(self) -> None:
-
-        dotenv.load_dotenv()
-        self._mode = self._mode or os.getenv("MODE")
-        self._description = self._description or f"{self.__class__.__name__}.{self._name}"
-
-    # ------------------------------------------------------------------------------------------------ #
     def _validate(self) -> None:
         super()._validate()
-        if self._task_id is not None:
-            if not isinstance(self._task_id, int):
-                msg = f"Task_id must be an integer, not {type(self._task_id)}"
-                self._logger.error(msg)
-                raise TypeError(msg)
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                        DATASETS                                                  #
 # ------------------------------------------------------------------------------------------------ #
-class Datasets(DatasetComponent):
-    """Composite collection of Dataset or Datasets objects.
+class Dataset(DataComponent):
+    """Composite collection of DataFrame objects.
 
     Args:
         name (str): Short, yet descriptive lowercase name for Dataset object.
         description (str): Describes the Dataset object.
         datasource (str): The data datasource.
-        mode (str): One of the registered modes, ie. 'input', 'prod', 'dev', or 'test'.
         stage (str): The stage of the data processing lifecycle to which the Dataset belongs.
-        task_id (int): The identifier for the Task that is creating the Dataset.
-        parent_id (int): The identifier for the Dataset to which this Dataset belongs if any. Default = 0"""
+        task_id (Task): The Id for the Task that created the Dataset. Optional. Defaults to 0.
+        data (pd.DataFrame): Data payload. If provided, a DataFrame object is automatically
+            created and added to the Dataset.
+        mode (str): Mode for which the DataFrame is created. If None, defaults to mode from environment
+            variable.
+    """
 
     def __init__(
         self,
         name: str,
         datasource: str,
-        mode: str,
         stage: str,
         description: str = None,
-        task_id: int = None,
-        parent: DatasetComponent = None,
+        mode: str = None,
+        task_id: int = 0,
+        data: pd.DataFrame = None,
     ) -> None:
-        super().__init__(name=name, datasource=datasource, mode=mode, stage=stage, description=description, task_id=task_id, parent=parent)
+        super().__init__(name=name, description=description, mode=mode)
+        self._datasource = datasource
+        self._stage = stage
+        self._task_id = task_id
 
-        self._children = []
+        self._dataframes = {}
         self._is_composite = True
 
-        self._set_metadata()
+        self._validate()
 
-    def __eq__(self, other: DatasetComponent) -> bool:
+        if data is not None:
+            dataframe = self.create_dataframe(data)
+            self.add_dataframe(dataframe)
+
+    def __str__(self) -> str:
+        return f"Dataset Id: {self._id}\n\tData source: {self._datasource}\n\tName: {self._name}\n\tDescription: {self._description}\n\tMode: {self._mode}\n\tStage: {self._stage}\n\tDataFrames: {self.dataframe_count}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+
+    def __repr__(self) -> str:
+        return f"{self._id}, {self._datasource}, {self._name}, {self._description}, {self._mode}, {self._stage}, {self.dataframe_count}, {self._created}, {self._modified}"
+
+    def __eq__(self, other: DataComponent) -> bool:
         if self.__class__.__name__ == other.__class__.__name__:
             return (self.is_composite == other.is_composite
                     and self.name == other.name
@@ -166,28 +117,71 @@ class Datasets(DatasetComponent):
                     and self.datasource == other.datasource
                     and self.mode == other.mode
                     and self.stage == other.stage
-                    and self.task_id == other.task_id
-                    and self.parent == other.parent)
+                    and self.task_id == other.task_id)
         else:
             return False
 
-    def __len__(self) -> int:
-        return len(self._children)
+    @property
+    def dataframe_count(self) -> int:
+        return len(self._dataframes)
 
     # -------------------------------------------------------------------------------------------- #
-    def add(self, component: DatasetComponent) -> None:
-        component.parent = self
-        self._children.append(component)
+    @property
+    def is_composite(self) -> str:
+        return self._is_composite
 
     # -------------------------------------------------------------------------------------------- #
-    def remove(self, component: DatasetComponent) -> None:
-        self._children.remove(component)
+    @property
+    def datasource(self) -> str:
+        """Datasource from which the Dataset Component has derived."""
+        return self._datasource
 
     # -------------------------------------------------------------------------------------------- #
-    def as_dto(self) -> dict:
-        dtos = []
+    @property
+    def stage(self) -> str:
+        """Data processing stage in which the Dataset Component is created."""
+        return self._stage
 
-        dto = DatasetsDTO(
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def dataframe_names(self) -> list:
+        return list(self._dataframes.keys())
+
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def task_id(self) -> str:
+        """Id for the Task that created the Dataset."""
+        return self._task_id
+
+    # -------------------------------------------------------------------------------------------- #
+    def create_dataframe(self, data: pd.DataFrame, name: str = None, description: str = None) -> DataComponent:
+        name = name or self._name
+        description = description or self._description
+        return DataFrame(name=name, data=data, parent=self, description=description)
+
+    # -------------------------------------------------------------------------------------------- #
+    def add_dataframe(self, dataframe: DataComponent) -> None:
+        self._dataframes[dataframe.name] = dataframe
+
+    # -------------------------------------------------------------------------------------------- #
+    def get_dataframe(self, name: str = None) -> None:
+        try:
+            if name is None:
+                name = self._name
+            return self._dataframes[name]
+        except KeyError:
+            msg = f"Dataset {self._name} has no dataframe with name = {name}."
+            self._logger.error(msg)
+            raise FileNotFoundError(msg)
+
+    # -------------------------------------------------------------------------------------------- #
+    def remove_dataframe(self, name: str) -> None:
+        del self._dataframes[name]
+
+    # -------------------------------------------------------------------------------------------- #
+    def as_dto(self) -> DatasetDTO:
+
+        dto = DatasetDTO(
             id=self._id,
             oid=self._oid,
             name=self._name,
@@ -196,95 +190,104 @@ class Datasets(DatasetComponent):
             mode=self._mode,
             stage=self._stage,
             task_id=self._task_id,
-            parent_id=self._parent.id if self._parent else None,
             created=self._created,
             modified=self._modified,
         )
-        dtos.append(dto)
-        for component in self._children:
-            dtos.append(component.as_dto())
-
-        return dtos
+        return dto
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                        DATASET                                                   #
 # ------------------------------------------------------------------------------------------------ #
-class Dataset(DatasetComponent):
-    """Dataset encapsulates tabular data, metadata, and access behaviors for data used in this package.
+class DataFrame(DataComponent):
+    """DataFrame encapsulates tabular data, metadata, and access behaviors for data used in this package.
 
     Args:
-        name (str): Short, yet descriptive lowercase name for Dataset object.
-        description (str): Describes the Dataset object.
-        datasource (str): The data datasource.
-        mode (str): One of the registered modes, ie. 'input', 'prod', 'dev', or 'test'.
-        stage (str): The stage of the data processing lifecycle to which the Dataset belongs.
+        name (str): Short, yet descriptive lowercase name for DataFrame object.
+        description (str): Describes the DataFrame object. Default's to parent's description if None.
         data (pd.DataFrame): Payload in pandas DataFrame format.
-        task_id (int): The identifier for the Task that is creating the Dataset.
-        parent_id (int): The identifier for the Dataset to which this Dataset belongs if any. Default = 0
+        parent (Dataset): The parent Dataset instance. Optional.
+        mode (str): Mode for which the DataFrame is created. If None, defaults to mode from environment
+            variable.
 
     """
 
     def __init__(
         self,
         name: str,
-        datasource: str,
-        mode: str,
-        stage: str,
-        data: pd.DataFrame = None,
+        data: pd.DataFrame,
+        parent: Dataset,
         description: str = None,
-        task_id: int = None,
-        parent: DatasetComponent = None,
+        mode: str = None,
     ) -> None:
-        super().__init__(name=name, datasource=datasource, mode=mode, stage=stage, description=description, task_id=task_id, parent=parent)
-
-        self._is_composite = False
+        super().__init__(name=name, description=description, mode=mode)
 
         self._data = data
+        self._parent = parent
+        self._is_composite = False
 
-        # Assigned by repo
+        # Inherited from parent and assigned in set_metadata if and when parent is set.
+        self._datasource = None
+        self._stage = None
+        self._mode = None
+
         self._size = None
         self._nrows = None
         self._ncols = None
         self._nulls = None
         self._pct_nulls = None
 
-        # Set metadata
         self._set_metadata()
-
-        # Validate entity
         self._validate()
 
+    def __str__(self) -> str:
+        return f"DataFrame Id: {self._id}\n\tData source: {self._datasource}\n\tName: {self._name}\n\tDescription: {self._description}\n\tMode: {self._mode}\n\tStage: {self._stage}\n\tSize: {self._size}\n\tRows: {self._nrows}\n\tColumns: {self._ncols}\n\tNulls: {self._nulls}\n\tPct Nulls: {self._pct_nulls}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+
+    def __repr__(self) -> str:
+        return f"{self._id}, {self._datasource}, {self._name}, {self._description}, {self._mode}, {self._stage}, {self._size}, {self._nrows}, {self._ncols}, {self._nulls}, {self._pct_nulls}, {self._created}, {self._modified}"
+
     def __eq__(self, other) -> bool:
-        """Compares two Datasets for equality.
-        Datasets are considered equal solely if their underlying data are equal.
+        """Compares two Dataset for equality.
+        Dataset are considered equal solely if their underlying data are equal.
 
         Args:
-            other (Dataset): The Dataset object to compare.
+            other (DataFrame): The DataFrame object to compare.
         """
 
-        if isinstance(other, Dataset):
+        if isinstance(other, DataFrame):
             return self._data.equals(other.data)
 
     def __len__(self) -> int:
         return 0
 
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def is_composite(self) -> str:
+        return self._is_composite
+
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def datasource(self) -> str:
+        """Datasource from which the Dataset Component has derived."""
+        return self._datasource
+
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def stage(self) -> str:
+        """Data processing stage in which the Dataset Component is created."""
+        return self._stage
+
+    # -------------------------------------------------------------------------------------------- #
     @property
     def data(self) -> pd.DataFrame:
         return self._data
 
-    @data.setter
-    def data(self, data: pd.DataFrame) -> None:
-        if self._data is None:
-            self._data = data
-            self._update_and_validate()
-        else:
-            msg = (
-                f"The 'data'attribute on Dataset {self._id} does not support item re-assignment."
-            )
-            self._logger.error(msg)
-            raise TypeError(msg)
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def parent(self) -> Dataset:
+        return self._parent
 
+    # -------------------------------------------------------------------------------------------- #
     @property
     def size(self) -> int:
         return self._size
@@ -308,29 +311,17 @@ class Dataset(DatasetComponent):
     # Data Access methods
 
     def info(self) -> None:
-        try:
-            self._data.info(verbose=True, memory_usage=True, show_counts=True)
-        except AttributeError:
-            msg = "The data member is None or not a valid pandas DataFrame object."
-            self._logger.warning(msg)
+        self._data.info(verbose=True, memory_usage=True, show_counts=True)
 
     def head(self, n: int = 5) -> pd.DataFrame:
-        try:
-            return self._data.head(n)
-        except AttributeError:
-            msg = "The data member is None or not a valid pandas DataFrame object."
-            self._logger.warning(msg)
+        return self._data.head(n)
 
     def tail(self, n: int = 5) -> pd.DataFrame:
-        try:
-            return self._data.tail(n)
-        except AttributeError:
-            msg = "The data member is None or not a valid pandas DataFrame object."
-            self._logger.warning(msg)
+        return self._data.tail(n)
 
     # ------------------------------------------------------------------------------------------------ #
-    def as_dto(self) -> DatasetDTO:
-        return DatasetDTO(
+    def as_dto(self) -> DataFrameDTO:
+        return DataFrameDTO(
             id=self._id,
             oid=self._oid,
             name=self._name,
@@ -343,19 +334,24 @@ class Dataset(DatasetComponent):
             ncols=self._ncols,
             nulls=self._nulls,
             pct_nulls=self._pct_nulls,
-            task_id=self._task_id,
-            parent_id=self._parent.id if self._parent else None,
+            parent_id=self._parent.id,
             created=self._created,
             modified=self._modified,
         )
 
     # ------------------------------------------------------------------------------------------------ #
     def _set_metadata(self) -> None:
+        self._set_parent_metadata()
+        self._set_data_metadata()
 
-        dotenv.load_dotenv()
-        self._mode = self._mode or os.getenv("MODE")
-        self._description = self._description or f"{self.__class__.__name__}.{self._name}"
+    def _set_parent_metadata(self) -> None:
+        if self._parent is not None:
+            self._description = self._description or self._parent.description
+            self._datasource = self._parent.datasource
+            self._stage = self._parent.stage
+            self._mode = self._parent.mode
 
+    def _set_data_metadata(self) -> None:
         if self._data is not None:
             if isinstance(self._data, pd.DataFrame):
                 self._size = self._data.memory_usage(deep=True).sum()
@@ -363,21 +359,3 @@ class Dataset(DatasetComponent):
                 self._ncols = self._data.shape[1]
                 self._nulls = self._data.isnull().sum().sum()
                 self._pct_nulls = (self._nulls / (self._nrows * self._ncols)) * 100
-
-    def _update_and_validate(self) -> None:
-        self._modified = datetime.now()
-        self._validate()
-
-    # ------------------------------------------------------------------------------------------------ #
-    def _validate(self) -> None:
-        super()._validate()
-        if self._data is not None:
-            if not isinstance(self._data, pd.DataFrame):
-                msg = f"The data member must be a pandas Dataframe, not {type(self._data)}."
-                self._logger.error(msg)
-                raise TypeError(msg)
-        if self._task_id is not None:
-            if not isinstance(self._task_id, int):  # pragma: no cover
-                msg = f"Task_id must be an integer, not {type(self._task_id)}"
-                self._logger.error(msg)
-                raise TypeError(msg)

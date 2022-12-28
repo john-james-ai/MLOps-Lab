@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 10th 2022 09:17:57 pm                                             #
-# Modified   : Saturday December 10th 2022 10:44:05 pm                                             #
+# Modified   : Sunday December 25th 2022 10:29:35 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,7 +22,6 @@ import pytest
 import logging
 
 from recsys.core.services.io import IOService
-import tests.containers   # noqa F401
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)

@@ -11,19 +11,18 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 10:24:47 pm                                                #
-# Modified   : Saturday December 24th 2022 09:55:52 am                                             #
+# Modified   : Wednesday December 28th 2022 06:28:46 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Job Module."""
-from datetime import datetime
+from collections import OrderedDict
 
 from recsys import STATES
 from recsys.core.dal.dto import JobDTO
+from recsys.core.workflow.task import Task
 from .base import Process
-from .pipeline import Pipeline
-from recsys.core.dal.repo import Context
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -38,37 +37,23 @@ class Job(Process):
 
     """
 
-    def __init__(self) -> None:
-        super().__init__()
-        self._pipeline = None
-        self._context = None
+    def __init__(self, name: str, description: str = None, mode: str = None) -> None:
+        super().__init__(name=name, description=description, mode=mode)
 
-    @property
-    def context(self) -> Context:
-        return self._context
+        self._tasks = OrderedDict()
 
-    @context.setter
-    def context(self, context: Context) -> None:
-        self._context = context
-
-    @property
-    def pipeline(self) -> Pipeline:
-        return self._pipeline
-
-    @pipeline.setter
-    def pipeline(self, pipeline: Pipeline) -> None:
-        if self._pipeline is None:
-            self._pipeline = pipeline
-            self._modified = datetime.now()
-        else:
-            msg = "Job doesn't support 'pipeline' re-assignment."
-            self._logger.error(msg)
-            raise TypeError(msg)
+    def add_task(self, task: Task) -> None:
+        self._tasks[task.name] = task
 
     def run(self) -> None:
         """Runs the Job"""
         self._setup()
-        self._pipeline.run(context=self._context)
+        for task in self._tasks.values():
+            dataset = self._uow.context.dataset.read_by_name(name=task.input_spec.name)
+            dataset = task.run(data=dataset)
+            self._uow.context.dataset.create(dataset)
+
+        self._pipeline.run(uow=self._uow)
         self._teardown()
 
     def as_dto(self) -> JobDTO:

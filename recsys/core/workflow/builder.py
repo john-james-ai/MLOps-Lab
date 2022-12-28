@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 19th 2022 03:34:43 pm                                               #
-# Modified   : Saturday December 24th 2022 11:18:46 am                                             #
+# Modified   : Wednesday December 28th 2022 06:32:06 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,14 +22,12 @@ import importlib
 from types import SimpleNamespace
 import logging
 
-from dependency_injector.wiring import Provide, inject
-
-from recsys.containers import Recsys
+from recsys.core.repo.uow import UnitOfWork
 from .task import Task
 from .pipeline import Pipeline
 from .job import Job
 from recsys.core.services.io import IOService
-from recsys.core.dal.repo import Context
+from recsys.core.repo.base import Context
 from recsys.core.workflow.operator import Operator
 
 
@@ -40,8 +38,8 @@ class Builder(ABC):
     """Constructs complex objects"""
 
     @inject
-    def __init__(self, context: Context = Provide[Recsys.context]) -> None:
-        self._context = context
+    def __init__(self, uow: UnitOfWork()) -> None:
+        self._uow = uow
         self._logger = logging.getLogger(
             f"{self.__module__}.{self.__class__.__name__}",
         )
@@ -98,8 +96,7 @@ class JobBuilder(Builder):
     def build_job(self) -> None:
         self._job.name = self._config.name
         self._job.description = self._config.description
-        self._job.mode = self._config.mode
-        self._job.context = self._context
+
         self._job = self._context.job.add(self._job)
 
     def build_pipeline(self) -> None:

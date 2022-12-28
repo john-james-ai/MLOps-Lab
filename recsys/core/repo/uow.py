@@ -4,57 +4,72 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/workflow/pipeline.py                                                   #
+# Filename   : /recsys/core/repo/uow.py                                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Monday December 19th 2022 03:34:43 pm                                               #
-# Modified   : Wednesday December 28th 2022 03:27:38 am                                            #
+# Created    : Sunday December 25th 2022 12:55:35 pm                                               #
+# Modified   : Wednesday December 28th 2022 03:12:03 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-"""Pipeline Module"""
+"""Unit of Work Module"""
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 
-from .task import Task
-from recsys.core.repo.uow import UnitOfWork
+from dependency_injector.wiring import Provide, inject
+
+from .base import Context
+from recsys.containers import Recsys
+from recsys.core.repo.dataset import DatasetRepo
+from recsys.core.repo.job import JobRepo
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                     PIPELINE BASE CLASS                                          #
+#                                 UNIT OF WORK ABC                                                 #
 # ------------------------------------------------------------------------------------------------ #
-class Pipeline(ABC):
-    """Base class for Pipelines"""
-    def __init__(self) -> None:
-        self._tasks = OrderedDict()
-        self._data = None
+class UnitOfWorkAbstract(ABC):
 
-    def __len__(self) -> int:
-        return len(self._tasks)
+    @property
+    @abstractmethod
+    def dataset(self) -> DatasetRepo:
+        """Returns an instantiated dataset repository."""
 
-    def add_task(self, task: Task) -> None:
-        self._tasks[task.name] = task
+    @property
+    @abstractmethod
+    def job(self) -> JobRepo:
+        """Returns an instantiated Job repository."""
 
     @abstractmethod
-    def run(self, uow: UnitOfWork = UnitOfWork()) -> None:
-        """Runs the pipeline"""
-
+    def save(self):
+        """Save changes."""
 
 # ------------------------------------------------------------------------------------------------ #
-#                                      DATA PIPELINE                                               #
+#                                     UNIT OF WORK ABC                                             #
 # ------------------------------------------------------------------------------------------------ #
-class DataPipeline(Pipeline):
-    def __init__(self) -> None:
-        super().__init__()
 
-    def run(self, uow: UnitOfWork = UnitOfWork()) -> None:
-        """Runs the pipeline"""
-        data = self._data
 
-        for _, task in self._tasks.items():
-            result = task.run(data, uow)
-            data = result or data
+class UnitOfWork(UnitOfWorkAbstract):
+
+    @inject
+    def __init__(self, context: Context = Provide[Recsys.dao]) -> None:
+        self._context = context
+        self._dataset = None
+        self._job = None
+
+    @property
+    def dataset(self) -> DatasetRepo:
+        if self._dataset is None:
+            self._dataset = DatasetRepo(context=self._context)
+        return self._dataset
+
+    @property
+    def job(self) -> JobRepo:
+        if self._job is None:
+            self._job = JobRepo(context=self._context)
+        return self._job
+
+    def save(self) -> None:
+        self._context.save()

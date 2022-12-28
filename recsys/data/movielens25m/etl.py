@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 08:05:00 pm                                               #
-# Modified   : Tuesday December 20th 2022 08:12:58 pm                                              #
+# Modified   : Sunday December 25th 2022 10:26:13 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,24 +19,24 @@
 from dependency_injector.wiring import Provide, inject
 
 from recsys.core.workflow.job import Job
-from recsys.core.dal.repo import Repo
+from recsys.core.repo.base import Repo
 from recsys.containers import Recsys
 from .container import MovieLens25M
 # ------------------------------------------------------------------------------------------------ #
 
 
 class Movielens25mETL(Job):
-    """ETL for MovieLens25M Dataset"""
+    """ETL for MovieLens25M DataFrame"""
 # ------------------------------------------------------------------------------------------------ #
 
 
 class Movielens25mETLBuilder:
 
     @inject
-    def __init__(self, dataset_repo: Repo = Provide[Recsys.dataset_repo],
+    def __init__(self, dataframe_repo: Repo = Provide[Recsys.dataframe_repo],
                  job_repo: Repo = Provide[Recsys.job_repo],
                  task_repo: Repo = Provide[Recsys.task_repo]) -> None:
-        self._dataset_repo = dataset_repo
+        self._dataframe_repo = dataframe_repo
         self._job_repo = job_repo
         self._task_repo = task_repo
         self._job = None

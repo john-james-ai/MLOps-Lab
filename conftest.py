@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Saturday December 24th 2022 04:16:18 pm                                             #
+# Modified   : Tuesday December 27th 2022 11:35:02 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -20,17 +20,18 @@ import pytest
 import sqlite3
 from datetime import datetime, timedelta
 
-import tests.containers
-from tests.containers import RecsysTest
+import recsys
+from recsys.containers import Recsys
 from recsys.core.services.io import IOService
-from recsys.core.entity.dataset import Dataset
+from recsys.core.entity.dataset import DataFrame, Dataset, DatasetSpec
 from recsys.core.entity.profile import Profile
 from recsys.core.workflow.job import Job
 from recsys.core.workflow.task import Task
 from recsys.core.workflow.operator import NullOperator
 from recsys.core.database.relational import RDB
 from recsys.core.database.connection import SQLiteConnection
-
+from recsys.core.repo.base import Context
+from recsys.core.repo.uow import UnitOfWork
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
 RATINGS_FILEPATH = "tests/data/movielens25m/raw/ratings.pkl"
@@ -68,21 +69,24 @@ def database(connection):
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def datasets(ratings):
-    datasets = []
+def dataset(ratings):
+    dataset = Dataset(
+        name=f"dataset_name_{1}",
+        description=f"Dataset Description {1}",
+        datasource="spotify",
+        stage="extract",
+        task_id=55,
+    )
     for i in range(1, 6):
-        dataset = Dataset(
-            name=f"dataset_name_{i}",
-            description=f"Description for Dataset DTO {i}",
-            datasource="movielens25m",
-            mode="test",
-            stage="interim",
+        dataframe = DataFrame(
+            name=f"dataframe_name_{i}",
+            description=f"Description for DataFrame {i}",
             data=ratings,
-            task_id=i + 50,
+            parent=dataset,
         )
-        dataset.id = i
-        datasets.append(dataset)
-    return datasets
+        dataset.add_dataframe(dataframe=dataframe)
+
+    return dataset
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -123,25 +127,30 @@ def profiles():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def tasks(datasets):
+def tasks(dataset):
     tasks = []
     for i in range(1, 6):
+        input_spec = DatasetSpec(
+            name=f"input_dataset_{i}",
+            datasource='spotify',
+            stage="extract"
+        )
+        output_spec = DatasetSpec(
+            name=f"output_dataset_{i}",
+            datasource='spotify',
+            stage="interim"
+        )
         task = Task(
             name=f"task_dto_{i}",
             description=f"Task Description DTO {i}",
-            mode="test",
             stage="extract",
-            operator=NullOperator,
-            input=datasets[0],
-            output=datasets[i - 1],
+            operator=NullOperator(),
+            input_spec=input_spec,
+            output_spec=output_spec,
             job_id=i * 10,
-            started=datetime.now() - timedelta(hours=i),
-            ended=datetime.now(),
-            duration=(datetime.now() - (datetime.now() - timedelta(hours=i))).total_seconds(),
-            state='CREATED',
-            created=datetime.now(),
-            modified=datetime.now(),
         )
+        task.id = i
+        task.run()
         tasks.append(task)
     return tasks
 
@@ -154,7 +163,6 @@ def jobs():
         job = Job(
             name=f"job_name_{i}",
             description=f"Description for Job # {i}",
-            mode="test",
             pipeline={},
             started=datetime.now() - timedelta(hours=i),
             ended=datetime.now(),
@@ -169,13 +177,13 @@ def jobs():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def dataset_dicts():
-    """List of dictionaries that can be used to instantiate Dataset."""
+def dataframe_dicts():
+    """List of dictionaries that can be used to instantiate DataFrame."""
     lod = []
     for i in range(1, 6):
         d = {
-            "name": f"dataset_{i}",
-            "description": f"Description for Dataset {i}",
+            "name": f"dataframe_{i}",
+            "description": f"Description for DataFrame {i}",
             "datasource": "movielens25m",
             "mode": "test",
             "stage": "interim",
@@ -189,14 +197,22 @@ def dataset_dicts():
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
 def job_config():
-    """List of dictionaries that can be used to instantiate Dataset."""
+    """List of dictionaries that can be used to instantiate DataFrame."""
     return IOService.read(JOB_CONFIG_FILEPATH)
 
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope='module', autouse=True)
 def container():
-    container = RecsysTest()
+    container = Recsys()
     container.init_resources()
-    container.wire(modules=[tests.containers])
+    container.wire(modules=[recsys.containers, recsys.core.repo.base])
     return container
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope='module', autouse=True)
+def uow():
+    context = Context()
+    uow = UnitOfWork(context=context)
+    return uow

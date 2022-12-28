@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Saturday December 24th 2022 12:34:07 pm                                             #
+# Modified   : Sunday December 25th 2022 10:24:15 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.entity.dataset import Dataset
+from recsys.core.entity.dataset import DataFrame
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.dao
-@pytest.mark.dataset_dao
-class TestDatasetDAO:  # pragma: no cover
+@pytest.mark.dataframe_dao
+class TestDataFrameDAO:  # pragma: no cover
     # ============================================================================================ #
     def test_setup(self, container, caplog):
         start = datetime.now()
@@ -43,7 +43,7 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ts = container.table.dataset()
+        ts = container.table.dataframe()
         ts.reset()
         odb = container.data.odb()
         odb.reset()
@@ -62,7 +62,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create_no_commit(self, datasets, container, caplog):
+    def test_create_no_commit(self, dataset, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -73,12 +73,12 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        for i, dataset in enumerate(datasets, start=1):
-            logger.debug(f"\n\nTest Create DTO {i}\n\t{dataset}")
-            dataset = dao.create(dataset)
-            assert dataset.id == i
-            assert dataset.oid == f'dataset_{i}'
+        dao = container.dao.dataframe()
+        for i, dataframe in enumerate(dataset, start=1):
+            logger.debug(f"\n\nTest Create DTO {i}\n\t{dataframe}")
+            dataframe = dao.create(dataframe)
+            assert dataframe.id == i
+            assert dataframe.oid == f'dataframe_{i}'
             assert dao.exists(i)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -95,7 +95,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_read_no_commit(self, datasets, container, caplog):
+    def test_read_no_commit(self, dataset, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -106,9 +106,9 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        for i, dataset in enumerate(datasets, start=1):
-            logger.debug(f"\n\nDataset\n{dataset}")
+        dao = container.dao.dataframe()
+        for i, dataframe in enumerate(dataset, start=1):
+            logger.debug(f"\n\nDataFrame\n{dataframe}")
             with pytest.raises(FileNotFoundError):
                 _ = dao.read(i)
 
@@ -127,7 +127,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create_commit(self, datasets, container, caplog):
+    def test_create_commit(self, dataset, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -138,12 +138,12 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        for i, dataset in enumerate(datasets, start=1):
-            logger.debug(f"\n\nTest Create DTO {i}\n\t{dataset}")
-            dataset = dao.create(dataset)
+        dao = container.dao.dataframe()
+        for i, dataframe in enumerate(dataset, start=1):
+            logger.debug(f"\n\nTest Create DTO {i}\n\t{dataframe}")
+            dataframe = dao.create(dataframe)
             dao.save()
-            assert dataset.id == i
+            assert dataframe.id == i
             assert dao.exists(i)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -160,7 +160,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_read_commit(self, datasets, container, caplog):
+    def test_read_commit(self, dataset, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -171,11 +171,11 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        for i, dataset in enumerate(datasets, start=1):
-            logger.debug(f"\n\nDataset DTO\n{dataset}")
-            dataset = dao.read(i)
-            assert dataset == dataset
+        dao = container.dao.dataframe()
+        for i, dataframe in enumerate(dataset, start=1):
+            logger.debug(f"\n\nDataFrame DTO\n{dataframe}")
+            dataframe = dao.read(i)
+            assert dataframe == dataframe
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -203,17 +203,17 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        datasets = dao.read_all()
-        assert len(datasets) == 5
-        assert isinstance(datasets, dict)
-        for i, dataset in datasets.items():
-            assert isinstance(dataset, Dataset)
-            assert dataset.id == i
-            assert dataset.task_id == i + i
-            assert dataset.oid == f'dataset_{i}'
-            assert isinstance(dataset.created, datetime)
-            assert isinstance(dataset.modified, datetime)
+        dao = container.dao.dataframe()
+        dataset = dao.read_all()
+        assert len(dataset) == 5
+        assert isinstance(dataset, dict)
+        for i, dataframe in dataset.items():
+            assert isinstance(dataframe, DataFrame)
+            assert dataframe.id == i
+            assert dataframe.task_id == i + i
+            assert dataframe.oid == f'dataframe_{i}'
+            assert isinstance(dataframe.created, datetime)
+            assert isinstance(dataframe.modified, datetime)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -240,9 +240,9 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
+        dao = container.dao.dataframe()
         with pytest.raises(FileNotFoundError):
-            _ = dao.read_by_name("dataset_22")
+            _ = dao.read_by_name("dataframe_22")
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -270,14 +270,14 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        dataset = dao.read_by_name("dataset_3")
-        assert isinstance(dataset, Dataset)
-        assert dataset.task_id == 6
-        assert dataset.ncols == 4
-        assert dataset.nrows == 2500010
-        assert isinstance(dataset.created, datetime)
-        assert isinstance(dataset.modified, datetime)
+        dao = container.dao.dataframe()
+        dataframe = dao.read_by_name("dataframe_3")
+        assert isinstance(dataframe, DataFrame)
+        assert dataframe.task_id == 6
+        assert dataframe.ncols == 4
+        assert dataframe.nrows == 2500010
+        assert isinstance(dataframe.created, datetime)
+        assert isinstance(dataframe.modified, datetime)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -293,7 +293,7 @@ class TestDatasetDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_update(self, datasets, container, caplog):
+    def test_update(self, dataset, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -304,14 +304,14 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
-        for i, dataset in enumerate(datasets, start=1):
-            dataset.stage = "final"
-            dao.update(dataset)
+        dao = container.dao.dataframe()
+        for i, dataframe in enumerate(dataset, start=1):
+            dataframe.stage = "final"
+            dao.update(dataframe)
 
         for i in range(1, 6):
-            dataset = dao.read(i)
-            assert dataset.stage == "final"
+            dataframe = dao.read(i)
+            assert dataframe.stage == "final"
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -339,7 +339,7 @@ class TestDatasetDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataset()
+        dao = container.dao.dataframe()
         for i in range(1, 6):
             dao.delete(i)
 

@@ -4,36 +4,35 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Dataname   : /tests/test_core/test_entity/test_dataset.py                                        #
+# Filename   : /tests/test_core/test_entity/test_dataset.py                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Wednesday December 7th 2022 10:37:56 am                                             #
-# Modified   : Sunday December 25th 2022 12:37:19 am                                               #
+# Created    : Tuesday December 27th 2022 05:33:26 pm                                              #
+# Modified   : Tuesday December 27th 2022 09:27:58 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import inspect
-from datetime import datetime
 import pandas as pd
+from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.entity.dataset import Dataset, Datasets
-from recsys.core.dal.dto import DatasetDTO
-
+# Import modules to be tested
+from recsys.core.entity.dataset import Dataset, DataFrame
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
-@pytest.mark.dse
-class TestDatasetEntity:  # pragma: no cover
+@pytest.mark.dataset
+class TestDataset:  # pragma: no cover
     # ============================================================================================ #
-    def test_instantiation_no_data(self, caplog):
+    def test_instantiation(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -44,35 +43,18 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        d = Dataset(
             name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            mode="test",
-            task_id=22,
-            stage="extract",
+            datasource='spotify',
+            stage='interim',
+            description='Dataset for ' + inspect.stack()[0][3],
         )
-        dss = Datasets(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            mode="test",
-            task_id=22,
-            stage="extract",
-        )
-        dss.add(ds)
-        assert len(dss) == 1
-        assert ds.name == inspect.stack()[0][3]
-        assert ds.description == f"Description of {inspect.stack()[0][3]}"
-        assert ds.datasource == "movielens25m"
-        assert ds.size is None
-        assert ds.nrows is None
-        assert ds.ncols is None
-        assert ds.nulls is None
-        assert ds.pct_nulls is None
-        assert ds.task_id == 22
-        assert isinstance(ds.created, datetime)
-
+        assert d.is_composite is True
+        assert d.name == inspect.stack()[0][3]
+        assert d.datasource == 'spotify'
+        assert d.mode == 'test'
+        assert d.stage == 'interim'
+        assert d.dataframe_count == 0  # No children
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -88,7 +70,7 @@ class TestDatasetEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_instantiation_with_data(self, ratings, caplog):
+    def test_instantiation_data(self, ratings, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -98,27 +80,21 @@ class TestDatasetEntity:  # pragma: no cover
                 start.strftime("%m/%d/%Y"),
             )
         )
+
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        d = Dataset(
             name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
+            datasource='spotify',
+            stage='interim',
+            description='Dataset for ' + inspect.stack()[0][3],
             data=ratings,
-            mode="test",
-            task_id=22,
-            stage="extract",
         )
-        assert ds.name == inspect.stack()[0][3]
-        assert ds.description == f"Description of {inspect.stack()[0][3]}"
-        assert ds.datasource == "movielens25m"
-        assert ds.task_id == 22
-        assert ds.size is not None
-        assert ds.nrows is not None
-        assert ds.ncols is not None
-        assert ds.nulls is not None
-        assert ds.pct_nulls is not None
-        assert isinstance(ds.created, datetime)
-        assert isinstance(ds.data, pd.DataFrame)
+        assert d.is_composite is True
+        assert d.name == inspect.stack()[0][3]
+        assert d.datasource == 'spotify'
+        assert d.mode == 'test'
+        assert d.stage == 'interim'
+        assert d.dataframe_count == 1
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -135,7 +111,7 @@ class TestDatasetEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_instantiation_validation(self, caplog):
+    def test_instantiation_task(self, ratings, tasks, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -146,134 +122,27 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        with pytest.raises(TypeError):  # No name
-            _ = Dataset()
-
-        with pytest.raises(TypeError):  # No datasource
-            _ = Dataset(name="johosephat", stage="extract")
-
-        with pytest.raises(TypeError):
-            _ = Dataset(name="johosephat", datasource="spotify")  # No task_id
-
-        with pytest.raises(TypeError):
-            _ = Dataset(name="johosephat", datasource="spotify", task_id=232)  # No stage
-
-        with pytest.raises(TypeError):
-            _ = Dataset(name="johosephat", datasource="spotify", task_id=232, stage="extract")  # No mode
-
-        with pytest.raises(ValueError):
-            _ = Dataset(
-                name="johosephat", datasource="spotify", task_id=232, stage="rafas", mode="test",
-            )  # Invalid stage
-
-        with pytest.raises(TypeError):
-            _ = Dataset(
-                name="johosephat", datasource="spotify", task_id="232", stage="raw", mode="test",
-            )  # Invalid task_id
-
-        with pytest.raises(ValueError):
-            _ = Dataset(
-                name="johosephat", datasource="dfas", task_id=232, stage="raw", mode="test",
-            )  # Invalid datasource
-
-        with pytest.raises(ValueError):
-            _ = Dataset(
-                name="johosephat", datasource="spotify", task_id=232, stage="raw", mode="towt",
-            )  # Invalid mode
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_as_dict(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        d = Dataset(
             name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            mode="test",
+            datasource='spotify',
+            stage='interim',
+            description='Dataset for ' + inspect.stack()[0][3],
             data=ratings,
-            stage="extract",
+            task_id=tasks[0].id
         )
-        d = ds.as_dict()
-        assert isinstance(d, dict)
-        assert d["id"] is None
-        assert d["name"] == inspect.stack()[0][3]
-        assert d["description"] == f"Description of {inspect.stack()[0][3]}"
-        assert d["datasource"] == "movielens25m"
-        assert d["mode"] == "test"
-        assert d["stage"] == "extract"
-        assert d["task_id"] == 22
-        assert isinstance(d["created"], datetime)
-        assert d["modified"] is None
+        assert d.dataframe_count == 1
 
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_as_dto(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            mode="test",
-            task_id=22,
-            data=ratings,
-            stage="extract",
-        )
-        dto = ds.as_dto()
-        assert isinstance(dto, DatasetDTO)
-        assert dto.id is None
+        d.id = 5
+        dto = d.as_dto()
+        assert dto.id == 5
+        assert dto.oid == "dataset_" + str(5)
         assert dto.name == inspect.stack()[0][3]
-        assert dto.description == f"Description of {inspect.stack()[0][3]}"
-        assert dto.datasource == "movielens25m"
-        assert dto.mode == "test"
-        assert dto.stage == "extract"
-        assert dto.task_id == 22
+        assert dto.datasource == 'spotify'
+        assert dto.mode == 'test'
+        assert dto.stage == 'interim'
+        assert dto.task_id == 1
+
         assert isinstance(dto.created, datetime)
-        assert dto.modified is None
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -290,7 +159,7 @@ class TestDatasetEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_access_methods(self, ratings, caplog):
+    def test_validation(self, ratings, tasks, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -301,97 +170,85 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        with pytest.raises(ValueError):
+            _ = Dataset(
+                name=inspect.stack()[0][3],
+                datasource='sxpotify',
+                stage='interim',
+                description='Dataset for ' + inspect.stack()[0][3],
+                data=ratings,
+                task_id=tasks[0].id
+            )
+
+        with pytest.raises(ValueError):
+            _ = Dataset(
+                name=inspect.stack()[0][3],
+                datasource='spotify',
+                stage='interixm',
+                description='Dataset for ' + inspect.stack()[0][3],
+                data=ratings,
+                task_id=tasks[0].id
+            )
+
+        with pytest.raises(ValueError):
+            _ = Dataset(
+                name=inspect.stack()[0][3],
+                datasource='sxpotify',
+                stage='interim',
+                description='Dataset for ' + inspect.stack()[0][3],
+                data=5,
+                task_id=tasks[0].id
+            )
+
+        with pytest.raises(ValueError):
+            _ = Dataset(
+                name=inspect.stack()[0][3],
+                datasource='sxpotify',
+                stage='interim',
+                description='Dataset for ' + inspect.stack()[0][3],
+                data=ratings,
+                task_id=5,
+            )
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_get_dataframe(self, ratings, tasks, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        d = Dataset(
             name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            mode="test",
+            datasource='spotify',
+            stage='interim',
+            description='Dataset for ' + inspect.stack()[0][3],
             data=ratings,
-            stage="extract",
+            task_id=tasks[0].id,
         )
-        logger.info(ds.info())
-        assert isinstance(ds.head(), pd.DataFrame)
-        assert isinstance(ds.tail(), pd.DataFrame)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        df = d.get_dataframe(name=inspect.stack()[0][3])
+        assert isinstance(df, DataFrame)
+        assert d.dataframe_count == 1
 
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_access_methods_no_data(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            mode="test",
-            stage="extract",
-        )
-
-        assert ds.info() is None
-        assert ds.head() is None
-        assert ds.tail() is None
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_set_once(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            mode='test',
-            stage="interim",
-        )
-        ds.id = 5
-        with pytest.raises(TypeError):
-            ds.id = 6
-
-        ds.data = ratings
-        with pytest.raises(TypeError):
-            ds.data = ratings
+        with pytest.raises(FileNotFoundError):
+            d.get_dataframe(name='33')
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -408,7 +265,7 @@ class TestDatasetEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_modified(self, ratings, caplog):
+    def test_add_dataframe(self, ratings, tasks, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -419,67 +276,38 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds = Dataset(
+        d = Dataset(
             name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            mode='test',
-            stage="raw",
-        )
-        modified = ds.modified
-        ds.id = 9
-        assert ds.modified != modified
-        modified = ds.modified
-
-        ds.data = ratings
-        assert ds.modified != modified
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-
-    def test_equality(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds1 = Dataset(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            mode='test',
-            stage="extract",
+            datasource='spotify',
+            stage='interim',
+            description='Dataset for ' + inspect.stack()[0][3],
             data=ratings,
+            task_id=tasks[0].id,
         )
-        ds2 = Dataset(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            mode="dev",
-            task_id=22,
-            stage="extract",
+        df1 = DataFrame(
+            name='new_dataframe',
+            data=ratings,
+            parent=d,
+            description='some new dataframe'
         )
-        assert not ds1 == ds2
+        assert isinstance(df1, DataFrame)
+
+        d.add_dataframe(df1)
+        assert d.dataframe_count == 2
+
+        df2 = d.get_dataframe(name='new_dataframe')
+        assert df1 == df2
+
+        assert d.dataframe_names == [inspect.stack()[0][3], 'new_dataframe']
+
+        df3 = DataFrame(
+            name='new_dataframe',
+            data=ratings,
+            parent=d,
+            description='some new dataframe'
+        )
+        d.add_dataframe(df3)
+        assert df3.parent == d
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -496,7 +324,7 @@ class TestDatasetEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_data(self, ratings, caplog):
+    def test_remove_dataframe(self, ratings, tasks, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -507,64 +335,17 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds1 = Dataset(
+        d = Dataset(
             name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            task_id=22,
-            mode="dev",
-            stage="extract",
+            datasource='spotify',
+            stage='interim',
+            description='Dataset for ' + inspect.stack()[0][3],
             data=ratings,
+            task_id=tasks[0].id,
         )
-        assert isinstance(ds1.data, pd.DataFrame)
+        d.remove_dataframe(name=inspect.stack()[0][3])
 
-        ds2 = Dataset(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            mode="prod",
-            task_id=22,
-            stage="extract",
-        )
-        with pytest.raises(TypeError):
-            ds2.data = {'some': 'dictionary'}
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_task_id_assignment(self, ratings, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        ds1 = Dataset(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            stage="extract",
-            mode="prod",
-            data=ratings,
-        )
-        ds1.task_id = 75
-        with pytest.raises(TypeError):
-            ds1.task_id = 76
+        assert d.dataframe_count == 0   # Zero DataFrames
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -581,7 +362,7 @@ class TestDatasetEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_component(self, ratings, caplog):
+    def test_equality(self, ratings, tasks, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -592,57 +373,16 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ds1 = Dataset(
+        d = Dataset(
             name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            stage="extract",
-            mode="prod",
+            datasource='spotify',
+            stage='interim',
+            description='Dataset for ' + inspect.stack()[0][3],
             data=ratings,
+            task_id=tasks[0].id,
         )
-
-        ds2 = Dataset(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            stage="extract",
-            mode="prod",
-            data=ratings,
-        )
-
-        dss1 = Datasets(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            stage="extract",
-            mode="prod",
-        )
-
-        dss2 = Datasets(
-            name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            stage="extract",
-            mode="prod",
-        )
-        dss3 = 5
-
-        ds1.parent = dss1
-        assert isinstance(ds1.parent, Datasets)
-        assert ds1.is_composite is False
-        assert dss1.is_composite is True
-        assert len(ds1) == 0
-
-        with pytest.raises(TypeError):
-            ds1.task_id = 'str'
-
-        with pytest.raises(TypeError):
-            ds1.parent = ds2
-
-        assert ds1 == ds2
-        assert dss1 == dss2
-        assert ds1 != dss2
-        assert dss2 != dss3
+        d2 = 5
+        assert not d == d2
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -659,7 +399,7 @@ class TestDatasetEntity:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_datasets(self, datasets, caplog):
+    def test_dataframe_data(self, ratings, tasks, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -670,29 +410,83 @@ class TestDatasetEntity:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dss = Datasets(
+        d = Dataset(
             name=inspect.stack()[0][3],
-            description=f"Description of {inspect.stack()[0][3]}",
-            datasource="movielens25m",
-            stage="extract",
-            mode="prod",
+            datasource='spotify',
+            stage='interim',
+            description='Dataset for ' + inspect.stack()[0][3],
+            data=ratings,
+            task_id=tasks[0].id,
         )
-        for dataset in datasets:
-            dss.add(dataset)
-        dto = dss.as_dto()
-        assert len(dss) == 5
-        if isinstance(dto, dict):
-            for i, (k, v) in enumerate(dto.items()):
-                if isinstance(v, Dataset):
-                    assert v.name == datasets[i].name
-                    assert v.description == datasets[i].description
-                    assert v.datasource == datasets[i].datasource
-                    assert v.stage == datasets[i].stage
-                    assert v.mode == datasets[i].mode
+        df = DataFrame(
+            name='new_dataframe',
+            data=ratings,
+            parent=d,
+            description='some new dataframe'
+        )
+        assert df.is_composite is False
+        assert len(df) == 0
+        assert df.size > 0
+        assert df.nrows > 100
+        assert df.ncols > 3
+        assert df.nulls == 0
+        assert df.pct_nulls < 0.1
+        logger.debug(df.info())
+        assert isinstance(df.head(), pd.DataFrame)
+        assert isinstance(df.tail(), pd.DataFrame)
+        assert df.head().shape[0] == 5
+        assert df.tail().shape[0] == 5
 
-        for dataset in datasets:
-            dss.remove(dataset)
-        assert len(dss) == 0
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_dto(self, ratings, tasks, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        d = Dataset(
+            name=inspect.stack()[0][3],
+            datasource='spotify',
+            stage='interim',
+            description='Dataset for ' + inspect.stack()[0][3],
+            data=ratings,
+            task_id=tasks[0].id,
+        )
+        d.id = 9
+
+        df = d.get_dataframe()
+        assert isinstance(df, DataFrame)
+
+        dto = df.as_dto()
+        assert dto.name == inspect.stack()[0][3]
+        assert dto.stage == 'interim'
+        assert dto.datasource == 'spotify'
+        assert dto.parent_id == 9
+        assert dto.size > 0
+        assert dto.nrows > 100
+        assert dto.ncols > 2
+        assert dto.nulls == 0
+        assert dto.pct_nulls < 0.1
+        assert isinstance(dto.created, datetime)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

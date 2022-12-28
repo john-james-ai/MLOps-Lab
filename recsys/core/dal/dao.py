@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Saturday December 24th 2022 08:19:03 pm                                             #
+# Modified   : Tuesday December 27th 2022 10:48:41 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,7 @@ import logging
 
 from recsys.core.database.relational import RDB
 from recsys.core.database.object import ODB
-from .dto import DTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO
+from .dto import DTO, DataFrameDTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO
 from .base import DML
 from recsys.core.entity.base import Entity
 
@@ -55,7 +55,7 @@ class DAO(ABC):
         cmd = self._dml.begin()
         self._rdb.begin(cmd.sql, cmd.args)
 
-    def create(self, entity: Entity) -> Entity:
+    def create(self, entity: Entity, persist: bool = True) -> Entity:
         """Adds an entity to the database.
 
         Args:
@@ -64,12 +64,9 @@ class DAO(ABC):
         Returns: entity with id set.
         """
         dto = entity.as_dto()
-        if isinstance(dto, dict):
-            for _, entity in dto.items():
-                entity = self.create(entity)
-        else:
-            cmd = self._dml.insert(dto)
-            entity.id = self._rdb.insert(cmd.sql, cmd.args)
+        cmd = self._dml.insert(dto)
+        entity.id = self._rdb.insert(cmd.sql, cmd.args)
+        if persist:
             self._odb.create(entity)
         return entity
 
@@ -102,7 +99,7 @@ class DAO(ABC):
         row = self._rdb.select(cmd.sql, cmd.args)
         if len(row) > 0:
             dto = self._row_to_dto(row[0])
-            return self._odb.get(dto.oid)
+            return self._odb.read(dto.oid)
         else:
             msg = f"{self.__class__.__name__}.{name} does not exist."
             self._logger.info(msg)
@@ -122,7 +119,7 @@ class DAO(ABC):
             self._logger.info(msg)
         return entities
 
-    def update(self, entity: Entity) -> None:
+    def update(self, entity: Entity, persist: bool = True) -> None:
         """Updates an existing entity.
 
         Args:
@@ -131,7 +128,8 @@ class DAO(ABC):
         dto = entity.as_dto()
         cmd = self._dml.update(dto)
         self._rdb.update(cmd.sql, cmd.args)
-        self._odb.update(entity)
+        if persist:
+            self._odb.update(entity)
 
     def exists(self, id: int) -> bool:
         """Returns True if the entity with id exists in the database.
@@ -151,11 +149,16 @@ class DAO(ABC):
         cmd = self._dml.delete(id)
         oid = self._get_oid(id)
         self._rdb.delete(cmd.sql, cmd.args)
-        self._odb.delete(oid)
+        try:
+            self._odb.delete(oid)
+        except FileNotFoundError:
+            msg = f"Object id {oid} does not exist."
+            self._logger.info(msg)
 
     def save(self) -> None:
         """Commits the changes to the database."""
         self._rdb.save()
+        self._odb.save()
 
     def _rows_to_dict(self, results: List) -> Dict:
         """Converts the results to a dictionary of DTO objects."""
@@ -175,19 +178,19 @@ class DAO(ABC):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                 DATASET DATA ACCESS OBJECT                                       #
+#                                 DATAFRAME DATA ACCESS OBJECT                                     #
 # ------------------------------------------------------------------------------------------------ #
-class DatasetDAO(DAO):
+class DataFrameDAO(DAO):
     def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
         super().__init__(rdb=rdb, odb=odb, dml=dml)
 
     def _get_oid(self, id) -> str:
         """Returns the object id for the given id and entity."""
-        return f"dataset_{id}"
+        return f"dataframe_{id}"
 
-    def _row_to_dto(self, row: Tuple) -> DatasetDTO:
+    def _row_to_dto(self, row: Tuple) -> DataFrameDTO:
         try:
-            return DatasetDTO(
+            return DataFrameDTO(
                 id=row[0],
                 oid=row[1],
                 name=row[2],
@@ -200,10 +203,41 @@ class DatasetDAO(DAO):
                 ncols=row[9],
                 nulls=row[10],
                 pct_nulls=row[11],
-                task_id=row[12],
-                parent_id=row[13],
-                created=row[14],
-                modified=row[15],
+                parent_id=row[12],
+                created=row[13],
+                modified=row[14],
+            )
+
+        except IndexError as e:  # pragma: no cover
+            msg = f"Index error in_row_to_dto method.\n{e}"
+            self._logger.error(msg)
+            raise IndexError(msg)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                 DATASET DATA ACCESS OBJECT                                       #
+# ------------------------------------------------------------------------------------------------ #
+class DatasetDAO(DAO):
+    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
+        super().__init__(rdb=rdb, odb=odb, dml=dml)
+
+    def _get_oid(self, id) -> str:
+        """Returns the object id for the given id and entity."""
+        return f"dataset_{id}"
+
+    def _row_to_dto(self, row: Tuple) -> DataFrameDTO:
+        try:
+            return DatasetDTO(
+                id=row[0],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                datasource=row[4],
+                mode=row[5],
+                stage=row[6],
+                task_id=row[7],
+                created=row[8],
+                modified=row[9],
             )
 
         except IndexError as e:  # pragma: no cover

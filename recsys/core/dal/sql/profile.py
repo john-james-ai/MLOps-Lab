@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Saturday December 24th 2022 08:49:40 am                                             #
+# Modified   : Wednesday December 28th 2022 05:20:39 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateProfileTable(SQL):
     name: str = "profile"
-    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('profile_' || id), name TEXT NOT NULL UNIQUE, description TEXT, started timestamp, ended timestamp, duration INTEGER DEFAULT 0, user_cpu_time INTEGER DEFAULT 0, percent_cpu_used REAL NOT NULL, total_physical_memory INTEGER DEFAULT 0, physical_memory_available INTEGER DEFAULT 0, physical_memory_used INTEGER DEFAULT 0, percent_physical_memory_used REAL NOT NULL, active_memory_used INTEGER DEFAULT 0, disk_usage INTEGER DEFAULT 0, percent_disk_usage REAL NOT NULL, read_count INTEGER DEFAULT 0, write_count INTEGER DEFAULT 0, read_bytes INTEGER DEFAULT 0, write_bytes INTEGER DEFAULT 0, read_time INTEGER DEFAULT 0, write_time INTEGER DEFAULT 0, bytes_sent INTEGER DEFAULT 0, bytes_recv INTEGER DEFAULT 0, task_id INTEGER NOT NULL, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('profile_' || id), name TEXT NOT NULL, description TEXT, mode TEXT NOT NULL, started timestamp, ended timestamp, duration INTEGER DEFAULT 0, user_cpu_time INTEGER DEFAULT 0, percent_cpu_used REAL NOT NULL, total_physical_memory INTEGER DEFAULT 0, physical_memory_available INTEGER DEFAULT 0, physical_memory_used INTEGER DEFAULT 0, percent_physical_memory_used REAL NOT NULL, active_memory_used INTEGER DEFAULT 0, disk_usage INTEGER DEFAULT 0, percent_disk_usage REAL NOT NULL, read_count INTEGER DEFAULT 0, write_count INTEGER DEFAULT 0, read_bytes INTEGER DEFAULT 0, write_bytes INTEGER DEFAULT 0, read_time INTEGER DEFAULT 0, write_time INTEGER DEFAULT 0, bytes_sent INTEGER DEFAULT 0, bytes_recv INTEGER DEFAULT 0, task_id INTEGER NOT NULL, created timestamp, modified timestamp);CREATE UNIQUE INDEX name_mode ON profile(name, mode);"""
     args: tuple = ()
 
 
@@ -72,13 +72,14 @@ class ProfileDDL(DDL):
 @dataclass
 class InsertProfile(SQL):
     dto: DTO
-    sql: str = """INSERT INTO profile (name, description, started, ended, duration, user_cpu_time, percent_cpu_used, total_physical_memory, physical_memory_available, physical_memory_used, percent_physical_memory_used, active_memory_used, disk_usage, percent_disk_usage, read_count, write_count, read_bytes, write_bytes, read_time, write_time, bytes_sent, bytes_recv, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO profile (name, description, mode, started, ended, duration, user_cpu_time, percent_cpu_used, total_physical_memory, physical_memory_available, physical_memory_used, percent_physical_memory_used, active_memory_used, disk_usage, percent_disk_usage, read_count, write_count, read_bytes, write_bytes, read_time, write_time, bytes_sent, bytes_recv, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
+            self.dto.mode,
             self.dto.started,
             self.dto.ended,
             self.dto.duration,
@@ -118,6 +119,7 @@ class UpdateProfile(SQL):
         self.args = (
             self.dto.name,
             self.dto.description,
+            self.dto.mode,
             self.dto.started,
             self.dto.ended,
             self.dto.duration,

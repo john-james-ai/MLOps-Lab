@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:31:12 am                                                #
-# Modified   : Monday December 19th 2022 03:32:02 pm                                               #
+# Modified   : Sunday December 25th 2022 09:38:11 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -201,12 +201,12 @@ class Sampler(Operator):
 #                               TRAIN TEST SPLIT OPERATOR                                          #
 # ------------------------------------------------------------------------------------------------ #
 class TrainTestSplit(Operator):
-    """Splits the dataset into to training and test sets using global
+    """Splits the dataframe into to training and test sets using global
     Args:
         split_var (str): The variable containing the temporal value.
         train_size (float): The proportion of the data to allocate to the training set.
 
-    Returns: Dictionary of Train and Test Dataset objects.
+    Returns: Dictionary of Train and Test DataFrame objects.
     """
 
     def __init__(self, split_var: str, train_size: float = 0.80) -> None:

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 9th 2022 10:54:47 pm                                                #
-# Modified   : Sunday December 11th 2022 02:30:32 pm                                               #
+# Modified   : Wednesday December 28th 2022 06:24:15 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,8 +33,8 @@ class Profile(Entity):
         description (str): Description of job or task being profiled.
     """
 
-    def __init__(self, name: str, task_id: int, description: str = None) -> None:
-        super().__init__(name=name, description=description)
+    def __init__(self, name: str, task_id: int, description: str = None, mode: str = None) -> None:
+        super().__init__(name=name, description=description, mode=mode)
         self._task_id = task_id
         self._started = None
         self._ended = None

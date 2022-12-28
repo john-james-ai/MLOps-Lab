@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Saturday December 24th 2022 09:00:34 am                                             #
+# Modified   : Wednesday December 28th 2022 05:21:34 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateTaskTable(SQL):
     name: str = "task"
-    sql: str = """CREATE TABLE IF NOT EXISTS task (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('task_' || id), name TEXT NOT NULL, description TEXT, mode TEXT NOT NULL, stage TEXT NOT NULL, job_id INTEGER DEFAULT 0, started timestamp, ended timestamp, duration REAL, state TEXT NOT NULL, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS task (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('task_' || id), name TEXT NOT NULL UNIQUE, description TEXT, mode TEXT NOT NULL, stage TEXT NOT NULL, job_id INTEGER DEFAULT 0, started timestamp, ended timestamp, duration REAL, state TEXT NOT NULL, created timestamp, modified timestamp);CREATE UNIQUE INDEX name_mode ON task(name, mode);"""
     args: tuple = ()
 
 
@@ -72,7 +72,7 @@ class TaskDDL(DDL):
 @dataclass
 class InsertTask(SQL):
     dto: DTO
-    sql: str = """INSERT INTO task (name, description, mode, stage, job_id, started, ended, duration, state, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO task (name, description, mode, stage, job_id, started, ended, duration, state, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:

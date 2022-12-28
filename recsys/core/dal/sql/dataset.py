@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Saturday December 24th 2022 08:47:39 am                                             #
+# Modified   : Wednesday December 28th 2022 05:18:03 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDatasetTable(SQL):
     name: str = "dataset"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('dataset_' || id), name TEXT NOT NULL UNIQUE, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, size INTEGER, nrows INTEGER, ncols INTEGER, nulls INTEGER, pct_nulls REAL, task_id INTEGER, parent_id INTEGER DEFAULT 0, created timestamp, modified timestamp);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('dataset_' || id), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, task_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX name_mode ON dataset(name, mode);"""
     args: tuple = ()
 
 
@@ -71,7 +71,7 @@ class DatasetDDL(DDL):
 @dataclass
 class InsertDataset(SQL):
     dto: DTO
-    sql: str = """INSERT INTO dataset (name, description, datasource, mode, stage, size, nrows, ncols, nulls, pct_nulls, task_id, parent_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO dataset (name, description, datasource, mode, stage, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -81,13 +81,7 @@ class InsertDataset(SQL):
             self.dto.datasource,
             self.dto.mode,
             self.dto.stage,
-            self.dto.size,
-            self.dto.nrows,
-            self.dto.ncols,
-            self.dto.nulls,
-            self.dto.pct_nulls,
             self.dto.task_id,
-            self.dto.parent_id,
             self.dto.created,
             self.dto.modified,
         )
@@ -99,7 +93,7 @@ class InsertDataset(SQL):
 @dataclass
 class UpdateDataset(SQL):
     dto: DTO
-    sql: str = """UPDATE dataset SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, size = ?, nrows = ?, ncols = ?, nulls = ?, pct_nulls = ?, task_id = ?, parent_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE dataset SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -109,13 +103,7 @@ class UpdateDataset(SQL):
             self.dto.datasource,
             self.dto.mode,
             self.dto.stage,
-            self.dto.size,
-            self.dto.nrows,
-            self.dto.ncols,
-            self.dto.nulls,
-            self.dto.pct_nulls,
             self.dto.task_id,
-            self.dto.parent_id,
             self.dto.created,
             self.dto.modified,
             self.dto.id,
@@ -151,7 +139,7 @@ class SelectDatasetByName(SQL):
 
 
 @dataclass
-class SelectAllDatasets(SQL):
+class SelectAllDataset(SQL):
     sql: str = """SELECT * FROM dataset;"""
     args: tuple = ()
 
@@ -187,6 +175,6 @@ class DatasetDML(DML):
     update: type(SQL) = UpdateDataset
     select: type(SQL) = SelectDataset
     select_by_name: type(SQL) = SelectDatasetByName
-    select_all: type(SQL) = SelectAllDatasets
+    select_all: type(SQL) = SelectAllDataset
     exists: type(SQL) = DatasetExists
     delete: type(SQL) = DeleteDataset

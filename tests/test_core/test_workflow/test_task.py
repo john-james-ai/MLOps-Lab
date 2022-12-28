@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 09:01:22 pm                                               #
-# Modified   : Tuesday December 20th 2022 08:40:39 pm                                              #
+# Modified   : Sunday December 25th 2022 09:29:56 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -98,7 +98,7 @@ class TestTask:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_setters(self, datasets, caplog):
+    def test_setters(self, dataset, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -110,10 +110,10 @@ class TestTask:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         task = Task(name=inspect.stack()[0][3], mode="test", operator=NullOperator(), job_id=1, description=f"description for {inspect.stack()[0][3]}")
-        task.input = datasets[0]
-        task.output = datasets
-        assert task.input == datasets[0]
-        assert task.output == datasets
+        task.input = dataset[0]
+        task.output = dataset
+        assert task.input == dataset[0]
+        assert task.output == dataset
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

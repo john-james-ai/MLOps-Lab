@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Sunday December 18th 2022 06:18:21 pm                                               #
+# Modified   : Sunday December 25th 2022 09:38:05 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -105,7 +105,7 @@ class TestJobDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.job()
         for i, job_dto in enumerate(job_dtos, start=1):
-            logger.debug(f"\n\nDataset DTO\n{job_dto}")
+            logger.debug(f"\n\nDataFrame DTO\n{job_dto}")
             with pytest.raises(FileNotFoundError):
                 _ = dao.read(i)
 
@@ -170,7 +170,7 @@ class TestJobDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.job()
         for i, job_dto in enumerate(job_dtos, start=1):
-            logger.debug(f"\n\nDataset DTO\n{job_dto}")
+            logger.debug(f"\n\nDataFrame DTO\n{job_dto}")
             dto = dao.read(i)
             assert job_dto == dto
 

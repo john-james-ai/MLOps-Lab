@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Saturday December 24th 2022 01:50:30 pm                                             #
+# Modified   : Wednesday December 28th 2022 05:13:56 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -50,7 +50,8 @@ class RDB(Service):
         return cursor
 
     def create_table(self, sql: str, args: tuple = None) -> None:
-        cursor = self.query(sql, args)
+        cursor = self._connection.cursor()
+        cursor.executescript(sql)
         cursor.close()
 
     def drop_table(self, sql: str, args: tuple = None) -> None:

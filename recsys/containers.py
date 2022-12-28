@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Saturday December 24th 2022 02:47:25 pm                                             #
+# Modified   : Sunday December 25th 2022 01:59:44 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,9 +22,9 @@ import sqlite3
 from dependency_injector import containers, providers  # pragma: no cover
 
 from recsys.core.services.io import IOService
-from recsys.core.dal.repo import Repo, Context
-from recsys.core.dal.dao import DatasetDAO, JobDAO, TaskDAO, ProfileDAO
+from recsys.core.dal.dao import DataFrameDAO, DatasetDAO, JobDAO, TaskDAO, ProfileDAO
 from recsys.core.dal.ddo import TableService
+from recsys.core.dal.sql.dataframe import DataFrameDDL, DataFrameDML
 from recsys.core.dal.sql.dataset import DatasetDDL, DatasetDML
 from recsys.core.dal.sql.job import JobDDL, JobDML
 from recsys.core.dal.sql.profile import ProfileDDL, ProfileDML
@@ -72,6 +72,8 @@ class TableContainer(containers.DeclarativeContainer):
 
     rdb = providers.Dependency()
 
+    dataframe = providers.Factory(TableService, database=rdb, ddl=DataFrameDDL)
+
     dataset = providers.Factory(TableService, database=rdb, ddl=DatasetDDL)
 
     job = providers.Factory(TableService, database=rdb, ddl=JobDDL)
@@ -87,6 +89,8 @@ class DAOContainer(containers.DeclarativeContainer):
 
     odb = providers.Dependency()
 
+    dataframe = providers.Factory(DataFrameDAO, rdb=rdb, odb=odb, dml=DataFrameDML)
+
     dataset = providers.Factory(DatasetDAO, rdb=rdb, odb=odb, dml=DatasetDML)
 
     job = providers.Factory(JobDAO, rdb=rdb, odb=odb, dml=JobDML)
@@ -96,57 +100,14 @@ class DAOContainer(containers.DeclarativeContainer):
     profile = providers.Factory(ProfileDAO, rdb=rdb, odb=odb, dml=ProfileDML)
 
 
-class RepoContainer(containers.DeclarativeContainer):
-
-    dao = providers.Dependency()
-
-    repo = providers.Singleton(
-        Repo,
-        dao=dao,
-    )
-
-
-class ContextContainer(containers.DeclarativeContainer):
-
-    dataset = providers.Dependency(instance_of=Repo)
-
-    job = providers.Dependency(instance_of=Repo)
-
-    task = providers.Dependency(instance_of=Repo)
-
-    profile = providers.Dependency(instance_of=Repo)
-
-    context = providers.Singleton(
-        Context,
-        dataset=dataset,
-        job=job,
-        task=task,
-        profile=profile,
-    )
-
-
 class Recsys(containers.DeclarativeContainer):
 
     config = providers.Configuration(yaml_files=["config.yml"])
 
-    core = providers.Container(CoreContainer, config=config.core)
+    core = providers.Container(CoreContainer, config=config.test.core)  # substitute test for the mode (prod, dev) of interest
 
-    data = providers.Container(DataLayerContainer, config=config.data)
+    data = providers.Container(DataLayerContainer, config=config.test.data)
 
     table = providers.Container(TableContainer, rdb=data.rdb)
 
     dao = providers.Container(DAOContainer, rdb=data.rdb, odb=data.odb)
-
-    dataset = providers.Container(RepoContainer, dao=dao.dataset)
-
-    job = providers.Container(RepoContainer, dao=dao.job)
-
-    task = providers.Container(RepoContainer, dao=dao.task)
-
-    profile = providers.Container(RepoContainer, dao=dao.profile)
-
-    context = providers.Container(ContextContainer,
-                                  dataset=dataset.repo,
-                                  job=job.repo,
-                                  task=task.repo,
-                                  profile=profile.repo)

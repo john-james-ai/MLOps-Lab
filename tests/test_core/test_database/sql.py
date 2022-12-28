@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_core/test_data/sql.py                                                   #
+# Filename   : /tests/test_core/test_database/sql.py                                               #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:09:28 am                                              #
-# Modified   : Monday December 12th 2022 01:31:53 am                                               #
+# Modified   : Sunday December 25th 2022 09:38:07 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -48,7 +48,7 @@ class TestTableExists:
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class InsertTest:
-    """All attributes of a Dataset are included; however, two are not used - namely id, and data."""
+    """All attributes of a DataFrame are included; however, two are not used - namely id, and data."""
 
     name: str = "test_row"
     description: str = "A Test Row"

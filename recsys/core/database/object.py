@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Saturday December 24th 2022 04:52:41 pm                                             #
+# Modified   : Sunday December 25th 2022 01:54:05 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -81,6 +81,7 @@ class ODB(Service):
             oid (str): Object Id comprised of <classname>_<id> in lower case.
         """
         try:
+            self._check_connection()
             cursor = self._connection.cursor()
             return cursor[oid]
         except KeyError:
@@ -122,9 +123,15 @@ class ODB(Service):
 
     # -------------------------------------------------------------------------------------------- #
     def exists(self, oid: str) -> bool:
+        self._check_connection()
         cursor = self._connection.cursor()
         return oid in cursor.keys()
 
     # -------------------------------------------------------------------------------------------- #
     def save(self) -> None:
         self._connection.commit()
+
+    # -------------------------------------------------------------------------------------------- #
+    def _check_connection(self) -> None:
+        if not self._connection.is_connected():
+            self._connection.connect()

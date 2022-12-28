@@ -11,17 +11,21 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Saturday December 24th 2022 11:50:06 pm                                             #
+# Modified   : Wednesday December 28th 2022 06:31:41 am                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+import os
+import dotenv
+from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from datetime import datetime
 import logging
 
 import recsys
 from recsys.core.dal.base import DTO
+from recsys.core.services.validation import Validator
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -31,18 +35,18 @@ class Entity(ABC):
 
     name (str): Name of entity
     description (str): Optional description of entity
-    mode (str): One of the registered modes, i.e. ['input','test', 'dev', 'prod']
 
     """
 
-    def __init__(self, name: str, mode: str, description: str = None) -> None:
-        self._id = None
-        self._oid = None
+    def __init__(self, name: str, description: str = None, mode: str = None) -> None:
         self._name = name
         self._description = description
-        self._mode = mode
+        self._id = None
+        self._oid = None
+        self._mode = mode or self._get_mode()
         self._created = datetime.now()
         self._modified = None
+        self._validator = Validator()
         self._logger = logging.getLogger(
             f"{self.__module__}.{self.__class__.__name__}",
         )
@@ -57,10 +61,8 @@ class Entity(ABC):
             self._id = id
             self._oid = f"{self.__class__.__name__.lower()}_{id}"
             self._modified = datetime.now()
-        else:
-            msg = (
-                "The 'id' property does not support item re-assignment."
-            )
+        elif self._id != id:
+            msg = "Item re-assignment is not supported for 'id' instance variable."
             self._logger.error(msg)
             raise TypeError(msg)
 
@@ -115,39 +117,23 @@ class Entity(ABC):
         else:
             """Else nothing. What do you want?"""
 
-    def _validate(self) -> None:  # noqa C901
-        if hasattr(self, "name"):
-            if self._name is None:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'name' is required for {self.__class__.__name__} objects."
-                self._logger.error(msg)
-                raise TypeError(msg)
+    def _get_mode(self) -> str:
+        dotenv.load_dotenv()
+        return os.getenv("MODE")
 
-        if hasattr(self, "datasource"):
-            if self._datasource is None:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is required for {self.__class__.__name__} objects."
-                self._logger.error(msg)
-                raise TypeError(msg)
-            elif self._datasource not in recsys.SOURCES:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'source' is invalid. Must be one of {recsys.SOURCES}."
-                self._logger.error(msg)
-                raise ValueError(msg)
+    def _validate(self) -> None:
+        response = self._validator.validate(self)
+        if not response.is_ok:
+            self._logger.error(response.msg)
+            raise response.exception(response.msg)
 
-        if hasattr(self, "mode"):
-            if self._mode is None:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'mode' is required for {self.__class__.__name__} objects."
-                self._logger.error(msg)
-                raise TypeError(msg)
-            elif self._mode not in recsys.MODES:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'mode' is invalid. Must be one of {recsys.MODES}."
-                self._logger.error(msg)
-                raise ValueError(msg)
 
-        if hasattr(self, "stage"):
-            if self._stage is None:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'stage' is required for {self.__class__.__name__} objects."
-                self._logger.error(msg)
-                raise TypeError(msg)
-            elif self._stage not in recsys.STAGES:
-                msg = f"Error instantiating {self.__class__.__name__}. Attribute 'stage' is invalid. Must be one of {recsys.STAGES}."
-                self._logger.error(msg)
-                raise ValueError(msg)
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class Spec:
+    """Specification class. Defines the input / output specification for an entity."""
+    entity: type(Entity)
+    name: str
+    description: str = None
+    mode: str = None
+    uri: str = None

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 02:13:29 pm                                             #
-# Modified   : Saturday December 24th 2022 04:52:48 pm                                             #
+# Modified   : Sunday December 25th 2022 10:29:29 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,8 +21,7 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.entity.dataset import Dataset
-import tests.containers    # noqa F401
+from recsys.core.entity.dataset import DataFrame
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -63,7 +62,7 @@ class TestODB:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create(self, datasets, container, caplog):
+    def test_create(self, dataset, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -76,20 +75,20 @@ class TestODB:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         odb = container.data.odb()
         j = 0
-        for i, dataset in enumerate(datasets, start=1):
+        for i, dataframe in enumerate(dataset, start=1):
             if i % 2 == 0:
                 j += 1
                 with odb as db:
-                    db.create(dataset)
+                    db.create(dataframe)
                     assert len(odb) == j - 1
 
         assert len(odb) == 2
 
-        for i, dataset in enumerate(datasets, start=1):
+        for i, dataframe in enumerate(dataset, start=1):
             if i % 2 == 0:
                 with odb as db:
                     with pytest.raises(FileExistsError):
-                        db.create(dataset)
+                        db.create(dataframe)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -120,22 +119,22 @@ class TestODB:  # pragma: no cover
         odb = container.data.odb()
 
         for i in range(1, 6):
-            oid = f"dataset_{i}"
+            oid = f"dataframe_{i}"
             if i % 2 == 0:
                 with odb as db:
-                    dataset = db.read(oid)
-                    assert isinstance(dataset, Dataset)
-                    assert dataset.id == i
-                    assert dataset.datasource == 'movielens25m'
-                    assert dataset.mode == 'test'
-                    assert dataset.stage == 'interim'
-                    assert dataset.ncols > 1
-                    assert dataset.nrows > 100
-                    assert dataset.pct_nulls == 0.0
-                    assert dataset.task_id == i + 50
-                    assert dataset.parent_id == 0
-                    assert isinstance(dataset.created, datetime)
-                    assert isinstance(dataset.modified, datetime)
+                    dataframe = db.read(oid)
+                    assert isinstance(dataframe, DataFrame)
+                    assert dataframe.id == i
+                    assert dataframe.datasource == 'movielens25m'
+                    assert dataframe.mode == 'test'
+                    assert dataframe.stage == 'interim'
+                    assert dataframe.ncols > 1
+                    assert dataframe.nrows > 100
+                    assert dataframe.pct_nulls == 0.0
+                    assert dataframe.task_id == i + 50
+                    assert dataframe.parent_id == 0
+                    assert isinstance(dataframe.created, datetime)
+                    assert isinstance(dataframe.modified, datetime)
             else:
                 with pytest.raises(FileNotFoundError):
                     with odb as db:
@@ -156,7 +155,7 @@ class TestODB:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_update(self, datasets, container, caplog):
+    def test_update(self, dataset, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -168,14 +167,14 @@ class TestODB:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         odb = container.data.odb()
-        for i, dataset in enumerate(datasets, start=1):
+        for i, dataframe in enumerate(dataset, start=1):
             if i % 2 == 0:
                 with odb as db:
-                    db.update(dataset)
+                    db.update(dataframe)
             else:
                 with pytest.raises(FileNotFoundError):
                     with odb as db:
-                        db.update(dataset)
+                        db.update(dataframe)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -204,7 +203,7 @@ class TestODB:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         odb = container.data.odb()
         for i in range(1, 6):
-            oid = f"dataset_{i}"
+            oid = f"dataframe_{i}"
             if i % 2 == 0:
                 with odb as db:
                     db.delete(oid)
@@ -228,7 +227,7 @@ class TestODB:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_save(self, container, datasets, caplog):
+    def test_save(self, container, dataset, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -240,11 +239,11 @@ class TestODB:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         odb = container.data.odb()
-        for i, dataset in enumerate(datasets, start=1):
+        for i, dataframe in enumerate(dataset, start=1):
             if i % 2 == 0:
                 size = len(odb)
                 with odb as db:
-                    db.create(dataset)
+                    db.create(dataframe)
                     assert len(db) == size
                     db.save()
                     assert len(db) == size + 1
