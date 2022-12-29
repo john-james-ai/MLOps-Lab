@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday December 28th 2022 05:18:03 am                                            #
+# Modified   : Wednesday December 28th 2022 03:05:45 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -126,13 +126,14 @@ class SelectDataset(SQL):
 
 
 @dataclass
-class SelectDatasetByName(SQL):
+class SelectDatasetByNameMode(SQL):
     name: str
-    sql: str = """SELECT * FROM dataset WHERE name = ?;"""
+    mode: str
+    sql: str = """SELECT * FROM dataset WHERE name = ? AND mode = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
-        self.args = (self.name,)
+        self.args = (self.name, self.mode,)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -174,7 +175,7 @@ class DatasetDML(DML):
     insert: type(SQL) = InsertDataset
     update: type(SQL) = UpdateDataset
     select: type(SQL) = SelectDataset
-    select_by_name: type(SQL) = SelectDatasetByName
+    select_by_name_mode: type(SQL) = SelectDatasetByNameMode
     select_all: type(SQL) = SelectAllDataset
     exists: type(SQL) = DatasetExists
     delete: type(SQL) = DeleteDataset

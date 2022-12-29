@@ -11,27 +11,29 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Tuesday December 27th 2022 11:35:02 pm                                              #
+# Modified   : Thursday December 29th 2022 03:09:49 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import pytest
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import recsys
 from recsys.containers import Recsys
 from recsys.core.services.io import IOService
-from recsys.core.entity.dataset import DataFrame, Dataset, DatasetSpec
+# from recsys.core.entity.base import Spec
+from recsys.core.entity.file import File
+from recsys.core.entity.dataset import DataFrame, Dataset
 from recsys.core.entity.profile import Profile
-from recsys.core.workflow.job import Job
-from recsys.core.workflow.task import Task
-from recsys.core.workflow.operator import NullOperator
+# from recsys.core.repo.job import Job
+# from recsys.core.workflow.task import Task
+# from recsys.core.workflow.operator import NullOperator
 from recsys.core.database.relational import RDB
 from recsys.core.database.connection import SQLiteConnection
-from recsys.core.repo.base import Context
-from recsys.core.repo.uow import UnitOfWork
+# from recsys.core.repo.base import Context
+# from recsys.core.repo.uow import UnitOfWork
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
 RATINGS_FILEPATH = "tests/data/movielens25m/raw/ratings.pkl"
@@ -65,6 +67,37 @@ def connection():
 @pytest.fixture(scope="module")
 def database(connection):
     return RDB(connection=connection)
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def file():
+    file = File(
+        name="test_file",
+        description="Test File Description",
+        datasource="movielens25m",
+        stage="extract",
+        uri="tests/data/movielens25m/raw/ratings.pkl",
+        task_id=55,
+    )
+    return file
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def files():
+    files = []
+    for i in range(1, 6):
+        file = File(
+            name=f"test_file_{i}",
+            description=f"Test File Description {i}",
+            datasource="movielens25m",
+            stage="extract",
+            uri="tests/data/movielens25m/raw/ratings.pkl",
+            task_id=i + 22,
+        )
+        files.append(file)
+    return files
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -125,54 +158,56 @@ def profiles():
     return profiles
 
 
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def tasks(dataset):
-    tasks = []
-    for i in range(1, 6):
-        input_spec = DatasetSpec(
-            name=f"input_dataset_{i}",
-            datasource='spotify',
-            stage="extract"
-        )
-        output_spec = DatasetSpec(
-            name=f"output_dataset_{i}",
-            datasource='spotify',
-            stage="interim"
-        )
-        task = Task(
-            name=f"task_dto_{i}",
-            description=f"Task Description DTO {i}",
-            stage="extract",
-            operator=NullOperator(),
-            input_spec=input_spec,
-            output_spec=output_spec,
-            job_id=i * 10,
-        )
-        task.id = i
-        task.run()
-        tasks.append(task)
-    return tasks
+# # ------------------------------------------------------------------------------------------------ #
+# @pytest.fixture(scope="module")
+# def tasks(dataset):
+#     tasks = []
+#     for i in range(1, 6):
+#         input_spec = Spec(
+#             entity=Dataset,
+#             name=f"input_dataset_{i}",
+#             mode='test',
+#         )
+#         output_spec = Spec(
+#             entity=Dataset,
+#             name=f"output_dataset_{i}",
+#             datasource='spotify',
+#             stage="interim",
+#             mode="test",
+#         )
+#         task = Task(
+#             name=f"task_dto_{i}",
+#             description=f"Task Description DTO {i}",
+#             stage="extract",
+#             operator=NullOperator(),
+#             input_spec=input_spec,
+#             output_spec=output_spec,
+#             job_id=i * 10,
+#         )
+#         task.id = i
+#         task.run()
+#         tasks.append(task)
+#     return tasks
 
 
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def jobs():
-    jobs = []
-    for i in range(1, 6):
-        job = Job(
-            name=f"job_name_{i}",
-            description=f"Description for Job # {i}",
-            pipeline={},
-            started=datetime.now() - timedelta(hours=i),
-            ended=datetime.now(),
-            duration=(datetime.now() - (datetime.now() - timedelta(hours=i))).total_seconds(),
-            state="READY",
-            created=datetime.now(),
-            modified=datetime.now(),
-        )
-        jobs.append(job)
-    return jobs
+# # ------------------------------------------------------------------------------------------------ #
+# @pytest.fixture(scope="module")
+# def jobs():
+#     jobs = []
+#     for i in range(1, 6):
+#         job = Job(
+#             name=f"job_name_{i}",
+#             description=f"Description for Job # {i}",
+#             pipeline={},
+#             started=datetime.now() - timedelta(hours=i),
+#             ended=datetime.now(),
+#             duration=(datetime.now() - (datetime.now() - timedelta(hours=i))).total_seconds(),
+#             state="READY",
+#             created=datetime.now(),
+#             modified=datetime.now(),
+#         )
+#         jobs.append(job)
+#     return jobs
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -210,9 +245,9 @@ def container():
     return container
 
 
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope='module', autouse=True)
-def uow():
-    context = Context()
-    uow = UnitOfWork(context=context)
-    return uow
+# # ------------------------------------------------------------------------------------------------ #
+# @pytest.fixture(scope='module', autouse=True)
+# def uow():
+#     context = Context()
+#     uow = UnitOfWork(context=context)
+#     return uow

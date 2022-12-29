@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 10:24:47 pm                                                #
-# Modified   : Wednesday December 28th 2022 06:28:46 am                                            #
+# Modified   : Wednesday December 28th 2022 03:00:49 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -49,7 +49,7 @@ class Job(Process):
         """Runs the Job"""
         self._setup()
         for task in self._tasks.values():
-            dataset = self._uow.context.dataset.read_by_name(name=task.input_spec.name)
+            dataset = self._uow.context.dataset.read_by_name_mode(name=task.input_spec.name)
             dataset = task.run(data=dataset)
             self._uow.context.dataset.create(dataset)
 

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Tuesday December 27th 2022 10:48:41 pm                                              #
+# Modified   : Wednesday December 28th 2022 03:04:28 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,7 @@ import logging
 
 from recsys.core.database.relational import RDB
 from recsys.core.database.object import ODB
-from .dto import DTO, DataFrameDTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO
+from .dto import DTO, DataFrameDTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO, FileDTO
 from .base import DML
 from recsys.core.entity.base import Entity
 
@@ -87,14 +87,14 @@ class DAO(ABC):
             self._logger.info(msg)
             raise FileNotFoundError(msg)
 
-    def read_by_name(self, name: str) -> DTO:
+    def read_by_name_mode(self, name: str, mode: str) -> DTO:
         """Retrieves an entity from the database, based upon name
         Args:
             name (str): The name assigned to the entity.
 
         Returns a Data Transfer Object (DTO)
         """
-        cmd = self._dml.select_by_name(name)
+        cmd = self._dml.select_by_name_mode(name, mode)
 
         row = self._rdb.select(cmd.sql, cmd.args)
         if len(row) > 0:
@@ -359,6 +359,41 @@ class JobDAO(DAO):
                 ended=row[6],
                 duration=row[7],
                 state=row[8],
+                created=row[9],
+                modified=row[10],
+            )
+
+        except IndexError as e:  # pragma: no cover
+            msg = f"Index error in_row_to_dto method.\n{e}"
+            self._logger.error(msg)
+            raise IndexError(msg)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                 FILE DATA ACCESS OBJECT                                          #
+# ------------------------------------------------------------------------------------------------ #
+class FileDAO(DAO):
+    """File Data Access Object"""
+
+    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
+        super().__init__(rdb=rdb, odb=odb, dml=dml)
+
+    def _get_oid(self, id) -> str:
+        """Returns the object id for the given id and entity."""
+        return f"file_{id}"
+
+    def _row_to_dto(self, row: Tuple) -> FileDTO:
+        try:
+            return FileDTO(
+                id=row[0],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                datasource=row[4],
+                mode=row[5],
+                stage=row[6],
+                uri=row[7],
+                task_id=row[8],
                 created=row[9],
                 modified=row[10],
             )

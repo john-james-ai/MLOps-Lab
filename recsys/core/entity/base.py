@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Wednesday December 28th 2022 06:31:41 am                                            #
+# Modified   : Wednesday December 28th 2022 03:21:35 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -135,5 +135,7 @@ class Spec:
     entity: type(Entity)
     name: str
     description: str = None
+    datasource: str = None
+    stage: str = None
     mode: str = None
     uri: str = None

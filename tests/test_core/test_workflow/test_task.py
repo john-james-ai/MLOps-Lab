@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 09:01:22 pm                                               #
-# Modified   : Sunday December 25th 2022 09:29:56 am                                               #
+# Modified   : Thursday December 29th 2022 03:12:21 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 
 
+@pytest.mark.skip()
 @pytest.mark.task
 class TestTask:  # pragma: no cover
     # ============================================================================================ #

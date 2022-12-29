@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 12:28:07 am                                               #
-# Modified   : Wednesday December 28th 2022 12:32:53 am                                            #
+# Modified   : Wednesday December 28th 2022 03:07:59 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -51,8 +51,9 @@ class DatasetRepo(Repo):
         "Returns an entity with the designated id"
         return self._context.dataset.read(id)
 
-    def get_by_name(self, name: str) -> Entity:
-        return self._context.dataset.read_by_name(name)
+    def get_by_name_mode(self, name: str, mode: str = None) -> Entity:
+        mode = mode or self._get_mode()
+        return self._context.dataset.read_by_name_mode(name, mode)
 
     def get_all(self) -> dict:
         return self._context.dataset.read_all()

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Wednesday December 28th 2022 05:20:39 am                                            #
+# Modified   : Wednesday December 28th 2022 03:06:37 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -163,13 +163,14 @@ class SelectProfile(SQL):
 
 
 @dataclass
-class SelectProfileByName(SQL):
+class SelectProfileByNameMode(SQL):
     name: str
-    sql: str = """SELECT * FROM profile WHERE name = ?;"""
+    mode: str
+    sql: str = """SELECT * FROM profile WHERE name = ? AND mode = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
-        self.args = (self.name,)
+        self.args = (self.name, self.mode,)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -210,7 +211,7 @@ class ProfileDML(DML):
     insert: type(SQL) = InsertProfile
     update: type(SQL) = UpdateProfile
     select: type(SQL) = SelectProfile
-    select_by_name: type(SQL) = SelectProfileByName
+    select_by_name_mode: type(SQL) = SelectProfileByNameMode
     select_all: type(SQL) = SelectAllProfiles
     exists: type(SQL) = ProfileExists
     delete: type(SQL) = DeleteProfile

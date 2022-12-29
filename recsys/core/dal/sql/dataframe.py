@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday December 28th 2022 05:18:16 am                                            #
+# Modified   : Wednesday December 28th 2022 03:05:11 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -136,13 +136,14 @@ class SelectDataFrame(SQL):
 
 
 @dataclass
-class SelectDataFrameByName(SQL):
+class SelectDataFrameByNameMode(SQL):
     name: str
-    sql: str = """SELECT * FROM dataframe WHERE name = ?;"""
+    mode: str
+    sql: str = """SELECT * FROM dataframe WHERE name = ? AND mode = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
-        self.args = (self.name,)
+        self.args = (self.name, self.mode,)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -184,7 +185,7 @@ class DataFrameDML(DML):
     insert: type(SQL) = InsertDataFrame
     update: type(SQL) = UpdateDataFrame
     select: type(SQL) = SelectDataFrame
-    select_by_name: type(SQL) = SelectDataFrameByName
+    select_by_name_mode: type(SQL) = SelectDataFrameByNameMode
     select_all: type(SQL) = SelectAllDataset
     exists: type(SQL) = DataFrameExists
     delete: type(SQL) = DeleteDataFrame

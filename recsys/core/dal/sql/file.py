@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/dal/sql/task.py                                                        #
+# Filename   : /recsys/core/dal/sql/file.py                                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday December 28th 2022 03:06:54 pm                                            #
+# Modified   : Wednesday December 28th 2022 03:06:03 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,27 +19,26 @@
 from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
-
 # ================================================================================================ #
-#                                           TASK                                                   #
+#                                        DATASET                                                   #
 # ================================================================================================ #
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                            DDL                                                   #
+#                                          DDL                                                     #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class CreateTaskTable(SQL):
-    name: str = "task"
-    sql: str = """CREATE TABLE IF NOT EXISTS task (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('task_' || id), name TEXT NOT NULL UNIQUE, description TEXT, mode TEXT NOT NULL, stage TEXT NOT NULL, job_id INTEGER DEFAULT 0, started timestamp, ended timestamp, duration REAL, state TEXT NOT NULL, created timestamp, modified timestamp);CREATE UNIQUE INDEX name_mode ON task(name, mode);"""
+class CreateFileTable(SQL):
+    name: str = "file"
+    sql: str = """CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('dataset_' || id), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, uri TEXT NOT NULL, task_id INTEGER DEFAULT 0, created timestamp, modified timestamp);CREATE UNIQUE INDEX name_mode ON file(name, mode);"""
     args: tuple = ()
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DropTaskTable(SQL):
-    name: str = "task"
-    sql: str = """DROP TABLE IF EXISTS task;"""
+class DropFileTable(SQL):
+    name: str = "file"
+    sql: str = """DROP TABLE IF EXISTS file;"""
     args: tuple = ()
 
 
@@ -47,8 +46,8 @@ class DropTaskTable(SQL):
 
 
 @dataclass
-class TaskTableExists(SQL):
-    name: str = "task"
+class FileTableExists(SQL):
+    name: str = "file"
     sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
     args: tuple = ()
 
@@ -58,10 +57,10 @@ class TaskTableExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class TaskDDL(DDL):
-    create: SQL = CreateTaskTable()
-    drop: SQL = DropTaskTable()
-    exists: SQL = TaskTableExists()
+class FileDDL(DDL):
+    create: SQL = CreateFileTable()
+    drop: SQL = DropFileTable()
+    exists: SQL = FileTableExists()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -70,22 +69,20 @@ class TaskDDL(DDL):
 
 
 @dataclass
-class InsertTask(SQL):
+class InsertFile(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO task (name, description, mode, stage, job_id, started, ended, duration, state, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO file (name, description, datasource, mode, stage, uri, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
+            self.dto.datasource,
             self.dto.mode,
             self.dto.stage,
-            self.dto.job_id,
-            self.dto.started,
-            self.dto.ended,
-            self.dto.duration,
-            self.dto.state,
+            self.dto.uri,
+            self.dto.task_id,
             self.dto.created,
             self.dto.modified,
         )
@@ -95,22 +92,20 @@ class InsertTask(SQL):
 
 
 @dataclass
-class UpdateTask(SQL):
+class UpdateFile(SQL):
     dto: DTO
-    sql: str = """UPDATE task SET name = ?, description = ?, mode = ?, stage = ?, job_id = ?, started = ?, ended = ?, duration = ?, state = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE file SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
+            self.dto.datasource,
             self.dto.mode,
             self.dto.stage,
-            self.dto.job_id,
-            self.dto.started,
-            self.dto.ended,
-            self.dto.duration,
-            self.dto.state,
+            self.dto.uri,
+            self.dto.task_id,
             self.dto.created,
             self.dto.modified,
             self.dto.id,
@@ -121,9 +116,9 @@ class UpdateTask(SQL):
 
 
 @dataclass
-class SelectTask(SQL):
+class SelectFile(SQL):
     id: int
-    sql: str = """SELECT * FROM task WHERE id = ?;"""
+    sql: str = """SELECT * FROM file WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -133,10 +128,10 @@ class SelectTask(SQL):
 
 
 @dataclass
-class SelectTaskByNameMode(SQL):
+class SelectFileByNameMode(SQL):
     name: str
     mode: str
-    sql: str = """SELECT * FROM task WHERE name = ? AND mode = ?;"""
+    sql: str = """SELECT * FROM file WHERE name = ? AND mode = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -147,17 +142,18 @@ class SelectTaskByNameMode(SQL):
 
 
 @dataclass
-class SelectAllTasks(SQL):
-    sql: str = """SELECT * FROM task;"""
+class SelectAllFile(SQL):
+    sql: str = """SELECT * FROM file;"""
     args: tuple = ()
 
 
 # ------------------------------------------------------------------------------------------------ #
 
+
 @dataclass
-class TaskExists(SQL):
+class FileExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM task WHERE id = ?;"""
+    sql: str = """SELECT COUNT(*) FROM file WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -166,9 +162,9 @@ class TaskExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DeleteTask(SQL):
+class DeleteFile(SQL):
     id: int
-    sql: str = """DELETE FROM task WHERE id = ?;"""
+    sql: str = """DELETE FROM file WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -177,11 +173,11 @@ class DeleteTask(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class TaskDML(DML):
-    insert: type(SQL) = InsertTask
-    update: type(SQL) = UpdateTask
-    select: type(SQL) = SelectTask
-    select_by_name_mode: type(SQL) = SelectTaskByNameMode
-    select_all: type(SQL) = SelectAllTasks
-    exists: type(SQL) = TaskExists
-    delete: type(SQL) = DeleteTask
+class FileDML(DML):
+    insert: type(SQL) = InsertFile
+    update: type(SQL) = UpdateFile
+    select: type(SQL) = SelectFile
+    select_by_name_mode: type(SQL) = SelectFileByNameMode
+    select_all: type(SQL) = SelectAllFile
+    exists: type(SQL) = FileExists
+    delete: type(SQL) = DeleteFile

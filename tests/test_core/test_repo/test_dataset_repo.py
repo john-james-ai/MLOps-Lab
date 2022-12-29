@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 13th 2022 10:50:34 pm                                              #
-# Modified   : Wednesday December 28th 2022 12:28:27 am                                            #
+# Modified   : Wednesday December 28th 2022 03:00:36 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -141,7 +141,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_by_name(self, uow, dataset, caplog):
+    def test_get_by_name_mode(self, uow, dataset, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -153,11 +153,11 @@ class TestDatasetRepo:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         repo = uow.dataset
-        dataset = repo.get_by_name("dataset_name_1")
+        dataset = repo.get_by_name_mode("dataset_name_1")
         assert isinstance(dataset, Dataset)
 
         with pytest.raises(FileNotFoundError):
-            _ = repo.get_by_name("joe")
+            _ = repo.get_by_name_mode("joe")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

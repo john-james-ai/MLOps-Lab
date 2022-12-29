@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Sunday December 25th 2022 01:59:44 pm                                               #
+# Modified   : Wednesday December 28th 2022 02:41:00 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,8 +22,9 @@ import sqlite3
 from dependency_injector import containers, providers  # pragma: no cover
 
 from recsys.core.services.io import IOService
-from recsys.core.dal.dao import DataFrameDAO, DatasetDAO, JobDAO, TaskDAO, ProfileDAO
+from recsys.core.dal.dao import DataFrameDAO, DatasetDAO, JobDAO, TaskDAO, ProfileDAO, FileDAO
 from recsys.core.dal.ddo import TableService
+from recsys.core.dal.sql.file import FileDDL, FileDML
 from recsys.core.dal.sql.dataframe import DataFrameDDL, DataFrameDML
 from recsys.core.dal.sql.dataset import DatasetDDL, DatasetDML
 from recsys.core.dal.sql.job import JobDDL, JobDML
@@ -72,6 +73,8 @@ class TableContainer(containers.DeclarativeContainer):
 
     rdb = providers.Dependency()
 
+    file = providers.Factory(TableService, database=rdb, ddl=FileDDL)
+
     dataframe = providers.Factory(TableService, database=rdb, ddl=DataFrameDDL)
 
     dataset = providers.Factory(TableService, database=rdb, ddl=DatasetDDL)
@@ -88,6 +91,8 @@ class DAOContainer(containers.DeclarativeContainer):
     rdb = providers.Dependency()
 
     odb = providers.Dependency()
+
+    file = providers.Factory(FileDAO, rdb=rdb, odb=odb, dml=FileDML)
 
     dataframe = providers.Factory(DataFrameDAO, rdb=rdb, odb=odb, dml=DataFrameDML)
 

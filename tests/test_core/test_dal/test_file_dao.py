@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_core/test_dal/test_dataset_dao.py                                       #
+# Filename   : /tests/test_core/test_dal/test_file_dao.py                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Wednesday December 28th 2022 03:09:27 pm                                            #
+# Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
+# Modified   : Wednesday December 28th 2022 03:10:13 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.entity.dataset import DataFrame
+from recsys.core.entity.file import File
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.dao
-@pytest.mark.dataframe_dao
-class TestDataFrameDAO:  # pragma: no cover
+@pytest.mark.file_dao
+class TestFileDAO:  # pragma: no cover
     # ============================================================================================ #
     def test_setup(self, container, caplog):
         start = datetime.now()
@@ -43,7 +43,7 @@ class TestDataFrameDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        ts = container.table.dataframe()
+        ts = container.table.file()
         ts.reset()
         odb = container.data.odb()
         odb.reset()
@@ -62,7 +62,7 @@ class TestDataFrameDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create_no_commit(self, dataset, container, caplog):
+    def test_create_no_commit(self, file, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -73,12 +73,12 @@ class TestDataFrameDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataframe()
-        for i, dataframe in enumerate(dataset, start=1):
-            logger.debug(f"\n\nTest Create DTO {i}\n\t{dataframe}")
-            dataframe = dao.create(dataframe)
-            assert dataframe.id == i
-            assert dataframe.oid == f'dataframe_{i}'
+        dao = container.dao.file()
+        for i, file in enumerate(file, start=1):
+            logger.debug(f"\n\nTest Create DTO {i}\n\t{file}")
+            file = dao.create(file)
+            assert file.id == i
+            assert file.oid == f'file_{i}'
             assert dao.exists(i)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -95,7 +95,7 @@ class TestDataFrameDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_read_no_commit(self, dataset, container, caplog):
+    def test_read_no_commit(self, file, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -106,9 +106,9 @@ class TestDataFrameDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataframe()
-        for i, dataframe in enumerate(dataset, start=1):
-            logger.debug(f"\n\nDataFrame\n{dataframe}")
+        dao = container.dao.file()
+        for i, file in enumerate(file, start=1):
+            logger.debug(f"\n\nFile\n{file}")
             with pytest.raises(FileNotFoundError):
                 _ = dao.read(i)
 
@@ -127,7 +127,7 @@ class TestDataFrameDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create_commit(self, dataset, container, caplog):
+    def test_create_commit(self, file, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -138,12 +138,12 @@ class TestDataFrameDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataframe()
-        for i, dataframe in enumerate(dataset, start=1):
-            logger.debug(f"\n\nTest Create DTO {i}\n\t{dataframe}")
-            dataframe = dao.create(dataframe)
+        dao = container.dao.file()
+        for i, file in enumerate(file, start=1):
+            logger.debug(f"\n\nTest Create DTO {i}\n\t{file}")
+            file = dao.create(file)
             dao.save()
-            assert dataframe.id == i
+            assert file.id == i
             assert dao.exists(i)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -160,7 +160,7 @@ class TestDataFrameDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_read_commit(self, dataset, container, caplog):
+    def test_read_commit(self, file, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -171,11 +171,11 @@ class TestDataFrameDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataframe()
-        for i, dataframe in enumerate(dataset, start=1):
-            logger.debug(f"\n\nDataFrame DTO\n{dataframe}")
-            dataframe = dao.read(i)
-            assert dataframe == dataframe
+        dao = container.dao.file()
+        for i, file in enumerate(file, start=1):
+            logger.debug(f"\n\nFile DTO\n{file}")
+            file = dao.read(i)
+            assert file == file
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -203,17 +203,17 @@ class TestDataFrameDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataframe()
-        dataset = dao.read_all()
-        assert len(dataset) == 5
-        assert isinstance(dataset, dict)
-        for i, dataframe in dataset.items():
-            assert isinstance(dataframe, DataFrame)
-            assert dataframe.id == i
-            assert dataframe.task_id == i + i
-            assert dataframe.oid == f'dataframe_{i}'
-            assert isinstance(dataframe.created, datetime)
-            assert isinstance(dataframe.modified, datetime)
+        dao = container.dao.file()
+        file = dao.read_all()
+        assert len(file) == 5
+        assert isinstance(file, dict)
+        for i, file in file.items():
+            assert isinstance(file, File)
+            assert file.id == i
+            assert file.task_id == i + i
+            assert file.oid == f'file_{i}'
+            assert isinstance(file.created, datetime)
+            assert isinstance(file.modified, datetime)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -240,9 +240,9 @@ class TestDataFrameDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataframe()
+        dao = container.dao.file()
         with pytest.raises(FileNotFoundError):
-            _ = dao.read_by_name_mode("dataframe_22", 'test')
+            _ = dao.read_by_name_mode("file_22", "test")
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -270,14 +270,14 @@ class TestDataFrameDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataframe()
-        dataframe = dao.read_by_name_mode("dataframe_3", "test")
-        assert isinstance(dataframe, DataFrame)
-        assert dataframe.task_id == 6
-        assert dataframe.ncols == 4
-        assert dataframe.nrows == 2500010
-        assert isinstance(dataframe.created, datetime)
-        assert isinstance(dataframe.modified, datetime)
+        dao = container.dao.file()
+        file = dao.read_by_name_mode("file_3")
+        assert isinstance(file, File)
+        assert file.task_id == 6
+        assert file.ncols == 4
+        assert file.nrows == 2500010
+        assert isinstance(file.created, datetime)
+        assert isinstance(file.modified, datetime)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -293,7 +293,7 @@ class TestDataFrameDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_update(self, dataset, container, caplog):
+    def test_update(self, file, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -304,14 +304,14 @@ class TestDataFrameDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataframe()
-        for i, dataframe in enumerate(dataset, start=1):
-            dataframe.stage = "final"
-            dao.update(dataframe)
+        dao = container.dao.file()
+        for i, file in enumerate(file, start=1):
+            file.stage = "final"
+            dao.update(file)
 
         for i in range(1, 6):
-            dataframe = dao.read(i)
-            assert dataframe.stage == "final"
+            file = dao.read(i)
+            assert file.stage == "final"
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -339,7 +339,7 @@ class TestDataFrameDAO:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.dataframe()
+        dao = container.dao.file()
         for i in range(1, 6):
             dao.delete(i)
 

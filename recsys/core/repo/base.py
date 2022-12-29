@@ -11,12 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 12:28:07 am                                               #
-# Modified   : Sunday December 25th 2022 11:19:07 pm                                               #
+# Modified   : Wednesday December 28th 2022 03:02:53 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+import os
 from dataclasses import dataclass
+import dotenv
 from abc import ABC, abstractmethod
 import logging
 
@@ -73,7 +75,7 @@ class Repo(ABC):
         """Returns an entity with the designated id"""
 
     @abstractmethod
-    def get_by_name(self, name: str) -> Entity:
+    def get_by_name_mode(self, name: str) -> Entity:
         """Returns an entity with the given name."""
 
     @abstractmethod
@@ -95,3 +97,7 @@ class Repo(ABC):
     @abstractmethod
     def print(self) -> None:
         """Prints the repository contents as a DataFrame."""
+
+    def _get_mode(self) -> str:
+        dotenv.load_dotenv()
+        return os.getenv("MODE")
