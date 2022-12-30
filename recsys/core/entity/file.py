@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Thursday December 29th 2022 01:55:33 pm                                             #
+# Modified   : Thursday December 29th 2022 08:22:34 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -95,10 +95,20 @@ class File(Entity):
     def uri(self) -> str:
         return self._uri
 
+    @uri.setter
+    def uri(self, uri: str) -> None:
+        self._uri = uri
+        self._set_metadata()
+
     # -------------------------------------------------------------------------------------------- #
     @property
     def size(self) -> int:
         return self._size
+
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def task_id(self) -> int:
+        return self._task_id
 
     # ------------------------------------------------------------------------------------------------ #
     def as_dto(self) -> FileDTO:
@@ -111,6 +121,7 @@ class File(Entity):
             mode=self._mode,
             stage=self._stage,
             uri=self._uri,
+            size=self._size,
             task_id=self._task_id,
             created=self._created,
             modified=self._modified,

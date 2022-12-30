@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday December 28th 2022 03:06:03 pm                                            #
+# Modified   : Thursday December 29th 2022 08:19:42 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateFileTable(SQL):
     name: str = "file"
-    sql: str = """CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('dataset_' || id), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, uri TEXT NOT NULL, task_id INTEGER DEFAULT 0, created timestamp, modified timestamp);CREATE UNIQUE INDEX name_mode ON file(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('file_' || id), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, uri TEXT NOT NULL, size INTEGER DEFAULT 0, task_id INTEGER DEFAULT 0, created timestamp, modified timestamp);CREATE UNIQUE INDEX name_mode ON file(name, mode);"""
     args: tuple = ()
 
 
@@ -71,7 +71,7 @@ class FileDDL(DDL):
 @dataclass
 class InsertFile(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO file (name, description, datasource, mode, stage, uri, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO file (name, description, datasource, mode, stage, uri, size, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -82,6 +82,7 @@ class InsertFile(SQL):
             self.dto.mode,
             self.dto.stage,
             self.dto.uri,
+            self.dto.size,
             self.dto.task_id,
             self.dto.created,
             self.dto.modified,
@@ -94,7 +95,7 @@ class InsertFile(SQL):
 @dataclass
 class UpdateFile(SQL):
     dto: DTO
-    sql: str = """UPDATE file SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE file SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, uri = ?, size = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -105,6 +106,7 @@ class UpdateFile(SQL):
             self.dto.mode,
             self.dto.stage,
             self.dto.uri,
+            self.dto.size,
             self.dto.task_id,
             self.dto.created,
             self.dto.modified,

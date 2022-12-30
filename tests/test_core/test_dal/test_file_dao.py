@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Wednesday December 28th 2022 03:10:13 pm                                            #
+# Modified   : Thursday December 29th 2022 08:43:00 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -62,7 +62,7 @@ class TestFileDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create_no_commit(self, file, container, caplog):
+    def test_create_no_commit(self, files, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -74,12 +74,12 @@ class TestFileDAO:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.file()
-        for i, file in enumerate(file, start=1):
-            logger.debug(f"\n\nTest Create DTO {i}\n\t{file}")
+        for i, file in enumerate(files, start=1):
             file = dao.create(file)
+            logger.debug(f"\n\nTest Create DTO {i}\n\t{file}")
             assert file.id == i
             assert file.oid == f'file_{i}'
-            assert dao.exists(i)
+            assert not dao.exists(i)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -95,7 +95,7 @@ class TestFileDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_read_no_commit(self, file, container, caplog):
+    def test_read_no_commit(self, files, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -107,7 +107,7 @@ class TestFileDAO:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.file()
-        for i, file in enumerate(file, start=1):
+        for i, file in enumerate(files, start=1):
             logger.debug(f"\n\nFile\n{file}")
             with pytest.raises(FileNotFoundError):
                 _ = dao.read(i)
@@ -127,7 +127,7 @@ class TestFileDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_create_commit(self, file, container, caplog):
+    def test_create_commit(self, files, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -139,7 +139,7 @@ class TestFileDAO:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.file()
-        for i, file in enumerate(file, start=1):
+        for i, file in enumerate(files, start=1):
             logger.debug(f"\n\nTest Create DTO {i}\n\t{file}")
             file = dao.create(file)
             dao.save()
@@ -160,7 +160,7 @@ class TestFileDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_read_commit(self, file, container, caplog):
+    def test_read_commit(self, files, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -172,7 +172,7 @@ class TestFileDAO:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.file()
-        for i, file in enumerate(file, start=1):
+        for i, file in enumerate(files, start=1):
             logger.debug(f"\n\nFile DTO\n{file}")
             file = dao.read(i)
             assert file == file
@@ -204,14 +204,15 @@ class TestFileDAO:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.file()
-        file = dao.read_all()
-        assert len(file) == 5
-        assert isinstance(file, dict)
-        for i, file in file.items():
+        files = dao.read_all()
+        assert len(files) == 5
+        assert isinstance(files, dict)
+        for i, file in files.items():
             assert isinstance(file, File)
             assert file.id == i
-            assert file.task_id == i + i
+            assert file.task_id == i + 22
             assert file.oid == f'file_{i}'
+            assert file.size > 0
             assert isinstance(file.created, datetime)
             assert isinstance(file.modified, datetime)
         # ---------------------------------------------------------------------------------------- #
@@ -271,11 +272,9 @@ class TestFileDAO:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.file()
-        file = dao.read_by_name_mode("file_3")
+        file = dao.read_by_name_mode("file_3", "test")
         assert isinstance(file, File)
-        assert file.task_id == 6
-        assert file.ncols == 4
-        assert file.nrows == 2500010
+        assert file.task_id == 25
         assert isinstance(file.created, datetime)
         assert isinstance(file.modified, datetime)
         # ---------------------------------------------------------------------------------------- #
@@ -293,7 +292,7 @@ class TestFileDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_update(self, file, container, caplog):
+    def test_update(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -305,13 +304,16 @@ class TestFileDAO:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         dao = container.dao.file()
-        for i, file in enumerate(file, start=1):
-            file.stage = "final"
+        files = dao.read_all()
+        for id, file in files.items():
+            file.uri = "tests/data/movielens25m/raw/movies.pkl"
+            logger.debug(file)
             dao.update(file)
+        dao.save()
 
         for i in range(1, 6):
             file = dao.read(i)
-            assert file.stage == "final"
+            assert file.uri == "tests/data/movielens25m/raw/movies.pkl"
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -360,3 +362,28 @@ class TestFileDAO:  # pragma: no cover
         )
 
     # ============================================================================================ #
+    def test_repr(self, file, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        assert isinstance(repr(file), str)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )

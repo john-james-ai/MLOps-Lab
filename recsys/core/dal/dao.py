@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Wednesday December 28th 2022 03:04:28 pm                                            #
+# Modified   : Thursday December 29th 2022 08:16:34 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -41,6 +41,7 @@ class DAO(ABC):
         self._rdb = rdb
         self._odb = odb
         self._dml = dml
+        self._entity = self.__class__.__name__.replace("DAO", "")
         self._logger = logging.getLogger(
             f"{self.__module__}.{self.__class__.__name__}",
         )
@@ -83,7 +84,7 @@ class DAO(ABC):
             dto = self._row_to_dto(row[0])
             return self._odb.read(dto.oid)
         else:
-            msg = f"{self.__class__.__name__}.{id} does not exist."
+            msg = f"{self._entity}.{id} does not exist."
             self._logger.info(msg)
             raise FileNotFoundError(msg)
 
@@ -101,7 +102,7 @@ class DAO(ABC):
             dto = self._row_to_dto(row[0])
             return self._odb.read(dto.oid)
         else:
-            msg = f"{self.__class__.__name__}.{name} does not exist."
+            msg = f"{self._entity}.{name} does not exist."
             self._logger.info(msg)
             raise FileNotFoundError(msg)
 
@@ -113,9 +114,9 @@ class DAO(ABC):
         if len(rows) > 0:
             rows = self._rows_to_dict(rows)
             for __, dto in rows.items():
-                entities[dto.oid] = self._odb.read(dto.oid)
+                entities[dto.id] = self._odb.read(dto.oid)
         else:
-            msg = f"There are no Entities in the {self.__class__.__name__} database."
+            msg = "There are no Entities in the database."
             self._logger.info(msg)
         return entities
 
@@ -393,9 +394,10 @@ class FileDAO(DAO):
                 mode=row[5],
                 stage=row[6],
                 uri=row[7],
-                task_id=row[8],
-                created=row[9],
-                modified=row[10],
+                size=row[8],
+                task_id=row[9],
+                created=row[10],
+                modified=row[11],
             )
 
         except IndexError as e:  # pragma: no cover

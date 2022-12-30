@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Wednesday December 28th 2022 02:36:14 pm                                            #
+# Modified   : Thursday December 29th 2022 08:23:41 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -145,6 +145,7 @@ class FileDTO(DTO):
     mode: str
     stage: str
     uri: str
+    size: int
     task_id: int
     created: datetime
     modified: datetime

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Thursday December 29th 2022 03:09:49 pm                                             #
+# Modified   : Thursday December 29th 2022 07:55:17 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -84,12 +84,12 @@ def file():
 
 
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def files():
     files = []
     for i in range(1, 6):
         file = File(
-            name=f"test_file_{i}",
+            name=f"file_{i}",
             description=f"Test File Description {i}",
             datasource="movielens25m",
             stage="extract",
@@ -241,7 +241,7 @@ def job_config():
 def container():
     container = Recsys()
     container.init_resources()
-    container.wire(modules=[recsys.containers, recsys.core.repo.base])
+    container.wire(modules=[recsys.containers])
     return container
 
 
