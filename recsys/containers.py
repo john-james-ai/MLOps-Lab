@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Wednesday December 28th 2022 02:41:00 pm                                            #
+# Modified   : Friday December 30th 2022 07:53:44 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,8 +22,10 @@ import sqlite3
 from dependency_injector import containers, providers  # pragma: no cover
 
 from recsys.core.services.io import IOService
-from recsys.core.dal.dao import DataFrameDAO, DatasetDAO, JobDAO, TaskDAO, ProfileDAO, FileDAO
-from recsys.core.dal.ddo import TableService
+from recsys.core.dal.dao import DataFrameDAO, DatasetDAO, JobDAO, TaskDAO, ProfileDAO, FileDAO, DataSourceDAO, DataSourceURLDAO
+from recsys.core.dal.ddl import TableBuildService
+from recsys.core.dal.sql.datasource import DataSourceDDL, DataSourceDML
+from recsys.core.dal.sql.datasource_url import DataSourceURLDDL, DataSourceURLDML
 from recsys.core.dal.sql.file import FileDDL, FileDML
 from recsys.core.dal.sql.dataframe import DataFrameDDL, DataFrameDML
 from recsys.core.dal.sql.dataset import DatasetDDL, DatasetDML
@@ -73,17 +75,21 @@ class TableContainer(containers.DeclarativeContainer):
 
     rdb = providers.Dependency()
 
-    file = providers.Factory(TableService, database=rdb, ddl=FileDDL)
+    file = providers.Factory(TableBuildService, database=rdb, ddl=FileDDL)
 
-    dataframe = providers.Factory(TableService, database=rdb, ddl=DataFrameDDL)
+    datasource = providers.Factory(TableBuildService, database=rdb, ddl=DataSourceDDL)
 
-    dataset = providers.Factory(TableService, database=rdb, ddl=DatasetDDL)
+    datasource_url = providers.Factory(TableBuildService, database=rdb, ddl=DataSourceURLDDL)
 
-    job = providers.Factory(TableService, database=rdb, ddl=JobDDL)
+    dataframe = providers.Factory(TableBuildService, database=rdb, ddl=DataFrameDDL)
 
-    task = providers.Factory(TableService, database=rdb, ddl=TaskDDL)
+    dataset = providers.Factory(TableBuildService, database=rdb, ddl=DatasetDDL)
 
-    profile = providers.Factory(TableService, database=rdb, ddl=ProfileDDL)
+    job = providers.Factory(TableBuildService, database=rdb, ddl=JobDDL)
+
+    task = providers.Factory(TableBuildService, database=rdb, ddl=TaskDDL)
+
+    profile = providers.Factory(TableBuildService, database=rdb, ddl=ProfileDDL)
 
 
 class DAOContainer(containers.DeclarativeContainer):
@@ -93,6 +99,10 @@ class DAOContainer(containers.DeclarativeContainer):
     odb = providers.Dependency()
 
     file = providers.Factory(FileDAO, rdb=rdb, odb=odb, dml=FileDML)
+
+    datasource = providers.Factory(DataSourceDAO, rdb=rdb, odb=odb, dml=DataSourceDML)
+
+    datasource_url = providers.Factory(DataSourceURLDAO, rdb=rdb, odb=odb, dml=DataSourceURLDML)
 
     dataframe = providers.Factory(DataFrameDAO, rdb=rdb, odb=odb, dml=DataFrameDML)
 

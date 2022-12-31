@@ -4,7 +4,7 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/dal/sql/file.py                                                        #
+# DataSourcename   : /recsys/core/dal/sql/datasource.py                                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
@@ -28,17 +28,17 @@ from recsys.core.dal.dto import DTO
 #                                          DDL                                                     #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class CreateFileTable(SQL):
-    name: str = "file"
-    sql: str = """CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('file_' || id), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, uri TEXT NOT NULL, size INTEGER DEFAULT 0, task_id INTEGER DEFAULT 0, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON file(name, mode);"""
+class CreateDataSourceTable(SQL):
+    name: str = "datasource"
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('datasource_' || id), name TEXT NOT NULL, description TEXT, website TEXT NOT NULL, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON datasource(name, mode);"""
     args: tuple = ()
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DropFileTable(SQL):
-    name: str = "file"
-    sql: str = """DROP TABLE IF EXISTS file;"""
+class DropDataSourceTable(SQL):
+    name: str = "datasource"
+    sql: str = """DROP TABLE IF EXISTS datasource;"""
     args: tuple = ()
 
 
@@ -46,8 +46,8 @@ class DropFileTable(SQL):
 
 
 @dataclass
-class FileTableExists(SQL):
-    name: str = "file"
+class DataSourceTableExists(SQL):
+    name: str = "datasource"
     sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
     args: tuple = ()
 
@@ -57,10 +57,10 @@ class FileTableExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class FileDDL(DDL):
-    create: SQL = CreateFileTable()
-    drop: SQL = DropFileTable()
-    exists: SQL = FileTableExists()
+class DataSourceDDL(DDL):
+    create: SQL = CreateDataSourceTable()
+    drop: SQL = DropDataSourceTable()
+    exists: SQL = DataSourceTableExists()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -69,21 +69,16 @@ class FileDDL(DDL):
 
 
 @dataclass
-class InsertFile(SQL):
+class InsertDataSource(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO file (name, description, datasource, mode, stage, uri, size, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO datasource (name, description, website, created, modified) VALUES (?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource,
-            self.dto.mode,
-            self.dto.stage,
-            self.dto.uri,
-            self.dto.size,
-            self.dto.task_id,
+            self.dto.website,
             self.dto.created,
             self.dto.modified,
         )
@@ -93,21 +88,16 @@ class InsertFile(SQL):
 
 
 @dataclass
-class UpdateFile(SQL):
+class UpdateDataSource(SQL):
     dto: DTO
-    sql: str = """UPDATE file SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, uri = ?, size = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE datasource SET name = ?, description = ?, website = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource,
-            self.dto.mode,
-            self.dto.stage,
-            self.dto.uri,
-            self.dto.size,
-            self.dto.task_id,
+            self.dto.website,
             self.dto.created,
             self.dto.modified,
             self.dto.id,
@@ -118,9 +108,9 @@ class UpdateFile(SQL):
 
 
 @dataclass
-class SelectFile(SQL):
+class SelectDataSource(SQL):
     id: int
-    sql: str = """SELECT * FROM file WHERE id = ?;"""
+    sql: str = """SELECT * FROM datasource WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -130,10 +120,10 @@ class SelectFile(SQL):
 
 
 @dataclass
-class SelectFileByNameMode(SQL):
+class SelectDataSourceByNameMode(SQL):
     name: str
     mode: str
-    sql: str = """SELECT * FROM file WHERE name = ? AND mode = ?;"""
+    sql: str = """SELECT * FROM datasource WHERE name = ? AND mode = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -144,8 +134,8 @@ class SelectFileByNameMode(SQL):
 
 
 @dataclass
-class SelectAllFile(SQL):
-    sql: str = """SELECT * FROM file;"""
+class SelectAllDataSource(SQL):
+    sql: str = """SELECT * FROM datasource;"""
     args: tuple = ()
 
 
@@ -153,9 +143,9 @@ class SelectAllFile(SQL):
 
 
 @dataclass
-class FileExists(SQL):
+class DataSourceExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM file WHERE id = ?;"""
+    sql: str = """SELECT COUNT(*) FROM datasource WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -164,9 +154,9 @@ class FileExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DeleteFile(SQL):
+class DeleteDataSource(SQL):
     id: int
-    sql: str = """DELETE FROM file WHERE id = ?;"""
+    sql: str = """DELETE FROM datasource WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -175,11 +165,11 @@ class DeleteFile(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class FileDML(DML):
-    insert: type(SQL) = InsertFile
-    update: type(SQL) = UpdateFile
-    select: type(SQL) = SelectFile
-    select_by_name_mode: type(SQL) = SelectFileByNameMode
-    select_all: type(SQL) = SelectAllFile
-    exists: type(SQL) = FileExists
-    delete: type(SQL) = DeleteFile
+class DataSourceDML(DML):
+    insert: type(SQL) = InsertDataSource
+    update: type(SQL) = UpdateDataSource
+    select: type(SQL) = SelectDataSource
+    select_by_name_mode: type(SQL) = SelectDataSourceByNameMode
+    select_all: type(SQL) = SelectAllDataSource
+    exists: type(SQL) = DataSourceExists
+    delete: type(SQL) = DeleteDataSource

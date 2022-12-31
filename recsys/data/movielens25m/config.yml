@@ -11,25 +11,39 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 5th 2022 02:42:49 pm                                                #
-# Modified   : Sunday December 25th 2022 09:38:09 am                                               #
+# Modified   : Friday December 30th 2022 07:19:10 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 ---
-job:
+pipeline:
   name: movielens25m_etl
   description: Extracts MovieLens25M data from GroupLens website, transforms data into pickle format, then loads the data into production, development and testing environments.
+  mode: prod
   tasks:
     # ============================================================================================ #
     #                                      EXTRACT                                                 #
     # ============================================================================================ #
-    - name: movielens25m_extractor
-      description: Download and Extract MovieLens25M from GroupLens website.
-      mode: prod
-      stage: extract
-      operator: DownloadExtractor
-      module: recsys.core.workflow.operator
+    - 1:
+      task_params:
+        name: movielens25m_extractor
+        description: Download and Extract MovieLens25M from GroupLens website.
+        mode: prod
+        stage: extract
+      operator_params:
+        name: Download
+        module: recsys.core.workflow.operators.download
+      input_params:
+        kind: datasource
+        id:
+      output_params:
+        uri: data/movielens25m/ext
+    -2:
+      task_params:
+        name:
+
+      task_params:
       params:
         url: https://files.grouplens.org/dataset/movielens/ml-25m.zip
         destination: data/movielens25m/ext
@@ -84,7 +98,7 @@ job:
         dataframe:
           name: links
           description: Links DataFrame
-          datasource: movielens25m            
+          datasource: movielens25m
           stage: raw
       force: False
 

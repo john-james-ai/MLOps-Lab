@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 19th 2022 03:34:43 pm                                               #
-# Modified   : Wednesday December 28th 2022 06:32:06 am                                            #
+# Modified   : Friday December 30th 2022 08:08:06 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,13 +22,9 @@ import importlib
 from types import SimpleNamespace
 import logging
 
-from recsys.core.repo.uow import UnitOfWork
-from .task import Task
+from recsys.core.dal.uow import UnitOfWork
 from .pipeline import Pipeline
-from .job import Job
 from recsys.core.services.io import IOService
-from recsys.core.repo.base import Context
-from recsys.core.workflow.operator import Operator
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -37,106 +33,74 @@ from recsys.core.workflow.operator import Operator
 class Builder(ABC):
     """Constructs complex objects"""
 
-    @inject
-    def __init__(self, uow: UnitOfWork()) -> None:
-        self._uow = uow
-        self._logger = logging.getLogger(
-            f"{self.__module__}.{self.__class__.__name__}",
-        )
-
     @property
     @abstractmethod
-    def job(self) -> Job:
-        """Returns a Job object."""
+    def pipeline(self) -> Pipeline:
+        """Returns a Pipeline object."""
 
     @abstractmethod
     def build_config(self, config: dict) -> None:
         """Build the configuration namesspace object."""
 
     @abstractmethod
-    def build_job(self, job_config: SimpleNamespace) -> None:
+    def build_pipeline(self) -> None:
         """Builds the job object."""
 
     @abstractmethod
-    def build_pipeline(self, pipeline: Pipeline) -> None:
+    def build_operations(self, pipeline: Pipeline) -> None:
         """Builds the pipeline object."""
-
-    @abstractmethod
-    def build_tasks(self, tasks_config: SimpleNamespace) -> None:
-        """Constructs Task objects and adds to the pipeline"""
-
-    @abstractmethod
-    def save(self) -> None:
-        """Saves the process in the repository."""
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                      JOB BUILDER CLASS                                           #
 # ------------------------------------------------------------------------------------------------ #
-class JobBuilder(Builder):
+class PipelineBuilder(Builder):
     """Constructs a Job"""
 
     def __init__(self) -> None:
-        super().__init__()
-        self.reset()
+        self._uow = None
         self._pipeline = None
+        self._logger = logging.getLogger(
+            f"{self.__module__}.{self.__class__.__name__}",
+        )
 
-    def reset(self) -> None:
-        self._job = Job()
-
+    # ------------------------------------------------------------------------------------------------ #
     @property
-    def job(self) -> Job:
-        job = self._job
-        self.reset()
-        return job
+    def pipeline(self) -> Pipeline:
+        return self._pipeline
+
+    @pipeline.setter
+    def pipeline(self, pipeline: Pipeline) -> None:
+        self._pipeline = pipeline
+
+    # ------------------------------------------------------------------------------------------------ #
+    @property
+    def uow(self) -> str:
+        return self._uow
+
+    @uow.setter
+    def uow(self, uow: str) -> None:
+        self._uow = uow
+
+    def reset(self) -> Pipeline:
+        self._pipeline = Pipeline()
 
     def build_config(self, config: dict) -> None:
-        self._config = SimpleNamespace(**config)
-
-    def build_job(self) -> None:
-        self._job.name = self._config.name
-        self._job.description = self._config.description
-
-        self._job = self._context.job.add(self._job)
+        self._config = SimpleNamespace(**config["pipeline"])
 
     def build_pipeline(self) -> None:
-        module = importlib.import_module(name=self._config.pipeline.module)
-        pipeline = getattr(module, self._config.pipeline.name)
-        self._job.pipeline = pipeline()
-        self._context.job.update(self._job)
+        self._pipeline.name = self._config.name
+        self._pipeline.description = self._config.description
+        self._pipeline.mode = self._config.mode
+        self._pipeline.uow = self._uow
 
-    def build_tasks(self) -> None:
-        """Iterates through task and returns a list of task objects."""
-        for task_config in self._config.job.pipeline.tasks:
-            operator = self._build_operator(task_config)
-            task = Task()
-            task.name = task_config.name
-            task.description = task_config.description
-            task.mode = task_config.mode
-            task.stage = task_config.stage
-            task.operator = operator
-            task.force = task_config.force
-            task.job_id = self._job.id
-            self._context.task.add(task)
-
-            self._job.pipeline.add_task(task)
-
-        self._context.job.update(self._job)
-
-    def save(self) -> None:
-        """Saves context."""
-        self._context.save()
-
-    def _build_operator(self, config) -> Operator:
-        """Contructs the Operation object.
-
-        Args:
-            config (SimpleNamespace): Job configuration.
-        """
-        module = importlib.import_module(name=config.module)
-        operator = getattr(module, config.operator)
-
-        return operator(**vars(config.params))
+    def build_operations(self) -> None:
+        for task in self._config.tasks:
+            task = SimpleNamespace(**task)
+            module = importlib.import_module(name=task.module)
+            operator = getattr(module, task.operator)
+            operator = operator(task_params=task.task_params, output_params=task.output_params)
+            self._pipeline.add_operation(operator)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -145,7 +109,10 @@ class JobBuilder(Builder):
 class Director:
     """The Director is responsible for executing the building steps in a particular sequence. """
 
-    def __init__(self, io: IOService = IOService) -> None:
+    def __init__(self, pipeline: Pipeline = Pipeline(), uow: UnitOfWork = UnitOfWork(), io: IOService = IOService) -> None:
+        self._pipeline = pipeline
+        self._uow = uow
+        self._io = io
         self._builder = None
         self._config = None
 
@@ -162,10 +129,11 @@ class Director:
         """
         self._builder = builder
 
-    def build_job(self, config_filepath: str) -> None:
-        config = IOService.read(config_filepath)
-        self._builder.build_config(config["job"])
-        self._builder.build_job()
+    def build_pipeline(self, config_filepath: str) -> None:
+        config = self._io.read(config_filepath)
+        self._builder.uow = self._uow
+        self._builder.pipeline = self._pipeline
+        self._builder.build_config(config)
         self._builder.build_pipeline()
-        self._builder.build_tasks()
-        self._builder.save()
+        self._builder.build_operations()
+        return self._builder.pipeline

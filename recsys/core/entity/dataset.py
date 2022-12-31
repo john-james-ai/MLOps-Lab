@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Wednesday December 28th 2022 06:31:31 am                                            #
+# Modified   : Friday December 30th 2022 07:45:53 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -153,6 +153,10 @@ class Dataset(DataComponent):
         """Id for the Task that created the Dataset."""
         return self._task_id
 
+    @task_id.setter
+    def task_id(self, task_id: int) -> None:
+        self._task_id = task_id
+
     # -------------------------------------------------------------------------------------------- #
     def create_dataframe(self, data: pd.DataFrame, name: str = None, description: str = None) -> DataComponent:
         name = name or self._name
@@ -161,6 +165,7 @@ class Dataset(DataComponent):
 
     # -------------------------------------------------------------------------------------------- #
     def add_dataframe(self, dataframe: DataComponent) -> None:
+        dataframe.parent = self
         self._dataframes[dataframe.name] = dataframe
 
     # -------------------------------------------------------------------------------------------- #
@@ -286,6 +291,10 @@ class DataFrame(DataComponent):
     @property
     def parent(self) -> Dataset:
         return self._parent
+
+    @parent.setter
+    def parent(self, dataset: Dataset) -> None:
+        self._parent = dataset
 
     # -------------------------------------------------------------------------------------------- #
     @property

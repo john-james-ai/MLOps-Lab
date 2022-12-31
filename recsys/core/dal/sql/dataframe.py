@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday December 28th 2022 03:05:11 pm                                            #
+# Modified   : Friday December 30th 2022 08:35:58 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDataFrameTable(SQL):
     name: str = "dataframe"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('DataFrame_' || id), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, size INTEGER, nrows INTEGER, ncols INTEGER, nulls INTEGER, pct_nulls REAL, parent_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX name_mode ON dataframe(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('DataFrame_' || id), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, size INTEGER, nrows INTEGER, ncols INTEGER, nulls INTEGER, pct_nulls REAL, parent_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON dataframe(name, mode);"""
     args: tuple = ()
 
 

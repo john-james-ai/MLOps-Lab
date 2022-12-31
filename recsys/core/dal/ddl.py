@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/dal/ddo.py                                                             #
+# Filename   : /recsys/setup/build.py                                                              #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Saturday December 24th 2022 02:44:53 pm                                             #
+# Modified   : Friday December 30th 2022 02:12:28 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -20,7 +20,7 @@
 
 from recsys.core.services.base import Service
 from recsys.core.database.relational import RDB
-from .base import DDL
+from recsys.core.dal.base import DDL
 # ------------------------------------------------------------------------------------------------ #
 
 # ------------------------------------------------------------------------------------------------ #
@@ -28,7 +28,7 @@ from .base import DDL
 # ------------------------------------------------------------------------------------------------ #
 
 
-class TableService(Service):
+class TableBuildService(Service):
     def __init__(self, database: RDB, ddl: DDL) -> None:
         self._database = database
         self._ddl = ddl

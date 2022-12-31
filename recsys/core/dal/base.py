@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 12:44:06 pm                                              #
-# Modified   : Tuesday December 13th 2022 02:42:34 pm                                              #
+# Modified   : Friday December 30th 2022 07:42:28 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,16 +19,11 @@
 """Base Data Access Module"""
 from abc import ABC
 from dataclasses import dataclass
-from datetime import datetime
-import logging
 
-from recsys import IMMUTABLE_TYPES, SEQUENCE_TYPES
 
 # ------------------------------------------------------------------------------------------------ #
 #                                  SQL COMMAND ABC                                                 #
 # ------------------------------------------------------------------------------------------------ #
-
-
 @dataclass
 class SQL(ABC):  # pragma: no cover
     """Base class for SQL Command Objects."""
@@ -59,43 +54,3 @@ class DML(ABC):  # pragma: no cover
     select_all: type(SQL)
     exists: type(SQL)
     delete: type(SQL)
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                   SERVICE BASE CLASS                                             #
-# ------------------------------------------------------------------------------------------------ #
-class Service(ABC):  # pragma: no cover
-    def __init__(self) -> None:
-        self._logger = logging.getLogger(
-            f"{__name__}.{self.__class__.__name__}",
-        )
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                              DATA TRANSFER OBJECT ABC                                            #
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
-class DTO(ABC):  # pragma: no cover
-    """Data Transfer Object"""
-
-    def as_dict(self) -> dict:
-        """Returns a dictionary representation of the the Config object."""
-        return {k: self._export_config(v) for k, v in self.__dict__.items()}
-
-    @classmethod
-    def _export_config(cls, v):
-        """Returns v with Configs converted to dicts, recursively."""
-        if isinstance(v, IMMUTABLE_TYPES):
-            return v
-        elif isinstance(v, SEQUENCE_TYPES):
-            return type(v)(map(cls._export_config, v))
-        elif isinstance(v, datetime):
-            return v.strftime("%H:%M:%S on %m/%d/%Y")
-        elif isinstance(v, dict):
-            return v
-        elif hasattr(v, "as_dict"):
-            return v.as_dict()
-        else:
-            """Else nothing. What do you want?"""

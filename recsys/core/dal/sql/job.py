@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday December 28th 2022 03:06:20 pm                                            #
+# Modified   : Friday December 30th 2022 08:35:58 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateJobTable(SQL):
     name: str = "job"
-    sql: str = """CREATE TABLE IF NOT EXISTS job (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('job_' || id), name TEXT NOT NULL, description TEXT, mode TEXT NOT NULL, started timestamp, ended timestamp, duration REAL, state TEXT DEFAULT "CREATED", created timestamp, modified timestamp);CREATE UNIQUE INDEX name_mode ON job(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS job (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('job_' || id), name TEXT NOT NULL , description TEXT, mode TEXT NOT NULL, state TEXT DEFAULT "CREATED", created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON job(name, mode);"""
     args: tuple = ()
 
 
@@ -73,7 +73,7 @@ class JobDDL(DDL):
 class InsertJob(SQL):
     dto: DTO
 
-    sql: str = """REPLACE INTO job (name, description, mode, started, ended, duration, state, created, modified) VALUES (?,?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO job (name, description, mode, state, created, modified) VALUES (?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -81,9 +81,6 @@ class InsertJob(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.mode,
-            self.dto.started,
-            self.dto.ended,
-            self.dto.duration,
             self.dto.state,
             self.dto.created,
             self.dto.modified,
@@ -96,7 +93,7 @@ class InsertJob(SQL):
 @dataclass
 class UpdateJob(SQL):
     dto: DTO
-    sql: str = """UPDATE job SET name = ?, description = ?, mode = ?, started = ?, ended = ?, duration = ?, state = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE job SET name = ?, description = ?, mode = ?, state = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -104,9 +101,6 @@ class UpdateJob(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.mode,
-            self.dto.started,
-            self.dto.ended,
-            self.dto.duration,
             self.dto.state,
             self.dto.created,
             self.dto.modified,

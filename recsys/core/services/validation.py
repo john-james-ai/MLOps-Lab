@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 27th 2022 02:41:20 pm                                              #
-# Modified   : Wednesday December 28th 2022 03:37:33 am                                            #
+# Modified   : Thursday December 29th 2022 10:21:25 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -73,6 +73,16 @@ class Validator:
         return response
 
     @classmethod
+    def job_id(cls, entity) -> Response:
+        response = Response()
+        if hasattr(entity, 'job_id'):
+            if not isinstance(entity.job_id, int) and entity.job_id is not None:
+                response.is_ok = False
+                response.msg = f"Error in {entity.__class__.__name__}. Variable 'job_id' is not valid. Must be an integer."
+                response.exception = TypeError
+        return response
+
+    @classmethod
     def task_id(cls, entity) -> Response:
         response = Response()
         if hasattr(entity, 'task_id'):
@@ -92,7 +102,7 @@ class Validator:
         return response
 
     def validate(self, entity) -> Response:
-        validators = [self.datasource, self.mode, self.stage, self.data, self.task_id, self.state]
+        validators = [self.datasource, self.mode, self.stage, self.data, self.job_id, self.task_id, self.state]
         response = Response()
         for validator in validators:
             response = validator(entity)

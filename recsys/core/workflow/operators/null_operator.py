@@ -4,47 +4,38 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/data/movielens25m/etl.py                                                    #
+# Filename   : /recsys/core/workflow/operators/null_operator.py                                    #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday December 16th 2022 08:05:00 pm                                               #
-# Modified   : Friday December 30th 2022 07:55:31 pm                                               #
+# Created    : Friday December 30th 2022 10:33:34 am                                               #
+# Modified   : Friday December 30th 2022 10:35:19 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-from dependency_injector.wiring import Provide, inject
+import time
 
-from recsys.core.workflow.job import Job
-from recsys.core.dal.repo import Repo
-from recsys.containers import Recsys
-from .container import MovieLens25M
+from recsys.core.workflow.base import Operator
+
+
 # ------------------------------------------------------------------------------------------------ #
-
-
-class Movielens25mETL(Job):
-    """ETL for MovieLens25M DataFrame"""
+#                                     NULL OPERATOR                                                #
 # ------------------------------------------------------------------------------------------------ #
+class NullOperator(Operator):
+    """Null Operator does nothing. Returns the data it receives from the Environment.
 
+    Args:
+        seconds (int): Number of seconds the operator should take, i.e. sleep.
 
-class Movielens25mETLBuilder:
+    """
 
-    @inject
-    def __init__(self, dataframe_repo: Repo = Provide[Recsys.dataframe_repo],
-                 job_repo: Repo = Provide[Recsys.job_repo],
-                 task_repo: Repo = Provide[Recsys.task_repo]) -> None:
-        self._dataframe_repo = dataframe_repo
-        self._job_repo = job_repo
-        self._task_repo = task_repo
-        self._job = None
+    def __init__(self, seconds: int = 2, *args, **kwargs) -> None:
+        super().__init__()
+        self._seconds = seconds
 
-    @property
-    def job(self) -> Job:
-        return self._job
-
-    @inject
-    def build_job(self, job: Job = Provide[MovieLens25M.job.job]) -> None:
-        self._job = self._job_repo.add(job)
+    def execute(self) -> None:
+        """Executes the operation"""
+        time.sleep(self._seconds)

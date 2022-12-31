@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Thursday December 29th 2022 08:16:34 pm                                             #
+# Modified   : Friday December 30th 2022 07:45:53 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,7 @@ import logging
 
 from recsys.core.database.relational import RDB
 from recsys.core.database.object import ODB
-from .dto import DTO, DataFrameDTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO, FileDTO
+from .dto import DTO, DataFrameDTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO, FileDTO, DataSourceDTO, DataSourceURLDTO
 from .base import DML
 from recsys.core.entity.base import Entity
 
@@ -319,14 +319,10 @@ class TaskDAO(DAO):
                 name=row[2],
                 description=row[3],
                 mode=row[4],
-                stage=row[5],
+                state=row[5],
                 job_id=row[6],
-                started=row[7],
-                ended=row[8],
-                duration=row[9],
-                state=row[10],
-                created=row[11],
-                modified=row[12],
+                created=row[7],
+                modified=row[8],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -356,12 +352,9 @@ class JobDAO(DAO):
                 name=row[2],
                 description=row[3],
                 mode=row[4],
-                started=row[5],
-                ended=row[6],
-                duration=row[7],
-                state=row[8],
-                created=row[9],
-                modified=row[10],
+                state=row[5],
+                created=row[6],
+                modified=row[7],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -398,6 +391,68 @@ class FileDAO(DAO):
                 task_id=row[9],
                 created=row[10],
                 modified=row[11],
+            )
+
+        except IndexError as e:  # pragma: no cover
+            msg = f"Index error in_row_to_dto method.\n{e}"
+            self._logger.error(msg)
+            raise IndexError(msg)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                 DATA SOURCE ACCESS OBJECT                                        #
+# ------------------------------------------------------------------------------------------------ #
+class DataSourceDAO(DAO):
+    """File Data Access Object"""
+
+    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
+        super().__init__(rdb=rdb, odb=odb, dml=dml)
+
+    def _get_oid(self, id) -> str:
+        """Returns the object id for the given id and entity."""
+        return f"file_{id}"
+
+    def _row_to_dto(self, row: Tuple) -> FileDTO:
+        try:
+            return DataSourceDTO(
+                id=row[0],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                website=row[4],
+                created=row[5],
+                modified=row[6],
+            )
+
+        except IndexError as e:  # pragma: no cover
+            msg = f"Index error in_row_to_dto method.\n{e}"
+            self._logger.error(msg)
+            raise IndexError(msg)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                               DATA SOURCE URL ACCESS OBJECT                                      #
+# ------------------------------------------------------------------------------------------------ #
+class DataSourceURLDAO(DAO):
+    """File Data Access Object"""
+
+    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
+        super().__init__(rdb=rdb, odb=odb, dml=dml)
+
+    def _get_oid(self, id) -> str:
+        """Returns the object id for the given id and entity."""
+        return f"file_{id}"
+
+    def _row_to_dto(self, row: Tuple) -> FileDTO:
+        try:
+            return DataSourceURLDTO(
+                id=row[0],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                website=row[4],
+                created=row[5],
+                modified=row[6],
             )
 
         except IndexError as e:  # pragma: no cover

@@ -11,15 +11,44 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Thursday December 29th 2022 08:23:41 pm                                             #
+# Modified   : Friday December 30th 2022 07:40:12 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+from abc import ABC
 from datetime import datetime
 from dataclasses import dataclass
 
-from .base import DTO
+from recsys import IMMUTABLE_TYPES, SEQUENCE_TYPES
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                              DATA TRANSFER OBJECT ABC                                            #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class DTO(ABC):  # pragma: no cover
+    """Data Transfer Object"""
+
+    def as_dict(self) -> dict:
+        """Returns a dictionary representation of the the Config object."""
+        return {k: self._export_config(v) for k, v in self.__dict__.items()}
+
+    @classmethod
+    def _export_config(cls, v):
+        """Returns v with Configs converted to dicts, recursively."""
+        if isinstance(v, IMMUTABLE_TYPES):
+            return v
+        elif isinstance(v, SEQUENCE_TYPES):
+            return type(v)(map(cls._export_config, v))
+        elif isinstance(v, datetime):
+            return v.strftime("%H:%M:%S on %m/%d/%Y")
+        elif isinstance(v, dict):
+            return v
+        elif hasattr(v, "as_dict"):
+            return v.as_dict()
+        else:
+            """Else nothing. What do you want?"""
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -147,5 +176,34 @@ class FileDTO(DTO):
     uri: str
     size: int
     task_id: int
+    created: datetime
+    modified: datetime
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                               DATA SOURCE TRANSFER OBJECT                                        #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class DataSourceDTO(DTO):
+    id: int
+    oid: str
+    name: str
+    description: str
+    website: str
+    created: datetime
+    modified: datetime
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                             DATA SOURCE URL TRANSFER OBJECT                                      #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class DataSourceURLDTO(DTO):
+    id: int
+    oid: str
+    name: str
+    description: str
+    url: str
+    datasource_id: int
     created: datetime
     modified: datetime

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 9th 2022 10:54:47 pm                                                #
-# Modified   : Wednesday December 28th 2022 06:24:15 am                                            #
+# Modified   : Friday December 30th 2022 07:54:43 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -20,8 +20,8 @@ import psutil
 import statistics
 from datetime import datetime
 
-from .base import Entity, DTO
-from recsys.core.dal.dto import ProfileDTO
+from .base import Entity
+from recsys.core.dal.dto import ProfileDTO, DTO
 # ------------------------------------------------------------------------------------------------ #
 
 

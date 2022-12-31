@@ -4,7 +4,7 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/dal/sql/file.py                                                        #
+# Filename   : /recsys/core/dal/sql/datasource_url.py                                              #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
@@ -28,17 +28,17 @@ from recsys.core.dal.dto import DTO
 #                                          DDL                                                     #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class CreateFileTable(SQL):
-    name: str = "file"
-    sql: str = """CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('file_' || id), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, uri TEXT NOT NULL, size INTEGER DEFAULT 0, task_id INTEGER DEFAULT 0, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON file(name, mode);"""
+class CreateDataSourceURLTable(SQL):
+    name: str = "datasource_url"
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('datasource_url_' || id), name TEXT NOT NULL, description TEXT, url TEXT NOT NULL, datasource_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON datasource_url(name, mode);"""
     args: tuple = ()
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DropFileTable(SQL):
-    name: str = "file"
-    sql: str = """DROP TABLE IF EXISTS file;"""
+class DropDataSourceURLTable(SQL):
+    name: str = "datasource_url"
+    sql: str = """DROP TABLE IF EXISTS datasource_url;"""
     args: tuple = ()
 
 
@@ -46,8 +46,8 @@ class DropFileTable(SQL):
 
 
 @dataclass
-class FileTableExists(SQL):
-    name: str = "file"
+class DataSourceURLTableExists(SQL):
+    name: str = "datasource_url"
     sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
     args: tuple = ()
 
@@ -57,10 +57,10 @@ class FileTableExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class FileDDL(DDL):
-    create: SQL = CreateFileTable()
-    drop: SQL = DropFileTable()
-    exists: SQL = FileTableExists()
+class DataSourceURLDDL(DDL):
+    create: SQL = CreateDataSourceURLTable()
+    drop: SQL = DropDataSourceURLTable()
+    exists: SQL = DataSourceURLTableExists()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -69,21 +69,17 @@ class FileDDL(DDL):
 
 
 @dataclass
-class InsertFile(SQL):
+class InsertDataSourceURL(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO file (name, description, datasource, mode, stage, uri, size, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO datasource_url (name, description, url, datasource_id, created, modified) VALUES (?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource,
-            self.dto.mode,
-            self.dto.stage,
-            self.dto.uri,
-            self.dto.size,
-            self.dto.task_id,
+            self.dto.url,
+            self.dto.datasource_id,
             self.dto.created,
             self.dto.modified,
         )
@@ -93,21 +89,17 @@ class InsertFile(SQL):
 
 
 @dataclass
-class UpdateFile(SQL):
+class UpdateDataSourceURL(SQL):
     dto: DTO
-    sql: str = """UPDATE file SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, uri = ?, size = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE datasource_url SET name = ?, description = ?, url = ?, datasource_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource,
-            self.dto.mode,
-            self.dto.stage,
-            self.dto.uri,
-            self.dto.size,
-            self.dto.task_id,
+            self.dto.url,
+            self.dto.datasource_id,
             self.dto.created,
             self.dto.modified,
             self.dto.id,
@@ -118,9 +110,9 @@ class UpdateFile(SQL):
 
 
 @dataclass
-class SelectFile(SQL):
+class SelectDataSourceURL(SQL):
     id: int
-    sql: str = """SELECT * FROM file WHERE id = ?;"""
+    sql: str = """SELECT * FROM datasource_url WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -130,10 +122,10 @@ class SelectFile(SQL):
 
 
 @dataclass
-class SelectFileByNameMode(SQL):
+class SelectDataSourceURLByNameMode(SQL):
     name: str
     mode: str
-    sql: str = """SELECT * FROM file WHERE name = ? AND mode = ?;"""
+    sql: str = """SELECT * FROM datasource_url WHERE name = ? AND mode = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -144,8 +136,8 @@ class SelectFileByNameMode(SQL):
 
 
 @dataclass
-class SelectAllFile(SQL):
-    sql: str = """SELECT * FROM file;"""
+class SelectAllDataSourceURL(SQL):
+    sql: str = """SELECT * FROM datasource_url;"""
     args: tuple = ()
 
 
@@ -153,9 +145,9 @@ class SelectAllFile(SQL):
 
 
 @dataclass
-class FileExists(SQL):
+class DataSourceURLExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM file WHERE id = ?;"""
+    sql: str = """SELECT COUNT(*) FROM datasource_url WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -164,9 +156,9 @@ class FileExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DeleteFile(SQL):
+class DeleteDataSourceURL(SQL):
     id: int
-    sql: str = """DELETE FROM file WHERE id = ?;"""
+    sql: str = """DELETE FROM datasource_url WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -175,11 +167,11 @@ class DeleteFile(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class FileDML(DML):
-    insert: type(SQL) = InsertFile
-    update: type(SQL) = UpdateFile
-    select: type(SQL) = SelectFile
-    select_by_name_mode: type(SQL) = SelectFileByNameMode
-    select_all: type(SQL) = SelectAllFile
-    exists: type(SQL) = FileExists
-    delete: type(SQL) = DeleteFile
+class DataSourceURLDML(DML):
+    insert: type(SQL) = InsertDataSourceURL
+    update: type(SQL) = UpdateDataSourceURL
+    select: type(SQL) = SelectDataSourceURL
+    select_by_name_mode: type(SQL) = SelectDataSourceURLByNameMode
+    select_all: type(SQL) = SelectAllDataSourceURL
+    exists: type(SQL) = DataSourceURLExists
+    delete: type(SQL) = DeleteDataSourceURL

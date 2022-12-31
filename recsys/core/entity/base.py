@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Wednesday December 28th 2022 03:21:35 pm                                            #
+# Modified   : Friday December 30th 2022 07:32:14 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,6 @@ from datetime import datetime
 import logging
 
 import recsys
-from recsys.core.dal.base import DTO
 from recsys.core.services.validation import Validator
 
 # ------------------------------------------------------------------------------------------------ #
@@ -91,7 +90,7 @@ class Entity(ABC):
         return self._modified
 
     @abstractmethod
-    def as_dto(self) -> DTO:
+    def as_dto(self):
         """Returns a Data Transfer Object representation of the entity."""
 
     def as_dict(self) -> dict:

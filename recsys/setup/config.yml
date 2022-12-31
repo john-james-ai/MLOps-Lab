@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+# ================================================================================================ #
+# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Version    : 0.1.0                                                                               #
+# Python     : 3.10.6                                                                              #
+# Filename   : /recsys/setup/config.yml                                                            #
+# ------------------------------------------------------------------------------------------------ #
+# Author     : John James                                                                          #
+# Email      : john.james.ai.studio@gmail.com                                                      #
+# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# ------------------------------------------------------------------------------------------------ #
+# Created    : Monday December 5th 2022 02:42:49 pm                                                #
+# Modified   : Friday December 30th 2022 06:46:10 pm                                               #
+# ------------------------------------------------------------------------------------------------ #
+# License    : MIT License                                                                         #
+# Copyright  : (c) 2022 John James                                                                 #
+# ================================================================================================ #
+---
+pipeline:
+  name: load_sources
+  description: Load Data Sources
+  mode: prod
+  tasks:
+    # ============================================================================================ #
+    #                                      EXTRACT                                                 #
+    # ============================================================================================ #
+    - operator: DataSourceLoader
+      module: recsys.core.workflow.operators.loader
+      task_params:
+        name: load_movielens25m
+        description: Load MovieLens25M Data Source
+        mode: prod
+      operator_params: None
+      input_params: None
+      output_params:
+        kind: DataSource
+        name: movielens25m
+        description: MovieLens25M Data
+        website: https://grouplens.org/datasets/movielens/25m/
+        urls:
+        - kind: DataSourceURL
+          name: movielens25m_dataset_url
+          description: MovieLens25M Dataset Link
+          url: https://files.grouplens.org/dataset/movielens/ml-25m.zip
+          parent: movielens25m
+    - operator: DataSourceLoader
+      module: recsys.core.workflow.operators.loader
+      task_params:
+        name: load_spotify
+        description: Load Spotify DataSource
+        mode: prod
+      operator_params: None
+      input_params: None
+      output_params:
+        kind: DataSource
+        name: spotify
+        description: Spotify Million Playlist Challenge Dataset
+        website: https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge/dataset_files
+        urls:
+        - kind: DataSourceURL
+          name: spotify_million_playlist_dataset
+          description: Spotify Million Playlist Dataset (5.89 Gb)
+          url: https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge/dataset_files?unique_download_uri=188518&challenge_id=277
+          parent: spotify
+        - kind: DataSourceURL
+          name: spotify_million_playlist_dataset_challenge
+          description: Spotify Million Playlist Challenge Dataset (1.08 Mb)
+          url: https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge/dataset_files?unique_download_uri=188519&challenge_id=277
+    - operator: DataSourceLoader
+      module: recsys.core.workflow.operators.loader
+      task_params:
+        name: load_spotify
+        description: Load Spotify DataSource
+        mode: prod
+      operator_params: None
+      input_params: None
+      output_params:
+        kind: DataSource
+        name: tenrec
+        description: Tenrec - A Large-scale Multipurpose Benchmark Dataset for Recommender Systems
+        website: https://github.com/yuangh-x/2022-NIPS-Tenrec
+        urls:
+        - kind: DataSourceURL
+          name: tenrec_dataset_link
+          description: Tenrec Dataset Link
+          url: https://static.qblv.qq.com/qblv/h5/algo-frontend/tenrec_dataset.html
+          parent: tenrec
