@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday January 1st 2023 05:20:58 am                                                 #
+# Modified   : Sunday January 1st 2023 06:41:01 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDataSourceURLTable(SQL):
     name: str = "datasource_url"
-    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('datasource_url_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, url TEXT NOT NULL, datasource_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON datasource_url(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('datasource_url_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, url TEXT NOT NULL, mode TEXT NOT NULL DEFAULT 'prod', datasource_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON datasource_url(name, mode);"""
     args: tuple = ()
 
 
@@ -71,7 +71,7 @@ class DataSourceURLDDL(DDL):
 @dataclass
 class InsertDataSourceURL(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO datasource_url (name, description, url, datasource_id, created, modified) VALUES (?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO datasource_url (name, description, url, mode, datasource_id, created, modified) VALUES (?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -79,6 +79,7 @@ class InsertDataSourceURL(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.url,
+            self.dto.mode,
             self.dto.datasource_id,
             self.dto.created,
             self.dto.modified,
@@ -91,7 +92,7 @@ class InsertDataSourceURL(SQL):
 @dataclass
 class UpdateDataSourceURL(SQL):
     dto: DTO
-    sql: str = """UPDATE datasource_url SET name = ?, description = ?, url = ?, datasource_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE datasource_url SET name = ?, description = ?, url = ?, mode = ?, datasource_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -99,6 +100,7 @@ class UpdateDataSourceURL(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.url,
+            self.dto.mode,
             self.dto.datasource_id,
             self.dto.created,
             self.dto.modified,

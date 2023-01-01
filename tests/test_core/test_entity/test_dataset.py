@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 27th 2022 05:33:26 pm                                              #
-# Modified   : Sunday January 1st 2023 05:18:31 am                                                 #
+# Modified   : Sunday January 1st 2023 05:42:10 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -287,7 +287,7 @@ class TestDataset:  # pragma: no cover
         df1 = DataFrame(
             name='new_dataframe',
             data=ratings,
-            parent=d,
+            dataset=d,
             description='some new dataframe'
         )
         assert isinstance(df1, DataFrame)
@@ -303,11 +303,11 @@ class TestDataset:  # pragma: no cover
         df3 = DataFrame(
             name='new_dataframe',
             data=ratings,
-            parent=d,
+            dataset=d,
             description='some new dataframe'
         )
         d.add_dataframe(df3)
-        assert df3.parent == d
+        assert df3.dataset == d
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -421,7 +421,7 @@ class TestDataset:  # pragma: no cover
         df = DataFrame(
             name='new_dataframe',
             data=ratings,
-            parent=d,
+            dataset=d,
             description='some new dataframe'
         )
         assert df.is_composite is False

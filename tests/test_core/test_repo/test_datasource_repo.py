@@ -10,8 +10,8 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Tuesday December 13th 2022 10:50:34 pm                                              #
-# Modified   : Saturday December 31st 2022 01:21:55 pm                                             #
+# Created    : Saturday December 31st 2022 11:58:21 pm                                             #
+# Modified   : Sunday January 1st 2023 06:55:19 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.entity.datasource import DataSourceURL, DataSource
+from recsys.core.entity.datasource import DataSource, DataSourceURL
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.repo
-@pytest.mark.dsource_repo
+@pytest.mark.datasource_repo
 class TestDataSourceRepo:  # pragma: no cover
     # ============================================================================================ #
     def test_setup(self, container, caplog):
@@ -43,10 +43,10 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        container.table.datasource_url().reset()
-        container.table.datasource().reset()
-        container.data.odb().reset()
-
+        table = container.table.datasource()
+        table.reset()
+        table = container.table.datasource_url()
+        table.reset()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -62,7 +62,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_add(self, container, datasource, caplog):
+    def test_add_get(self, container, datasources, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -73,12 +73,12 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repo.datasource
-        datasource = repo.add(datasource)
-        assert len(repo) == 1
-        assert datasource.id == 1
-        assert isinstance(datasource, DataSource)
-        assert len(repo) == 1
+        repo = container.repos.datasource()
+        for i, datasource in enumerate(datasources, start=1):
+            datasource = repo.add(datasource)
+            assert datasource.id == i
+            j2 = repo.get(i)
+            assert datasource == j2
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -94,7 +94,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get(self, container, datasource, caplog):
+    def test_get_by_name(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -105,83 +105,13 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repo.datasource
-        datasource = repo.get(1)
+        repo = container.repos.datasource()
+        datasource = repo.get_by_name_mode(name="spotify")
         assert isinstance(datasource, DataSource)
-        assert datasource.id == 1
-        assert datasource.datasource_url_count == 5
-
-        for i, name in enumerate(datasource.datasource_url_names, start=1):
-            datasource_url = datasource.get_datasource_url(name)
+        for name, datasource_url in datasource.urls.items():
             assert isinstance(datasource_url, DataSourceURL)
-            assert datasource_url.name == f'datasource_url_name_{i}'
-            assert isinstance(datasource_url.parent, DataSource)
-
-        with pytest.raises(FileNotFoundError):
-            _ = repo.get(92)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_get_by_name_mode(self, container, datasource, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        repo = container.repo.datasource
-        datasource = repo.get_by_name_mode("datasource_name_1")
-        assert isinstance(datasource, DataSource)
-
-        with pytest.raises(FileNotFoundError):
-            _ = repo.get_by_name_mode("joe")
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_exists(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-
-        # ---------------------------------------------------------------------------------------- #
-        repo = container.repo.datasource
-        assert repo.exists(1) is True
-        assert repo.exists(11) is False
-
+            assert datasource_url.name == name
+            assert datasource_url.datasource == datasource
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -208,11 +138,18 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repo.datasource
-        entities = repo.get_all()
-        assert isinstance(entities, dict)
-        for id, entity in entities.items():
-            assert isinstance(entity, DataSource)
+        repo = container.repos.datasource()
+        datasources = repo.get_all()
+        logger.debug(datasources)
+        assert isinstance(datasources, dict)
+        for i, datasource in datasources.items():
+            assert isinstance(datasource, DataSource)
+            assert datasource.id == i
+            assert datasource.oid is not None
+            logger.debug(datasource.urls)
+            for j, datasource_url in datasource.urls.items():
+                assert isinstance(datasource_url, DataSourceURL)
+                assert datasource_url.name == j
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -239,21 +176,59 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repo.datasource
-        datasource = repo.get(1)
-        assert datasource.datasource_url_count == 5
+        repo = container.repos.datasource()
+        datasources = repo.get_all()
+        for i, datasource in datasources.items():
+            datasource.state = "COMPLETE"
+            for j, datasource_url in datasource.urls.items():
+                datasource_url.state = "COMPLETE"
+                datasource.update_url(datasource_url)
+            repo.update(datasource)
 
-        for name in datasource.datasource_url_names:
-            datasource_url = datasource.get_datasource_url(name)
-            name = name + "_updated"
-            new_datasource_url = datasource.create_datasource_url(datasource_url.data, name=name)
-            datasource.add_datasource_url(new_datasource_url)
+        datasources = repo.get_all()
+        for i, datasource in datasources.items():
+            assert datasource.state == "COMPLETE"
+            for j, datasource_url in datasource.urls.items():
+                assert datasource_url.state == "COMPLETE"
 
-        repo.update(datasource)
-        datasource = repo.get(1)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
 
-        assert datasource.datasource_url_count == 10
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
 
+    # ============================================================================================ #
+    def test_remove_exists(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        repo = container.repos.datasource()
+        for i in range(1, 6):
+            if i % 2 == 0:
+                repo.remove(i)
+        assert len(repo) < 5
+
+        for i in range(1, 6):
+            if i % 2 == 0:
+                with pytest.raises(FileNotFoundError):
+                    repo.get(i)
+            else:
+                assert repo.exists(i)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -280,41 +255,8 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repo.datasource
-        logger.info(f"\n\nDataSource Repository: {repo.print()}")
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_remove(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        repo = container.repo.datasource
-        b4 = len(repo)
-        repo.remove(1)
-        uow.save()
-
-        assert len(repo) != b4
-
+        repo = container.repos.datasource()
+        repo.print()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

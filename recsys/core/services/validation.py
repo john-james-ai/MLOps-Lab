@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 27th 2022 02:41:20 pm                                              #
-# Modified   : Thursday December 29th 2022 10:21:25 pm                                             #
+# Modified   : Sunday January 1st 2023 06:10:31 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -38,10 +38,10 @@ class Validator:
     @classmethod
     def datasource(cls, entity) -> Response:
         response = Response()
-        if hasattr(entity, 'datasource'):
-            if entity.datasource not in SOURCES:
+        if hasattr(entity, 'datasource_name'):
+            if entity.datasource_name not in SOURCES:
                 response.is_ok = False
-                response.msg = f"Error in {entity.__class__.__name__}. Variable 'datasource' is not valid. Must be one of {SOURCES}."
+                response.msg = f"Error in {entity.__class__.__name__}. Variable 'datasource_name' is not valid. Must be one of {SOURCES}."
         return response
 
     @classmethod

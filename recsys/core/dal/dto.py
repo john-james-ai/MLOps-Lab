@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Sunday January 1st 2023 05:18:31 am                                                 #
+# Modified   : Sunday January 1st 2023 06:42:33 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -186,6 +186,7 @@ class DataSourceDTO(DTO):
     name: str
     description: str
     website: str
+    mode: str
     created: datetime
     modified: datetime
 
@@ -200,6 +201,7 @@ class DataSourceURLDTO(DTO):
     name: str
     description: str
     url: str
+    mode: str
     datasource_id: int
     created: datetime
     modified: datetime

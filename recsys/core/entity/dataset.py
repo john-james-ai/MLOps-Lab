@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Sunday January 1st 2023 05:18:31 am                                                 #
+# Modified   : Sunday January 1st 2023 05:40:30 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -167,7 +167,7 @@ class Dataset(DataComponent):
 
     # -------------------------------------------------------------------------------------------- #
     def add_dataframe(self, dataframe: DataComponent) -> None:
-        dataframe.parent = self
+        dataframe.dataset = self
         self._dataframes[dataframe.name] = dataframe
         self._modified = datetime.now()
 

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 27th 2022 05:33:26 pm                                              #
-# Modified   : Friday December 30th 2022 01:34:28 am                                               #
+# Modified   : Sunday January 1st 2023 05:42:37 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -199,7 +199,7 @@ class TestDataSource:  # pragma: no cover
         assert url1 == url2
         assert url1 != {"some": "dict"}
 
-        assert url1.parent == url2.parent
+        assert url1.datasource == url2.datasource
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday January 1st 2023 02:07:42 am                                                 #
+# Modified   : Sunday January 1st 2023 06:38:01 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDataSourceTable(SQL):
     name: str = "datasource"
-    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('datasource_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, website TEXT NOT NULL, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON datasource(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('datasource_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, website TEXT NOT NULL, mode TEXT NOT NULL DEFAULT 'prod', created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON datasource(name, mode);"""
     args: tuple = ()
 
 
@@ -71,7 +71,7 @@ class DataSourceDDL(DDL):
 @dataclass
 class InsertDataSource(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO datasource (name, description, website, created, modified) VALUES (?,?,?,?,?);"""
+    sql: str = """REPLACE INTO datasource (name, description, website, mode, created, modified) VALUES (?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -79,6 +79,7 @@ class InsertDataSource(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.website,
+            self.dto.mode,
             self.dto.created,
             self.dto.modified,
         )
@@ -90,7 +91,7 @@ class InsertDataSource(SQL):
 @dataclass
 class UpdateDataSource(SQL):
     dto: DTO
-    sql: str = """UPDATE datasource SET name = ?, description = ?, website = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE datasource SET name = ?, description = ?, website = ?, mode = ?, created = ?, modified = ?  WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -98,6 +99,7 @@ class UpdateDataSource(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.website,
+            self.dto.mode,
             self.dto.created,
             self.dto.modified,
             self.dto.id,

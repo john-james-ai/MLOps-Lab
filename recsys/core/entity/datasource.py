@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday December 31st 2022 07:32:21 pm                                             #
+# Modified   : Sunday January 1st 2023 06:46:37 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -113,7 +113,7 @@ class DataSource(DataSourceComponent):
     def create_url(self, url: str, name: str = None, description: str = None) -> DataSourceComponent:
         name = name or self._name
         description = description or self._description
-        return DataSourceURL(name=name, url=url, parent=self, description=description)
+        return DataSourceURL(name=name, url=url, datasource=self, description=description)
 
     # -------------------------------------------------------------------------------------------- #
     def add_url(self, url: DataSourceComponent) -> None:
@@ -130,6 +130,11 @@ class DataSource(DataSourceComponent):
             raise FileNotFoundError(msg)
 
     # -------------------------------------------------------------------------------------------- #
+    def update_url(self, url: DataSourceComponent) -> None:
+        self._urls[url.name] = url
+        self._modified = datetime.now()
+
+    # -------------------------------------------------------------------------------------------- #
     def remove_url(self, name: str) -> None:
         del self._urls[name]
         self._modified = datetime.now()
@@ -143,6 +148,7 @@ class DataSource(DataSourceComponent):
             name=self._name,
             description=self._description,
             website=self._website,
+            mode=self._mode,
             created=self._created,
             modified=self._modified,
         )
@@ -157,9 +163,9 @@ class DataSourceURL(DataSourceComponent):
 
     Args:
         name (str): Short, yet descriptive lowercase name for DataSourceURL object.
-        description (str): Describes the DataSourceURL object. Default's to parent's description if None.
+        description (str): Describes the DataSourceURL object. Default's to datasource's description if None.
         url (pd.DataSourceURL): Payload in pandas DataSourceURL format.
-        parent (DataSource): The parent DataSource instance. Optional.
+        datasource (DataSource): The datasource DataSource instance. Optional.
         mode (str): Mode for which the DataSourceURL is created. If None, defaults to mode from environment
             variable.
 
@@ -169,13 +175,13 @@ class DataSourceURL(DataSourceComponent):
         self,
         name: str,
         url: str,
-        parent: DataSource,
+        datasource: DataSource,
         description: str = None,
     ) -> None:
         super().__init__(name=name, description=description)
 
         self._url = url
-        self._parent = parent
+        self._datasource = datasource
         self._is_composite = False
 
         self._set_metadata()
@@ -215,8 +221,8 @@ class DataSourceURL(DataSourceComponent):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def parent(self) -> DataSource:
-        return self._parent
+    def datasource(self) -> DataSource:
+        return self._datasource
 
     # ------------------------------------------------------------------------------------------------ #
     def as_dto(self) -> DataSourceURLDTO:
@@ -226,12 +232,13 @@ class DataSourceURL(DataSourceComponent):
             name=self._name,
             description=self._description,
             url=self._url,
-            datasource_id=self._parent.id,
+            mode=self._mode,
+            datasource_id=self._datasource.id,
             created=self._created,
             modified=self._modified,
         )
 
     # ------------------------------------------------------------------------------------------------ #
     def _set_metadata(self) -> None:
-        if self._parent is not None:
-            self._description = self._description or self._parent.description
+        if self._datasource is not None:
+            self._description = self._description or self._datasource.description

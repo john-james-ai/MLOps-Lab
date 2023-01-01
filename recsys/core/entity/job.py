@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Sunday January 1st 2023 02:49:02 am                                                 #
+# Modified   : Sunday January 1st 2023 05:41:18 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -126,7 +126,7 @@ class Job(JobComponent):
 
     # -------------------------------------------------------------------------------------------- #
     def create_task(self, name: str, description: str) -> JobComponent:
-        return Task(name=name, parent=self, description=description)
+        return Task(name=name, job=self, description=description)
 
     # -------------------------------------------------------------------------------------------- #
     def add_task(self, task: JobComponent) -> None:
@@ -181,8 +181,8 @@ class Task(JobComponent):
 
     Args:
         name (str): Short, yet descriptive lowercase name for Task object.
-        description (str): Describes the Task object. Default's to parent's description if None.
-        parent (Job): The parent Job instance. Optional.
+        description (str): Describes the Task object. Default's to job's description if None.
+        job (Job): The job Job instance. Optional.
         mode (str): Mode for which the Task is created. If None, defaults to mode from environment
             variable.
 
@@ -191,13 +191,13 @@ class Task(JobComponent):
     def __init__(
         self,
         name: str,
-        parent: Job,
+        job: Job,
         description: str = None,
         mode: str = None,
     ) -> None:
         super().__init__(name=name, description=description, mode=mode)
 
-        self._parent = parent
+        self._job = job
         self._is_composite = False
         self._state = STATES[0]
 
@@ -221,7 +221,7 @@ class Task(JobComponent):
             return (self._name == other.name
                     and self._description == other.description
                     and self._mode == other.mode
-                    and self._parent == other.parent)
+                    and self._job == other.job)
         else:
             return False
 
@@ -246,8 +246,8 @@ class Task(JobComponent):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def parent(self) -> Job:
-        return self._parent
+    def job(self) -> Job:
+        return self._job
 
     # ------------------------------------------------------------------------------------------------ #
     def as_dto(self) -> TaskDTO:
@@ -258,7 +258,7 @@ class Task(JobComponent):
             description=self._description,
             mode=self._mode,
             state=self._state,
-            job_id=self._parent.id,
+            job_id=self._job.id,
             created=self._created,
             modified=self._modified,
         )

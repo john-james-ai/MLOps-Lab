@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:58:21 pm                                             #
-# Modified   : Sunday January 1st 2023 03:15:39 am                                                 #
+# Modified   : Sunday January 1st 2023 05:43:05 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -112,7 +112,7 @@ class TestJobRepo:  # pragma: no cover
         for name, task in job.tasks.items():
             assert isinstance(task, Task)
             assert task.name == name
-            assert task.parent == job
+            assert task.job == job
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
