@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Friday December 30th 2022 07:32:14 pm                                               #
+# Modified   : Saturday December 31st 2022 07:48:29 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -44,7 +44,7 @@ class Entity(ABC):
         self._oid = None
         self._mode = mode or self._get_mode()
         self._created = datetime.now()
-        self._modified = None
+        self._modified = datetime.now()
         self._validator = Validator()
         self._logger = logging.getLogger(
             f"{self.__module__}.{self.__class__.__name__}",
@@ -58,7 +58,7 @@ class Entity(ABC):
     def id(self, id: int) -> None:
         if self._id is None:
             self._id = id
-            self._oid = f"{self.__class__.__name__.lower()}_{id}"
+            self._oid = self._get_oid()
             self._modified = datetime.now()
         elif self._id != id:
             msg = "Item re-assignment is not supported for 'id' instance variable."
@@ -115,6 +115,9 @@ class Entity(ABC):
             return v.as_dict()
         else:
             """Else nothing. What do you want?"""
+
+    def _get_oid(self) -> str:
+        return f"{self.__class__.__name__.lower()}_{self._name}_{self._id}_{self._mode}"
 
     def _get_mode(self) -> str:
         dotenv.load_dotenv()

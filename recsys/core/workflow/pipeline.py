@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 19th 2022 03:34:43 pm                                               #
-# Modified   : Friday December 30th 2022 08:19:08 pm                                               #
+# Modified   : Saturday December 31st 2022 06:53:59 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,9 +21,9 @@ from collections import OrderedDict
 import logging
 
 from recsys import STATES
-from recsys.core.dal.uow import UnitOfWork
 from recsys.core.entity.job import Job
-from .base import Operator
+from recsys.core.workflow.operators.base import Operator
+from recsys.core.dal.uow import UnitOfWork
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -86,7 +86,7 @@ class Pipeline:
         return self._uow
 
     @uow.setter
-    def uow(self, uow: str) -> None:
+    def uow(self, uow: UnitOfWork) -> None:
         self._uow = uow
 
     # ------------------------------------------------------------------------------------------------ #
@@ -97,28 +97,28 @@ class Pipeline:
 
     def run(self) -> None:
         """Runs the pipeline"""
-        self.setup()
+        self._setup()
 
         for operator in self._operations.values():
             operator.uow = self._uow
             operator.execute()
 
-        self.teardown()
+        self._teardown()
 
-    def setup(self) -> None:
+    def _setup(self) -> None:
         """Creates the Job and returns it."""
         job = self.as_job()
         job.state = STATES[2]
         job = self._uow.job.add(job)
-        self._uow.current = job
+        self._logger.debug(f"Just added the following job:\n{job}")
+        self._uow.current_job = job
         self._uow.save()
 
-    def teardown(self) -> None:
+    def _teardown(self) -> None:
         """Updates job with final state and persists it."""
-        job = self._uow.current
-        job.state = STATES[-1]
-        self._uow.job.update(job)
-        self._uow.current = job
+        self._uow.current_job.state = STATES[-1]
+        self._uow.job.update(self._uow.current_job)
+        self._logger.debug(f"Just updated the following job:\n{self._uow.current_job}")
         self._uow.save()
 
     def as_job(self) -> Job:
@@ -128,21 +128,3 @@ class Pipeline:
             description=self._description,
             mode=self._mode
         )
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                      DATA PIPELINE                                               #
-# ------------------------------------------------------------------------------------------------ #
-class DataPipeline(Pipeline):
-    def __init__(self, name: str, mode: str, uow: UnitOfWork = UnitOfWork(), description: str = None) -> None:
-        super().__init__(name=name, mode=mode, uow=uow, description=description)
-
-    def run(self) -> None:
-
-        self.setup()
-
-        for operator in self._operations.values():
-            operator.uow = self._uow
-            operator.execute()
-
-        self.teardown()

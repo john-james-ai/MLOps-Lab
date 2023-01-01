@@ -11,14 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 30th 2022 10:33:34 am                                               #
-# Modified   : Friday December 30th 2022 10:35:19 am                                               #
+# Modified   : Saturday December 31st 2022 04:17:27 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 import time
 
-from recsys.core.workflow.base import Operator
+from .base import Operator
 
 
 # ------------------------------------------------------------------------------------------------ #

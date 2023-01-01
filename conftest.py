@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Friday December 30th 2022 07:58:13 pm                                               #
+# Modified   : Saturday December 31st 2022 01:22:25 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,8 +33,6 @@ from recsys.core.entity.profile import Profile
 # from recsys.core.workflow.operator import NullOperator
 from recsys.core.database.relational import RDB
 from recsys.core.database.connection import SQLiteConnection
-from recsys.core.dal.repo import Context
-from recsys.core.dal.uow import UnitOfWork
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
 RATINGS_FILEPATH = "tests/data/movielens25m/raw/ratings.pkl"
@@ -259,11 +257,3 @@ def container():
     container.init_resources()
     container.wire(modules=[recsys.containers])
     return container
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope='module', autouse=True)
-def uow():
-    context = Context()
-    uow = UnitOfWork(context=context)
-    return uow

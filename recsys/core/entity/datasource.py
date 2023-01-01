@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Friday December 30th 2022 07:45:53 pm                                               #
+# Modified   : Saturday December 31st 2022 07:32:21 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,6 +19,7 @@
 """DataSourceURL Entity Module"""
 from abc import abstractmethod
 from typing import Union, Dict
+from datetime import datetime
 
 from recsys.core.entity.base import Entity
 from recsys.core.dal.dto import DataSourceURLDTO, DataSourceDTO
@@ -117,6 +118,7 @@ class DataSource(DataSourceComponent):
     # -------------------------------------------------------------------------------------------- #
     def add_url(self, url: DataSourceComponent) -> None:
         self._urls[url.name] = url
+        self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #
     def get_url(self, name) -> None:
@@ -130,6 +132,7 @@ class DataSource(DataSourceComponent):
     # -------------------------------------------------------------------------------------------- #
     def remove_url(self, name: str) -> None:
         del self._urls[name]
+        self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #
     def as_dto(self) -> DataSourceDTO:

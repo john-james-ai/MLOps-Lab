@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 13th 2022 10:50:34 pm                                              #
-# Modified   : Wednesday December 28th 2022 03:00:36 pm                                            #
+# Modified   : Saturday December 31st 2022 01:23:12 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -63,7 +63,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_add(self, uow, dataset, caplog):
+    def test_add(self, container, dataset, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -74,7 +74,7 @@ class TestDatasetRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.dataset
+        repo = container.repo.dataset
         dataset = repo.add(dataset)
         assert len(repo) == 1
         assert dataset.id == 1
@@ -95,7 +95,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get(self, uow, dataset, caplog):
+    def test_get(self, container, dataset, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -106,7 +106,7 @@ class TestDatasetRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.dataset
+        repo = container.repo.dataset
         dataset = repo.get(1)
         assert isinstance(dataset, Dataset)
         assert dataset.id == 1
@@ -141,7 +141,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_by_name_mode(self, uow, dataset, caplog):
+    def test_get_by_name_mode(self, container, dataset, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -152,7 +152,7 @@ class TestDatasetRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.dataset
+        repo = container.repo.dataset
         dataset = repo.get_by_name_mode("dataset_name_1")
         assert isinstance(dataset, Dataset)
 
@@ -173,7 +173,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_exists(self, uow, caplog):
+    def test_exists(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -185,7 +185,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.dataset
+        repo = container.repo.dataset
         assert repo.exists(1) is True
         assert repo.exists(11) is False
 
@@ -204,7 +204,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_all(self, uow, caplog):
+    def test_get_all(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -215,7 +215,7 @@ class TestDatasetRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.dataset
+        repo = container.repo.dataset
         entities = repo.get_all()
         assert isinstance(entities, dict)
         for id, entity in entities.items():
@@ -235,7 +235,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_update(self, uow, caplog):
+    def test_update(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -246,7 +246,7 @@ class TestDatasetRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.dataset
+        repo = container.repo.dataset
         dataset = repo.get(1)
         assert dataset.dataframe_count == 5
 
@@ -276,7 +276,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_print(self, uow, caplog):
+    def test_print(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -287,7 +287,7 @@ class TestDatasetRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.dataset
+        repo = container.repo.dataset
         logger.info(f"\n\nDataset Repository: {repo.print()}")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -304,7 +304,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_remove(self, uow, caplog):
+    def test_remove(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -315,10 +315,10 @@ class TestDatasetRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.dataset
+        repo = container.repo.dataset
         b4 = len(repo)
         repo.remove(1)
-        uow.save()
+        container.uow.uow.save()
 
         assert len(repo) != b4
 

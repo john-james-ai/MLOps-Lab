@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 12:55:33 pm                                             #
-# Modified   : Saturday December 24th 2022 04:47:04 pm                                             #
+# Modified   : Saturday December 31st 2022 08:43:14 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -117,6 +117,7 @@ class ODBConnection(Service):
         self._delete_dbfiles()
         self._reset_cache()
         self.connect()
+        self._logger.debug(f"Reset object database at {self._dbfile}")
 
     def connect(self) -> shelve.Shelf:
         self._connection = shelve.open(self._dbfile)

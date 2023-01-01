@@ -11,12 +11,15 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Friday December 30th 2022 07:44:48 pm                                               #
+# Modified   : Saturday December 31st 2022 08:04:51 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Object persistence module"""
+import os
+import dotenv
+
 from .connection import Connection
 from recsys.core.services.base import Service
 from recsys.core.entity.base import Entity
@@ -54,10 +57,6 @@ class ODB(Service):
         return len(cursor.keys())
 
     # -------------------------------------------------------------------------------------------- #
-    def reset(self) -> None:
-        self._connection.reset()
-
-    # -------------------------------------------------------------------------------------------- #
     def create(self, entity: Entity) -> None:
         """Persists a new entity into the object database.
 
@@ -68,6 +67,7 @@ class ODB(Service):
             cache = self._connection.cache
             cache[entity.oid] = entity
             self._connection.cache = cache
+            self._connection.commit()
         else:
             msg = f"Object {entity.oid} already exists."
             self._logger.error(msg)
@@ -100,6 +100,7 @@ class ODB(Service):
             cache = self._connection.cache
             cache[entity.oid] = entity
             self._connection.cache = cache
+            self._connection.commit()
         else:
             msg = f"Object with object_id = {entity.oid} does not exist."
             self._logger.error(msg)
@@ -122,6 +123,15 @@ class ODB(Service):
             raise FileNotFoundError(msg)
 
     # -------------------------------------------------------------------------------------------- #
+    def reset(self) -> bool:
+        if not self._is_test_mode():
+            go = input("This will permanently delete the object database. Are you SURE? (y/n) ")
+            if 'y' in go.lower():
+                self._connection.reset()
+        else:
+            self._connection.reset()
+
+    # -------------------------------------------------------------------------------------------- #
     def exists(self, oid: str) -> bool:
         self._check_connection()
         cursor = self._connection.cursor()
@@ -135,3 +145,8 @@ class ODB(Service):
     def _check_connection(self) -> None:
         if not self._connection.is_connected():
             self._connection.connect()
+
+    # -------------------------------------------------------------------------------------------- #
+    def _is_test_mode(self) -> bool:
+        dotenv.load_dotenv()
+        return os.getenv("MODE") == "test"

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 30th 2022 10:02:44 am                                               #
-# Modified   : Friday December 30th 2022 03:20:14 pm                                               #
+# Modified   : Saturday December 31st 2022 05:49:43 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,7 +19,7 @@
 """Download Operator Module"""
 from types import SimpleNamespace
 
-from recsys.core.workflow.base import Operator
+from .base import Operator
 from atelier.operator.download import Downloader
 
 
@@ -51,7 +51,7 @@ class Download(Operator):
     def execute(self) -> None:
         """Downloads Zip Files from the DataSource website."""
 
-        task = self.setup()
+        task = self._setup()
         self._execute()
         self._teardown(task)
 

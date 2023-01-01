@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Friday December 30th 2022 07:53:44 pm                                               #
+# Modified   : Saturday December 31st 2022 08:37:41 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,8 +22,14 @@ import sqlite3
 from dependency_injector import containers, providers  # pragma: no cover
 
 from recsys.core.services.io import IOService
+from recsys.core.dal.repo import Context, Repo
+from recsys.core.entity.file import File
+from recsys.core.entity.dataset import Dataset, DataFrame
+from recsys.core.entity.datasource import DataSource, DataSourceURL
+from recsys.core.entity.job import Job, Task
+from recsys.core.entity.profile import Profile
 from recsys.core.dal.dao import DataFrameDAO, DatasetDAO, JobDAO, TaskDAO, ProfileDAO, FileDAO, DataSourceDAO, DataSourceURLDAO
-from recsys.core.dal.ddl import TableBuildService
+from recsys.core.dal.dba import DBA
 from recsys.core.dal.sql.datasource import DataSourceDDL, DataSourceDML
 from recsys.core.dal.sql.datasource_url import DataSourceURLDDL, DataSourceURLDML
 from recsys.core.dal.sql.file import FileDDL, FileDML
@@ -38,8 +44,6 @@ from recsys.core.database.connection import SQLiteConnection, ODBConnection
 
 
 # ------------------------------------------------------------------------------------------------ #
-
-
 class CoreContainer(containers.DeclarativeContainer):
 
     config = providers.Configuration()
@@ -74,22 +78,23 @@ class DataLayerContainer(containers.DeclarativeContainer):
 class TableContainer(containers.DeclarativeContainer):
 
     rdb = providers.Dependency()
+    odb = providers.Dependency()
 
-    file = providers.Factory(TableBuildService, database=rdb, ddl=FileDDL)
+    file = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=FileDDL)
 
-    datasource = providers.Factory(TableBuildService, database=rdb, ddl=DataSourceDDL)
+    datasource = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=DataSourceDDL)
 
-    datasource_url = providers.Factory(TableBuildService, database=rdb, ddl=DataSourceURLDDL)
+    datasource_url = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=DataSourceURLDDL)
 
-    dataframe = providers.Factory(TableBuildService, database=rdb, ddl=DataFrameDDL)
+    dataframe = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=DataFrameDDL)
 
-    dataset = providers.Factory(TableBuildService, database=rdb, ddl=DatasetDDL)
+    dataset = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=DatasetDDL)
 
-    job = providers.Factory(TableBuildService, database=rdb, ddl=JobDDL)
+    job = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=JobDDL)
 
-    task = providers.Factory(TableBuildService, database=rdb, ddl=TaskDDL)
+    task = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=TaskDDL)
 
-    profile = providers.Factory(TableBuildService, database=rdb, ddl=ProfileDDL)
+    profile = providers.Factory(DBA, rdb=rdb, odb=odb, dl=ProfileDDL)
 
 
 class DAOContainer(containers.DeclarativeContainer):
@@ -115,6 +120,34 @@ class DAOContainer(containers.DeclarativeContainer):
     profile = providers.Factory(ProfileDAO, rdb=rdb, odb=odb, dml=ProfileDML)
 
 
+class ContextContainer(containers.DeclarativeContainer):
+
+    dao = providers.Dependency()
+
+    context = providers.Factory(Context, dao=dao)
+
+
+class RepoContainer(containers.DeclarativeContainer):
+
+    context = providers.Dependency()
+
+    dataset = providers.Factory(Repo, context=context, entity=Dataset)
+
+    dataframe = providers.Factory(Repo, context=context, entity=DataFrame)
+
+    file = providers.Factory(Repo, context=context, entity=File)
+
+    datasource = providers.Factory(Repo, context=context, entity=DataSource)
+
+    datasource_url = providers.Factory(Repo, context=context, entity=DataSourceURL)
+
+    job = providers.Factory(Repo, context=context, entity=Job)
+
+    task = providers.Factory(Repo, context=context, entity=Task)
+
+    profile = providers.Factory(Repo, context=context, entity=Profile)
+
+
 class Recsys(containers.DeclarativeContainer):
 
     config = providers.Configuration(yaml_files=["config.yml"])
@@ -123,6 +156,10 @@ class Recsys(containers.DeclarativeContainer):
 
     data = providers.Container(DataLayerContainer, config=config.test.data)
 
-    table = providers.Container(TableContainer, rdb=data.rdb)
+    table = providers.Container(TableContainer, rdb=data.rdb, odb=data.odb)
 
     dao = providers.Container(DAOContainer, rdb=data.rdb, odb=data.odb)
+
+    context = providers.Container(ContextContainer, dao=dao)
+
+    repos = providers.Container(RepoContainer, context=context.context)

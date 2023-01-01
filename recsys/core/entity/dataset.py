@@ -11,13 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Friday December 30th 2022 07:45:53 pm                                               #
+# Modified   : Saturday December 31st 2022 07:30:54 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """DataFrame Entity Module"""
 from abc import abstractmethod
+from datetime import datetime
 import pandas as pd
 from typing import Union, Dict
 
@@ -156,6 +157,7 @@ class Dataset(DataComponent):
     @task_id.setter
     def task_id(self, task_id: int) -> None:
         self._task_id = task_id
+        self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #
     def create_dataframe(self, data: pd.DataFrame, name: str = None, description: str = None) -> DataComponent:
@@ -167,6 +169,7 @@ class Dataset(DataComponent):
     def add_dataframe(self, dataframe: DataComponent) -> None:
         dataframe.parent = self
         self._dataframes[dataframe.name] = dataframe
+        self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #
     def get_dataframe(self, name: str = None) -> None:
@@ -182,6 +185,7 @@ class Dataset(DataComponent):
     # -------------------------------------------------------------------------------------------- #
     def remove_dataframe(self, name: str) -> None:
         del self._dataframes[name]
+        self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #
     def as_dto(self) -> DatasetDTO:
@@ -295,6 +299,7 @@ class DataFrame(DataComponent):
     @parent.setter
     def parent(self, dataset: Dataset) -> None:
         self._parent = dataset
+        self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #
     @property

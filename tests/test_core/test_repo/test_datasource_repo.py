@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 13th 2022 10:50:34 pm                                              #
-# Modified   : Friday December 30th 2022 02:14:48 am                                               #
+# Modified   : Saturday December 31st 2022 01:21:55 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -62,7 +62,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_add(self, uow, datasource, caplog):
+    def test_add(self, container, datasource, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -73,7 +73,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.datasource
+        repo = container.repo.datasource
         datasource = repo.add(datasource)
         assert len(repo) == 1
         assert datasource.id == 1
@@ -94,7 +94,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get(self, uow, datasource, caplog):
+    def test_get(self, container, datasource, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -105,7 +105,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.datasource
+        repo = container.repo.datasource
         datasource = repo.get(1)
         assert isinstance(datasource, DataSource)
         assert datasource.id == 1
@@ -134,7 +134,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_by_name_mode(self, uow, datasource, caplog):
+    def test_get_by_name_mode(self, container, datasource, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -145,7 +145,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.datasource
+        repo = container.repo.datasource
         datasource = repo.get_by_name_mode("datasource_name_1")
         assert isinstance(datasource, DataSource)
 
@@ -166,7 +166,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_exists(self, uow, caplog):
+    def test_exists(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -178,7 +178,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.datasource
+        repo = container.repo.datasource
         assert repo.exists(1) is True
         assert repo.exists(11) is False
 
@@ -197,7 +197,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_all(self, uow, caplog):
+    def test_get_all(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -208,7 +208,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.datasource
+        repo = container.repo.datasource
         entities = repo.get_all()
         assert isinstance(entities, dict)
         for id, entity in entities.items():
@@ -228,7 +228,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_update(self, uow, caplog):
+    def test_update(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -239,7 +239,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.datasource
+        repo = container.repo.datasource
         datasource = repo.get(1)
         assert datasource.datasource_url_count == 5
 
@@ -269,7 +269,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_print(self, uow, caplog):
+    def test_print(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -280,7 +280,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.datasource
+        repo = container.repo.datasource
         logger.info(f"\n\nDataSource Repository: {repo.print()}")
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -297,7 +297,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_remove(self, uow, caplog):
+    def test_remove(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -308,7 +308,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = uow.datasource
+        repo = container.repo.datasource
         b4 = len(repo)
         repo.remove(1)
         uow.save()

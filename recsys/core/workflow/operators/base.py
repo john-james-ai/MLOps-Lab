@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/workflow/base.py                                                       #
+# Filename   : /recsys/core/workflow/operators/base.py                                             #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Friday December 30th 2022 08:18:27 pm                                               #
+# Modified   : Saturday December 31st 2022 07:09:22 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ import pandas as pd
 import logging
 
 from recsys import STATES
-from recsys.core.entity.job import Job, Task
+from recsys.core.entity.job import Task
 from recsys.core.dal.uow import UnitOfWork
 from recsys.core.entity.dataset import Dataset
 
@@ -71,30 +71,31 @@ class Operator(ABC):
     def execute(self, *args, **kwargs) -> None:
         """Executes the operation."""
 
-    def setup(self) -> Task:
-        """Create task and write to repository."""
-        # Get the current job from the unit of work context
-        job = self._uow.current
-        # Create the task, adding the job as parent
-        task = self._as_task(job)
-        # Add the task to the repository and return it
-        self._uow.task.add(task)
-        return task
-
-    def teardown(self, task: Task) -> None:
-        """Updates the state of the Task and updates the repository."""
-        # Set task state to COMPLETE
-        task.state = STATES[-1]
-        # Update the task in the repository.
-        self._uow.task.update(task)
-
-    def as_task(self, job: Job) -> Task:
+    def _as_task(self) -> Task:
         """Creates a task reprsentation of the Operation, sets the state to in-progress, and returns it."""
         # Create the Task object
-        task = Task(name=self._name, parent=job, description=self._description, mode=self._mode)
+        task = Task(name=self._name, parent=self._uow.current_job, description=self._description, mode=self._mode)
         # Set the task state to in-progress and return it.
         task.state = STATES[2]
         return task
+
+    def _setup(self) -> Task:
+        """Create task and write to repository."""
+        task = self._as_task()
+        task = self._uow.task.add(task, persist=False)
+        self._logger.debug(f"Just added the following task:\n{task}")
+        self._uow.current_job.add_task(task)
+        self._uow.save()
+        return task
+
+    def _teardown(self, task: Task) -> None:
+        """Updates the state of the Task and updates the repository."""
+        # Set task state to COMPLETE
+        task.state = STATES[-1]
+        self._uow.task.update(task, persist=False)
+        self._uow.current_job.update_task(task)
+        self._logger.debug(f"Just updated the following task:\n{task}")
+        self._uow.save()
 
     def _get_dataframe(self) -> pd.DataFrame:
         """Retrieves a pandas DataFrame from the Dataset repository."""

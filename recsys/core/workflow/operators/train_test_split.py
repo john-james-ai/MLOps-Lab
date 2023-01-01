@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 30th 2022 11:18:59 am                                               #
-# Modified   : Friday December 30th 2022 02:45:53 pm                                               #
+# Modified   : Saturday December 31st 2022 05:49:43 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,7 +19,7 @@
 from types import SimpleNamespace
 import pandas as pd
 
-from recsys.core.workflow.base import Operator
+from .base import Operator
 from recsys.core.dal.base import Dataset
 
 
@@ -57,7 +57,7 @@ class TrainTestSplit(Operator):
 
     def execute(self, *args, **kwargs) -> Dataset:
 
-        task = self.setup()
+        task = self._setup()
         dataframe = self._get_dataframe()
         dataset = self._execute(dataframe.data)
         dataset.task_id = task.id

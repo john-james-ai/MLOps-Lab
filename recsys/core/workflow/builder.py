@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 19th 2022 03:34:43 pm                                               #
-# Modified   : Friday December 30th 2022 08:08:06 pm                                               #
+# Modified   : Saturday December 31st 2022 12:18:40 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -109,7 +109,7 @@ class PipelineBuilder(Builder):
 class Director:
     """The Director is responsible for executing the building steps in a particular sequence. """
 
-    def __init__(self, pipeline: Pipeline = Pipeline(), uow: UnitOfWork = UnitOfWork(), io: IOService = IOService) -> None:
+    def __init__(self, uow: UnitOfWork, pipeline: Pipeline = Pipeline(), io: IOService = IOService) -> None:
         self._pipeline = pipeline
         self._uow = uow
         self._io = io

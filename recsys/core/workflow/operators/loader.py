@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 30th 2022 10:04:01 am                                               #
-# Modified   : Friday December 30th 2022 08:10:31 pm                                               #
+# Modified   : Saturday December 31st 2022 05:50:03 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ from types import SimpleNamespace
 
 from recsys.core.entity.file import File
 from recsys.core.entity.datasource import DataSource, DataSourceURL
-from recsys.core.workflow.base import Operator
+from .base import Operator
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -48,7 +48,7 @@ class FileLoader(Operator):
 
     def execute(self, *args, **kwargs) -> None:
         """Creates the task, and the File objects, and loads them into the File repository."""
-        task = self.setup()
+        task = self._setup()
         for file in self._entities:
             file.task_id = task.id
             self._put_file(file)
@@ -81,7 +81,7 @@ class DataSourceLoader(Operator):
     def execute(self) -> None:
         """Loads the File objects into the Repository."""
 
-        task = self.setup()
+        task = self._setup()
         datasource = self._build_datasource()
         self._put_datasource(datasource)
         self._teardown(task)
@@ -94,17 +94,17 @@ class DataSourceLoader(Operator):
         )
         for url in self._output_params.urls:
             ds_url = DataSourceURL(
-                name=url.name,
-                url=url.url,
+                name=url["name"],
+                url=url["url"],
                 parent=datasource,
-                description=url.description,
+                description=url["description"]
             )
             datasource.add_url(ds_url)
         return datasource
 
     def _put_datasource(self, datasource: DataSource) -> None:
         """Stores a datasource in the DataSource repository."""
-        self._uow.datasource.create(datasource)
+        self._uow.datasource.add(datasource)
         ds_urls = datasource.urls
         for ds_url in ds_urls.values():
-            self._uow.datasource_url.create(ds_url)
+            self._uow.datasource_url.add(ds_url)

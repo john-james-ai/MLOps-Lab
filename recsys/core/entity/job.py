@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Friday December 30th 2022 08:20:09 pm                                               #
+# Modified   : Saturday December 31st 2022 08:47:04 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,6 +19,7 @@
 """Task Entity Module"""
 from abc import abstractmethod
 from typing import Union, Dict
+from datetime import datetime
 
 from recsys.core.entity.base import Entity
 from recsys.core.dal.dto import TaskDTO, JobDTO
@@ -98,6 +99,9 @@ class Job(JobComponent):
         else:
             return False
 
+    def __len__(self) -> int:
+        return len(self._tasks)
+
     @property
     def task_count(self) -> int:
         self._task_count = len(self._tasks)
@@ -117,6 +121,7 @@ class Job(JobComponent):
     @state.setter
     def state(self, state: str) -> None:
         self._state = state
+        self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -130,6 +135,7 @@ class Job(JobComponent):
     # -------------------------------------------------------------------------------------------- #
     def add_task(self, task: JobComponent) -> None:
         self._tasks[task.name] = task
+        self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #
     def get_task(self, name: str = None) -> None:
@@ -141,8 +147,14 @@ class Job(JobComponent):
             raise FileNotFoundError(msg)
 
     # -------------------------------------------------------------------------------------------- #
+    def update_task(self, task: JobComponent) -> None:
+        self._tasks[task.name] = task
+        self._modified = datetime.now()
+
+    # -------------------------------------------------------------------------------------------- #
     def remove_task(self, name: str) -> None:
         del self._tasks[name]
+        self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #
     def as_dto(self) -> JobDTO:
@@ -225,6 +237,11 @@ class Task(JobComponent):
         """The overall state of the task."""
         return self._state
 
+    @state.setter
+    def state(self, state: str) -> None:
+        self._state = state
+        self._modified = datetime.now()
+
     # -------------------------------------------------------------------------------------------- #
     @property
     def parent(self) -> Job:
@@ -239,7 +256,7 @@ class Task(JobComponent):
             description=self._description,
             mode=self._mode,
             state=self._state,
-            job_id=self._job_id,
+            job_id=self._parent.id,
             created=self._created,
             modified=self._modified,
         )

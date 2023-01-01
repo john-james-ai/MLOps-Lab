@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 12:28:07 am                                               #
-# Modified   : Friday December 30th 2022 08:50:15 pm                                               #
+# Modified   : Saturday December 31st 2022 07:01:19 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,10 +19,8 @@
 import os
 import dotenv
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 import logging
 
-from dependency_injector.wiring import Provide
 from recsys.core.dal.dao import DAO
 from recsys.core.entity.base import Entity
 from recsys.core.entity.dataset import Dataset, DataFrame
@@ -31,52 +29,76 @@ from recsys.core.entity.job import Task, Job
 from recsys.core.entity.file import File
 from recsys.core.entity.profile import Profile
 
-from recsys.containers import Recsys
-
 
 # ------------------------------------------------------------------------------------------------ #
 #                                        CONTEXT                                                   #
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
 class Context:
 
-    file: DAO = Provide[Recsys.dao.file]
-    datasource: DAO = Provide[Recsys.dao.datasource]
-    datasource_url: DAO = Provide[Recsys.dao.datasource_url]
-    dataset: DAO = Provide[Recsys.dao.dataset]
-    dataframe: DAO = Provide[Recsys.dao.dataframe]
-    task: DAO = Provide[Recsys.dao.task]
-    job: DAO = Provide[Recsys.dao.job]
-    profile: DAO = Provide[Recsys.dao.profile]
+    def __init__(self, dao: DAO) -> None:
+        self._dao = dao
 
-    @classmethod
-    def get_dao(cls, entity: type(Entity)) -> DAO:
+    def get_dao(self, entity: type(Entity)) -> DAO:
+        daos = {Dataset: self._dao.dataset(), DataFrame: self._dao.dataframe(),
+                DataSource: self._dao.datasource(), DataSourceURL: self._dao.datasource_url(),
+                Task: self._dao.task(), Job: self._dao.job(), Profile: self._dao.profile(),
+                File: self._dao.file()}
 
-        cls.logger = logging.getLogger(
-            f"{cls.__module__}.{cls.__class__.__name__}",
-        )
+        return daos[entity]
 
-        daos = {Dataset: cls.dataset, DataFrame: cls.dataframe, DataSource: cls.datasource,
-                DataSourceURL: cls.datasource_url, Task: cls.task, Job: cls.job,
-                Profile: cls.profile, File: cls.file}
-        try:
-            return daos[entity]
-        except KeyError:
-            msg = f'Error: {entity} does not have a data access object (DAO).'
-            cls.logger.error(msg)
-            raise ValueError(msg)
+    def save(self) -> None:
+        self._dao.file().save()
+        self._dao.dataset().save()
+        self._dao.dataframe().save()
+        self._dao.datasource().save()
+        self._dao.datasource_url().save()
+        self._dao.job().save()
+        self._dao.task().save()
+        self._dao.profile().save()
 
-    @classmethod
-    def save(cls) -> None:
-        cls.file.save()
-        cls.datasource.save()
-        cls.datasource_url.save()
-        cls.dataset.save()
-        cls.dataframe.save()
-        cls.task.save()
-        cls.job.save()
-        cls.profile.save()
 
+# # ------------------------------------------------------------------------------------------------ #
+# #                                        CONTEXT                                                   #
+# # ------------------------------------------------------------------------------------------------ #
+# @dataclass
+# class Context:
+
+#     file: DAO = Provide[Recsys.dao.file]
+#     datasource: DAO = Provide[Recsys.dao.datasource]
+#     datasource_url: DAO = Provide[Recsys.dao.datasource_url]
+#     dataset: DAO = Provide[Recsys.dao.dataset]
+#     dataframe: DAO = Provide[Recsys.dao.dataframe]
+#     task: DAO = Provide[Recsys.dao.task]
+#     job: DAO = Provide[Recsys.dao.job]
+#     profile: DAO = Provide[Recsys.dao.profile]
+
+#     @classmethod
+#     def get_dao(cls, entity: type(Entity)) -> DAO:
+
+#         cls.logger = logging.getLogger(
+#             f"{cls.__module__}.{cls.__class__.__name__}",
+#         )
+
+#         daos = {Dataset: cls.dataset, DataFrame: cls.dataframe, DataSource: cls.datasource,
+#                 DataSourceURL: cls.datasource_url, Task: cls.task, Job: cls.job,
+#                 Profile: cls.profile, File: cls.file}
+#         try:
+#             return daos[entity]
+#         except KeyError:
+#             msg = f'Error: {entity} does not have a data access object (DAO).'
+#             cls.logger.error(msg)
+#             raise ValueError(msg)
+
+#     @classmethod
+#     def save(cls) -> None:
+#         cls.file.save()
+#         cls.datasource.save()
+#         cls.datasource_url.save()
+#         cls.dataset.save()
+#         cls.dataframe.save()
+#         cls.task.save()
+#         cls.job.save()
+#         cls.profile.save()
 
 # ------------------------------------------------------------------------------------------------ #
 #                                      REPOSITORY ABC                                              #
@@ -142,9 +164,9 @@ class Repo(RepoABC):
     def __len__(self) -> int:
         return len(self.get_all())
 
-    def add(self, entity: Entity) -> Entity:
+    def add(self, entity: Entity, persist: bool = True) -> Entity:
         """Adds an entity to the repository and returns the Entity with the id added."""
-        entity = self._dao.create(entity)
+        entity = self._dao.create(entity=entity, persist=persist)
         return entity
 
     def get(self, id: str) -> Entity:
@@ -158,9 +180,9 @@ class Repo(RepoABC):
     def get_all(self) -> dict:
         return self._dao.read_all()
 
-    def update(self, entity: Entity) -> None:
+    def update(self, entity: Entity, persist: bool = True) -> None:
         """Updates an entity in the database."""
-        self._dao.update(entity)
+        self._dao.update(entity=entity, persist=persist)
 
     def remove(self, id: str) -> None:
         """Removes an entity (and its children) from repository."""
