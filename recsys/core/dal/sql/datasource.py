@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday December 30th 2022 08:35:58 pm                                               #
+# Modified   : Sunday January 1st 2023 02:07:42 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDataSourceTable(SQL):
     name: str = "datasource"
-    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('datasource_' || id), name TEXT NOT NULL, description TEXT, website TEXT NOT NULL, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON datasource(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('datasource_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, website TEXT NOT NULL, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON datasource(name, mode);"""
     args: tuple = ()
 
 

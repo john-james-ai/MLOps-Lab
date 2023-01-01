@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 19th 2022 03:34:43 pm                                               #
-# Modified   : Saturday December 31st 2022 06:53:59 pm                                             #
+# Modified   : Sunday January 1st 2023 01:54:46 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ import logging
 from recsys import STATES
 from recsys.core.entity.job import Job
 from recsys.core.workflow.operators.base import Operator
-from recsys.core.dal.uow import UnitOfWork
+from recsys.core.repo.uow import UnitOfWork
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -112,14 +112,12 @@ class Pipeline:
         job = self._uow.job.add(job)
         self._logger.debug(f"Just added the following job:\n{job}")
         self._uow.current_job = job
-        self._uow.save()
 
     def _teardown(self) -> None:
         """Updates job with final state and persists it."""
         self._uow.current_job.state = STATES[-1]
         self._uow.job.update(self._uow.current_job)
         self._logger.debug(f"Just updated the following job:\n{self._uow.current_job}")
-        self._uow.save()
 
     def as_job(self) -> Job:
         """Returns the job object that represents the Pipeline."""

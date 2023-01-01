@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Saturday December 31st 2022 07:09:22 pm                                             #
+# Modified   : Sunday January 1st 2023 01:54:46 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,7 +22,7 @@ import logging
 
 from recsys import STATES
 from recsys.core.entity.job import Task
-from recsys.core.dal.uow import UnitOfWork
+from recsys.core.repo.uow import UnitOfWork
 from recsys.core.entity.dataset import Dataset
 
 
@@ -80,27 +80,20 @@ class Operator(ABC):
         return task
 
     def _setup(self) -> Task:
-        """Create task and write to repository."""
+        """Create task and add to current job."""
         task = self._as_task()
-        task = self._uow.task.add(task, persist=False)
-        self._logger.debug(f"Just added the following task:\n{task}")
         self._uow.current_job.add_task(task)
-        self._uow.save()
         return task
 
     def _teardown(self, task: Task) -> None:
-        """Updates the state of the Task and updates the repository."""
+        """Sets task state and updates the job object."""
         # Set task state to COMPLETE
         task.state = STATES[-1]
-        self._uow.task.update(task, persist=False)
         self._uow.current_job.update_task(task)
-        self._logger.debug(f"Just updated the following task:\n{task}")
-        self._uow.save()
 
-    def _get_dataframe(self) -> pd.DataFrame:
+    def _get_dataset(self) -> pd.DataFrame:
         """Retrieves a pandas DataFrame from the Dataset repository."""
-        dataset = self._uow.dataset.get(self._input_params.id)
-        return dataset.get_dataframe(name=dataset.name)
+        return self._uow.dataset.get(self._input_params.id)
 
     def _put_dataset(self, dataset: Dataset) -> None:
         """Stores the Dataset in the Repository."""

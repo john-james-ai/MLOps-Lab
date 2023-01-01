@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday December 30th 2022 08:35:58 pm                                               #
+# Modified   : Sunday January 1st 2023 05:20:41 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateTaskTable(SQL):
     name: str = "task"
-    sql: str = """CREATE TABLE IF NOT EXISTS task (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('Task_' || id), name TEXT NOT NULL , description TEXT, mode TEXT NOT NULL, state TEXT DEFAULT "CREATED", job_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON task(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS task (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('task_' || name || "_" || id || "_" || mode), name TEXT NOT NULL , description TEXT, mode TEXT NOT NULL, state TEXT DEFAULT "CREATED", job_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON task(name, mode);"""
     args: tuple = ()
 
 
@@ -125,6 +125,18 @@ class SelectTask(SQL):
 
 
 @dataclass
+class SelectTaskByParentId(SQL):
+    job_id: int
+    sql: str = """SELECT * FROM task WHERE job_id = ?;"""
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.args = (self.job_id,)
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
 class SelectTaskByNameMode(SQL):
     name: str
     mode: str
@@ -174,6 +186,7 @@ class TaskDML(DML):
     update: type(SQL) = UpdateTask
     select: type(SQL) = SelectTask
     select_by_name_mode: type(SQL) = SelectTaskByNameMode
+    select_by_parent_id: type(SQL) = SelectTaskByParentId
     select_all: type(SQL) = SelectAllTasks
     exists: type(SQL) = TaskExists
     delete: type(SQL) = DeleteTask

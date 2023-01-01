@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Saturday December 31st 2022 08:37:41 pm                                             #
+# Modified   : Sunday January 1st 2023 01:54:13 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,11 +22,12 @@ import sqlite3
 from dependency_injector import containers, providers  # pragma: no cover
 
 from recsys.core.services.io import IOService
-from recsys.core.dal.repo import Context, Repo
+from recsys.core.repo.context import Context
+from recsys.core.repo.entity import Repo
+from recsys.core.repo.job import JobRepo
 from recsys.core.entity.file import File
 from recsys.core.entity.dataset import Dataset, DataFrame
 from recsys.core.entity.datasource import DataSource, DataSourceURL
-from recsys.core.entity.job import Job, Task
 from recsys.core.entity.profile import Profile
 from recsys.core.dal.dao import DataFrameDAO, DatasetDAO, JobDAO, TaskDAO, ProfileDAO, FileDAO, DataSourceDAO, DataSourceURLDAO
 from recsys.core.dal.dba import DBA
@@ -94,7 +95,7 @@ class TableContainer(containers.DeclarativeContainer):
 
     task = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=TaskDDL)
 
-    profile = providers.Factory(DBA, rdb=rdb, odb=odb, dl=ProfileDDL)
+    profile = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=ProfileDDL)
 
 
 class DAOContainer(containers.DeclarativeContainer):
@@ -141,9 +142,7 @@ class RepoContainer(containers.DeclarativeContainer):
 
     datasource_url = providers.Factory(Repo, context=context, entity=DataSourceURL)
 
-    job = providers.Factory(Repo, context=context, entity=Job)
-
-    task = providers.Factory(Repo, context=context, entity=Task)
+    job = providers.Factory(JobRepo, context=context)
 
     profile = providers.Factory(Repo, context=context, entity=Profile)
 

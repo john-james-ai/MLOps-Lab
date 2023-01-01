@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 30th 2022 07:21:43 pm                                               #
-# Modified   : Saturday December 31st 2022 08:47:36 pm                                             #
+# Modified   : Sunday January 1st 2023 01:54:46 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ import logging
 
 from recsys.core.workflow.builder import Director, PipelineBuilder
 from recsys.core.workflow.pipeline import Pipeline
-from recsys.core.dal.uow import UnitOfWork
+from recsys.core.repo.uow import UnitOfWork
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -90,6 +90,7 @@ class TestBuilder:  # pragma: no cover
         pipeline.run()
 
         assert len(uow.current_job) == 3
+        logger.debug(uow.task.print())
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

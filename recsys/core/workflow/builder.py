@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 19th 2022 03:34:43 pm                                               #
-# Modified   : Saturday December 31st 2022 12:18:40 pm                                             #
+# Modified   : Sunday January 1st 2023 01:54:46 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,7 +22,7 @@ import importlib
 from types import SimpleNamespace
 import logging
 
-from recsys.core.dal.uow import UnitOfWork
+from recsys.core.repo.uow import UnitOfWork
 from .pipeline import Pipeline
 from recsys.core.services.io import IOService
 

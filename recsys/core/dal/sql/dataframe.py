@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday December 30th 2022 08:35:58 pm                                               #
+# Modified   : Sunday January 1st 2023 05:19:52 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDataFrameTable(SQL):
     name: str = "dataframe"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('DataFrame_' || id), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, size INTEGER, nrows INTEGER, ncols INTEGER, nulls INTEGER, pct_nulls REAL, parent_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON dataframe(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('dataframe_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, size INTEGER, nrows INTEGER, ncols INTEGER, nulls INTEGER, pct_nulls REAL, dataset_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON dataframe(name, mode);"""
     args: tuple = ()
 
 
@@ -71,7 +71,7 @@ class DataFrameDDL(DDL):
 @dataclass
 class InsertDataFrame(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO dataframe (name, description, datasource, mode, stage, size, nrows, ncols, nulls, pct_nulls, parent_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO dataframe (name, description, datasource, mode, stage, size, nrows, ncols, nulls, pct_nulls, dataset_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -86,7 +86,7 @@ class InsertDataFrame(SQL):
             self.dto.ncols,
             self.dto.nulls,
             self.dto.pct_nulls,
-            self.dto.parent_id,
+            self.dto.dataset_id,
             self.dto.created,
             self.dto.modified,
         )
@@ -98,7 +98,7 @@ class InsertDataFrame(SQL):
 @dataclass
 class UpdateDataFrame(SQL):
     dto: DTO
-    sql: str = """UPDATE dataframe SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, size = ?, nrows = ?, ncols = ?, nulls = ?, pct_nulls = ?, parent_id = ?, created = ?, modified = ?  WHERE id = ?;"""
+    sql: str = """UPDATE dataframe SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, size = ?, nrows = ?, ncols = ?, nulls = ?, pct_nulls = ?, dataset_id = ?, created = ?, modified = ?  WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -113,7 +113,7 @@ class UpdateDataFrame(SQL):
             self.dto.ncols,
             self.dto.nulls,
             self.dto.pct_nulls,
-            self.dto.parent_id,
+            self.dto.dataset_id,
             self.dto.created,
             self.dto.modified,
             self.dto.id,
@@ -131,6 +131,18 @@ class SelectDataFrame(SQL):
 
     def __post_init__(self) -> None:
         self.args = (self.id,)
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+@dataclass
+class SelectDataFrameByParentId(SQL):
+    dataset_id: int
+    sql: str = """SELECT * FROM dataframe WHERE dataset_id = ?;"""
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.args = (self.dataset_id,)
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -186,6 +198,7 @@ class DataFrameDML(DML):
     update: type(SQL) = UpdateDataFrame
     select: type(SQL) = SelectDataFrame
     select_by_name_mode: type(SQL) = SelectDataFrameByNameMode
+    select_by_parent_id: type(SQL) = SelectDataFrameByParentId
     select_all: type(SQL) = SelectAllDataset
     exists: type(SQL) = DataFrameExists
     delete: type(SQL) = DeleteDataFrame

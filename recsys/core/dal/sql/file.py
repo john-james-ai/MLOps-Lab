@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday December 30th 2022 08:35:58 pm                                               #
+# Modified   : Sunday January 1st 2023 02:07:25 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateFileTable(SQL):
     name: str = "file"
-    sql: str = """CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('file_' || id), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, uri TEXT NOT NULL, size INTEGER DEFAULT 0, task_id INTEGER DEFAULT 0, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON file(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('file_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, uri TEXT NOT NULL, size INTEGER DEFAULT 0, task_id INTEGER DEFAULT 0, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON file(name, mode);"""
     args: tuple = ()
 
 

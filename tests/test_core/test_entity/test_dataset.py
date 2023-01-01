@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 27th 2022 05:33:26 pm                                              #
-# Modified   : Tuesday December 27th 2022 09:27:58 pm                                              #
+# Modified   : Sunday January 1st 2023 05:18:31 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -480,7 +480,7 @@ class TestDataset:  # pragma: no cover
         assert dto.name == inspect.stack()[0][3]
         assert dto.stage == 'interim'
         assert dto.datasource == 'spotify'
-        assert dto.parent_id == 9
+        assert dto.dataset_id == 9
         assert dto.size > 0
         assert dto.nrows > 100
         assert dto.ncols > 2

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday December 31st 2022 08:47:04 pm                                             #
+# Modified   : Sunday January 1st 2023 02:49:02 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,6 +23,7 @@ from datetime import datetime
 
 from recsys.core.entity.base import Entity
 from recsys.core.dal.dto import TaskDTO, JobDTO
+from recsys import STATES
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -77,9 +78,9 @@ class Job(JobComponent):
         super().__init__(name=name, description=description, mode=mode)
 
         self._tasks = {}
-        self._state = 'CREATED'
-        self._task_count = 0
+        self._state = STATES[0]
         self._is_composite = True
+        self._task_count = 0
 
         self._validate()
 
@@ -102,11 +103,6 @@ class Job(JobComponent):
     def __len__(self) -> int:
         return len(self._tasks)
 
-    @property
-    def task_count(self) -> int:
-        self._task_count = len(self._tasks)
-        return self._task_count
-
     # -------------------------------------------------------------------------------------------- #
     @property
     def is_composite(self) -> str:
@@ -125,8 +121,8 @@ class Job(JobComponent):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def task_names(self) -> list:
-        return list(self._tasks.keys())
+    def tasks(self) -> dict:
+        return self._tasks
 
     # -------------------------------------------------------------------------------------------- #
     def create_task(self, name: str, description: str) -> JobComponent:
@@ -136,6 +132,8 @@ class Job(JobComponent):
     def add_task(self, task: JobComponent) -> None:
         self._tasks[task.name] = task
         self._modified = datetime.now()
+        self._task_count = len(self._tasks)
+        self._logger.debug(f"just added task {task.name} to {self._name}")
 
     # -------------------------------------------------------------------------------------------- #
     def get_task(self, name: str = None) -> None:
@@ -150,10 +148,13 @@ class Job(JobComponent):
     def update_task(self, task: JobComponent) -> None:
         self._tasks[task.name] = task
         self._modified = datetime.now()
+        self._task_count = len(self._tasks)
+        self._logger.debug(f"just updated task {task.name} in {self._name}")
 
     # -------------------------------------------------------------------------------------------- #
     def remove_task(self, name: str) -> None:
         del self._tasks[name]
+        self._task_count = len(self._tasks)
         self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #
@@ -198,6 +199,7 @@ class Task(JobComponent):
 
         self._parent = parent
         self._is_composite = False
+        self._state = STATES[0]
 
         self._validate()
 

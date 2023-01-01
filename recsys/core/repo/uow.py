@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/dal/uow.py                                                             #
+# Filename   : /recsys/core/repo/uow.py                                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 25th 2022 12:55:35 pm                                               #
-# Modified   : Saturday December 31st 2022 06:51:13 pm                                             #
+# Modified   : Sunday January 1st 2023 01:58:05 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,8 @@ from dependency_injector.wiring import inject, Provide
 
 from recsys.containers import RepoContainer
 from recsys.containers import Recsys
-from recsys.core.dal.repo import Repo, Context
+from recsys.core.repo.entity import Repo
+from recsys.core.repo.context import Context
 from recsys.core.entity.base import Entity
 
 

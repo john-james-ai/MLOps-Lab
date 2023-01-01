@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Saturday December 31st 2022 01:22:25 pm                                             #
+# Modified   : Sunday January 1st 2023 01:57:17 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -28,8 +28,7 @@ from recsys.core.entity.file import File
 from recsys.core.entity.dataset import DataFrame, Dataset
 from recsys.core.entity.datasource import DataSource
 from recsys.core.entity.profile import Profile
-# from recsys.core.repo.job import Job
-# from recsys.core.workflow.task import Task
+from recsys.core.entity.job import Job
 # from recsys.core.workflow.operator import NullOperator
 from recsys.core.database.relational import RDB
 from recsys.core.database.connection import SQLiteConnection
@@ -172,56 +171,23 @@ def profiles():
     return profiles
 
 
-# # ------------------------------------------------------------------------------------------------ #
-# @pytest.fixture(scope="module")
-# def tasks(dataset):
-#     tasks = []
-#     for i in range(1, 6):
-#         input_spec = Spec(
-#             entity=Dataset,
-#             name=f"input_dataset_{i}",
-#             mode='test',
-#         )
-#         output_spec = Spec(
-#             entity=Dataset,
-#             name=f"output_dataset_{i}",
-#             datasource='spotify',
-#             stage="interim",
-#             mode="test",
-#         )
-#         task = Task(
-#             name=f"task_dto_{i}",
-#             description=f"Task Description DTO {i}",
-#             stage="extract",
-#             operator=NullOperator(),
-#             input_spec=input_spec,
-#             output_spec=output_spec,
-#             job_id=i * 10,
-#         )
-#         task.id = i
-#         task.run()
-#         tasks.append(task)
-#     return tasks
-
-
-# # ------------------------------------------------------------------------------------------------ #
-# @pytest.fixture(scope="module")
-# def jobs():
-#     jobs = []
-#     for i in range(1, 6):
-#         job = Job(
-#             name=f"job_name_{i}",
-#             description=f"Description for Job # {i}",
-#             pipeline={},
-#             started=datetime.now() - timedelta(hours=i),
-#             ended=datetime.now(),
-#             duration=(datetime.now() - (datetime.now() - timedelta(hours=i))).total_seconds(),
-#             state="READY",
-#             created=datetime.now(),
-#             modified=datetime.now(),
-#         )
-#         jobs.append(job)
-#     return jobs
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def jobs():
+    jobs = []
+    for i in range(1, 6):
+        job = Job(
+            name=f"job_name_{i}",
+            description=f"Description for Job # {i}",
+            mode="test"
+        )
+        for j in range(1, 6):
+            task = job.create_task(name=f"task_{j}_job_{i}",
+                                   description=f"Description for task {j} of job {i}"
+                                   )
+            job.add_task(task)
+        jobs.append(job)
+    return jobs
 
 
 # ------------------------------------------------------------------------------------------------ #

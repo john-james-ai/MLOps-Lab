@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday December 30th 2022 08:35:58 pm                                               #
+# Modified   : Sunday January 1st 2023 05:20:58 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDataSourceURLTable(SQL):
     name: str = "datasource_url"
-    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('datasource_url_' || id), name TEXT NOT NULL, description TEXT, url TEXT NOT NULL, datasource_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON datasource_url(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('datasource_url_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, url TEXT NOT NULL, datasource_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON datasource_url(name, mode);"""
     args: tuple = ()
 
 
@@ -108,7 +108,6 @@ class UpdateDataSourceURL(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 
-
 @dataclass
 class SelectDataSourceURL(SQL):
     id: int
@@ -117,6 +116,18 @@ class SelectDataSourceURL(SQL):
 
     def __post_init__(self) -> None:
         self.args = (self.id,)
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+@dataclass
+class SelectDataSourceURLByParentId(SQL):
+    datasource_id: int
+    sql: str = """SELECT * FROM datasource_url WHERE datasource_id = ?;"""
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.args = (self.datasource_id,)
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -133,7 +144,6 @@ class SelectDataSourceURLByNameMode(SQL):
 
 
 # ------------------------------------------------------------------------------------------------ #
-
 
 @dataclass
 class SelectAllDataSourceURL(SQL):
@@ -172,6 +182,7 @@ class DataSourceURLDML(DML):
     update: type(SQL) = UpdateDataSourceURL
     select: type(SQL) = SelectDataSourceURL
     select_by_name_mode: type(SQL) = SelectDataSourceURLByNameMode
+    select_by_parent_id: type(SQL) = SelectDataSourceURLByParentId
     select_all: type(SQL) = SelectAllDataSourceURL
     exists: type(SQL) = DataSourceURLExists
     delete: type(SQL) = DeleteDataSourceURL

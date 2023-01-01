@@ -11,13 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Friday December 30th 2022 07:45:53 pm                                               #
+# Modified   : Sunday January 1st 2023 05:25:12 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Data Layer Services associated with Database construction."""
 from abc import ABC, abstractmethod
+import pandas as pd
 from collections import OrderedDict
 from typing import Dict, Tuple, List
 import logging
@@ -35,7 +36,15 @@ from recsys.core.entity.base import Entity
 
 
 class DAO(ABC):
-    """Data Access Object"""
+    """Data Access Object
+
+    Provides access to the underlying database and object storage for entities and aggregates.
+
+    Args:
+        rdb (RDB): Relational database object.
+        odb (ODB): The object database storage.
+        dml (DML): The Data Manipulation Language SQL objects.
+    """
 
     def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
         self._rdb = rdb
@@ -61,6 +70,8 @@ class DAO(ABC):
 
         Args:
             entity (Entity): Entity
+            persist (bool): Indicates whether the entity was persisted in the
+                object database
 
         Returns: entity with id set.
         """
@@ -112,19 +123,33 @@ class DAO(ABC):
         cmd = self._dml.select_all()
         rows = self._rdb.select(cmd.sql, cmd.args)
         if len(rows) > 0:
-            rows = self._rows_to_dict(rows)
-            for __, dto in rows.items():
+            for row in rows:
+                dto = self._row_to_dto(row)
                 entities[dto.id] = self._odb.read(dto.oid)
         else:
             msg = "There are no Entities in the database."
             self._logger.info(msg)
         return entities
 
+    def read_by_parent_id(self, parent: Entity) -> pd.DataFrame:
+        """Returns all table data in a pandas DataFrame."""
+        metadata = pd.DataFrame()
+        cmd = self._dml.select_by_parent_id(parent.id)
+        rows = self._rdb.select(cmd.sql, cmd.args)
+        if len(rows) > 0:
+            for row in rows:
+                dto = self._row_to_dto(row)
+                df = pd.DataFrame(data=dto.as_dict(), index=[0])
+                metadata = pd.concat([metadata, df], axis=0)
+        return metadata
+
     def update(self, entity: Entity, persist: bool = True) -> None:
         """Updates an existing entity.
 
         Args:
             dto (DTO): Data Transfer Object
+            persist (bool): Indicates whether the entity was persisted in the
+                object database
         """
         dto = entity.as_dto()
         cmd = self._dml.update(dto)
@@ -139,22 +164,26 @@ class DAO(ABC):
             id (int): id for the entity
         """
         cmd = self._dml.exists(id)
-        oid = self._get_oid(id)
-        return (self._rdb.exists(cmd.sql, cmd.args) and self._odb.exists(oid))
+        return self._rdb.exists(cmd.sql, cmd.args)
 
-    def delete(self, id: int) -> None:
+    def delete(self, id: int, persist=True) -> None:
         """Deletes a Entity from the registry, given an id.
         Args:
             id (int): The id for the entity to delete.
+            persist (bool): Indicates whether the entity was persisted in the
+                object database
         """
+        if persist:
+            entity = self.read(id)
+            try:
+                self._odb.delete(entity.oid)
+            except KeyError:
+                msg = f"Unable to delete object id {entity.id} as it does not exist."
+                self._logger.info(msg)
+                raise RuntimeWarning(msg)
+
         cmd = self._dml.delete(id)
-        oid = self._get_oid(id)
         self._rdb.delete(cmd.sql, cmd.args)
-        try:
-            self._odb.delete(oid)
-        except FileNotFoundError:
-            msg = f"Object id {oid} does not exist."
-            self._logger.info(msg)
 
     def save(self) -> None:
         """Commits the changes to the database."""
@@ -170,10 +199,6 @@ class DAO(ABC):
         return results_dict
 
     @abstractmethod
-    def _get_oid(self, id) -> str:
-        """Returns the object id for the given id and entity."""
-
-    @abstractmethod
     def _row_to_dto(self, row: Tuple) -> DTO:
         """Converts a row from the Database into a Data Transfer Object."""
 
@@ -184,10 +209,6 @@ class DAO(ABC):
 class DataFrameDAO(DAO):
     def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
         super().__init__(rdb=rdb, odb=odb, dml=dml)
-
-    def _get_oid(self, id) -> str:
-        """Returns the object id for the given id and entity."""
-        return f"dataframe_{id}"
 
     def _row_to_dto(self, row: Tuple) -> DataFrameDTO:
         try:
@@ -204,7 +225,7 @@ class DataFrameDAO(DAO):
                 ncols=row[9],
                 nulls=row[10],
                 pct_nulls=row[11],
-                parent_id=row[12],
+                dataset_id=row[12],
                 created=row[13],
                 modified=row[14],
             )
@@ -221,10 +242,6 @@ class DataFrameDAO(DAO):
 class DatasetDAO(DAO):
     def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
         super().__init__(rdb=rdb, odb=odb, dml=dml)
-
-    def _get_oid(self, id) -> str:
-        """Returns the object id for the given id and entity."""
-        return f"dataset_{id}"
 
     def _row_to_dto(self, row: Tuple) -> DataFrameDTO:
         try:
@@ -255,10 +272,6 @@ class ProfileDAO(DAO):
 
     def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
         super().__init__(rdb=rdb, odb=odb, dml=dml)
-
-    def _get_oid(self, id) -> str:
-        """Returns the object id for the given id and entity."""
-        return f"profile_{id}"
 
     def _row_to_dto(self, row: Tuple) -> ProfileDTO:
         try:
@@ -307,10 +320,6 @@ class TaskDAO(DAO):
     def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
         super().__init__(rdb=rdb, odb=odb, dml=dml)
 
-    def _get_oid(self, id) -> str:
-        """Returns the object id for the given id and entity."""
-        return f"task_{id}"
-
     def _row_to_dto(self, row: Tuple) -> TaskDTO:
         try:
             return TaskDTO(
@@ -340,10 +349,6 @@ class JobDAO(DAO):
     def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
         super().__init__(rdb=rdb, odb=odb, dml=dml)
 
-    def _get_oid(self, id) -> str:
-        """Returns the object id for the given id and entity."""
-        return f"job_{id}"
-
     def _row_to_dto(self, row: Tuple) -> JobDTO:
         try:
             return JobDTO(
@@ -371,10 +376,6 @@ class FileDAO(DAO):
 
     def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
         super().__init__(rdb=rdb, odb=odb, dml=dml)
-
-    def _get_oid(self, id) -> str:
-        """Returns the object id for the given id and entity."""
-        return f"file_{id}"
 
     def _row_to_dto(self, row: Tuple) -> FileDTO:
         try:
@@ -408,10 +409,6 @@ class DataSourceDAO(DAO):
     def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
         super().__init__(rdb=rdb, odb=odb, dml=dml)
 
-    def _get_oid(self, id) -> str:
-        """Returns the object id for the given id and entity."""
-        return f"file_{id}"
-
     def _row_to_dto(self, row: Tuple) -> FileDTO:
         try:
             return DataSourceDTO(
@@ -438,10 +435,6 @@ class DataSourceURLDAO(DAO):
 
     def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
         super().__init__(rdb=rdb, odb=odb, dml=dml)
-
-    def _get_oid(self, id) -> str:
-        """Returns the object id for the given id and entity."""
-        return f"file_{id}"
 
     def _row_to_dto(self, row: Tuple) -> FileDTO:
         try:
