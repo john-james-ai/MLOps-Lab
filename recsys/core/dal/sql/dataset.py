@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday January 1st 2023 02:08:16 am                                                 #
+# Modified   : Sunday January 1st 2023 07:17:41 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDatasetTable(SQL):
     name: str = "dataset"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('dataset_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, task_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON dataset(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('dataset_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, datasource_name TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, task_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON dataset(name, mode);"""
     args: tuple = ()
 
 
@@ -71,14 +71,14 @@ class DatasetDDL(DDL):
 @dataclass
 class InsertDataset(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO dataset (name, description, datasource, mode, stage, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO dataset (name, description, datasource_name, mode, stage, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource,
+            self.dto.datasource_name,
             self.dto.mode,
             self.dto.stage,
             self.dto.task_id,
@@ -93,14 +93,14 @@ class InsertDataset(SQL):
 @dataclass
 class UpdateDataset(SQL):
     dto: DTO
-    sql: str = """UPDATE dataset SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE dataset SET name = ?, description = ?, datasource_name = ?, mode = ?, stage = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource,
+            self.dto.datasource_name,
             self.dto.mode,
             self.dto.stage,
             self.dto.task_id,

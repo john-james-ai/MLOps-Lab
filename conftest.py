@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Sunday January 1st 2023 06:51:12 am                                                 #
+# Modified   : Sunday January 1st 2023 07:10:35 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -169,6 +169,32 @@ def profiles():
         )
         profiles.append(profile)
     return profiles
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def datasets(ratings):
+    datasets = []
+    sources = ['spotify', 'movielens25m', 'tenrec']
+    for i in range(1, 6):
+        dataset = Dataset(
+            name=f"dataset_name_{i}",
+            datasource_name=sources[i % 3],
+            description=f"Description for Dataset # {i}",
+            stage="extract",
+            mode="test",
+        )
+        for j in range(1, 6):
+            dataframe = dataset.create_dataframe(
+                name=f"dataframe_{j}_dataset_{i}",
+                data=ratings,
+                dataset=dataset,
+                description=f"Description for dataframe {j} of dataset {i}",
+                mode="test",
+            )
+            dataset.add_dataframe(dataframe)
+        datasets.append(dataset)
+    return datasets
 
 
 # ------------------------------------------------------------------------------------------------ #

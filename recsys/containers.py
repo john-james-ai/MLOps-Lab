@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Sunday January 1st 2023 05:50:20 am                                                 #
+# Modified   : Sunday January 1st 2023 07:30:07 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -26,8 +26,8 @@ from recsys.core.repo.context import Context
 from recsys.core.repo.entity import Repo
 from recsys.core.repo.job import JobRepo
 from recsys.core.repo.datasource import DataSourceRepo
+from recsys.core.repo.dataset import DatasetRepo
 from recsys.core.entity.file import File
-from recsys.core.entity.dataset import Dataset, DataFrame
 from recsys.core.entity.profile import Profile
 from recsys.core.dal.dao import DataFrameDAO, DatasetDAO, JobDAO, TaskDAO, ProfileDAO, FileDAO, DataSourceDAO, DataSourceURLDAO
 from recsys.core.dal.dba import DBA
@@ -132,9 +132,7 @@ class RepoContainer(containers.DeclarativeContainer):
 
     context = providers.Dependency()
 
-    dataset = providers.Factory(Repo, context=context, entity=Dataset)
-
-    dataframe = providers.Factory(Repo, context=context, entity=DataFrame)
+    dataset = providers.Factory(DatasetRepo, context=context)
 
     file = providers.Factory(Repo, context=context, entity=File)
 

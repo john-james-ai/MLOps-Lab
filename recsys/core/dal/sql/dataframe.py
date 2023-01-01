@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday January 1st 2023 05:19:52 am                                                 #
+# Modified   : Sunday January 1st 2023 07:18:16 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDataFrameTable(SQL):
     name: str = "dataframe"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('dataframe_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, size INTEGER, nrows INTEGER, ncols INTEGER, nulls INTEGER, pct_nulls REAL, dataset_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON dataframe(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('dataframe_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, datasource_name TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, size INTEGER, nrows INTEGER, ncols INTEGER, nulls INTEGER, pct_nulls REAL, dataset_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON dataframe(name, mode);"""
     args: tuple = ()
 
 
@@ -71,14 +71,14 @@ class DataFrameDDL(DDL):
 @dataclass
 class InsertDataFrame(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO dataframe (name, description, datasource, mode, stage, size, nrows, ncols, nulls, pct_nulls, dataset_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO dataframe (name, description, datasource_name, mode, stage, size, nrows, ncols, nulls, pct_nulls, dataset_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource,
+            self.dto.datasource_name,
             self.dto.mode,
             self.dto.stage,
             self.dto.size,
@@ -98,14 +98,14 @@ class InsertDataFrame(SQL):
 @dataclass
 class UpdateDataFrame(SQL):
     dto: DTO
-    sql: str = """UPDATE dataframe SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, size = ?, nrows = ?, ncols = ?, nulls = ?, pct_nulls = ?, dataset_id = ?, created = ?, modified = ?  WHERE id = ?;"""
+    sql: str = """UPDATE dataframe SET name = ?, description = ?, datasource_name = ?, mode = ?, stage = ?, size = ?, nrows = ?, ncols = ?, nulls = ?, pct_nulls = ?, dataset_id = ?, created = ?, modified = ?  WHERE id = ?;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource,
+            self.dto.datasource_name,
             self.dto.mode,
             self.dto.stage,
             self.dto.size,
