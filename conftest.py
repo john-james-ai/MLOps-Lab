@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Sunday January 1st 2023 07:10:35 am                                                 #
+# Modified   : Sunday January 1st 2023 02:27:54 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -85,12 +85,14 @@ def datasource(ratings):
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
 def file():
+
     file = File(
         name="test_file",
         description="Test File Description",
         datasource="movielens25m",
         stage="extract",
         uri="tests/data/movielens25m/raw/ratings.pkl",
+        mode="test",
         task_id=55,
     )
     return file
@@ -100,14 +102,16 @@ def file():
 @pytest.fixture(scope="function")
 def files():
     files = []
+    sources = ['spotify', 'movielens25m', 'tenrec']
     for i in range(1, 6):
         file = File(
             name=f"file_{i}",
             description=f"Test File Description {i}",
-            datasource="movielens25m",
+            datasource=sources[i % 3],
             stage="extract",
             uri="tests/data/movielens25m/raw/ratings.pkl",
             task_id=i + 22,
+            mode='test',
         )
         files.append(file)
     return files

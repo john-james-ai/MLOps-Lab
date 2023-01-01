@@ -11,12 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Saturday December 31st 2022 11:37:26 pm                                             #
+# Modified   : Sunday January 1st 2023 03:02:59 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Entity Repository. Serves as generic repository supporting basic CRUD functionality."""
+import pandas as pd
 
 from recsys.core.entity.base import Entity
 from .base import RepoABC
@@ -71,7 +72,13 @@ class Repo(RepoABC):
 
     def print(self) -> None:
         """Prints the repository contents as a DataFrame."""
+        df = pd.DataFrame()
         entities = self.get_all()
-        for id, entity in entities.items():
-            print("\n")
-            print(entity)
+        for entity in entities.values():
+            data = entity.as_dto().as_dict()
+            entity_df = pd.DataFrame(data=data, index=[entity.id])
+            df = pd.concat([df, entity_df], axis=0)
+        print(120 * "=")
+        print(40 * " ", f"\t\t{self._entity.__name__} Repository")
+        print(120 * "_")
+        print(df)

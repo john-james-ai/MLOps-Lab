@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Sunday January 1st 2023 06:59:04 am                                                 #
+# Modified   : Sunday January 1st 2023 03:06:15 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -88,6 +88,8 @@ class DatasetRepo(RepoABC):
         for name, entity in entities.items():
             print("\n\n")
             print(entity)
-            print("\n")
+            print(120 * "=")
+            print(50 * " ", "DataFrames")
+            print(120 * "_")
             dataframes = self._dataframe_dao.read_by_parent_id(parent=entity)
             print(dataframes)

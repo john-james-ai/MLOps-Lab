@@ -11,13 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Friday December 30th 2022 07:45:53 pm                                               #
+# Modified   : Sunday January 1st 2023 02:37:06 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """File Entity Module"""
 import os
+from datetime import datetime
 
 from recsys.core.entity.base import Entity
 from recsys.core.dal.dto import FileDTO
@@ -95,11 +96,6 @@ class File(Entity):
     def uri(self) -> str:
         return self._uri
 
-    @uri.setter
-    def uri(self, uri: str) -> None:
-        self._uri = uri
-        self._set_metadata()
-
     # -------------------------------------------------------------------------------------------- #
     @property
     def size(self) -> int:
@@ -109,6 +105,11 @@ class File(Entity):
     @property
     def task_id(self) -> int:
         return self._task_id
+
+    @task_id.setter
+    def task_id(self, task_id: int) -> None:
+        self._task_id = task_id
+        self._modified = datetime.now()
 
     # ------------------------------------------------------------------------------------------------ #
     def as_dto(self) -> FileDTO:
