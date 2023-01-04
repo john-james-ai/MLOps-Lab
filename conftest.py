@@ -11,34 +11,35 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Sunday January 1st 2023 02:27:54 pm                                                 #
+# Modified   : Tuesday January 3rd 2023 06:54:55 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+import os
+import dotenv
 import pytest
-import sqlite3
 from datetime import datetime
+import pymysql
 
 import recsys
 from recsys.containers import Recsys
 from recsys.core.services.io import IOService
-# from recsys.core.entity.base import Spec
 from recsys.core.entity.file import File
 from recsys.core.entity.dataset import DataFrame, Dataset
 from recsys.core.entity.datasource import DataSource
 from recsys.core.entity.profile import Profile
 from recsys.core.entity.job import Job
-# from recsys.core.workflow.operator import NullOperator
-from recsys.core.database.relational import RDB
-from recsys.core.database.connection import SQLiteConnection
+from recsys.core.database.relational import Database, MySQLConnection
+
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
 RATINGS_FILEPATH = "tests/data/movielens25m/raw/ratings.pkl"
 DATA_SOURCE_FILEPATH = "tests/data/datasources.xlsx"
 JOB_CONFIG_FILEPATH = "recsys/data/movielens25m/config.yml"
 
-
+# ------------------------------------------------------------------------------------------------ #
+collect_ignore_glob = ["*er.py"]
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -58,13 +59,19 @@ def ratings():
 
 @pytest.fixture(scope="module")
 def connection():
-    return SQLiteConnection(connector=sqlite3.connect, location=TEST_LOCATION)
+    dotenv.load_dotenv()
+    return MySQLConnection(connector=pymysql.connect,
+                           host=os.getenv("MYSQL_HOST"),
+                           user=os.getenv("MYSQL_USER"),
+                           password=os.getenv("MYSQL_PASSWORD"),
+                           database=os.getenv("MYSQL_DATABASE"),
+                           )
 
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
 def database(connection):
-    return RDB(connection=connection)
+    return Database(connection=connection)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -102,12 +109,11 @@ def file():
 @pytest.fixture(scope="function")
 def files():
     files = []
-    sources = ['spotify', 'movielens25m', 'tenrec']
     for i in range(1, 6):
         file = File(
             name=f"file_{i}",
             description=f"Test File Description {i}",
-            datasource=sources[i % 3],
+            datasource_id=i % 3,
             stage="extract",
             uri="tests/data/movielens25m/raw/ratings.pkl",
             task_id=i + 22,

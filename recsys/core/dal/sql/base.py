@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 02:57:58 am                                               #
-# Modified   : Friday December 16th 2022 03:11:35 am                                               #
+# Modified   : Monday January 2nd 2023 08:45:12 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -39,7 +39,6 @@ class DDL(ABC):  # pragma: no cover
 
     create: SQL
     drop: SQL
-    exists: SQL
 
 
 # ------------------------------------------------------------------------------------------------ #

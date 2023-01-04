@@ -3,10 +3,6 @@
 [![PyPI](https://img.shields.io/pypi/v/recsys?style=flat-square)](https://pypi.python.org/pypi/recsys/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/recsys?style=flat-square)](https://pypi.python.org/pypi/recsys/)
 [![PyPI - License](https://img.shields.io/pypi/l/recsys?style=flat-square)](https://pypi.python.org/pypi/recsys/)
-[![Coookiecutter - Wolt](https://img.shields.io/badge/cookiecutter-Wolt-00c2e8?style=flat-square&logo=cookiecutter&logoColor=D4AA00&link=https://github.com/woltapp/wolt-python-package-cookiecutter)](https://github.com/woltapp/wolt-python-package-cookiecutter)
-
-
----
 
 **Documentation**: [https://john-james-ai.github.io/recsys](https://john-james-ai.github.io/recsys)
 
@@ -16,7 +12,7 @@
 
 ---
 
-Recommender Systems from recsys.collaborative Filtering to Deep Learning State-of-the-Art
+Recommender Systems from Collaborative Filtering to Deep Learning State-of-the-Art
 
 ## Installation
 
@@ -86,7 +82,3 @@ Or if you want e.g. want to run all checks manually for all files:
 ```sh
 pre-commit run --all-files
 ```
-
----
-
-This project was generated using the [wolt-python-package-cookiecutter](https://github.com/woltapp/wolt-python-package-cookiecutter) template.

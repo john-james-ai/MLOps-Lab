@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Thursday December 29th 2022 08:43:00 pm                                             #
+# Modified   : Monday January 2nd 2023 10:42:17 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -45,8 +45,8 @@ class TestFileDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         ts = container.table.file()
         ts.reset()
-        odb = container.data.odb()
-        odb.reset()
+        object_db = container.data.object_db()
+        object_db.reset()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

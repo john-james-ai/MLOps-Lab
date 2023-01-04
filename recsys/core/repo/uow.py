@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 25th 2022 12:55:35 pm                                               #
-# Modified   : Sunday January 1st 2023 01:58:05 am                                                 #
+# Modified   : Sunday January 1st 2023 03:21:37 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -35,13 +35,18 @@ class UnitOfWorkAbstract(ABC):
 
     @property
     @abstractmethod
-    def datasource(self) -> Repo:
-        """Returns an instantiated datasource repossitory."""
+    def current_job(self) -> Entity:
+        """Returns the current job"""
+
+    @abstractmethod
+    @current_job.setter
+    def current_job(self, job: Entity) -> None:
+        """Sets the current job for the unit of work."""
 
     @property
     @abstractmethod
-    def datasource_url(self) -> Repo:
-        """Returns an instantiated datasource_url repossitory."""
+    def datasource(self) -> Repo:
+        """Returns an instantiated datasource repossitory."""
 
     @property
     @abstractmethod
@@ -55,18 +60,8 @@ class UnitOfWorkAbstract(ABC):
 
     @property
     @abstractmethod
-    def dataframe(self) -> Repo:
-        """Returns an instantiated dataframe repossitory."""
-
-    @property
-    @abstractmethod
     def job(self) -> Repo:
         """Returns an instantiated Job repossitory."""
-
-    @property
-    @abstractmethod
-    def task(self) -> Repo:
-        """Returns an instantiated Task repossitory."""
 
     @property
     @abstractmethod
@@ -118,24 +113,12 @@ class UnitOfWork(UnitOfWorkAbstract):
         return self._repos.datasource()
 
     @property
-    def datasource_url(self) -> Repo:
-        return self._repos.datasource_url()
-
-    @property
     def dataset(self) -> Repo:
         return self._repos.dataset()
 
     @property
-    def dataframe(self) -> Repo:
-        return self._repos.dataframe()
-
-    @property
     def job(self) -> Repo:
         return self._repos.job()
-
-    @property
-    def task(self) -> Repo:
-        return self._repos.task()
 
     @property
     def profile(self) -> Repo:

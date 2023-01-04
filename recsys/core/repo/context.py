@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 10:51:29 pm                                             #
-# Modified   : Saturday December 31st 2022 11:12:53 pm                                             #
+# Modified   : Tuesday January 3rd 2023 03:20:05 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -29,7 +29,7 @@ from recsys.core.entity.profile import Profile
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                        CONTEXT                                                   #
+#                                        CONVARCHAR(64)                                                   #
 # ------------------------------------------------------------------------------------------------ #
 class Context:
 

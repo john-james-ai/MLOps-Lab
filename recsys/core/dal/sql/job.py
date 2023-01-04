@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday January 1st 2023 02:07:09 am                                                 #
+# Modified   : Tuesday January 3rd 2023 05:21:24 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateJobTable(SQL):
     name: str = "job"
-    sql: str = """CREATE TABLE IF NOT EXISTS job (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('job_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, mode TEXT NOT NULL, state TEXT DEFAULT "CREATED", created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON job(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS job (id MEDIUMINT PRIMARY KEY, oid VARCHAR(64) GENERATED ALWAYS AS CONCAT('job_', name, "_", id, "_", mode), name VARCHAR(64) NOT NULL, description VARCHAR(64), mode VARCHAR(64) NOT NULL, state VARCHAR(64) DEFAULT "CREATED", created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
 
 
@@ -49,11 +49,8 @@ class DropJobTable(SQL):
 @dataclass
 class JobTableExists(SQL):
     name: str = "job"
-    sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
+    sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'job';"""
     args: tuple = ()
-
-    def __post_init__(self) -> None:
-        self.args = (self.name,)
 
 
 # ------------------------------------------------------------------------------------------------ #

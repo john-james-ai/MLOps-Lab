@@ -11,142 +11,224 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Saturday December 31st 2022 08:04:51 pm                                             #
+# Modified   : Tuesday January 3rd 2023 02:14:29 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Object persistence module"""
 import os
-import dotenv
+import shelve
+from glob import glob
+from mysql.connector import errors
 
-from .connection import Connection
-from recsys.core.services.base import Service
+from .base import AbstractConnection, AbstractDatabase
 from recsys.core.entity.base import Entity
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                             OBJECT DATABASE (PSEUDO) CONNECTION                                  #
+# ------------------------------------------------------------------------------------------------ #
+class ObjectDBConnection(AbstractConnection):
+    """Creates an object datastore at the designated directory location.
+
+    Args:
+        location (str): The path and filename for the data store. The base of the path is
+            the database name by convention.
+    """
+
+    def __init__(self, location: str) -> None:
+        super().__init__()
+        self._location = location
+        self._connection = None
+        self._is_connected = False
+        self._in_transaction = False
+
+        os.makedirs(os.path.dirname(self._location), exist_ok=True)
+        self._connection = shelve.open(self._location, writeback=True)
+        self._is_connected = True
+        self._logger.debug(f"{self.__class__.__name__} is open.")
+
+    @property
+    def database(self) -> str:
+        """Returns the path of the underlying database."""
+        return self._location
+
+    @property
+    def is_connected(self) -> bool:
+        return self._is_connected
+
+    @property
+    def in_transaction(self) -> bool:
+        return self._in_transaction
+
+    @property
+    def cursor(self) -> shelve:
+        return self._connection
+
+    @cursor.setter
+    def cursor(self, cursor: shelve) -> None:
+        self._connection = cursor
+
+    def begin(self) -> None:
+        """Starts a transaction."""
+        self._in_transaction = True
+
+    def close(self) -> None:
+        """Closes the current connection."""
+        if self._connection is not None:
+            self._connection.close()
+            self._connection = None
+            self._is_connected = False
+            self._in_transaction = False
+            self._logger.debug(f"{self.__class__.__name__} is closed.")
+        else:
+            msg = f"{self.__class__.__name__} is already closed."
+            self._logger.warning(msg)
+            raise errors.ProgrammingError(msg)
+
+    def commit(self) -> None:
+        """Commits data to the underlying database."""
+        self._in_transaction = False
+        if self._connection is not None:
+            self._connection.sync()
+            self._logger.debug(f"{self.__class__.__name__} is committed.")
+        else:
+            self._logger.error(f"{self.__class__.__name__} is closed. Nothing to commit.")
+
+    def rollback(self) -> None:  # pragma: no cover
+        """Rollsback changes made to the database since last commit."""
+        raise NotImplementedError()
+
+    def delete(self) -> None:
+        go = input("This will permanently delete object storage. Continue? (y/n)")
+        if 'y' in go.lower():
+            locations = self._location + ".*"
+            for f in glob(locations):
+                os.remove(f)
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                     OBJECT DATABASE                                              #
 # ------------------------------------------------------------------------------------------------ #
-class ODB(Service):
+class ObjectDB(AbstractDatabase):
     """Manages object persistence."""
-    def __init__(self, connection: Connection) -> None:
+    def __init__(self, connection: AbstractConnection) -> None:
         super().__init__()
         self._connection = connection
 
-    def __enter__(self):
-        if not self._connection.is_connected():
-            self._connection.connect()
-        return self
-
-    def __exit__(self, ext_type, exc_value, traceback):
-        if isinstance(exc_value, Exception):
-            self._connection.rollback()
-        else:
-            self._connection.commit()
-        self._connection.close()
-
-    def __del__(self):  # pragma: no cover
-        if self._connection.is_connected():
-            self._connection.close()
-
-    def __len__(self) -> int:
-        if not self._connection.is_connected():
-            self._connection.connect()
-        cursor = self._connection.cursor()
-        return len(cursor.keys())
+    @property
+    def connection(self) -> AbstractConnection:
+        return self._connection
 
     # -------------------------------------------------------------------------------------------- #
-    def create(self, entity: Entity) -> None:
-        """Persists a new entity into the object database.
+    def query(self, oid: str) -> Entity:
+        """Executes a query on the database."""
+        return self._connection.cursor[oid]
 
-        Args:
-            entity (Entity): The entity to persist
-        """
-        if not self.exists(entity.oid):
-            cache = self._connection.cache
-            cache[entity.oid] = entity
-            self._connection.cache = cache
-            self._connection.commit()
-        else:
-            msg = f"Object {entity.oid} already exists."
+    # -------------------------------------------------------------------------------------------- #
+    def begin(self) -> None:
+        self._connection.begin()
+
+    # -------------------------------------------------------------------------------------------- #
+    def create(self, location: str) -> None:
+        """Creates an object storage database in the designated location."""
+        return ObjectDBConnection(location)
+
+    # -------------------------------------------------------------------------------------------- #
+    def insert(self, entity: Entity) -> None:
+        """Inserts an entity into object storage if it doesn't already exist."""
+        cursor = self._connection.cursor
+        if entity.oid in cursor.keys():
+            msg = f"Unable to insert entity oid: {entity.oid}. The entity already exists."
             self._logger.error(msg)
             raise FileExistsError(msg)
+        else:
+            cursor[entity.oid] = entity
+            self._connection.cursor = cursor
+            self._logger.debug(f"{self.__class__.__name__} inserted {entity.__class__.__name__}.{entity.name}.")
+            if not self._connection.in_transaction:
+                self._connection.commit()
 
     # -------------------------------------------------------------------------------------------- #
-    def read(self, oid: str) -> Entity:
-        """Reads an Entity from the Database
-
-        Args:
-            oid (str): Object Id comprised of <classname>_<id> in lower case.
-        """
+    def selectone(self, oid: str) -> Entity:
+        """Performs a select query returning a single instance or row."""
         try:
-            self._check_connection()
-            cursor = self._connection.cursor()
-            return cursor[oid]
+            return self._connection.cursor[oid]
         except KeyError:
-            msg = f"Object with object_id = {oid} does not exist."
+            msg = f"No entity with oid = {oid} exists in the database."
+            self._logger.error(msg)
+            raise FileNotFoundError(msg)
+        except AttributeError:  # pragma: no cover
+            msg = f"No entity with oid = {oid} exists in the database."
             self._logger.error(msg)
             raise FileNotFoundError(msg)
 
     # -------------------------------------------------------------------------------------------- #
-    def update(self, entity: Entity) -> None:
-        """Updates an existing entity.
-
-        Args:
-            entity (Entity): The entity to update
-        """
-        if self.exists(entity.oid):
-            cache = self._connection.cache
-            cache[entity.oid] = entity
-            self._connection.cache = cache
-            self._connection.commit()
+    def selectall(self, keys: list = None) -> dict:
+        """Performs a select query returning one or multiple instances."""
+        result = {}
+        cursor = self._connection.cursor
+        if keys is not None:
+            for key in keys:
+                try:
+                    result[key] = cursor[key]
+                except KeyError:
+                    msg = f"No object with oid = {key} was found in object storage."
+                    self._logger.error(msg)
         else:
-            msg = f"Object with object_id = {entity.oid} does not exist."
+            for oid, entity in cursor.items():
+                result[oid] = entity
+        return result
+
+    # -------------------------------------------------------------------------------------------- #`
+    def update(self, entity: Entity) -> None:
+        """Performs an update on existing data in the database."""
+        cursor = self._connection.cursor
+        try:
+            if entity.oid in cursor.keys():
+                cursor[entity.oid] = entity
+                self._connection.cursor = cursor
+                self._logger.debug(f"{self.__class__.__name__} updated {entity.__class__.__name__}.{entity.name}.")
+                if not self._connection.in_transaction:
+                    self._connection.commit()
+            else:
+                msg = f"No object oid = {entity.oid} was found in object storage. Try inserting instead."
+                self._logger.error(msg)
+                raise FileNotFoundError(msg)
+        except AttributeError:  # pragma: no cover
+            msg = f"No object oid = {entity.oid} was found in object storage. Try inserting instead."
             self._logger.error(msg)
             raise FileNotFoundError(msg)
 
     # -------------------------------------------------------------------------------------------- #
     def delete(self, oid: str) -> None:
-        """Deletes an object from the database.
-
-        Args:
-            oid (str): Object Id = <classname>_<id> lowercase.
-        """
-        if self.exists(oid):
-            cache = self._connection.cache
-            cache[oid] = None
-            self._connection.cache = cache
-        else:
-            msg = f"Object with object_id = {oid} does not exist."
+        """Deletes existing data from the database."""
+        cursor = self._connection.cursor
+        try:
+            del cursor[oid]
+            self._connection.cursor = cursor
+            self._logger.debug(f"{self.__class__.__name__} deleted entity identified by oid = {oid}.")
+            if not self._connection.in_transaction:
+                self._connection.commit()
+        except KeyError:
+            msg = f"No object oid = {oid} was found in object storage."
             self._logger.error(msg)
             raise FileNotFoundError(msg)
 
     # -------------------------------------------------------------------------------------------- #
-    def reset(self) -> bool:
-        if not self._is_test_mode():
-            go = input("This will permanently delete the object database. Are you SURE? (y/n) ")
-            if 'y' in go.lower():
-                self._connection.reset()
-        else:
-            self._connection.reset()
+    def drop(self) -> None:
+        self._connection.delete()
 
     # -------------------------------------------------------------------------------------------- #
     def exists(self, oid: str) -> bool:
-        self._check_connection()
-        cursor = self._connection.cursor()
-        return oid in cursor.keys()
+        """Returns True if the data specified by the parameters exists. Returns False otherwise."""
+        try:
+            return oid in self._connection.cursor.keys()
+        except AttributeError:
+            return False
 
     # -------------------------------------------------------------------------------------------- #
     def save(self) -> None:
+        """Saves changes to the database."""
         self._connection.commit()
-
-    # -------------------------------------------------------------------------------------------- #
-    def _check_connection(self) -> None:
-        if not self._connection.is_connected():
-            self._connection.connect()
-
-    # -------------------------------------------------------------------------------------------- #
-    def _is_test_mode(self) -> bool:
-        dotenv.load_dotenv()
-        return os.getenv("MODE") == "test"

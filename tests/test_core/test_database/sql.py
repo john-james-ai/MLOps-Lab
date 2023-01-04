@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:09:28 am                                              #
-# Modified   : Sunday December 25th 2022 09:38:07 am                                               #
+# Modified   : Tuesday January 3rd 2023 03:21:21 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ from dataclasses import dataclass
 
 @dataclass
 class CreateTestTable:
-    sql: str = """CREATE TABLE IF NOT EXISTS test_table ( id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, description TEXT NOT NULL);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS test_table ( id MEDIUMINT PRIMARY KEY, name VARCHAR(64) NOT NULL UNIQUE, description VARCHAR(64) NOT NULL);"""
     args: tuple = ()
 
 

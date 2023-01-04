@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# DataSourcename   : /recsys/core/dal/sql/datasource.py                                                        #
+# DataSourcename   : /recsys/core/dal/sql/datasource.py                                            #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday January 1st 2023 06:38:01 am                                                 #
+# Modified   : Tuesday January 3rd 2023 05:21:32 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDataSourceTable(SQL):
     name: str = "datasource"
-    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('datasource_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, website TEXT NOT NULL, mode TEXT NOT NULL DEFAULT 'prod', created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON datasource(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id MEDIUMINT PRIMARY KEY, oid VARCHAR(64) GENERATED ALWAYS AS CONCAT('datasource_', name, "_", id, "_", mode), name VARCHAR(64) NOT NULL, description VARCHAR(64), website VARCHAR(255) NOT NULL, mode VARCHAR(64) NOT NULL DEFAULT 'prod', created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
 
 
@@ -48,11 +48,8 @@ class DropDataSourceTable(SQL):
 @dataclass
 class DataSourceTableExists(SQL):
     name: str = "datasource"
-    sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
+    sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'datasource';"""
     args: tuple = ()
-
-    def __post_init__(self) -> None:
-        self.args = (self.name,)
 
 
 # ------------------------------------------------------------------------------------------------ #

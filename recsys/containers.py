@@ -11,37 +11,31 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Sunday January 1st 2023 07:30:07 am                                                 #
+# Modified   : Tuesday January 3rd 2023 06:03:29 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+import os
 import logging.config  # pragma: no cover
-import sqlite3
+import pymysql
+import dotenv
 
 from dependency_injector import containers, providers  # pragma: no cover
 
 from recsys.core.services.io import IOService
-from recsys.core.repo.context import Context
-from recsys.core.repo.entity import Repo
-from recsys.core.repo.job import JobRepo
-from recsys.core.repo.datasource import DataSourceRepo
-from recsys.core.repo.dataset import DatasetRepo
-from recsys.core.entity.file import File
-from recsys.core.entity.profile import Profile
-from recsys.core.dal.dao import DataFrameDAO, DatasetDAO, JobDAO, TaskDAO, ProfileDAO, FileDAO, DataSourceDAO, DataSourceURLDAO
 from recsys.core.dal.dba import DBA
-from recsys.core.dal.sql.datasource import DataSourceDDL, DataSourceDML
-from recsys.core.dal.sql.datasource_url import DataSourceURLDDL, DataSourceURLDML
-from recsys.core.dal.sql.file import FileDDL, FileDML
-from recsys.core.dal.sql.dataframe import DataFrameDDL, DataFrameDML
-from recsys.core.dal.sql.dataset import DatasetDDL, DatasetDML
-from recsys.core.dal.sql.job import JobDDL, JobDML
-from recsys.core.dal.sql.profile import ProfileDDL, ProfileDML
-from recsys.core.dal.sql.task import TaskDDL, TaskDML
-from recsys.core.database.relational import RDB
-from recsys.core.database.object import ODB
-from recsys.core.database.connection import SQLiteConnection, ODBConnection
+from recsys.core.dal.sql.database import DatabaseDDL
+from recsys.core.dal.sql.file import FileDDL
+from recsys.core.dal.sql.datasource import DataSourceDDL
+from recsys.core.dal.sql.datasource_url import DataSourceURLDDL
+from recsys.core.dal.sql.dataset import DatasetDDL
+from recsys.core.dal.sql.dataframe import DataFrameDDL
+from recsys.core.dal.sql.job import JobDDL
+from recsys.core.dal.sql.task import TaskDDL
+from recsys.core.dal.sql.profile import ProfileDDL
+from recsys.core.database.relational import Database, MySQLConnection
+from recsys.core.database.object import ObjectDBConnection, ObjectDB
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -57,104 +51,97 @@ class CoreContainer(containers.DeclarativeContainer):
     io = providers.Singleton(IOService)
 
 
-class DataLayerContainer(containers.DeclarativeContainer):
+# ------------------------------------------------------------------------------------------------ #
+class ConnectionContainer(containers.DeclarativeContainer):
 
     config = providers.Configuration()
 
-    rdb_connection = providers.Factory(
-        SQLiteConnection,
-        connector=sqlite3.connect,
-        location=config.database.sqlite.location,
+    recsys_connection = providers.Factory(
+        MySQLConnection,
+        pymysql.connect,
+        host=config.database.host,
+        user=config.database.user,
+        password=config.database.password,
+        database=config.database.dbname
     )
 
-    odb_connection = providers.Factory(
-        ODBConnection,
-        dbfile=config.database.shelve.location,
+    object_db_connection = providers.Factory(
+        ObjectDBConnection,
+        location=config.database.shelve.location,
     )
 
-    rdb = providers.Factory(RDB, connection=rdb_connection)
-    odb = providers.Factory(ODB, connection=odb_connection)
+
+# ------------------------------------------------------------------------------------------------ #
+class DatabaseContainer(containers.DeclarativeContainer):
+
+    recsys_connection = providers.Dependency()
+    object_db_connection = providers.Dependency()
+
+    recsys = providers.Factory(
+        Database,
+        connection=recsys_connection
+    )
+
+    object_db = providers.Factory(
+        ObjectDB,
+        connection=object_db_connection
+    )
 
 
-class TableContainer(containers.DeclarativeContainer):
+# ------------------------------------------------------------------------------------------------ #
+class DBAContainer(containers.DeclarativeContainer):
 
-    rdb = providers.Dependency()
-    odb = providers.Dependency()
+    recsys = providers.Dependency()
+    object_db = providers.Dependency()
 
-    file = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=FileDDL)
+    database = providers.Factory(DBA, database=recsys, object_db=object_db, ddl=DatabaseDDL)
 
-    datasource = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=DataSourceDDL)
+    file = providers.Factory(DBA, database=recsys, object_db=object_db, ddl=FileDDL)
 
-    datasource_url = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=DataSourceURLDDL)
+    datasource = providers.Factory(DBA, database=recsys, object_db=object_db, ddl=DataSourceDDL)
 
-    dataframe = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=DataFrameDDL)
+    datasource_url = providers.Factory(DBA, database=recsys, object_db=object_db, ddl=DataSourceURLDDL)
 
-    dataset = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=DatasetDDL)
+    dataframe = providers.Factory(DBA, database=recsys, object_db=object_db, ddl=DataFrameDDL)
 
-    job = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=JobDDL)
+    dataset = providers.Factory(DBA, database=recsys, object_db=object_db, ddl=DatasetDDL)
 
-    task = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=TaskDDL)
+    job = providers.Factory(DBA, database=recsys, object_db=object_db, ddl=JobDDL)
 
-    profile = providers.Factory(DBA, rdb=rdb, odb=odb, ddl=ProfileDDL)
+    task = providers.Factory(DBA, database=recsys, object_db=object_db, ddl=TaskDDL)
 
-
-class DAOContainer(containers.DeclarativeContainer):
-
-    rdb = providers.Dependency()
-
-    odb = providers.Dependency()
-
-    file = providers.Factory(FileDAO, rdb=rdb, odb=odb, dml=FileDML)
-
-    datasource = providers.Factory(DataSourceDAO, rdb=rdb, odb=odb, dml=DataSourceDML)
-
-    datasource_url = providers.Factory(DataSourceURLDAO, rdb=rdb, odb=odb, dml=DataSourceURLDML)
-
-    dataframe = providers.Factory(DataFrameDAO, rdb=rdb, odb=odb, dml=DataFrameDML)
-
-    dataset = providers.Factory(DatasetDAO, rdb=rdb, odb=odb, dml=DatasetDML)
-
-    job = providers.Factory(JobDAO, rdb=rdb, odb=odb, dml=JobDML)
-
-    task = providers.Factory(TaskDAO, rdb=rdb, odb=odb, dml=TaskDML)
-
-    profile = providers.Factory(ProfileDAO, rdb=rdb, odb=odb, dml=ProfileDML)
+    profile = providers.Factory(DBA, database=recsys, object_db=object_db, ddl=ProfileDDL)
 
 
-class ContextContainer(containers.DeclarativeContainer):
-
-    dao = providers.Dependency()
-
-    context = providers.Factory(Context, dao=dao)
-
-
-class RepoContainer(containers.DeclarativeContainer):
-
-    context = providers.Dependency()
-
-    dataset = providers.Factory(DatasetRepo, context=context)
-
-    file = providers.Factory(Repo, context=context, entity=File)
-
-    datasource = providers.Factory(DataSourceRepo, context=context)
-
-    job = providers.Factory(JobRepo, context=context)
-
-    profile = providers.Factory(Repo, context=context, entity=Profile)
-
-
+# ------------------------------------------------------------------------------------------------ #
 class Recsys(containers.DeclarativeContainer):
 
-    config = providers.Configuration(yaml_files=["config.yml"])
+    dotenv.load_dotenv()
+    mode = os.getenv("MODE")
+    logging_config_filepath = os.path.join('config', mode, "logging.yml")
+    database_config_filepath = os.path.join('config', mode, "database.yml")
 
-    core = providers.Container(CoreContainer, config=config.test.core)  # substitute test for the mode (prod, dev) of interest
+    os.environ["HOST"] = os.getenv("MYSQL_HOST")
+    os.environ["USER"] = os.getenv("MYSQL_USER")
+    os.environ["PASSWORD"] = os.getenv("MYSQL_PASSWORD")
+    os.environ["DATABASE"] = os.getenv("MYSQL_DATABASE")
 
-    data = providers.Container(DataLayerContainer, config=config.test.data)
+    config = providers.Configuration(yaml_files=[logging_config_filepath, database_config_filepath])
+    config.database.host.from_env("HOST")
+    config.database.user.from_env("USER")
+    config.database.password.from_env("PASSWORD")
+    config.database.dbname.from_env("DATABASE")
 
-    table = providers.Container(TableContainer, rdb=data.rdb, odb=data.odb)
+    core = providers.Container(CoreContainer, config=config)
 
-    dao = providers.Container(DAOContainer, rdb=data.rdb, odb=data.odb)
+    connection = providers.Container(ConnectionContainer, config=config)
 
-    context = providers.Container(ContextContainer, dao=dao)
+    database = providers.Container(DatabaseContainer,
+                                   recsys_connection=connection.recsys_connection,
+                                   object_db_connection=connection.object_db_connection
+                                   )
 
-    repos = providers.Container(RepoContainer, context=context.context)
+    dba = providers.Container(DBAContainer,
+                              recsys=database.recsys,
+                              object_db=database.object_db,
+                              )

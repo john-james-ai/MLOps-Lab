@@ -10,90 +10,87 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday December 3rd 2022 07:39:50 am                                              #
-# Modified   : Saturday December 24th 2022 02:48:18 pm                                             #
+# Created    : Tuesday January 3rd 2023 03:04:52 pm                                                #
+# Modified   : Tuesday January 3rd 2023 08:00:31 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
-# Copyright  : (c) 2022 John James                                                                 #
+# Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
-import os
-import sqlite3
 import inspect
 from datetime import datetime
 import pytest
 import logging
 
-from .sql import (
-    CreateTestTable,
-    DropTestTable,
-    TestTableExists,
-    InsertTest,
-    SelectTest,
-    UpdateTest,
-    CountTest,
-    DeleteTest,
-    ExistsTest,
-)
-from recsys.core.database.connection import SQLiteConnection
+from recsys.core.dal.sql.file import FileDDL, FileDML
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
-LOCATION = "tests/test_core/test_data/test_data.connection3"
-
-# ================================================================================================ #
-#                                     TEST CONNECTION                                              #
-# ================================================================================================ #
+double_line = f"\n{100 * '='}"
+single_line = f"\n{100 * '-'}\n"
 
 
-@pytest.mark.connection
+@pytest.mark.rdb
 class TestConnection:  # pragma: no cover
     # ============================================================================================ #
-    def test_setup(self, caplog):
+    def test_setup(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
+                start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        if os.path.exists(LOCATION):
-            os.remove(LOCATION)
+        db = container.database.recsys()
+        db.drop(sql=FileDDL.drop.sql, args=FileDDL.drop.args)
+        exists = db.exists(sql=FileDDL.exists.sql, args=FileDDL.exists.args)
+        assert not exists
+        db.create(sql=FileDDL.create.sql, args=FileDDL.create.args)
+        exists = db.exists(sql=FileDDL.exists.sql, args=FileDDL.exists.args)
+        assert exists
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
 
         logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+            "\nCompleted {} {} in {} seconds at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 duration,
-                end.strftime("%I:%M:%S"),
+                end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_connection(self, caplog):
+    def test_connection(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
+                start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        connector = sqlite3.connect
-        connection = SQLiteConnection(connector=connector, location=LOCATION)
-        connection.connect()
-        assert connection.is_connected()
-        connection.close()
-        assert not connection.is_connected()
+        cnx = container.connection.recsys_connection()
+        assert cnx.is_connected
+        assert cnx.cursor is not None
+        assert cnx.database == 'recsys'
+        assert not cnx.in_transaction
+
+        cnx.begin()
+        assert cnx.in_transaction
+
+        cnx.close()
+        assert not cnx.is_connected
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -103,25 +100,74 @@ class TestConnection:  # pragma: no cover
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 duration,
-                end.strftime("%I:%M:%S"),
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+
+@pytest.mark.rdb
+class TestRDB:  # pragma: no cover
+    # ============================================================================================ #
+    def test_create_exists(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.recsys()
+        db.create(sql=FileDDL.create.sql, args=FileDDL.create.args)
+        response = db.exists(sql=FileDDL.exists.sql, args=FileDDL.exists.args)
+        assert response
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\nCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_teardown(self, caplog):
+    def test_insert_exists(self, container, files, caplog):
         start = datetime.now()
         logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
+                start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        if os.path.exists(LOCATION):
-            os.remove(LOCATION)
+        db = container.database.recsys()
+        for i, file in enumerate(files, start=1):
+            dto = file.as_dto()
+            dml = FileDML.insert(dto)
+            file.id = db.insert(sql=dml.sql, args=dml.args)
+            assert file.id == i
+            dto = file.as_dto()
+            dml = FileDML.exists(i)
+            logger.debug(dto)
+            logger.debug(dml)
+            result = db.exists(sql=dml.sql, args=dml.args)
+            assert result is True
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -131,62 +177,35 @@ class TestConnection:  # pragma: no cover
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 duration,
-                end.strftime("%I:%M:%S"),
+                end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-        )
 
-
-# ================================================================================================ #
-#                                      TEST DATABASE                                               #
-# ================================================================================================ #
-@pytest.mark.database
-class TestDatabase:  # pragma: no cover
-    # ================================================================================================ #
-    def test_setup(self, location, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
         )
-        # ---------------------------------------------------------------------------------------- #
-        if os.path.exists(location):
-            os.remove(location)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_create_table(self, database, caplog):
+    def test_read(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
+                start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        create = CreateTestTable()
-        exists = TestTableExists()
-        with database as db:
-            db.create_table(create.sql, create.args)
-            assert db.exists(exists.sql, exists.args)
+        db = container.database.recsys()
+        for i in range(1, 6):
+            dml = FileDML.select(id=i)
+            row = db.selectone(sql=dml.sql, args=dml.args)
+            assert isinstance(row, tuple)
+
+        dml = FileDML.select_all()
+        rows = db.selectall(sql=dml.sql, args=dml.args)
+        assert len(rows) == 5
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -197,28 +216,36 @@ class TestDatabase:  # pragma: no cover
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 duration,
-                end.strftime("%I:%M:%S"),
+                end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_drop_table(self, database, caplog):
+    def test_update(self, container, files, caplog):
         start = datetime.now()
         logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
+                start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        drop = DropTestTable()
-        exists = TestTableExists()
-        with database as db:
-            db.drop_table(drop.sql, drop.args)
-            assert not db.exists(exists.sql, exists.args)
+        db = container.database.recsys()
+        for i, file in enumerate(files, start=1):
+            file.id = i
+            file.task_id = i + 55
+            dto = file.as_dto()
+            dml = FileDML.update(dto)
+            rowcount = db.update(sql=dml.sql, args=dml.args)
+            assert rowcount == 1
+            dml = FileDML.select(i)
+            row = db.selectone(sql=dml.sql, args=dml.args)
+            assert row[8] == i + 55
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -229,32 +256,33 @@ class TestDatabase:  # pragma: no cover
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 duration,
-                end.strftime("%I:%M:%S"),
+                end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_insert(self, database, caplog):
+    def test_update_non_existing_entity(self, container, files, caplog):
         start = datetime.now()
         logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
+                start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        create = CreateTestTable()
-        insert = InsertTest()
-
-        with database as db:
-            db.create_table(create.sql, create.args)
-            for i in range(5):
-                db.insert(insert.sql, insert.args)
-                exists = ExistsTest(id=i + 1)
-                assert db.exists(exists.sql, exists.args)
+        db = container.database.recsys()
+        for i, file in enumerate(files, start=1):
+            file.id = i * 88
+            dto = file.as_dto()
+            dml = FileDML.update(dto)
+            rowcount = db.update(sql=dml.sql, args=dml.args)
+            assert rowcount == 0
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -265,28 +293,30 @@ class TestDatabase:  # pragma: no cover
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 duration,
-                end.strftime("%I:%M:%S"),
+                end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_select(self, database, caplog):
+    def test_count(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
+                start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        with database as db:
-            for i in range(5):
-                select = SelectTest(id=i + 1)
-                result = db.select(select.sql, select.args)
-                assert len(result) > 0
+        db = container.database.recsys()
+        dml = FileDML.select_all()
+        count = db.count(sql=dml.sql, args=dml.args)
+        assert count == 5
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -297,31 +327,36 @@ class TestDatabase:  # pragma: no cover
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 duration,
-                end.strftime("%I:%M:%S"),
+                end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_update(self, database, caplog):
+    def test_delete(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
+                start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        with database as db:
-            for i in range(5):
-                update = UpdateTest(id=i + 1)
-                db.update(update.sql, update.args)
-            for i in range(5):
-                select = SelectTest(id=i + 1)
-                result = db.select(select.sql, select.args)
-                logger.debug(f"Test Update Result[{i+1}] = {result}")
+        db = container.database.recsys()
+        for i in range(1, 6):
+            dml = FileDML.delete(i)
+            db.delete(sql=dml.sql, args=dml.args)
+            dml = FileDML.exists(i)
+            assert not db.exists(sql=dml.sql, args=dml.args)
+
+        dml = FileDML.select_all()
+        count = db.count(sql=dml.sql, args=dml.args)
+        assert count == 0
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -332,26 +367,55 @@ class TestDatabase:  # pragma: no cover
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 duration,
-                end.strftime("%I:%M:%S"),
+                end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_count(self, database, caplog):
+    def test_transaction(self, container, files, caplog):
         start = datetime.now()
         logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
+                start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        count = CountTest()
-        with database as db:
-            assert db.count(count.sql, count.args) == 5
+        # Reset file table
+        db = container.database.recsys()
+
+        # Before
+        dml = FileDML.select_all()
+        count = db.count(sql=dml.sql, args=dml.args)
+        assert count == 0
+
+        # Insert in transaction Note: Inserts are autocommitted, regardless.
+        db.begin()
+        for i, file in enumerate(files, start=1):
+            dto = file.as_dto()
+            dml = FileDML.insert(dto)
+            file.id = db.insert(sql=dml.sql, args=dml.args)
+            assert file.id == i + 5
+            dml = FileDML.exists(dto)
+            assert not db.exists(sql=dml.sql, args=dml.args)
+
+        dml = FileDML.select_all()
+        count = db.count(sql=dml.sql, args=dml.args)
+        assert count == 5
+
+        cnx = db.connection
+        cnx.rollback()
+
+        dml = FileDML.select_all()
+        count = db.count(sql=dml.sql, args=dml.args)
+        assert count == 0
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -361,69 +425,9 @@ class TestDatabase:  # pragma: no cover
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 duration,
-                end.strftime("%I:%M:%S"),
+                end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-        )
 
-    # ============================================================================================ #
-    def test_delete(self, database, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
         )
-        # ---------------------------------------------------------------------------------------- #
-        with database as db:
-            for i in range(5):
-                delete = DeleteTest(id=i + 1)
-                db.delete(delete.sql, delete.args)
-
-            for i in range(5):
-                exists = ExistsTest(id=i + 1)
-                assert not db.exists(exists.sql, exists.args)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ================================================================================================ #
-    def test_teardown(self, location, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        if os.path.exists(location):
-            os.remove(location)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
+        logger.info(single_line)

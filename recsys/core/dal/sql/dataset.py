@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday January 1st 2023 07:17:41 am                                                 #
+# Modified   : Tuesday January 3rd 2023 05:21:52 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDatasetTable(SQL):
     name: str = "dataset"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('dataset_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, datasource_name TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, task_id INTEGER, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON dataset(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id MEDIUMINT PRIMARY KEY, oid VARCHAR(64) GENERATED ALWAYS AS CONCAT('dataset_', name, "_", id, "_", mode), name VARCHAR(64) NOT NULL, description VARCHAR(64), datasource_name VARCHAR(64) NOT NULL, mode VARCHAR(64) NOT NULL, stage VARCHAR(64) NOT NULL, task_id MEDIUMINT, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
 
 
@@ -48,11 +48,8 @@ class DropDatasetTable(SQL):
 @dataclass
 class DatasetTableExists(SQL):
     name: str = "dataset"
-    sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
+    sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'dataset';"""
     args: tuple = ()
-
-    def __post_init__(self) -> None:
-        self.args = (self.name,)
 
 
 # ------------------------------------------------------------------------------------------------ #

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Sunday January 1st 2023 02:06:54 am                                                 #
+# Modified   : Tuesday January 3rd 2023 05:21:14 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -31,7 +31,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateProfileTable(SQL):
     name: str = "profile"
-    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('profile_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, mode TEXT NOT NULL, started timestamp, ended timestamp, duration INTEGER DEFAULT 0, user_cpu_time INTEGER DEFAULT 0, percent_cpu_used REAL NOT NULL, total_physical_memory INTEGER DEFAULT 0, physical_memory_available INTEGER DEFAULT 0, physical_memory_used INTEGER DEFAULT 0, percent_physical_memory_used REAL NOT NULL, active_memory_used INTEGER DEFAULT 0, disk_usage INTEGER DEFAULT 0, percent_disk_usage REAL NOT NULL, read_count INTEGER DEFAULT 0, write_count INTEGER DEFAULT 0, read_bytes INTEGER DEFAULT 0, write_bytes INTEGER DEFAULT 0, read_time INTEGER DEFAULT 0, write_time INTEGER DEFAULT 0, bytes_sent INTEGER DEFAULT 0, bytes_recv INTEGER DEFAULT 0, task_id INTEGER NOT NULL, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON profile(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id MEDIUMINT PRIMARY KEY, oid VARCHAR(64) GENERATED ALWAYS AS CONCAT('profile_', name, "_", id, "_", mode), name VARCHAR(64) NOT NULL, description VARCHAR(64), mode VARCHAR(64) NOT NULL, started DATETIME, ended DATETIME, duration MEDIUMINT DEFAULT 0, user_cpu_time MEDIUMINT DEFAULT 0, percent_cpu_used REAL NOT NULL, total_physical_memory MEDIUMINT DEFAULT 0, physical_memory_available MEDIUMINT DEFAULT 0, physical_memory_used MEDIUMINT DEFAULT 0, percent_physical_memory_used REAL NOT NULL, active_memory_used MEDIUMINT DEFAULT 0, disk_usage MEDIUMINT DEFAULT 0, percent_disk_usage REAL NOT NULL, read_count MEDIUMINT DEFAULT 0, write_count MEDIUMINT DEFAULT 0, read_bytes MEDIUMINT DEFAULT 0, write_bytes MEDIUMINT DEFAULT 0, read_time MEDIUMINT DEFAULT 0, write_time MEDIUMINT DEFAULT 0, bytes_sent MEDIUMINT DEFAULT 0, bytes_recv MEDIUMINT DEFAULT 0, task_id MEDIUMINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
 
 
@@ -49,11 +49,8 @@ class DropProfileTable(SQL):
 @dataclass
 class ProfileTableExists(SQL):
     name: str = "profile"
-    sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
+    sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'profile';"""
     args: tuple = ()
-
-    def __post_init__(self) -> None:
-        self.args = (self.name,)
 
 
 # ------------------------------------------------------------------------------------------------ #

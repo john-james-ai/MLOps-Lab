@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Sunday January 1st 2023 07:20:16 am                                                 #
+# Modified   : Tuesday January 3rd 2023 06:53:41 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,8 +23,8 @@ from collections import OrderedDict
 from typing import Dict, Tuple, List
 import logging
 
-from recsys.core.database.relational import RDB
-from recsys.core.database.object import ODB
+from recsys.core.database.relational import Database
+from recsys.core.database.object import ObjectDB
 from .dto import DTO, DataFrameDTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO, FileDTO, DataSourceDTO, DataSourceURLDTO
 from .base import DML
 from recsys.core.entity.base import Entity
@@ -41,14 +41,14 @@ class DAO(ABC):
     Provides access to the underlying database and object storage for entities and aggregates.
 
     Args:
-        rdb (RDB): Relational database object.
-        odb (ODB): The object database storage.
+        database (Database): Relational database object.
+        object_db (ObjectDB): The object database storage.
         dml (DML): The Data Manipulation Language SQL objects.
     """
 
-    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
-        self._rdb = rdb
-        self._odb = odb
+    def __init__(self, database: Database, object_db: ObjectDB, dml: DML) -> None:
+        self._database = database
+        self._object_db = object_db
         self._dml = dml
         self._entity = self.__class__.__name__.replace("DAO", "")
         self._logger = logging.getLogger(
@@ -63,7 +63,7 @@ class DAO(ABC):
     def begin(self) -> None:
         """Begins a transaction."""
         cmd = self._dml.begin()
-        self._rdb.begin(cmd.sql, cmd.args)
+        self._database.begin(cmd.sql, cmd.args)
 
     def create(self, entity: Entity, persist: bool = True) -> Entity:
         """Adds an entity to the database.
@@ -77,9 +77,9 @@ class DAO(ABC):
         """
         dto = entity.as_dto()
         cmd = self._dml.insert(dto)
-        entity.id = self._rdb.insert(cmd.sql, cmd.args)
+        entity.id = self._database.insert(cmd.sql, cmd.args)
         if persist:
-            self._odb.create(entity)
+            self._object_db.create(entity)
         return entity
 
     def read(self, id: int) -> Entity:
@@ -90,10 +90,10 @@ class DAO(ABC):
         Returns a Entity
         """
         cmd = self._dml.select(id)
-        row = self._rdb.select(cmd.sql, cmd.args)
+        row = self._database.select(cmd.sql, cmd.args)
         if len(row) > 0:
             dto = self._row_to_dto(row[0])
-            return self._odb.read(dto.oid)
+            return self._object_db.read(dto.oid)
         else:
             msg = f"{self._entity}.{id} does not exist."
             self._logger.info(msg)
@@ -108,10 +108,10 @@ class DAO(ABC):
         """
         cmd = self._dml.select_by_name_mode(name, mode)
 
-        row = self._rdb.select(cmd.sql, cmd.args)
+        row = self._database.select(cmd.sql, cmd.args)
         if len(row) > 0:
             dto = self._row_to_dto(row[0])
-            return self._odb.read(dto.oid)
+            return self._object_db.read(dto.oid)
         else:
             msg = f"{self._entity}.{name} does not exist."
             self._logger.info(msg)
@@ -121,11 +121,11 @@ class DAO(ABC):
         """Returns a dictionary of Entities."""
         entities = {}
         cmd = self._dml.select_all()
-        rows = self._rdb.select(cmd.sql, cmd.args)
+        rows = self._database.select(cmd.sql, cmd.args)
         if len(rows) > 0:
             for row in rows:
                 dto = self._row_to_dto(row)
-                entities[dto.id] = self._odb.read(dto.oid)
+                entities[dto.id] = self._object_db.read(dto.oid)
         else:
             msg = "There are no Entities in the database."
             self._logger.info(msg)
@@ -135,7 +135,7 @@ class DAO(ABC):
         """Returns all table data in a pandas DataFrame."""
         metadata = pd.DataFrame()
         cmd = self._dml.select_by_parent_id(parent.id)
-        rows = self._rdb.select(cmd.sql, cmd.args)
+        rows = self._database.select(cmd.sql, cmd.args)
         if len(rows) > 0:
             for row in rows:
                 dto = self._row_to_dto(row)
@@ -153,9 +153,9 @@ class DAO(ABC):
         """
         dto = entity.as_dto()
         cmd = self._dml.update(dto)
-        self._rdb.update(cmd.sql, cmd.args)
+        self._database.update(cmd.sql, cmd.args)
         if persist:
-            self._odb.update(entity)
+            self._object_db.update(entity)
 
     def exists(self, id: int) -> bool:
         """Returns True if the entity with id exists in the database.
@@ -164,7 +164,7 @@ class DAO(ABC):
             id (int): id for the entity
         """
         cmd = self._dml.exists(id)
-        return self._rdb.exists(cmd.sql, cmd.args)
+        return self._database.exists(cmd.sql, cmd.args)
 
     def delete(self, id: int, persist=True) -> None:
         """Deletes a Entity from the registry, given an id.
@@ -176,19 +176,19 @@ class DAO(ABC):
         if persist:
             entity = self.read(id)
             try:
-                self._odb.delete(entity.oid)
+                self._object_db.delete(entity.oid)
             except KeyError:
                 msg = f"Unable to delete object id {entity.id} as it does not exist."
                 self._logger.info(msg)
                 raise RuntimeWarning(msg)
 
         cmd = self._dml.delete(id)
-        self._rdb.delete(cmd.sql, cmd.args)
+        self._database.delete(cmd.sql, cmd.args)
 
     def save(self) -> None:
         """Commits the changes to the database."""
-        self._rdb.save()
-        self._odb.save()
+        self._database.save()
+        self._object_db.save()
 
     def _rows_to_dict(self, results: List) -> Dict:
         """Converts the results to a dictionary of DTO objects."""
@@ -207,8 +207,8 @@ class DAO(ABC):
 #                                 DATAFRAME DATA ACCESS OBJECT                                     #
 # ------------------------------------------------------------------------------------------------ #
 class DataFrameDAO(DAO):
-    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
-        super().__init__(rdb=rdb, odb=odb, dml=dml)
+    def __init__(self, database: Database, object_db: ObjectDB, dml: DML) -> None:
+        super().__init__(database=database, object_db=object_db, dml=dml)
 
     def _row_to_dto(self, row: Tuple) -> DataFrameDTO:
         try:
@@ -240,8 +240,8 @@ class DataFrameDAO(DAO):
 #                                 DATASET DATA ACCESS OBJECT                                       #
 # ------------------------------------------------------------------------------------------------ #
 class DatasetDAO(DAO):
-    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
-        super().__init__(rdb=rdb, odb=odb, dml=dml)
+    def __init__(self, database: Database, object_db: ObjectDB, dml: DML) -> None:
+        super().__init__(database=database, object_db=object_db, dml=dml)
 
     def _row_to_dto(self, row: Tuple) -> DataFrameDTO:
         try:
@@ -270,8 +270,8 @@ class DatasetDAO(DAO):
 class ProfileDAO(DAO):
     """Profile for Tasks"""
 
-    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
-        super().__init__(rdb=rdb, odb=odb, dml=dml)
+    def __init__(self, database: Database, object_db: ObjectDB, dml: DML) -> None:
+        super().__init__(database=database, object_db=object_db, dml=dml)
 
     def _row_to_dto(self, row: Tuple) -> ProfileDTO:
         try:
@@ -317,8 +317,8 @@ class ProfileDAO(DAO):
 class TaskDAO(DAO):
     """Task Data Access Object"""
 
-    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
-        super().__init__(rdb=rdb, odb=odb, dml=dml)
+    def __init__(self, database: Database, object_db: ObjectDB, dml: DML) -> None:
+        super().__init__(database=database, object_db=object_db, dml=dml)
 
     def _row_to_dto(self, row: Tuple) -> TaskDTO:
         try:
@@ -346,8 +346,8 @@ class TaskDAO(DAO):
 class JobDAO(DAO):
     """Job Data Access Object"""
 
-    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
-        super().__init__(rdb=rdb, odb=odb, dml=dml)
+    def __init__(self, database: Database, object_db: ObjectDB, dml: DML) -> None:
+        super().__init__(database=database, object_db=object_db, dml=dml)
 
     def _row_to_dto(self, row: Tuple) -> JobDTO:
         try:
@@ -374,24 +374,23 @@ class JobDAO(DAO):
 class FileDAO(DAO):
     """File Data Access Object"""
 
-    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
-        super().__init__(rdb=rdb, odb=odb, dml=dml)
+    def __init__(self, database: Database, object_db: ObjectDB, dml: DML) -> None:
+        super().__init__(database=database, object_db=object_db, dml=dml)
 
     def _row_to_dto(self, row: Tuple) -> FileDTO:
         try:
             return FileDTO(
                 id=row[0],
-                oid=row[1],
-                name=row[2],
-                description=row[3],
-                datasource=row[4],
-                mode=row[5],
-                stage=row[6],
-                uri=row[7],
-                size=row[8],
-                task_id=row[9],
-                created=row[10],
-                modified=row[11],
+                name=row[1],
+                description=row[2],
+                datasource_id=row[3],
+                mode=row[4],
+                stage=row[5],
+                uri=row[6],
+                size=row[7],
+                task_id=row[8],
+                created=row[9],
+                modified=row[10],
             )
 
         except IndexError as e:  # pragma: no cover
@@ -406,8 +405,8 @@ class FileDAO(DAO):
 class DataSourceDAO(DAO):
     """File Data Access Object"""
 
-    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
-        super().__init__(rdb=rdb, odb=odb, dml=dml)
+    def __init__(self, database: Database, object_db: ObjectDB, dml: DML) -> None:
+        super().__init__(database=database, object_db=object_db, dml=dml)
 
     def _row_to_dto(self, row: Tuple) -> FileDTO:
         try:
@@ -434,8 +433,8 @@ class DataSourceDAO(DAO):
 class DataSourceURLDAO(DAO):
     """File Data Access Object"""
 
-    def __init__(self, rdb: RDB, odb: ODB, dml: DML) -> None:
-        super().__init__(rdb=rdb, odb=odb, dml=dml)
+    def __init__(self, database: Database, object_db: ObjectDB, dml: DML) -> None:
+        super().__init__(database=database, object_db=object_db, dml=dml)
 
     def _row_to_dto(self, row: Tuple) -> FileDTO:
         try:

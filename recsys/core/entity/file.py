@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Sunday January 1st 2023 02:37:06 pm                                                 #
+# Modified   : Tuesday January 3rd 2023 06:56:35 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,7 +33,7 @@ class File(Entity):
     Args:
         name (str): Short, yet descriptive lowercase name for File object.
         description (str): Describes the File object. Default's to parent's description if None.
-        datasource (str): Source of File
+        datasource_id (str): Source of File
         mode (str): Mode for which the File is created. If None, defaults to mode from environment
             variable.
         stage (str): Data processing stage, i.e. extract or raw.
@@ -45,7 +45,7 @@ class File(Entity):
     def __init__(
         self,
         name: str,
-        datasource: str,
+        datasource_id: int,
         stage: str,
         uri: str,
         description: str = None,
@@ -53,7 +53,7 @@ class File(Entity):
         task_id: int = 0
     ) -> None:
         super().__init__(name=name, description=description, mode=mode)
-        self._datasource = datasource
+        self._datasource_id = datasource_id
         self._stage = stage
         self._uri = uri
         self._task_id = task_id
@@ -63,10 +63,10 @@ class File(Entity):
         self._validate()
 
     def __str__(self) -> str:
-        return f"File Id: {self._id}\n\tData source: {self._datasource}\n\tName: {self._name}\n\tDescription: {self._description}\n\tMode: {self._mode}\n\tStage: {self._stage}\n\tSize: {self._size}\n\tTask Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"File Id: {self._id}\n\t OID: {self._oid}\n\tData source: {self._datasource_id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tMode: {self._mode}\n\tStage: {self._stage}\n\tSize: {self._size}\n\tTask Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._datasource}, {self._name}, {self._description}, {self._mode}, {self._stage}, {self._size}, {self._task_id}, {self._created}, {self._modified}"
+        return f"{self._id}, {self._oid}, {self._datasource_id}, {self._name}, {self._description}, {self._mode}, {self._stage}, {self._size}, {self._task_id}, {self._created}, {self._modified}"
 
     def __eq__(self, other) -> bool:
         """Compares two File for equality.
@@ -81,9 +81,9 @@ class File(Entity):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def datasource(self) -> str:
+    def datasource_id(self) -> str:
         """Datasource from which the File Component has derived."""
-        return self._datasource
+        return self._datasource_id
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -115,10 +115,9 @@ class File(Entity):
     def as_dto(self) -> FileDTO:
         return FileDTO(
             id=self._id,
-            oid=self._oid,
             name=self._name,
             description=self._description,
-            datasource=self._datasource,
+            datasource_id=self._datasource_id,
             mode=self._mode,
             stage=self._stage,
             uri=self._uri,
