@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday January 1st 2023 02:07:25 am                                                 #
+# Modified   : Tuesday January 3rd 2023 08:01:46 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateFileTable(SQL):
     name: str = "file"
-    sql: str = """CREATE TABLE IF NOT EXISTS file (id INTEGER PRIMARY KEY, oid TEXT GENERATED ALWAYS AS ('file_' || name || "_" || id || "_" || mode), name TEXT NOT NULL, description TEXT, datasource TEXT NOT NULL, mode TEXT NOT NULL, stage TEXT NOT NULL, uri TEXT NOT NULL, size INTEGER DEFAULT 0, task_id INTEGER DEFAULT 0, created timestamp, modified timestamp);CREATE UNIQUE INDEX IF NOT EXISTS name_mode ON file(name, mode);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS file (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(128) NOT NULL, description VARCHAR(255), datasource_id SMALLINT NOT NULL, mode VARCHAR(32) NOT NULL, stage VARCHAR(64) NOT NULL, uri VARCHAR(255) NOT NULL, size BIGINT DEFAULT 0, task_id MEDIUMINT DEFAULT 0, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
 
 
@@ -48,11 +48,8 @@ class DropFileTable(SQL):
 @dataclass
 class FileTableExists(SQL):
     name: str = "file"
-    sql: str = """SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = ?;"""
+    sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'file';"""
     args: tuple = ()
-
-    def __post_init__(self) -> None:
-        self.args = (self.name,)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -71,14 +68,14 @@ class FileDDL(DDL):
 @dataclass
 class InsertFile(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO file (name, description, datasource, mode, stage, uri, size, task_id, created, modified) VALUES (?,?,?,?,?,?,?,?,?,?);"""
+    sql: str = """REPLACE INTO file (name, description, datasource_id, mode, stage, uri, size, task_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource,
+            self.dto.datasource_id,
             self.dto.mode,
             self.dto.stage,
             self.dto.uri,
@@ -95,14 +92,14 @@ class InsertFile(SQL):
 @dataclass
 class UpdateFile(SQL):
     dto: DTO
-    sql: str = """UPDATE file SET name = ?, description = ?, datasource = ?, mode = ?, stage = ?, uri = ?, size = ?, task_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE file SET name = %s, description = %s, datasource_id = %s, mode = %s, stage = %s, uri = %s, size = %s, task_id = %s, created = %s, modified = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource,
+            self.dto.datasource_id,
             self.dto.mode,
             self.dto.stage,
             self.dto.uri,
@@ -120,7 +117,7 @@ class UpdateFile(SQL):
 @dataclass
 class SelectFile(SQL):
     id: int
-    sql: str = """SELECT * FROM file WHERE id = ?;"""
+    sql: str = """SELECT * FROM file WHERE id = %s ;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -133,7 +130,7 @@ class SelectFile(SQL):
 class SelectFileByNameMode(SQL):
     name: str
     mode: str
-    sql: str = """SELECT * FROM file WHERE name = ? AND mode = ?;"""
+    sql: str = """SELECT * FROM file WHERE name = %s  AND mode = %s ;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -155,7 +152,7 @@ class SelectAllFile(SQL):
 @dataclass
 class FileExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM file WHERE id = ?;"""
+    sql: str = """SELECT EXISTS(SELECT * FROM file WHERE id = %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -166,7 +163,7 @@ class FileExists(SQL):
 @dataclass
 class DeleteFile(SQL):
     id: int
-    sql: str = """DELETE FROM file WHERE id = ?;"""
+    sql: str = """DELETE FROM file WHERE id = %s ;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
