@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday January 2nd 2023 06:32:13 am                                                 #
-# Modified   : Tuesday January 3rd 2023 05:15:37 pm                                                #
+# Modified   : Wednesday January 4th 2023 04:43:58 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -27,6 +27,7 @@ class CreateDatabase(SQL):
     name: str = 'recsys'
     sql: str = """CREATE DATABASE recsys;"""
     args: tuple = ()
+    description: str = "Created the recsys database"
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -35,6 +36,7 @@ class DropDatabase(SQL):
     name: str = "recsys"
     sql: str = """DROP DATABASE recsys;"""
     args: tuple = ()
+    description: str = "Dropped the recsys database."
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -43,6 +45,7 @@ class DatabaseExists(SQL):
     name: str = "recsys"
     sql: str = """SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'recsys';"""
     args: tuple = ()
+    description: str = "Checked existence of recsys database."
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -51,3 +54,4 @@ class DatabaseDDL(DDL):
     create: SQL = CreateDatabase()
     drop: SQL = DropDatabase()
     exists: SQL = DatabaseExists()
+

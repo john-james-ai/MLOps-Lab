@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 3rd 2023 12:33:25 am                                                #
-# Modified   : Tuesday January 3rd 2023 04:44:28 am                                                #
+# Modified   : Wednesday January 4th 2023 12:24:50 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -46,6 +46,10 @@ class AbstractConnection(Service):
     @abstractmethod
     def in_transaction(self) -> bool:
         """Returns the True if a transaction has been started."""
+
+    @abstractmethod
+    def open(self) -> None:
+        """Opens a connection to the database."""
 
     @abstractmethod
     def begin(self) -> None:
@@ -88,7 +92,7 @@ class AbstractDatabase(Service):
         """Inserts data into a table and returns the last row id."""
 
     @abstractmethod
-    def selectone(self, *args, **kwargs) -> list:
+    def select(self, *args, **kwargs) -> list:
         """Performs a select query returning a single instance or row."""
 
     @abstractmethod

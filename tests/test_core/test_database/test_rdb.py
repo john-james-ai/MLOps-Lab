@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 3rd 2023 03:04:52 pm                                                #
-# Modified   : Tuesday January 3rd 2023 08:00:31 pm                                                #
+# Modified   : Wednesday January 4th 2023 01:37:55 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -200,7 +200,7 @@ class TestRDB:  # pragma: no cover
         db = container.database.recsys()
         for i in range(1, 6):
             dml = FileDML.select(id=i)
-            row = db.selectone(sql=dml.sql, args=dml.args)
+            row = db.select(sql=dml.sql, args=dml.args)
             assert isinstance(row, tuple)
 
         dml = FileDML.select_all()
@@ -244,7 +244,7 @@ class TestRDB:  # pragma: no cover
             rowcount = db.update(sql=dml.sql, args=dml.args)
             assert rowcount == 1
             dml = FileDML.select(i)
-            row = db.selectone(sql=dml.sql, args=dml.args)
+            row = db.select(sql=dml.sql, args=dml.args)
             assert row[8] == i + 55
 
         # ---------------------------------------------------------------------------------------- #
@@ -415,6 +415,38 @@ class TestRDB:  # pragma: no cover
         dml = FileDML.select_all()
         count = db.count(sql=dml.sql, args=dml.args)
         assert count == 0
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_open_close(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.recsys()
+        db.connection.close()
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

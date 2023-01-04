@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Tuesday January 3rd 2023 06:54:55 pm                                                #
+# Modified   : Wednesday January 4th 2023 12:40:47 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -227,19 +227,19 @@ def jobs():
 
 
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def datasources():
     datasources = []
     sources = ['spotify', 'movielens25m', 'tenrec']
     for i in range(1, 6):
         datasource = DataSource(
-            name=sources[i % 3],
+            name=f"{sources[i % 3]}_{i}",
             description=f"Description for DataSource # {i}",
             website="www.some_website.com"
         )
         for j in range(1, 6):
             datasource_url = datasource.create_url(
-                name=sources[j % 3],
+                name=f"{sources[i % 3]}_{i}",
                 url=f"www.url_{j}.com",
                 description=f"Description for datasource_url {j} of datasource {i}"
             )

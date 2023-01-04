@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Tuesday January 3rd 2023 06:53:18 pm                                                #
+# Modified   : Tuesday January 3rd 2023 09:11:08 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -59,8 +59,8 @@ class ProfileDTO(DTO):
     id: int
     name: str
     description: str
-    started: datetime
-    ended: datetime
+    start: datetime
+    end: datetime
     duration: int
     user_cpu_time: int
     percent_cpu_used: float
@@ -87,15 +87,12 @@ class ProfileDTO(DTO):
 # ------------------------------------------------------------------------------------------------ #
 #                               DATASET DATA TRANSFER OBJECT                                       #
 # ------------------------------------------------------------------------------------------------ #
-
-
 @dataclass
 class DataFrameDTO(DTO):
     id: int
-    oid: str
     name: str
     description: str
-    datasource_name: str
+    datasource_id: int
     mode: str
     stage: str
     size: int
@@ -103,7 +100,7 @@ class DataFrameDTO(DTO):
     ncols: int
     nulls: int
     pct_nulls: float
-    dataset_id: int
+    parent_id: int
     created: datetime
     modified: datetime
 
@@ -111,14 +108,12 @@ class DataFrameDTO(DTO):
 # ------------------------------------------------------------------------------------------------ #
 #                               DATASETS DATA TRANSFER OBJECT                                      #
 # ------------------------------------------------------------------------------------------------ #
-
 @dataclass
 class DatasetDTO(DTO):
     id: int
-    oid: str
     name: str
     description: str
-    datasource_name: str
+    datasource_id: int
     mode: str
     stage: str
     task_id: int
@@ -132,7 +127,6 @@ class DatasetDTO(DTO):
 @dataclass
 class JobDTO(DTO):
     id: int
-    oid: str
     name: str
     description: str
     mode: str
@@ -147,7 +141,6 @@ class JobDTO(DTO):
 @dataclass
 class TaskDTO(DTO):
     id: int
-    oid: str
     name: str
     description: str
     mode: str
@@ -181,7 +174,6 @@ class FileDTO(DTO):
 @dataclass
 class DataSourceDTO(DTO):
     id: int
-    oid: str
     name: str
     description: str
     website: str
@@ -196,7 +188,6 @@ class DataSourceDTO(DTO):
 @dataclass
 class DataSourceURLDTO(DTO):
     id: int
-    oid: str
     name: str
     description: str
     url: str

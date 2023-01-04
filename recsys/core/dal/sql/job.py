@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Tuesday January 3rd 2023 05:21:24 pm                                                #
+# Modified   : Wednesday January 4th 2023 01:24:05 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,6 +19,8 @@
 from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
+from recsys.core.entity.base import Entity
+from recsys.core.entity.job import Job
 
 # ================================================================================================ #
 #                                         JOB                                                      #
@@ -31,8 +33,9 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateJobTable(SQL):
     name: str = "job"
-    sql: str = """CREATE TABLE IF NOT EXISTS job (id MEDIUMINT PRIMARY KEY, oid VARCHAR(64) GENERATED ALWAYS AS CONCAT('job_', name, "_", id, "_", mode), name VARCHAR(64) NOT NULL, description VARCHAR(64), mode VARCHAR(64) NOT NULL, state VARCHAR(64) DEFAULT "CREATED", created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS job (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(128) NOT NULL, description VARCHAR(255), mode VARCHAR(32) NOT NULL, state VARCHAR(32), created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
+    description: str = "Created the job table."
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -41,6 +44,7 @@ class DropJobTable(SQL):
     name: str = "job"
     sql: str = """DROP TABLE IF EXISTS job;"""
     args: tuple = ()
+    description: str = "Dropped the job table."
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -51,11 +55,13 @@ class JobTableExists(SQL):
     name: str = "job"
     sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'job';"""
     args: tuple = ()
+    description: str = "Checked existence of the job table."
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class JobDDL(DDL):
+    entity: type(Entity) = Job
     create: SQL = CreateJobTable()
     drop: SQL = DropJobTable()
     exists: SQL = JobTableExists()
@@ -70,7 +76,7 @@ class JobDDL(DDL):
 class InsertJob(SQL):
     dto: DTO
 
-    sql: str = """REPLACE INTO job (name, description, mode, state, created, modified) VALUES (?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO job (name, description, mode, state, created, modified) VALUES (%s,%s,%s,%s,%s,%s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -90,7 +96,7 @@ class InsertJob(SQL):
 @dataclass
 class UpdateJob(SQL):
     dto: DTO
-    sql: str = """UPDATE job SET name = ?, description = ?, mode = ?, state = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE job SET name = %s, description = %s, mode = %s, state = %s, created = %s, modified = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -111,7 +117,7 @@ class UpdateJob(SQL):
 @dataclass
 class SelectJob(SQL):
     id: int
-    sql: str = """SELECT * FROM job WHERE id = ?;"""
+    sql: str = """SELECT * FROM job WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -124,7 +130,7 @@ class SelectJob(SQL):
 class SelectJobByNameMode(SQL):
     name: str
     mode: str
-    sql: str = """SELECT * FROM job WHERE name = ? AND mode = ?;"""
+    sql: str = """SELECT * FROM job WHERE name = %s AND mode = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -145,7 +151,7 @@ class SelectAllJob(SQL):
 @dataclass
 class JobExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM job WHERE id = ?;"""
+    sql: str = """SELECT COUNT(*) FROM job WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -156,7 +162,7 @@ class JobExists(SQL):
 @dataclass
 class DeleteJob(SQL):
     id: int
-    sql: str = """DELETE FROM job WHERE id = ?;"""
+    sql: str = """DELETE FROM job WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -166,6 +172,7 @@ class DeleteJob(SQL):
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class JobDML(DML):
+    entity: type(Entity) = Job
     insert: type(SQL) = InsertJob
     update: type(SQL) = UpdateJob
     select: type(SQL) = SelectJob

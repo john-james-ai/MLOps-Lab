@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Tuesday January 3rd 2023 08:01:46 pm                                                #
+# Modified   : Wednesday January 4th 2023 01:24:05 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,8 +19,10 @@
 from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
+from recsys.core.entity.base import Entity
+from recsys.core.entity.file import File
 # ================================================================================================ #
-#                                        DATASET                                                   #
+#                                          FILE                                                    #
 # ================================================================================================ #
 
 
@@ -32,6 +34,7 @@ class CreateFileTable(SQL):
     name: str = "file"
     sql: str = """CREATE TABLE IF NOT EXISTS file (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(128) NOT NULL, description VARCHAR(255), datasource_id SMALLINT NOT NULL, mode VARCHAR(32) NOT NULL, stage VARCHAR(64) NOT NULL, uri VARCHAR(255) NOT NULL, size BIGINT DEFAULT 0, task_id MEDIUMINT DEFAULT 0, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
+    description: str = "Created the file table"
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -40,6 +43,7 @@ class DropFileTable(SQL):
     name: str = "file"
     sql: str = """DROP TABLE IF EXISTS file;"""
     args: tuple = ()
+    description: str = "Dropped the file table."
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -50,11 +54,13 @@ class FileTableExists(SQL):
     name: str = "file"
     sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'file';"""
     args: tuple = ()
+    description: str = "Checked existence of file table."
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class FileDDL(DDL):
+    entity: type(Entity) = File
     create: SQL = CreateFileTable()
     drop: SQL = DropFileTable()
     exists: SQL = FileTableExists()
@@ -68,7 +74,7 @@ class FileDDL(DDL):
 @dataclass
 class InsertFile(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO file (name, description, datasource_id, mode, stage, uri, size, task_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO file (name, description, datasource_id, mode, stage, uri, size, task_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -173,6 +179,7 @@ class DeleteFile(SQL):
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class FileDML(DML):
+    entity: type(Entity) = File
     insert: type(SQL) = InsertFile
     update: type(SQL) = UpdateFile
     select: type(SQL) = SelectFile

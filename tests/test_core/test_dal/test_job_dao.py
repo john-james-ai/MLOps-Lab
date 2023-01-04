@@ -10,8 +10,8 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday December 3rd 2022 06:17:38 pm                                              #
-# Modified   : Sunday December 25th 2022 09:38:05 am                                               #
+# Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
+# Modified   : Wednesday January 4th 2023 01:23:12 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,30 +21,100 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.dal.dto import JobDTO
+from recsys.core.dal.dto import DTO
+from recsys.core.dal.dao import DAO
+
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
+double_line = f"\n{100 * '='}"
+single_line = f"\n{100 * '-'}"
 
 
 @pytest.mark.dao
 @pytest.mark.job_dao
-class TestJobDAO:  # pragma: no cover
+class TestFileDAO:  # pragma: no cover
+
+    def reset_table(self, container):
+        dba = container.dba.job()
+        dba.database = container.database.recsys()
+        dba.reset()
+
+    def test_get_dao(self, container) -> DAO:
+        db = container.database.recsys()
+        db.connection.close()
+        db.connection.open()
+        dao = container.dao.job()
+        dao.database = db
+        return dao
+
+    # ============================================================================================ #
+    def check_results(self, i, dto) -> None:
+        assert (dto.id == i or dto.id == 5 + i)
+        assert isinstance(dto, DTO)
+        assert "job_" in dto.name
+        assert dto.mode == 'test'
+
     # ============================================================================================ #
     def test_setup(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        ts = ts = container.table.job()
-        ts.reset()
+        self.reset_table(container)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\nCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_create_exists(self, container, jobs, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        dao = self.test_get_dao(container)
+        dao.database.begin()
+
+        for i, job in enumerate(jobs, start=1):
+            dto = job.as_dto()
+            dto = dao.create(dto)
+            self.check_results(i, dto)
+
+        for i in range(1, 6):
+            assert dao.exists(i)
+
+        cnx = dao.database.connection
+        cnx.rollback()
+
+        for i in range(1, 6):
+            assert not dao.exists(i)
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -57,25 +127,36 @@ class TestJobDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_create_no_commit(self, job_dtos, container, caplog):
+    def test_create_commit(self, container, jobs, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.job()
-        for i, dto in enumerate(job_dtos, start=1):
-            logger.debug(f"\n\nTest Create DTO {i}\n\t{dto}")
+        self.reset_table(container)
+        dao = self.test_get_dao(container)
+
+        for i, job in enumerate(jobs, start=1):
+            dto = job.as_dto()
             dto = dao.create(dto)
-            assert dto.id == i
+            self.check_results(i, dto)
+            dao.database.save()
+
+        cnx = dao.database.connection
+        cnx.rollback()
+
+        for i in range(1, 6):
             assert dao.exists(i)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -90,90 +171,30 @@ class TestJobDAO:  # pragma: no cover
                 end.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_read_no_commit(self, job_dtos, container, caplog):
+    def test_read(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.job()
-        for i, job_dto in enumerate(job_dtos, start=1):
-            logger.debug(f"\n\nDataFrame DTO\n{job_dto}")
-            with pytest.raises(FileNotFoundError):
-                _ = dao.read(i)
+        dao = self.test_get_dao(container)
 
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_create_commit(self, job_dtos, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.job()
-        for i, dto in enumerate(job_dtos, start=1):
-            logger.debug(f"\n\nTest Create DTO {i}\n\t{dto}")
-            dto = dao.create(dto)
-            dao.save()
-            assert dto.id == i
-            assert dao.exists(i)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_read_commit(self, job_dtos, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.job()
-        for i, job_dto in enumerate(job_dtos, start=1):
-            logger.debug(f"\n\nDataFrame DTO\n{job_dto}")
+        for i in range(1, 6):
             dto = dao.read(i)
-            assert job_dto == dto
+            assert isinstance(dto, DTO)
+            self.check_results(i, dto)
 
+        with pytest.raises(FileNotFoundError):
+            _ = dao.read(99)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -186,38 +207,29 @@ class TestJobDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
     def test_read_all(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.job()
+        dao = self.test_get_dao(container)
+
         dtos = dao.read_all()
-        assert len(dtos) == 5
         assert isinstance(dtos, dict)
         for i, dto in dtos.items():
-            assert isinstance(dto, JobDTO)
-            assert dto.id == i
-            assert dto.name == f"job_dto_{i}"
-            assert dto.description == f"Description for Job # {i}"
-            assert dto.mode == "test"
-            assert isinstance(dto.started, datetime)
-            assert isinstance(dto.ended, datetime)
-            assert isinstance(dto.duration, float)
-            assert dto.n_tasks == i * 10
-            assert dto.n_tasks_completed == i * 8
-            assert dto.pct_tasks_completed == (i * 8) / (i * 10)
-            assert isinstance(dto.created, datetime)
-            assert isinstance(dto.modified, datetime)
+            self.check_results(i, dto)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -231,28 +243,31 @@ class TestJobDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_update(self, job_dtos, container, caplog):
+    def test_read_by_name_mode(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.job()
-        for i, dto in enumerate(job_dtos, start=1):
-            dto.description = f"Updated description {i}"
-            dao.update(dto)
+        dao = self.test_get_dao(container)
 
-        for i in range(1, 6):
-            dto = dao.read(i)
-            assert dto.description == f"Updated description {i}"
+        dto = dao.read_by_name_mode(name="job_name_1", mode='test')
+        assert isinstance(dto, DTO)
+        self.check_results(1, dto)
+
+        with pytest.raises(FileNotFoundError):
+            dto = dao.read_by_name_mode(name="job_1", mode='skdi')
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -266,26 +281,86 @@ class TestJobDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_update(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        dao = self.test_get_dao(container)
+        dao.database.connection.begin()
+        dtos = dao.read_all()
+        for i, dto in dtos.items():
+            dto.state = "READY"
+            dao.update(dto)
+
+        cnx = dao.database.connection
+        cnx.rollback()
+
+        dtos = dao.read_all()
+        for i, dto in dtos.items():
+            assert not dto.state == "READY"
+
+        for i, dto in dtos.items():
+            dto.state = "READY"
+            dao.update(dto)
+
+        db = dao.database
+        db.save()
+
+        dtos = dao.read_all()
+        for i, dto in dtos.items():
+            assert dto.state == "READY"
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
 
     # ============================================================================================ #
     def test_delete(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = container.dao.job()
-        for i in range(1, 6):
-            dao.delete(i)
+        dao = self.test_get_dao(container)
+        dao.database.begin()
+        dao.delete(1)
+        assert not dao.exists(1)
 
-        assert len(dao) == 0
+        cnx = dao.database.connection
+        cnx.rollback()
 
+        assert dao.exists(1)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -298,6 +373,6 @@ class TestJobDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-        )
 
-    # ============================================================================================ #
+        )
+        logger.info(single_line)

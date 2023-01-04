@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 02:13:29 pm                                             #
-# Modified   : Tuesday January 3rd 2023 02:13:03 pm                                                #
+# Modified   : Tuesday January 3rd 2023 10:25:25 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -155,7 +155,7 @@ class TestObjectDB:  # pragma: no cover
         for i, file in enumerate(files, start=1):
             file.id = i
             db.insert(file)
-            f2 = db.selectone(file.oid)
+            f2 = db.select(file.oid)
             assert f2 == file
             db.save()
             with pytest.raises(FileExistsError):
@@ -210,9 +210,9 @@ class TestObjectDB:  # pragma: no cover
             assert entity.mode == 'test'
         # ---------------------------------------------------------------------------------------- #
         with pytest.raises(FileNotFoundError):
-            db.selectone(oid="2")
+            db.select(oid="2")
 
-        file = db.selectone("file_file_2_2_test")
+        file = db.select("file_file_2_2_test")
         f2 = db.query("file_file_2_2_test")
         logger.debug(100 * "=")
         logger.debug(f2)
@@ -326,12 +326,12 @@ class TestObjectDB:  # pragma: no cover
             file.id = i * 14
             db.insert(file)
             with pytest.raises(FileNotFoundError):
-                assert not db.selectone(i * 14)
+                assert not db.select(i * 14)
 
         db.save()
 
         for i in range(1, 6):
-            assert db.selectone(f"file_file_{i}_{i*14}_test")
+            assert db.select(f"file_file_{i}_{i*14}_test")
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

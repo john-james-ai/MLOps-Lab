@@ -11,13 +11,17 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Tuesday January 3rd 2023 07:52:12 pm                                                #
+# Modified   : Wednesday January 4th 2023 12:42:37 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Relational Databases Module."""
+import os
 import pymysql
+import dotenv
+import mysql.connector
+from mysql.connector import errorcode
 
 from .base import AbstractConnection, AbstractDatabase
 
@@ -26,15 +30,14 @@ from .base import AbstractConnection, AbstractDatabase
 #                                    CONNECTION                                                    #
 # ------------------------------------------------------------------------------------------------ #
 class MySQLConnection(AbstractConnection):
-    """MySQL Databae."""
+    """MySQL Database."""
 
-    def __init__(self, connector: pymysql.connect, host: str, user: str, password: str, database: str = None) -> None:
+    def __init__(self, connector: pymysql.connect) -> None:
         super().__init__()
-        self._database = database
-        self._connection = connector(host=host, user=user, password=password, database=database, autocommit=False)
-        self._is_connected = True
+        self._connector = connector
+        self._database = None
         self._in_transaction = False
-        self._logger.debug(f"{self.__class__.__name__} is connected.")
+        self.open()
 
     @property
     def cursor(self) -> pymysql.connections.Connection.cursor:
@@ -48,7 +51,7 @@ class MySQLConnection(AbstractConnection):
     @property
     def is_connected(self) -> bool:
         """Returns the True if the connection is open, False otherwise."""
-        return self._is_connected
+        return self._connection.open
 
     @property
     def in_transaction(self) -> bool:
@@ -58,7 +61,33 @@ class MySQLConnection(AbstractConnection):
     def begin(self) -> None:
         """Start a transaction on the connection."""
         self._in_transaction = True
+        self._connection.begin()
         self._logger.debug(f"{self.__class__.__name__}  transaction started.")
+
+    def open(self) -> None:
+        """Opens a database connection."""
+
+        dotenv.load_dotenv()
+        host = os.getenv("MYSQL_HOST")
+        user = os.getenv("MYSQL_USER")
+        password = os.getenv("MYSQL_PASSWORD")
+        self._database = os.getenv("MYSQL_DATABASE")
+
+        try:
+            self._connection = self._connector(host=host, user=user, password=password, database=self._database, autocommit=False)
+            self._logger.debug(f"{self.__class__.__name__} is connected.")
+        except mysql.connector.Error as err:  # pragma: no cover
+            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                msg = "Invalid user name or password"
+                self._logger.error(msg)
+                raise mysql.connector.Error(msg)
+            elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                msg = "Database does not exist"
+                self._logger.error(msg)
+                raise mysql.connector.Error(msg)
+            else:
+                self._logger.error(err)
+                raise mysql.connector.Error()
 
     def close(self) -> None:
         """Closes the connection."""
@@ -95,8 +124,15 @@ class Database(AbstractDatabase):
     def query(self, sql: str, args: tuple = None) -> pymysql.connections.Connection.cursor:
         """Executes a query on the database and returns a cursor object."""
         cursor = self._connection.cursor
-        cursor.execute(sql, args)
-        return cursor
+        try:
+            cursor.execute(sql, args)
+            return cursor
+        except mysql.connector.Error as err:  # pragma: no cover
+            self._logger.error(err)
+            self._logger.error("Error Code: ", err.errno)
+            self._logger.error("SQLSTATE: ", err.sqlstate)
+            self._logger.error("Message: ", err.msg)
+            raise mysql.connector.Error()
 
     def begin(self, sql: str = None, args: tuple = None) -> None:
         """Starts a transaction on the underlying database connection."""
@@ -117,7 +153,7 @@ class Database(AbstractDatabase):
             self.save()
         return id
 
-    def selectone(self, sql: str, args: tuple = None) -> tuple:
+    def select(self, sql: str, args: tuple = None) -> tuple:
         """Performs a select query returning a single instance or row."""
         row = None
         cursor = self.query(sql, args)

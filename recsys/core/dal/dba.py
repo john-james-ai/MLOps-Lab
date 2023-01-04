@@ -11,71 +11,86 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Monday January 2nd 2023 07:40:38 pm                                                 #
+# Modified   : Wednesday January 4th 2023 04:51:17 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Data Definition Object Module."""
+from abc import ABC, abstractmethod
+import logging
 
-from recsys.core.services.base import Service
 from recsys.core.database.relational import Database
-from recsys.core.database.object import ObjectDB
 from recsys.core.dal.base import DDL
-# ------------------------------------------------------------------------------------------------ #
-
-# ------------------------------------------------------------------------------------------------ #
-#                                       TABLE SERVICE                                              #
-# ------------------------------------------------------------------------------------------------ #
 
 
-class DBA(Service):
-    def __init__(self, database: Database, object_db: ObjectDB, ddl: DDL) -> None:
-        self._database = database
-        self._object_db = object_db
+# ------------------------------------------------------------------------------------------------ #
+#                                    ABSTRACT DBA                                                  #
+# ------------------------------------------------------------------------------------------------ #
+class AbstractDBA(ABC):
+    "Abstract base class for Data Base Administration objects."
+
+    def __init__(self, ddl: DDL, autocommit: bool = True) -> None:
         self._ddl = ddl
-        super().__init__()
+        self._autocommit = autocommit
+        self._logger = logging.getLogger(
+            f"{self.__module__}.{self.__class__.__name__}",
+        )
+        self._database = None
 
-    def create_database(self) -> None:
-        with self._database as db:
-            db.create_database(self._ddl.create.sql, self._ddl.create.args)
-            msg = f"Database {self._ddl.create.name} is created."
-            self._logger.info(msg)
+    @property
+    def database(self) -> Database:
+        return self._database
 
-    def drop_database(self) -> None:
-        with self._database as db:
-            db.drop_database(self._ddl.drop.sql, self._ddl.drop.args)
-            msg = f"Database {self._ddl.create.name} is dropped."
-            self._logger.info(msg)
+    @database.setter
+    def database(self, database: Database) -> None:
+        self._database = database
 
-    def create_table(self) -> None:
-        with self._database as db:
-            db.create_table(self._ddl.create.sql, self._ddl.create.args)
-            msg = f"Table {self._ddl.create.name} is created."
-            self._logger.info(msg)
+    @abstractmethod
+    def create(self) -> None:
+        """Creates a database, object store or table."""
 
-    def drop_table(self) -> None:
-        with self._database as db:
-            db.drop_table(self._ddl.drop.sql, self._ddl.drop.args)
-            msg = f"Table {self._ddl.drop.name} is dropped."
-            self._logger.info(msg)
+    @abstractmethod
+    def drop(self) -> None:
+        """Drops a database, object store or table."""
 
+    @abstractmethod
     def exists(self) -> bool:
-        with self._database as db:
-            exists = db.exists(self._ddl.exists.sql, self._ddl.exists.args)
-            does = " exists" if exists else " does not exist."
-            msg = f"Table {self._ddl.exists.name}{does}"
-            self._logger.info(msg)
-            return exists
+        """Returns True if the object exists, False otherwise."""
 
-    def save(self) -> None:
-        with self._database as db:
-            db.save()
 
-    def reset(self, object_db: bool = True) -> None:
-        self.drop_table()
-        self.save()
-        self.create_table()
-        self.save()
-        if object_db:
-            self._object_db.reset()
+# ------------------------------------------------------------------------------------------------ #
+#                                           DBA                                                    #
+# ------------------------------------------------------------------------------------------------ #
+class DBA(AbstractDBA):
+    """Supports basic database and table administration.."""
+    def __init__(self, ddl: DDL, autocommit: bool = True) -> None:
+        super().__init__(ddl=ddl, autocommit=autocommit)
+
+    def create(self) -> None:
+        """Creates a database."""
+        self._database.create(sql=self._ddl.create.sql, args=self._ddl.create.args)
+        if self._autocommit:
+            self._database.save()
+        msg = self._ddl.create.description
+        self._logger.info(msg)
+
+    def drop(self) -> None:
+        """Drops a database or table."""
+        self._database.drop(sql=self._ddl.drop.sql, args=self._ddl.drop.args)
+        if self._autocommit:
+            self._database.save()
+        msg = self._ddl.drop.description
+        self._logger.info(msg)
+
+    def exists(self) -> None:
+        """Checks existence of a database."""
+        msg = self._ddl.exists.description
+        self._logger.info(msg)
+        return self._database.exists(sql=self._ddl.exists.sql, args=self._ddl.exists.args)
+
+    def reset(self) -> None:
+        self.drop()
+        self._database.save()
+        self.create()
+        self._database.save()

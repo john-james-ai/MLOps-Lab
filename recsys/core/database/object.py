@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Tuesday January 3rd 2023 02:14:29 pm                                                #
+# Modified   : Tuesday January 3rd 2023 10:25:25 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -151,7 +151,7 @@ class ObjectDB(AbstractDatabase):
                 self._connection.commit()
 
     # -------------------------------------------------------------------------------------------- #
-    def selectone(self, oid: str) -> Entity:
+    def select(self, oid: str) -> Entity:
         """Performs a select query returning a single instance or row."""
         try:
             return self._connection.cursor[oid]

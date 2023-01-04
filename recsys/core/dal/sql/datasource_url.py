@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Tuesday January 3rd 2023 05:21:40 pm                                                #
+# Modified   : Wednesday January 4th 2023 01:24:05 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,6 +19,8 @@
 from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
+from recsys.core.entity.base import Entity
+from recsys.core.entity.datasource import DataSourceURL
 # ================================================================================================ #
 #                                        DATASET                                                   #
 # ================================================================================================ #
@@ -30,8 +32,9 @@ from recsys.core.dal.dto import DTO
 @dataclass
 class CreateDataSourceURLTable(SQL):
     name: str = "datasource_url"
-    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id MEDIUMINT PRIMARY KEY, oid VARCHAR(64) GENERATED ALWAYS AS CONCAT('datasource_url_', name, "_", id, "_", mode), name VARCHAR(64) NOT NULL, description VARCHAR(64), url VARCHAR(255) NOT NULL, mode VARCHAR(64) NOT NULL DEFAULT 'prod', datasource_id MEDIUMINT, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(128) NOT NULL, description VARCHAR(255), url VARCHAR(255) NOT NULL, mode VARCHAR(32) NOT NULL, datasource_id SMALLINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
+    description: str = "Created the datasource URL table."
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -40,6 +43,7 @@ class DropDataSourceURLTable(SQL):
     name: str = "datasource_url"
     sql: str = """DROP TABLE IF EXISTS datasource_url;"""
     args: tuple = ()
+    description: str = "Dropped the datasource URL table."
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -50,11 +54,13 @@ class DataSourceURLTableExists(SQL):
     name: str = "datasource_url"
     sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'datasource_url';"""
     args: tuple = ()
+    description: str = "Checked the existence of the datasource URL table."
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class DataSourceURLDDL(DDL):
+    entity: type(Entity) = DataSourceURL
     create: SQL = CreateDataSourceURLTable()
     drop: SQL = DropDataSourceURLTable()
     exists: SQL = DataSourceURLTableExists()
@@ -68,7 +74,7 @@ class DataSourceURLDDL(DDL):
 @dataclass
 class InsertDataSourceURL(SQL):
     dto: DTO
-    sql: str = """REPLACE INTO datasource_url (name, description, url, mode, datasource_id, created, modified) VALUES (?,?,?,?,?,?,?);"""
+    sql: str = """INSERT INTO datasource_url (name, description, url, mode, datasource_id, created, modified) VALUES (%s,%s,%s,%s,%s,%s,%s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -89,7 +95,7 @@ class InsertDataSourceURL(SQL):
 @dataclass
 class UpdateDataSourceURL(SQL):
     dto: DTO
-    sql: str = """UPDATE datasource_url SET name = ?, description = ?, url = ?, mode = ?, datasource_id = ?, created = ?, modified = ? WHERE id = ?;"""
+    sql: str = """UPDATE datasource_url SET name = %s, description = %s, url = %s, mode = %s, datasource_id = %s, created = %s, modified = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -110,7 +116,7 @@ class UpdateDataSourceURL(SQL):
 @dataclass
 class SelectDataSourceURL(SQL):
     id: int
-    sql: str = """SELECT * FROM datasource_url WHERE id = ?;"""
+    sql: str = """SELECT * FROM datasource_url WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -122,7 +128,7 @@ class SelectDataSourceURL(SQL):
 @dataclass
 class SelectDataSourceURLByParentId(SQL):
     datasource_id: int
-    sql: str = """SELECT * FROM datasource_url WHERE datasource_id = ?;"""
+    sql: str = """SELECT * FROM datasource_url WHERE datasource_id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -135,7 +141,7 @@ class SelectDataSourceURLByParentId(SQL):
 class SelectDataSourceURLByNameMode(SQL):
     name: str
     mode: str
-    sql: str = """SELECT * FROM datasource_url WHERE name = ? AND mode = ?;"""
+    sql: str = """SELECT * FROM datasource_url WHERE name = %s AND mode = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -156,7 +162,7 @@ class SelectAllDataSourceURL(SQL):
 @dataclass
 class DataSourceURLExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM datasource_url WHERE id = ?;"""
+    sql: str = """SELECT COUNT(*) FROM datasource_url WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -167,7 +173,7 @@ class DataSourceURLExists(SQL):
 @dataclass
 class DeleteDataSourceURL(SQL):
     id: int
-    sql: str = """DELETE FROM datasource_url WHERE id = ?;"""
+    sql: str = """DELETE FROM datasource_url WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -177,6 +183,7 @@ class DeleteDataSourceURL(SQL):
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class DataSourceURLDML(DML):
+    entity: type(Entity) = DataSourceURL
     insert: type(SQL) = InsertDataSourceURL
     update: type(SQL) = UpdateDataSourceURL
     select: type(SQL) = SelectDataSourceURL
