@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Wednesday January 4th 2023 12:40:47 pm                                              #
+# Modified   : Wednesday January 4th 2023 08:33:25 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -78,7 +78,7 @@ def database(connection):
 @pytest.fixture(scope="module")
 def datasource(ratings):
     datasource = DataSource(
-        name=f"datasource_name_{1}",
+        name=f"datasource_id_{1}",
         description=f"Datasource Description {1}",
         website="www.spotify.com",
     )
@@ -153,8 +153,9 @@ def profiles():
         profile = Profile(
             name=f"profile_dto_{i}",
             description=f"Description for Profile {i}",
-            started=datetime.now(),
-            ended=datetime.now(),
+            mode='test',
+            start=datetime.now(),
+            end=datetime.now(),
             duration=i + 1000,
             user_cpu_time=i + 2000,
             percent_cpu_used=i + 3000,
@@ -173,7 +174,7 @@ def profiles():
             write_time=i + 16000,
             bytes_sent=i + 17000,
             bytes_recv=i + 18000,
-            task_id=i * 20,
+            parent_id=i * 20,
             created=datetime.now(),
             modified=datetime.now(),
         )
@@ -185,22 +186,22 @@ def profiles():
 @pytest.fixture(scope="module")
 def datasets(ratings):
     datasets = []
-    sources = ['spotify', 'movielens25m', 'tenrec']
     for i in range(1, 6):
         dataset = Dataset(
             name=f"dataset_name_{i}",
-            datasource_name=sources[i % 3],
+            datasource_id=i + 5,
             description=f"Description for Dataset # {i}",
             stage="extract",
             mode="test",
         )
         for j in range(1, 6):
-            dataframe = dataset.create_dataframe(
+            dataframe = DataFrame(
                 name=f"dataframe_{j}_dataset_{i}",
                 data=ratings,
-                dataset=dataset,
+                parent=dataset,
                 description=f"Description for dataframe {j} of dataset {i}",
                 mode="test",
+                stage="extract",
             )
             dataset.add_dataframe(dataframe)
         datasets.append(dataset)
@@ -239,7 +240,7 @@ def datasources():
         )
         for j in range(1, 6):
             datasource_url = datasource.create_url(
-                name=f"{sources[i % 3]}_{i}",
+                name=f"datasource_url_{j}",
                 url=f"www.url_{j}.com",
                 description=f"Description for datasource_url {j} of datasource {i}"
             )
