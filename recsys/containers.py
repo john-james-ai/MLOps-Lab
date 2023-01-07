@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Wednesday January 4th 2023 01:26:54 am                                              #
+# Modified   : Saturday January 7th 2023 01:02:12 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,10 +24,10 @@ import dotenv
 from dependency_injector import containers, providers  # pragma: no cover
 
 from recsys.core.services.io import IOService
-from recsys.core.dal.dba import DBA
+from recsys.core.dal.dba import DBA, ODBA
+from recsys.core.dal.oao import OAO
 from recsys.core.dal.dao import FileDAO, DatasetDAO, DataFrameDAO, DataSourceDAO, DataSourceURLDAO
 from recsys.core.dal.dao import JobDAO, TaskDAO, ProfileDAO
-from recsys.core.dal.sql.database import DatabaseDDL
 from recsys.core.dal.sql.file import FileDDL, FileDML
 from recsys.core.dal.sql.datasource import DataSourceDDL, DataSourceDML
 from recsys.core.dal.sql.datasource_url import DataSourceURLDDL, DataSourceURLDML
@@ -36,6 +36,8 @@ from recsys.core.dal.sql.dataframe import DataFrameDDL, DataFrameDML
 from recsys.core.dal.sql.job import JobDDL, JobDML
 from recsys.core.dal.sql.task import TaskDDL, TaskDML
 from recsys.core.dal.sql.profile import ProfileDDL, ProfileDML
+from recsys.core.dal.sql.database import DatabaseDDL
+from recsys.core.dal.sql.odb import ObjectODL, ObjectOML
 from recsys.core.database.relational import Database, MySQLConnection
 from recsys.core.database.object import ObjectDBConnection, ObjectDB
 
@@ -63,6 +65,10 @@ class ConnectionContainer(containers.DeclarativeContainer):
         pymysql.connect,
     )
 
+    mysql_connection = providers.Factory(
+        MySQLConnection
+    )
+
     object_db_connection = providers.Factory(
         ObjectDBConnection,
         location=config.database.shelve.location,
@@ -75,59 +81,67 @@ class DatabaseContainer(containers.DeclarativeContainer):
     recsys_connection = providers.Dependency()
     object_db_connection = providers.Dependency()
 
-    recsys = providers.Factory(
+    recsys = providers.Singleton(
         Database,
         connection=recsys_connection
     )
 
-    object_db = providers.Factory(
+    object_db = providers.Singleton(
         ObjectDB,
         connection=object_db_connection
     )
 
 
 # ------------------------------------------------------------------------------------------------ #
-class DAOContainer(containers.DeclarativeContainer):
+class DALContainer(containers.DeclarativeContainer):
 
-    file = providers.Factory(FileDAO, dml=FileDML)
+    rdb = providers.Dependency()
+    odb = providers.Dependency()
 
-    datasource = providers.Factory(DataSourceDAO, dml=DataSourceDML)
+    file = providers.Factory(FileDAO, dml=FileDML, database=rdb)
 
-    datasource_url = providers.Factory(DataSourceURLDAO, dml=DataSourceURLDML)
+    datasource = providers.Factory(DataSourceDAO, dml=DataSourceDML, database=rdb)
 
-    dataframe = providers.Factory(DataFrameDAO, dml=DataFrameDML)
+    datasource_url = providers.Factory(DataSourceURLDAO, dml=DataSourceURLDML, database=rdb)
 
-    dataset = providers.Factory(DatasetDAO, dml=DatasetDML)
+    dataframe = providers.Factory(DataFrameDAO, dml=DataFrameDML, database=rdb)
 
-    job = providers.Factory(JobDAO, dml=JobDML)
+    dataset = providers.Factory(DatasetDAO, dml=DatasetDML, database=rdb)
 
-    task = providers.Factory(TaskDAO, dml=TaskDML)
+    job = providers.Factory(JobDAO, dml=JobDML, database=rdb)
 
-    profile = providers.Factory(ProfileDAO, dml=ProfileDML)
+    task = providers.Factory(TaskDAO, dml=TaskDML, database=rdb)
+
+    profile = providers.Factory(ProfileDAO, dml=ProfileDML, database=rdb)
+
+    object = providers.Factory(OAO, dml=ObjectOML, database=odb)
 
 
 # ------------------------------------------------------------------------------------------------ #
 class DBAContainer(containers.DeclarativeContainer):
 
-    recsys = providers.Dependency()
+    rdb = providers.Dependency()
+    odb = providers.Dependency()
 
-    database = providers.Factory(DBA, ddl=DatabaseDDL)
+    database = providers.Factory(DBA, database=rdb, ddl=DatabaseDDL)
 
-    file = providers.Factory(DBA, ddl=FileDDL)
+    file = providers.Factory(DBA, database=rdb, ddl=FileDDL)
 
-    datasource = providers.Factory(DBA, ddl=DataSourceDDL)
+    datasource = providers.Factory(DBA, database=rdb, ddl=DataSourceDDL)
 
-    datasource_url = providers.Factory(DBA, ddl=DataSourceURLDDL)
+    datasource_url = providers.Factory(DBA, database=rdb, ddl=DataSourceURLDDL)
 
-    dataframe = providers.Factory(DBA, ddl=DataFrameDDL)
+    dataframe = providers.Factory(DBA, database=rdb, ddl=DataFrameDDL)
 
-    dataset = providers.Factory(DBA, ddl=DatasetDDL)
+    dataset = providers.Factory(DBA, database=rdb, ddl=DatasetDDL)
 
-    job = providers.Factory(DBA, ddl=JobDDL)
+    job = providers.Factory(DBA, database=rdb, ddl=JobDDL)
 
-    task = providers.Factory(DBA, ddl=TaskDDL)
+    task = providers.Factory(DBA, database=rdb, ddl=TaskDDL)
 
-    profile = providers.Factory(DBA, ddl=ProfileDDL)
+    profile = providers.Factory(DBA, database=rdb, ddl=ProfileDDL)
+
+    object = providers.Factory(ODBA, database=odb, ddl=ObjectODL)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -148,6 +162,10 @@ class Recsys(containers.DeclarativeContainer):
                                    recsys_connection=connection.recsys_connection,
                                    )
 
-    dao = providers.Container(DAOContainer)
+    dal = providers.Container(DALContainer,
+                              rdb=database.recsys,
+                              odb=database.object_db)
 
-    dba = providers.Container(DBAContainer)
+    dba = providers.Container(DBAContainer,
+                              rdb=database.recsys,
+                              odb=database.object_db)
