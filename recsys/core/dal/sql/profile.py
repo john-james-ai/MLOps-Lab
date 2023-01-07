@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Wednesday January 4th 2023 08:42:22 pm                                              #
+# Modified   : Saturday January 7th 2023 09:32:43 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.entity.profile import Profile
 @dataclass
 class CreateProfileTable(SQL):
     name: str = "profile"
-    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(128) NOT NULL, description VARCHAR(255), mode VARCHAR(32) NOT NULL, start DATETIME, end DATETIME, duration MEDIUMINT, user_cpu_time BIGINT, percent_cpu_used FLOAT, total_physical_memory BIGINT, physical_memory_available BIGINT, physical_memory_used BIGINT, percent_physical_memory_used FLOAT, active_memory_used BIGINT, disk_usage BIGINT, percent_disk_usage FLOAT, read_count BIGINT, write_count BIGINT, read_bytes BIGINT, write_bytes BIGINT, read_time FLOAT, write_time FLOAT, bytes_sent BIGINT, bytes_recv BIGINT, parent_id MEDIUMINT DEFAULT 0, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) AS (CONCAT('profile_', name, '_', mode)) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), mode VARCHAR(32), start DATETIME, end DATETIME, duration MEDIUMINT, user_cpu_time BIGINT, percent_cpu_used FLOAT, total_physical_memory BIGINT, physical_memory_available BIGINT, physical_memory_used BIGINT, percent_physical_memory_used FLOAT, active_memory_used BIGINT, disk_usage BIGINT, percent_disk_usage FLOAT, read_count BIGINT, write_count BIGINT, read_bytes BIGINT, write_bytes BIGINT, read_time FLOAT, write_time FLOAT, bytes_sent BIGINT, bytes_recv BIGINT, parent_id MEDIUMINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
     description: str = "Created the profile table."
 
@@ -189,7 +189,7 @@ class SelectAllProfiles(SQL):
 @dataclass
 class ProfileExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM profile WHERE id = %s;"""
+    sql: str = """SELECT EXISTS(SELECT 1 FROM profile WHERE id = %s LIMIT 1);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:

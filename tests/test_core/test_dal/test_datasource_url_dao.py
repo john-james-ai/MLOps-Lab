@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Wednesday January 4th 2023 05:15:32 pm                                              #
+# Modified   : Friday January 6th 2023 10:57:49 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,6 +24,7 @@ import mysql.connector
 
 from recsys.core.dal.dto import DTO
 from recsys.core.dal.dao import DAO
+from recsys.core.entity.datasource import DataSourceURL
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -38,18 +39,12 @@ single_line = f"\n{100 * '-'}"
 class TestDataSourceURLDAO:  # pragma: no cover
     # ============================================================================================ #
     def reset_table(self, container):
-        db = container.database.recsys()
         dba = container.dba.datasource_url()
-        dba.database = db
         dba.reset()
-        dba.database.save()
-        dba.database.connection.close()
 
     # ---------------------------------------------------------------------------------------- #
     def get_dao(self, container) -> DAO:
-        db = container.database.recsys()
-        dao = container.dao.datasource_url()
-        dao.database = db
+        dao = container.dal.datasource_url()
         return dao
 
     # ---------------------------------------------------------------------------------------- #
@@ -101,7 +96,7 @@ class TestDataSourceURLDAO:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
-        dao.database.begin()
+        dao.begin()
 
         for j, (name, datasource_url) in enumerate(datasources[0].urls.items(), start=1):
             dto = datasource_url.as_dto()
@@ -115,13 +110,14 @@ class TestDataSourceURLDAO:  # pragma: no cover
             logger.debug(exists)
             assert exists
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
+
+        dao.begin()
 
         for i in range(1, 6):
             exists = dao.exists(i)
             assert not exists
-        dao.database.save()
+        dao.close()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -160,8 +156,7 @@ class TestDataSourceURLDAO:  # pragma: no cover
             self.check_results(dto)
             logger.debug(dto)
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
 
         for i in range(6, 10):
             assert dao.exists(i)
@@ -196,7 +191,7 @@ class TestDataSourceURLDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
 
-        for i in range(6, 10):
+        for i in range(6, 11):
             dto = dao.read(i)
             assert isinstance(dto, DTO)
             self.check_results(dto)
@@ -295,6 +290,42 @@ class TestDataSourceURLDAO:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
+    def test_read_by_parent(self, container, datasources, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        dao = self.get_dao(container)
+        for i in range(6, 11):
+            urls = dao.read_by_parent_id(i)
+            for id, datasource_url in urls.items():
+                assert isinstance(datasource_url, DataSourceURL)
+                assert datasource_url.parent_id == i
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
     def test_update(self, container, datasources, caplog):
         start = datetime.now()
         logger.info(
@@ -308,34 +339,30 @@ class TestDataSourceURLDAO:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
-        dao.database.connection.begin()
+        dao.begin()
         dtos = dao.read_all()
         for i, dto in dtos.items():
             dto.url = "www.rollback.com"
             dao.update(dto)
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
 
         dtos = dao.read_all()
         for i, dto in dtos.items():
             assert not dto.url == "www.rollback.com"
 
+        dao.begin()
         for i, dto in dtos.items():
             dto.url = "www.committed.com"
             dao.update(dto)
-
-        db = dao.database
-        db.save()
+        dao.save()
 
         dtos = dao.read_all()
         for i, dto in dtos.items():
             assert dto.url == "www.committed.com"
-
-        with pytest.raises(mysql.connector.ProgrammingError):
-            bogus_datasource_url = datasources[0].urls["datasource_url_1"]
-            bogus_datasource_url.id = 7890
-            dao.update(bogus_datasource_url)
+            dto.id = 8938
+            with pytest.raises(mysql.connector.ProgrammingError):
+                dao.update(dto)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -367,12 +394,11 @@ class TestDataSourceURLDAO:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
-        dao.database.begin()
+        dao.begin()
         dao.delete(7)
         assert not dao.exists(7)
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
 
         assert dao.exists(7)
 

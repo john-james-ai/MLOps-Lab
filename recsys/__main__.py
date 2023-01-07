@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 02:32:23 pm                                              #
-# Modified   : Monday January 2nd 2023 06:25:36 pm                                                 #
+# Modified   : Saturday January 7th 2023 12:47:47 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -88,7 +88,7 @@ def build_tables():
 def wireup():
     recsys = Recsys()
     recsys.core.init_resources()
-    recsys.wire(modules=[__name__, "recsys.core.repo.uow"])
+    recsys.wire(modules=[__name__, "recsys.core.repo.context"])
 
 
 def main():

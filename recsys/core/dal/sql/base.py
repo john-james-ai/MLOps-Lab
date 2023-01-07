@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 02:57:58 am                                               #
-# Modified   : Monday January 2nd 2023 08:45:12 pm                                                 #
+# Modified   : Saturday January 7th 2023 11:37:54 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -39,16 +39,7 @@ class DDL(ABC):  # pragma: no cover
 
     create: SQL
     drop: SQL
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                 DML TRANSACTION  CLASS                                           #
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class Transaction(SQL):
-    name: str = "begin"
-    sql: str = """BEGIN;"""
-    args: tuple = ()
+    exists: SQL
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -63,4 +54,26 @@ class DML(ABC):  # pragma: no cover
     select_all: type(SQL) = None
     exists: type(SQL) = None
     delete: type(SQL) = None
-    begin: type(SQL) = Transaction
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                    OBJECT QUERY & MANIPULATION LANGUAGE BASE CLASSES                             #
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class OCL(ABC):
+    """Object Oriented Command Language"""
+
+
+@dataclass
+class ODL(ABC):
+    """Commands that define and manage the object store"""
+
+
+@dataclass
+class OQL(OCL):  # pragma: no cover
+    """Commands that query data."""
+
+
+@dataclass
+class OML(OCL):  # pragma: no cover
+    """Commands that manipulate data."""

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 02:13:29 pm                                             #
-# Modified   : Tuesday January 3rd 2023 10:25:25 pm                                                #
+# Modified   : Friday January 6th 2023 10:35:20 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -191,7 +191,7 @@ class TestObjectDB:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         db = container.database.object_db()
 
-        entities = db.selectall()
+        entities = db.select_all()
 
         assert len(entities) == 5
         logger.debug(100 * "=")
@@ -221,7 +221,7 @@ class TestObjectDB:  # pragma: no cover
         assert file == f2
         # ---------------------------------------------------------------------------------------- #
         keys = ["file_file_1_1_test", "file_file_2_2_test", "file_file_3_3_test", "dsda"]
-        entities = entities = db.selectall(keys=keys)  # Should log warning one not found.
+        entities = entities = db.select_all(keys=keys)  # Should log warning one not found.
         assert len(entities) == 3
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Wednesday January 4th 2023 07:24:37 pm                                              #
+# Modified   : Saturday January 7th 2023 09:17:35 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -193,6 +193,7 @@ class Dataset(DataComponent):
 
         dto = DatasetDTO(
             id=self._id,
+            oid=self._oid,
             name=self._name,
             description=self._description,
             datasource_id=self._datasource_id,
@@ -338,6 +339,7 @@ class DataFrame(DataComponent):
     def as_dto(self) -> DataFrameDTO:
         return DataFrameDTO(
             id=self._id,
+            oid=self._oid,
             name=self._name,
             description=self._description,
             stage=self._stage,

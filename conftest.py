@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Wednesday January 4th 2023 08:33:25 pm                                              #
+# Modified   : Saturday January 7th 2023 12:39:30 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -183,7 +183,7 @@ def profiles():
 
 
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def datasets(ratings):
     datasets = []
     for i in range(1, 6):
@@ -195,6 +195,7 @@ def datasets(ratings):
             mode="test",
         )
         for j in range(1, 6):
+            j = j + (i - 1)
             dataframe = DataFrame(
                 name=f"dataframe_{j}_dataset_{i}",
                 data=ratings,
@@ -280,5 +281,5 @@ def job_config():
 def container():
     container = Recsys()
     container.init_resources()
-    container.wire(modules=[recsys.containers])
+    container.wire(modules=[recsys.containers, "recsys.setup.reset_db"])
     return container

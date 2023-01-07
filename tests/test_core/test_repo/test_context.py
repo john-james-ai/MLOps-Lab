@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_di/test_containers.py                                                   #
+# Filename   : /tests/test_core/test_repo/test_context.py                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Monday January 2nd 2023 07:33:11 pm                                                 #
-# Modified   : Saturday January 7th 2023 12:47:47 pm                                               #
+# Created    : Wednesday January 4th 2023 11:14:20 pm                                              #
+# Modified   : Friday January 6th 2023 10:42:14 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -21,36 +21,47 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.database.relational import MySQLConnection, Database
-from recsys.core.database.object import ObjectDB, ObjectDBConnection
-from recsys.core.dal.dba import DBA
+from recsys.core.entity.dataset import Dataset
+from recsys.core.entity.dataset import DataFrame
+from recsys.core.entity.datasource import DataSource, DataSourceURL
+from recsys.core.entity.job import Job, Task
+from recsys.core.entity.file import File
+from recsys.core.entity.profile import Profile
+from recsys.core.dal.dao import DatasetDAO, DataFrameDAO, FileDAO, JobDAO, TaskDAO, DataSourceDAO, DataSourceURLDAO, ProfileDAO
+from recsys.core.dal.dto import DataFrameDTO
+from recsys.core.repo.context import Context
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
+double_line = f"\n{100 * '='}"
+single_line = f"\n{100 * '-'}"
 
-# ------------------------------------------------------------------------------------------------ #
 
+@pytest.mark.context
+class TestContext:  # pragma: no cover
 
-@pytest.mark.di
-class TestContainers:  # pragma: no cover
     # ============================================================================================ #
-    def test_config(self, container, caplog):
+    def reset_table(self, container):
+        dba = container.dba.dataset()
+        dba.reset()
+        dba = container.dba.dataframe()
+        dba.reset()
+
+    # ============================================================================================ #
+    def test_setup(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        config = container.config
-        assert config.database.shelve.location() == "data/prod/recsys.object_db"
-        assert config.database.host() == "localhost"
-        assert config.database.user() == "root"
-        assert config.database.dbname() == "recsys"
+        self.reset_table(container)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -63,88 +74,47 @@ class TestContainers:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_connection(self, container, caplog):
+    def test_get_dao(self, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        connection = container.connection
-        assert isinstance(connection.recsys_connection(), MySQLConnection)
-        assert isinstance(connection.object_db_connection(), ObjectDBConnection)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        cntx = Context()
+        dao = cntx.get_dao(Dataset)
+        assert isinstance(dao, DatasetDAO)
 
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
+        dao = cntx.get_dao(DataFrame)
+        assert isinstance(dao, DataFrameDAO)
 
-    # ============================================================================================ #
-    def test_database(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        database = container.database()
-        assert isinstance(database.recsys(), Database)
-        assert isinstance(database.object_db(), ObjectDB)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        dao = cntx.get_dao(DataSource)
+        assert isinstance(dao, DataSourceDAO)
 
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
+        dao = cntx.get_dao(DataSourceURL)
+        assert isinstance(dao, DataSourceURLDAO)
 
-    # ============================================================================================ #
-    def test_dba(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        dba = container.dba()
-        assert isinstance(dba.database(), DBA)
-        assert isinstance(dba.file(), DBA)
-        assert isinstance(dba.datasource(), DBA)
-        assert isinstance(dba.datasource_url(), DBA)
-        assert isinstance(dba.dataframe(), DBA)
-        assert isinstance(dba.dataset(), DBA)
-        assert isinstance(dba.job(), DBA)
-        assert isinstance(dba.task(), DBA)
-        assert isinstance(dba.profile(), DBA)
+        dao = cntx.get_dao(Profile)
+        assert isinstance(dao, ProfileDAO)
+
+        dao = cntx.get_dao(Job)
+        assert isinstance(dao, JobDAO)
+
+        dao = cntx.get_dao(Task)
+        assert isinstance(dao, TaskDAO)
+
+        dao = cntx.get_dao(File)
+        assert isinstance(dao, FileDAO)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -159,3 +129,119 @@ class TestContainers:  # pragma: no cover
                 end.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_rollback(self, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        cntx = Context()
+        ds_dao = cntx.get_dao(Dataset)
+        df_dao = cntx.get_dao(DataFrame)
+
+        cntx.begin()
+
+        for dataset in datasets:
+            for name, dataframe in dataset.dataframes.items():
+                dataframe = df_dao.create(dataframe.as_dto())
+                assert df_dao.exists(dataframe.id)
+            dataset = ds_dao.create(dataset.as_dto())
+            assert ds_dao.exists(dataset.id)
+
+        for i, dataset in enumerate(datasets, start=1):
+            assert ds_dao.exists(i)
+            for name, dataframe in dataset.dataframes.items():
+                df = df_dao.read_by_name_mode(name, mode="test")
+                assert isinstance(df, DataFrameDTO)
+
+        cntx.rollback()
+
+        assert len(df_dao) == 0
+        assert len(ds_dao) == 0
+
+        for i, dataset in enumerate(datasets, start=1):
+            assert not ds_dao.exists(i)
+            for name, dataframe in dataset.dataframes.items():
+                df = df_dao.read_by_name_mode(name, mode="test")
+                assert not isinstance(df, DataFrameDTO)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_transaction(self, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        cntx = Context()
+        ds_dao = cntx.get_dao(Dataset)
+        df_dao = cntx.get_dao(DataFrame)
+
+        cntx.begin()
+        assert cntx.in_transaction
+
+        for dataset in datasets:
+            for name, dataframe in dataset.dataframes.items():
+                dataframe = df_dao.create(dataframe.as_dto())
+                assert df_dao.exists(dataframe.id)
+            dataset = ds_dao.create(dataset.as_dto())
+            assert ds_dao.exists(dataset.id)
+
+        cntx.save()
+        cntx.close()
+
+        assert not cntx.in_transaction
+
+        cntx.begin()
+        for dataset in datasets:
+            for name, dataframe in dataset.dataframes.items():
+                df = df_dao.read_by_name_mode(name, mode="test")
+                assert df_dao.exists(df.id)
+            ds = ds_dao.read_by_name_mode(name=dataset.name, mode=dataset.mode)
+            assert ds_dao.exists(ds.id)
+        cntx.close()
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)

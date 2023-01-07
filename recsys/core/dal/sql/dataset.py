@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday January 4th 2023 01:24:05 pm                                              #
+# Modified   : Saturday January 7th 2023 09:35:04 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.entity.dataset import Dataset
 @dataclass
 class CreateDatasetTable(SQL):
     name: str = "dataset"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(128) NOT NULL, description VARCHAR(255), datasource_id SMALLINT NOT NULL, mode VARCHAR(32) NOT NULL, stage VARCHAR(64) NOT NULL, task_id MEDIUMINT DEFAULT 0, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) AS (CONCAT('dataset_', name, '_', mode)) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), datasource_id SMALLINT NOT NULL, mode VARCHAR(32) NOT NULL, stage VARCHAR(64) NOT NULL, task_id MEDIUMINT DEFAULT 0, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
     description: str = "Created the dataset table."
 
@@ -81,7 +81,7 @@ class InsertDataset(SQL):
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource_id,
+            self.dto.datasource.id,
             self.dto.mode,
             self.dto.stage,
             self.dto.task_id,
@@ -103,7 +103,7 @@ class UpdateDataset(SQL):
         self.args = (
             self.dto.name,
             self.dto.description,
-            self.dto.datasource_id,
+            self.dto.datasource.id,
             self.dto.mode,
             self.dto.stage,
             self.dto.task_id,
@@ -154,7 +154,7 @@ class SelectAllDataset(SQL):
 @dataclass
 class DatasetExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM dataset WHERE id = %s;"""
+    sql: str = """SELECT EXISTS(SELECT 1 FROM dataset WHERE id = %s LIMIT 1);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:

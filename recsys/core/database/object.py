@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Tuesday January 3rd 2023 10:25:25 pm                                                #
+# Modified   : Saturday January 7th 2023 11:29:33 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,17 +19,172 @@
 """Object persistence module"""
 import os
 import shelve
+from typing import Union
 from glob import glob
-from mysql.connector import errors
 
-from .base import AbstractConnection, AbstractDatabase
+from .base import Connection, AbstractDatabase, Cursor
 from recsys.core.entity.base import Entity
+from recsys.core.dal.sql.base import OCL, OQL, OML
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                         STORAGE CURSOR                                           #
+# ------------------------------------------------------------------------------------------------ #
+class StorageCursor(Cursor):
+    """Class for object storage cursors.
+
+    Args:
+        location (str): The path to the database file.
+
+    """
+
+    def __init__(self, location) -> None:
+        super().__init__(location=location)
+
+    def execute(self, ocl: OCL) -> Union[Entity, None]:
+
+        commands = {"insert": self._insert, "select": self._select,
+                    "select_by_name_mode": self._select_by_name_mode,
+                    "update": self._update, "delete": self._delete,
+                    "exists": self._exists}
+
+        return commands[ocl.cmd](ocl)
+
+    def _select(self, ocl: OQL) -> Union[Entity, None]:
+        """Select an existing entity by oid from object storage"""
+        try:
+            result = self._cursor[ocl.oid]
+        except KeyError:
+            result = None
+        return result
+
+    def _select_by_name_mode(self, ocl: OQL) -> Union[Entity, None]:
+        """Select an existing entity by name and mode from object storage."""
+        try:
+            result = self._cursor[ocl.oid]
+        except KeyError:
+            result = None
+        return result
+
+    def _insert(self, ocl: OML) -> None:
+        """Inserts an entity into the underlying object data store."""
+        if ocl.oid not in self._cursor.keys():
+            self._cursor[ocl.entity.oid] = ocl.entity
+            msg = f"{self.__class__.__name__} inserted entity oid: {ocl.oid}."
+            self._logger.info(msg)
+        else:
+            msg = f"{self.__class__.__name__} unable to insert entity oid: {ocl.oid}. Entity already exists."
+            self._logger.error(msg)
+            raise FileExistsError(msg)
+
+    def _update(self, ocl: OML) -> None:
+        """Update an existing entity in object storage or cache."""
+        if ocl.oid in self._cursor.keys():
+            self._cursor[ocl.oid] = ocl.entity
+            msg = f"{self.__class__.__name__} updated entity oid: {ocl.oid}."
+            self._logger.info(msg)
+        else:
+            msg = f"{self.__class__.__name__} unable to update entity oid: {ocl.oid}. Entity does not exist."
+            self._logger.error(msg)
+            raise FileNotFoundError(msg)
+
+    def _delete(self, ocl: OML) -> None:
+        """Deletes a key/value pair from object storage"""
+        try:
+            del self._cursor[ocl.oid]
+            msg = f"Deleted object with oid = {ocl.oid} from object storage."
+            self._logger.info(msg)
+
+        except KeyError:
+            msg = f"{self.__class__.__name__} unable to delete entity oid: {ocl.oid}. Entity does not exist."
+            self._logger.error(msg)
+            raise FileNotFoundError(msg)
+
+    @classmethod
+    def _exists(self, ocl: OML) -> None:
+        """Checks existence of an object in the storage"""
+        return ocl.oid in self._cursor.keys()
+
+    @classmethod
+    def save(self, cache: dict) -> None:
+        """Commits cache to object storage."""
+        for oid, entity in cache.items():
+            if entity is not None:
+                self._cursor[oid] = entity
+            else:
+                del self._cursor[oid]
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                          CACHE CURSOR                                            #
+# ------------------------------------------------------------------------------------------------ #
+class CacheCursor(Cursor):
+    """Class for object cache.
+
+    Args:
+        location (str): The path to the database file.
+
+    """
+
+    def __init__(self, location) -> None:
+        super().__init__(location=location)
+
+    @property
+    def cache(self) -> dict:
+        cache = {}
+        for oid, entity in self._cursor.items():
+            cache[oid] = entity
+        return cache
+
+    def execute(self, ocl: OCL) -> Union[Entity, None]:
+
+        commands = {"insert": self._insert,
+                    "update": self._update,
+                    "delete": self._delete}
+        return commands[ocl.cmd](ocl)
+
+    def _insert(self, ocl: OML) -> None:
+        """Inserts an entity into the underlying object cache."""
+        if ocl.oid not in self._cursor.keys():
+            self._cursor[ocl.entity.oid] = ocl.entity
+            msg = f"{self.__class__.__name__} inserted entity oid: {ocl.oid}."
+            self._logger.debug(msg)
+        else:
+            msg = f"{self.__class__.__name__} unable to insert entity oid: {ocl.oid}. Entity already exists."
+            self._logger.error(msg)
+            raise FileExistsError(msg)
+
+    def _update(self, ocl: OML) -> None:
+        """Update an existing entity in object cache."""
+        if ocl.oid in self._cursor.keys():
+            self._cursor[ocl.oid] = ocl.entity
+            msg = f"{self.__class__.__name__} updated entity oid: {ocl.oid}."
+            self._logger.debug(msg)
+        else:
+            msg = f"{self.__class__.__name__} unable to update entity oid: {ocl.oid}. Entity does not exist."
+            self._logger.error(msg)
+            raise FileNotFoundError(msg)
+
+    def _delete(self, ocl: OML) -> None:
+        """Marks a key/value pair for deletion from object storage"""
+        try:
+            self._cursor[ocl.oid] = None
+            msg = f"Marked object with oid = {ocl.oid} for deletion from object cache."
+        except KeyError:
+            msg = f"{self.__class__.__name__} unable to delete entity oid: {ocl.oid}. Entity does not exist."
+            self._logger.error(msg)
+            raise FileNotFoundError(msg)
+
+    def reset(self) -> None:
+        for oid in self._cursor.keys():
+            del self._cursor[oid]
+        self.close()
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                             OBJECT DATABASE (PSEUDO) CONNECTION                                  #
 # ------------------------------------------------------------------------------------------------ #
-class ObjectDBConnection(AbstractConnection):
+class ObjectDBConnection(Connection):
     """Creates an object datastore at the designated directory location.
 
     Args:
@@ -37,75 +192,89 @@ class ObjectDBConnection(AbstractConnection):
             the database name by convention.
     """
 
-    def __init__(self, location: str) -> None:
+    __cache_filename = "cache.odb"
+
+    def __init__(self, location: str, autocommit: bool = True, autoclose: bool = False) -> None:
         super().__init__()
         self._location = location
-        self._connection = None
-        self._is_connected = False
+        self._cache_location = os.path.join(os.path.dirname(location), self.__cache_filename)
+        self._autocommit = autocommit
+        self._autoclose = autoclose
+        self._cache_cursor = None
+        self._storage_cursor = None
+        self._current_cursor = None
         self._in_transaction = False
-
-        os.makedirs(os.path.dirname(self._location), exist_ok=True)
-        self._connection = shelve.open(self._location, writeback=True)
-        self._is_connected = True
-        self._logger.debug(f"{self.__class__.__name__} is open.")
-
-    @property
-    def database(self) -> str:
-        """Returns the path of the underlying database."""
-        return self._location
 
     @property
     def is_connected(self) -> bool:
+        """Returns the True if the connection is open, False otherwise."""
         return self._is_connected
 
     @property
     def in_transaction(self) -> bool:
+        """Returns the True if a transaction has been started."""
         return self._in_transaction
 
     @property
-    def cursor(self) -> shelve:
-        return self._connection
+    def autocommit(self) -> bool:
+        return self._autocommit
 
-    @cursor.setter
-    def cursor(self, cursor: shelve) -> None:
-        self._connection = cursor
+    @property
+    def autoclose(self) -> bool:
+        return self._autoclose
+
+    @property
+    def location(self) -> str:
+        return self._location
+
+    @property
+    def cache_filename(self) -> str:
+        return self.__cache_filename
+
+    @property
+    def cursor(self) -> shelve:
+        """Returns a cursor from the connection."""
+        return self._current_cursor
 
     def begin(self) -> None:
         """Starts a transaction."""
         self._in_transaction = True
+        self._current_cursor = self._cache_cursor
+        self._logger.debug(f"{self.__class__.__name__} transaction has started.")
+
+    def open(self, autocommit: bool = False) -> None:
+        """Opens a database connection."""
+        self._cache_cursor = CacheCursor(self._cache_location)
+        self._storage_cursor = StorageCursor(self._location)
+        if self._autocommit and not self._in_transaction:
+            self._current_cursor = self._storage_cursor
+        else:
+            self._current_cursor = self._cache_cursor
+        self._is_connected = True
+        self._logger.debug(f"{self.__class__.__name__} connection is open.")
+
+    def execute(self, ocl: OCL) -> Union[Entity, None]:
+        return self._current_cursor.execute(ocl)
 
     def close(self) -> None:
         """Closes the current connection."""
-        if self._connection is not None:
-            self._connection.close()
-            self._connection = None
-            self._is_connected = False
-            self._in_transaction = False
-            self._logger.debug(f"{self.__class__.__name__} is closed.")
-        else:
-            msg = f"{self.__class__.__name__} is already closed."
-            self._logger.warning(msg)
-            raise errors.ProgrammingError(msg)
+        self._cache_cursor.close()
+        self._storage_cursor.close()
+        self._current_connection = None
+        self._is_connected = False
+        self._in_transaction = False
+        self._logger.debug(f"{self.__class__.__name__} is closed.")
 
     def commit(self) -> None:
         """Commits data to the underlying database."""
+        self._storage_cursor.save(self._cache_cursor.cache)
+        self._cache_cursor.reset()
         self._in_transaction = False
-        if self._connection is not None:
-            self._connection.sync()
-            self._logger.debug(f"{self.__class__.__name__} is committed.")
-        else:
-            self._logger.error(f"{self.__class__.__name__} is closed. Nothing to commit.")
 
     def rollback(self) -> None:  # pragma: no cover
-        """Rollsback changes made to the database since last commit."""
-        raise NotImplementedError()
-
-    def delete(self) -> None:
-        go = input("This will permanently delete object storage. Continue? (y/n)")
-        if 'y' in go.lower():
-            locations = self._location + ".*"
-            for f in glob(locations):
-                os.remove(f)
+        """Rolls back changes made to the database since last commit."""
+        self._cache_cursor.reset()
+        self._in_transaction = False
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -113,122 +282,129 @@ class ObjectDBConnection(AbstractConnection):
 # ------------------------------------------------------------------------------------------------ #
 class ObjectDB(AbstractDatabase):
     """Manages object persistence."""
-    def __init__(self, connection: AbstractConnection) -> None:
+
+    def __init__(self, connection: type(Connection)) -> None:
         super().__init__()
         self._connection = connection
+        self._autocommit = connection.autocommit
+        self._autoclose = connection.autoclose
+        self._in_transaction = False
+        self._is_connected = False
 
     @property
-    def connection(self) -> AbstractConnection:
-        return self._connection
+    def in_transaction(self) -> bool:
+        return self._in_transaction
 
-    # -------------------------------------------------------------------------------------------- #
-    def query(self, oid: str) -> Entity:
-        """Executes a query on the database."""
-        return self._connection.cursor[oid]
+    @property
+    def is_connected(self) -> bool:
+        return self._is_connected
 
-    # -------------------------------------------------------------------------------------------- #
+    def connect(self) -> None:
+        """Connects to the database."""
+        self._connection.open()
+        self._is_connected = True
+
     def begin(self) -> None:
+        """Starts a transaction on the underlying database connection."""
+        if not self._is_connected:
+            self.connect()
         self._connection.begin()
+        self._in_transaction = True
 
-    # -------------------------------------------------------------------------------------------- #
-    def create(self, location: str) -> None:
-        """Creates an object storage database in the designated location."""
-        return ObjectDBConnection(location)
+    def close(self) -> None:
+        """Closes the underlying database connection."""
+        self._connection.close()
+        self._is_connected = False
+        self._in_transaction = False
 
-    # -------------------------------------------------------------------------------------------- #
-    def insert(self, entity: Entity) -> None:
-        """Inserts an entity into object storage if it doesn't already exist."""
-        cursor = self._connection.cursor
-        if entity.oid in cursor.keys():
-            msg = f"Unable to insert entity oid: {entity.oid}. The entity already exists."
-            self._logger.error(msg)
-            raise FileExistsError(msg)
-        else:
-            cursor[entity.oid] = entity
-            self._connection.cursor = cursor
-            self._logger.debug(f"{self.__class__.__name__} inserted {entity.__class__.__name__}.{entity.name}.")
-            if not self._connection.in_transaction:
-                self._connection.commit()
-
-    # -------------------------------------------------------------------------------------------- #
-    def select(self, oid: str) -> Entity:
-        """Performs a select query returning a single instance or row."""
-        try:
-            return self._connection.cursor[oid]
-        except KeyError:
-            msg = f"No entity with oid = {oid} exists in the database."
-            self._logger.error(msg)
-            raise FileNotFoundError(msg)
-        except AttributeError:  # pragma: no cover
-            msg = f"No entity with oid = {oid} exists in the database."
-            self._logger.error(msg)
-            raise FileNotFoundError(msg)
-
-    # -------------------------------------------------------------------------------------------- #
-    def selectall(self, keys: list = None) -> dict:
-        """Performs a select query returning one or multiple instances."""
-        result = {}
-        cursor = self._connection.cursor
-        if keys is not None:
-            for key in keys:
-                try:
-                    result[key] = cursor[key]
-                except KeyError:
-                    msg = f"No object with oid = {key} was found in object storage."
-                    self._logger.error(msg)
-        else:
-            for oid, entity in cursor.items():
-                result[oid] = entity
-        return result
-
-    # -------------------------------------------------------------------------------------------- #`
-    def update(self, entity: Entity) -> None:
-        """Performs an update on existing data in the database."""
-        cursor = self._connection.cursor
-        try:
-            if entity.oid in cursor.keys():
-                cursor[entity.oid] = entity
-                self._connection.cursor = cursor
-                self._logger.debug(f"{self.__class__.__name__} updated {entity.__class__.__name__}.{entity.name}.")
-                if not self._connection.in_transaction:
-                    self._connection.commit()
-            else:
-                msg = f"No object oid = {entity.oid} was found in object storage. Try inserting instead."
-                self._logger.error(msg)
-                raise FileNotFoundError(msg)
-        except AttributeError:  # pragma: no cover
-            msg = f"No object oid = {entity.oid} was found in object storage. Try inserting instead."
-            self._logger.error(msg)
-            raise FileNotFoundError(msg)
-
-    # -------------------------------------------------------------------------------------------- #
-    def delete(self, oid: str) -> None:
-        """Deletes existing data from the database."""
-        cursor = self._connection.cursor
-        try:
-            del cursor[oid]
-            self._connection.cursor = cursor
-            self._logger.debug(f"{self.__class__.__name__} deleted entity identified by oid = {oid}.")
-            if not self._connection.in_transaction:
-                self._connection.commit()
-        except KeyError:
-            msg = f"No object oid = {oid} was found in object storage."
-            self._logger.error(msg)
-            raise FileNotFoundError(msg)
-
-    # -------------------------------------------------------------------------------------------- #
-    def drop(self) -> None:
-        self._connection.delete()
-
-    # -------------------------------------------------------------------------------------------- #
-    def exists(self, oid: str) -> bool:
-        """Returns True if the data specified by the parameters exists. Returns False otherwise."""
-        try:
-            return oid in self._connection.cursor.keys()
-        except AttributeError:
-            return False
-
-    # -------------------------------------------------------------------------------------------- #
     def save(self) -> None:
         """Saves changes to the database."""
         self._connection.commit()
+        self._in_transaction = False
+
+    def rollback(self) -> None:
+        """Rolls back the database to state as of last save or commit."""
+        self._connection.rollback()
+        self._in_transaction = False
+
+    def query(self, ocl: OCL) -> Union[Entity, None]:
+        """Executes a query on the database."""
+        self._open_session()
+        cursor = self._connection.cursor
+        result = cursor.execute(ocl)
+        self._close_session()
+        return result
+
+    def insert(self, ocl: OCL) -> int:
+        """Inserts an object into object storage."""
+        self.query(ocl)
+
+    def select(self, ocl: OCL) -> tuple:
+        """Performs a select query returning a single instance or row."""
+        return self.query(ocl)
+
+    def select_all(self, ocl: OCL) -> list:
+        """Performs a select query returning multiple instances or rows."""
+        return self.query(ocl)
+
+    def update(self, ocl: OCL) -> None:
+        """Performs an update on existing data in the database."""
+        self.query(ocl)
+        return 1
+
+    def delete(self, ocl: OCL) -> None:
+        """Deletes existing data."""
+        self.query(ocl)
+
+    def create(self, ocl: OCL) -> None:
+        """Executes create OCL statement for databases and tables."""
+        self._connection = ObjectDBConnection(location=ocl.location,
+                                              autocommit=ocl.autocommit,
+                                              autoclose=ocl.autoclose)
+        msg = f"Created an object store at {ocl.location}: autocommit={ocl.autocommit}; autoclose={ocl.autoclose}."
+        self._logger.info(msg)
+
+    def drop(self, ocl: OCL) -> None:
+        """Drop a database or table."""
+        storage_pattern = ocl.location + "*"
+        cache_pattern = os.path.join(os.path.dirname(ocl.location), self._connection.cache_filename) + "*"
+        if self._connection.location == ocl.location:
+            self.close()
+        self._remove(storage_pattern, shelf='storage')
+        self._remove(cache_pattern, shelf='cache')
+        msg = f"Dropped object store at {ocl.location}."
+        self._logger.info(msg)
+
+    def exists(self, ocl: OCL) -> bool:
+        """Returns True if the data specified by the parameters exists. Returns False otherwise."""
+        if hasattr(ocl, "location"):
+            pattern = ocl.location + "*"
+            return len(glob(pattern)) > 0
+        else:
+            return self.query(ocl)
+
+    def _open_session(self) -> None:
+        """Opens a database connection if not already open."""
+        if not self._is_connected:
+            self.connect()
+
+    def _close_session(self) -> None:
+        """Saves and closes the connection, if not in transaction."""
+        if not self._in_transaction and self._autocommit:
+            self.save()
+        if not self._in_transaction and self._autoclose:
+            self.close()
+
+    def _remove(self, pattern, shelf: str) -> None:
+        """Removes files that match the glob pattern."""
+        file_list = glob(pattern, recursive=True)
+        for filepath in file_list:
+            try:
+                os.remove(filepath)
+                msg = f"Removed {filepath} from {shelf}."
+                self._logger.debug(msg)
+
+            except OSError:
+                msg = f"Error while deleting file at {filepath}"
+                self._logger.error(msg)
+                raise OSError(msg)

@@ -4,52 +4,37 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_core/test_dal/test_dataframe_dao.py                                     #
+# Filename   : /tests/test_core/test_dal/test_database_dal.py                                      #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Friday January 6th 2023 10:58:26 pm                                                 #
+# Created    : Tuesday January 3rd 2023 03:04:52 pm                                                #
+# Modified   : Friday January 6th 2023 10:35:20 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
-# Copyright  : (c) 2022 John James                                                                 #
+# Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
 import inspect
 from datetime import datetime
 import pytest
 import logging
-import mysql.connector
 
-from recsys.core.dal.dto import DTO
-from recsys.core.dal.dao import DAO
-
+from recsys.core.dal.sql.file import FileDML
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 double_line = f"\n{100 * '='}"
-single_line = f"\n{100 * '-'}"
+single_line = f"\n{100 * '-'}\n"
 
 
-@pytest.mark.dao
-@pytest.mark.dataframe_dao
-class TestDataFrameDAO:  # pragma: no cover
-    # ============================================================================================ #
+@pytest.mark.database
+class TestDatabase:  # pragma: no cover
     def reset_table(self, container):
-        dba = container.dba.dataframe()
+        dba = container.dba.file()
         dba.reset()
-
-    # ---------------------------------------------------------------------------------------- #
-    def get_dao(self, container) -> DAO:
-        dao = container.dal.dataframe()
-        return dao
-
-    # ---------------------------------------------------------------------------------------- #
-    def check_results(self, dto) -> None:
-        assert dto.id is not None
-        assert isinstance(dto, DTO)
 
     # ============================================================================================ #
     def test_setup(self, container, caplog):
@@ -81,7 +66,7 @@ class TestDataFrameDAO:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_create_exists(self, container, datasets, caplog):
+    def test_connection(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -93,29 +78,16 @@ class TestDataFrameDAO:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-        dao.begin()
+        db = container.dal.database()
+        assert not db.is_connected
+        assert not db.in_transaction
 
-        for j, (name, dataframe) in enumerate(datasets[0].dataframes.items(), start=1):
-            dto = dataframe.as_dto()
-            dto.datasource_id = j
-            dto = dao.create(dto)
-            self.check_results(dto)
-            logger.debug(dto)
+        db.connect()
+        assert db.is_connected
+        assert not db.in_transaction
 
-        for i in range(1, 6):
-            exists = dao.exists(i)
-            logger.debug(exists)
-            assert exists
-
-        dao.rollback()
-
-        dao.begin()
-
-        for i in range(1, 6):
-            exists = dao.exists(i)
-            assert not exists
-        dao.close()
+        db.close()
+        assert not db.is_connected
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -133,7 +105,7 @@ class TestDataFrameDAO:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_create_commit(self, container, datasets, caplog):
+    def test_create_exists(self, container, files, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -145,26 +117,42 @@ class TestDataFrameDAO:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-
-        for j, (name, dataframe) in enumerate(datasets[0].dataframes.items(), start=1):
-            dto = dataframe.as_dto()
-            dto.datasource_id = j
-            dto = dao.create(dto)
-            self.check_results(dto)
+        db = container.dal.database()
+        db.begin()
+        for file in files:
+            dto = file.as_dto()
+            cmd = FileDML.insert(dto)
+            dto.id = db.insert(sql=cmd.sql, args=cmd.args)
             logger.debug(dto)
 
-        dao.rollback()
+        for i in range(1, 6):
+            cmd = FileDML.exists(i)
+            response = db.exists(sql=cmd.sql, args=cmd.args)
+            assert response
 
-        for i in range(6, 11):
-            assert dao.exists(i)
+        db.rollback()
+
+        for i in range(1, 6):
+            cmd = FileDML.exists(i)
+            response = db.exists(sql=cmd.sql, args=cmd.args)
+            assert not response
+
+        # Add some data for the rest of the test.
+        for file in files:
+            dto = file.as_dto()
+            cmd = FileDML.insert(dto)
+            dto.id = db.insert(sql=cmd.sql, args=cmd.args)
+
+        db.save()
+        db.close()
+        assert not db.is_connected
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
 
         logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+            "\nCompleted {} {} in {} seconds at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 duration,
@@ -187,15 +175,62 @@ class TestDataFrameDAO:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-
+        db = container.dal.database()
+        db.begin()
         for i in range(6, 11):
-            dto = dao.read(i)
-            assert isinstance(dto, DTO)
-            self.check_results(dto)
+            dml = FileDML.select(id=i)
+            row = db.select(sql=dml.sql, args=dml.args)
+            assert isinstance(row, tuple)
 
-        result = dao.read(99)
-        assert result is None
+        dml = FileDML.select_all()
+        rows = db.select_all(sql=dml.sql, args=dml.args)
+        assert len(rows) == 5
+        db.save()
+        db.close()
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_update(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.dal.database()
+        db.begin()
+        for i, file in enumerate(files, start=6):
+            file.id = i
+            file.task_id = i + 55
+            dto = file.as_dto()
+            dml = FileDML.update(dto)
+            rowcount = db.update(sql=dml.sql, args=dml.args)
+            assert rowcount == 1
+            dml = FileDML.select(i)
+            row = db.select(sql=dml.sql, args=dml.args)
+            assert row[8] == i + 55
+
+        db.save()
+        db.close()
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -214,7 +249,7 @@ class TestDataFrameDAO:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_read_all(self, container, caplog):
+    def test_update_non_existing_entity(self, container, files, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -226,13 +261,16 @@ class TestDataFrameDAO:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-
-        dtos = dao.read_all()
-        assert isinstance(dtos, dict)
-        for i, dto in dtos.items():
-            assert dto.id == i
-
+        db = container.dal.database()
+        db.begin()
+        for i, file in enumerate(files, start=1):
+            file.id = i * 88
+            dto = file.as_dto()
+            dml = FileDML.update(dto)
+            rowcount = db.update(sql=dml.sql, args=dml.args)
+            assert rowcount == 0
+        db.save()
+        db.close()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -250,7 +288,7 @@ class TestDataFrameDAO:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_read_by_name_mode(self, container, caplog):
+    def test_count(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -262,70 +300,13 @@ class TestDataFrameDAO:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-
-        dto = dao.read_by_name_mode(name="dataframe_3_dataset_1", mode='test')
-        assert isinstance(dto, DTO)
-        self.check_results(dto)
-
-        dto = dao.read_by_name_mode(name="dataframe_1", mode='skdi')
-        assert dto is None
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-
-        )
-        logger.info(single_line)
-
-    # ============================================================================================ #
-    def test_update(self, container, datasets, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\nStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        logger.info(double_line)
-        # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-        dao.begin()
-        dtos = dao.read_all()
-        for i, dto in dtos.items():
-            dto.description = "2brollback"
-            dao.update(dto)
-
-        dao.rollback()
-
-        dtos = dao.read_all()
-        for i, dto in dtos.items():
-            assert not dto.description == "2brollback"
-
-        dao.begin()
-        for i, dto in dtos.items():
-            dto.description = "2bsustained"
-            dao.update(dto)
-        dao.save()
-
-        dtos = dao.read_all()
-        for i, dto in dtos.items():
-            assert dto.description == "2bsustained"
-            dto.id = 8938
-            with pytest.raises(mysql.connector.ProgrammingError):
-                dao.update(dto)
-
+        db = container.dal.database()
+        db.begin()
+        dml = FileDML.select_all()
+        count = db.count(sql=dml.sql, args=dml.args)
+        assert count == 5
+        db.save()
+        db.close()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -355,17 +336,112 @@ class TestDataFrameDAO:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-        dao.begin()
-        dao.delete(8)
-        assert not dao.exists(8)
+        db = container.dal.database()
+        db.begin()
+        for i in range(6, 11):
+            dml = FileDML.delete(i)
+            db.delete(sql=dml.sql, args=dml.args)
+            dml = FileDML.exists(i)
+            assert not db.exists(sql=dml.sql, args=dml.args)
 
-        dao.rollback()
+        dml = FileDML.select_all()
+        count = db.count(sql=dml.sql, args=dml.args)
+        assert count == 0
+        db.save()
+        db.close()
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
 
-        assert dao.exists(8)
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
 
-        with pytest.raises(mysql.connector.ProgrammingError):
-            dao.delete(8743)
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_transaction(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        # Reset file table
+        db = container.dal.database()
+        db.connect()
+
+        # Before
+        dml = FileDML.select_all()
+        count = db.count(sql=dml.sql, args=dml.args)
+        assert count == 0
+
+        db.close()
+
+        # Insert in transaction Note: Inserts are autocommitted, regardless.
+        db.begin()
+        for i, file in enumerate(files, start=6):
+            dto = file.as_dto()
+            dml = FileDML.insert(dto)
+            file.id = db.insert(sql=dml.sql, args=dml.args)
+            assert file.id == i + 5
+            dml = FileDML.exists(dto)
+            assert not db.exists(sql=dml.sql, args=dml.args)
+
+        dml = FileDML.select_all()
+        count = db.count(sql=dml.sql, args=dml.args)
+        assert count == 5
+
+        db.rollback()
+
+        dml = FileDML.select_all()
+        count = db.count(sql=dml.sql, args=dml.args)
+        assert count == 0
+        db.save()
+        db.close()
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_open_close(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.dal.database()
+        db.connect()
+        db.close()
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

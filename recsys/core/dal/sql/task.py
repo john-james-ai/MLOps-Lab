@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday January 4th 2023 01:24:05 pm                                              #
+# Modified   : Saturday January 7th 2023 09:25:01 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,7 +33,7 @@ from recsys.core.entity.job import Task
 @dataclass
 class CreateTaskTable(SQL):
     name: str = "task"
-    sql: str = """CREATE TABLE IF NOT EXISTS task (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(128) NOT NULL, description VARCHAR(255), mode VARCHAR(32) NOT NULL, state VARCHAR(32), job_id MEDIUMINT, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS task (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) AS (CONCAT('task_', name, '_', mode)) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), mode VARCHAR(32) NOT NULL, state VARCHAR(32), job_id MEDIUMINT, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
     description: str = "Created the task table."
 
@@ -164,7 +164,7 @@ class SelectAllTasks(SQL):
 @dataclass
 class TaskExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM task WHERE id = %s;"""
+    sql: str = """SELECT EXISTS(SELECT 1 FROM task WHERE id = %s LIMIT 1);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:

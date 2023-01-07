@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Wednesday January 4th 2023 04:51:17 am                                              #
+# Modified   : Saturday January 7th 2023 12:47:47 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,8 @@ from abc import ABC, abstractmethod
 import logging
 
 from recsys.core.database.relational import Database
-from recsys.core.dal.base import DDL
+from recsys.core.database.object import ObjectDB
+from recsys.core.dal.sql.base import DDL, ODL
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -30,21 +31,12 @@ from recsys.core.dal.base import DDL
 class AbstractDBA(ABC):
     "Abstract base class for Data Base Administration objects."
 
-    def __init__(self, ddl: DDL, autocommit: bool = True) -> None:
+    def __init__(self, ddl: DDL, database: Database) -> None:
         self._ddl = ddl
-        self._autocommit = autocommit
+        self._database = database
         self._logger = logging.getLogger(
             f"{self.__module__}.{self.__class__.__name__}",
         )
-        self._database = None
-
-    @property
-    def database(self) -> Database:
-        return self._database
-
-    @database.setter
-    def database(self, database: Database) -> None:
-        self._database = database
 
     @abstractmethod
     def create(self) -> None:
@@ -60,37 +52,75 @@ class AbstractDBA(ABC):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                           DBA                                                    #
+#                                          TABLE ADMIN                                             #
 # ------------------------------------------------------------------------------------------------ #
 class DBA(AbstractDBA):
     """Supports basic database and table administration.."""
-    def __init__(self, ddl: DDL, autocommit: bool = True) -> None:
-        super().__init__(ddl=ddl, autocommit=autocommit)
+    def __init__(self, ddl: DDL, database: Database) -> None:
+        super().__init__(ddl=ddl, database=database)
 
     def create(self) -> None:
         """Creates a database."""
+        self._database.connect()
+
         self._database.create(sql=self._ddl.create.sql, args=self._ddl.create.args)
-        if self._autocommit:
-            self._database.save()
+
+        self._database.save()
+        self._database.close()
+
         msg = self._ddl.create.description
         self._logger.info(msg)
 
     def drop(self) -> None:
         """Drops a database or table."""
+        self._database.connect()
+
         self._database.drop(sql=self._ddl.drop.sql, args=self._ddl.drop.args)
-        if self._autocommit:
-            self._database.save()
+
+        self._database.save()
+        self._database.close()
+
         msg = self._ddl.drop.description
         self._logger.info(msg)
 
     def exists(self) -> None:
         """Checks existence of a database."""
+        self._database.connect()
+
+        result = self._database.exists(sql=self._ddl.exists.sql, args=self._ddl.exists.args)
+
+        self._database.close()
+
         msg = self._ddl.exists.description
         self._logger.info(msg)
-        return self._database.exists(sql=self._ddl.exists.sql, args=self._ddl.exists.args)
+
+        return result
 
     def reset(self) -> None:
         self.drop()
-        self._database.save()
         self.create()
-        self._database.save()
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                       OBJECT DB ADMIN                                            #
+# ------------------------------------------------------------------------------------------------ #
+class ODBA(AbstractDBA):
+    """Supports object database definition."""
+    def __init__(self, ddl: ODL, database: ObjectDB) -> None:
+        super().__init__(ddl=ddl, database=database)
+
+    def create(self) -> None:
+        """Creates an object store."""
+        self._database.create(ocl=self._ddl.create)
+
+    def drop(self) -> None:
+        """Drops a database or table."""
+        self._database.drop(ocl=self._ddl.drop)
+
+    def exists(self) -> None:
+        """Checks existence of a database."""
+        return self._database.exists(ocl=self._ddl.exists)
+
+    def reset(self) -> None:
+        self.drop()
+        self.create()

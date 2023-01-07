@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Wednesday January 4th 2023 08:41:23 pm                                              #
+# Modified   : Saturday January 7th 2023 12:47:12 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -25,7 +25,7 @@ import mysql.connector
 
 from recsys.core.database.relational import Database
 from .dto import DTO, DataFrameDTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO, FileDTO, DataSourceDTO, DataSourceURLDTO
-from .base import DML
+from .sql.base import DML
 from recsys.core.entity.base import Entity
 
 
@@ -39,26 +39,38 @@ class DAO(ABC):
 
     Args:
         database (Database): Relational database object.
-        dml (DML): The Data Manipulation Language for the database.
+        dml (DML, database: Database): The Data Manipulation Language for the database.
     """
 
-    def __init__(self, dml: DML) -> None:
+    def __init__(self, dml: DML, database: Database) -> None:
         self._dml = dml
         self._entity = dml.entity
-        self._database = None
+        self._database = database
         self._logger = logging.getLogger(
             f"{self.__module__}.{self.__class__.__name__}",
         )
 
-    @property
-    def database(self) -> None:
-        """Returns the attending Database object."""
-        return self._database
+    def __len__(self) -> int:
+        """Returns the number of rows in the underlying table."""
+        cmd = self._dml.select_all()
+        results = self._database.select_all(cmd.sql, cmd.args)
+        return len(results)
 
-    @database.setter
-    def database(self, database: Database) -> None:
-        """Sets the database on the DAO object."""
-        self._database = database
+    def begin(self) -> None:
+        """Starts a transaction on the underlying database."""
+        self._database.begin()
+
+    def save(self) -> None:
+        """Commits changes to the database."""
+        self._database.save()
+
+    def close(self) -> None:
+        """Commits changes to the database."""
+        self._database.close()
+
+    def rollback(self) -> None:
+        """Rollback changes to the database."""
+        self._database.rollback()
 
     def create(self, dto: DTO) -> Entity:
         """Adds an entity in the form of a data transfer object to the database.
@@ -70,7 +82,7 @@ class DAO(ABC):
         """
         cmd = self._dml.insert(dto)
         dto.id = self._database.insert(cmd.sql, cmd.args)
-        msg = f"Inserted {self._entity.__name__}.{dto.id} - {dto.name} into the database."
+        msg = f"{self.__class__.__name__} inserted {self._entity.__name__}.{dto.id} - {dto.name} into the database."
         self._logger.debug(msg)
         return dto
 
@@ -108,7 +120,7 @@ class DAO(ABC):
         """Returns a dictionary of all entity data transfere objects of the in the database."""
         result = {}
         cmd = self._dml.select_all()
-        rows = self._database.selectall(cmd.sql, cmd.args)
+        rows = self._database.select_all(cmd.sql, cmd.args)
         if rows is not None:
             result = self._rows_to_dict(rows)
         return result
@@ -121,29 +133,29 @@ class DAO(ABC):
         """
         result = {}
         cmd = self._dml.select_by_parent_id(parent_id)
-        rows = self._database.selectall(cmd.sql, cmd.args)
+        rows = self._database.select_all(cmd.sql, cmd.args)
         if rows is not None:
             result = self._rows_to_dict(rows)
         return result
 
     def update(self, dto: DTO) -> int:
-        """Performs an upsert of an existing entity DTO
+        """Performs an update to an existing entity DTO
 
         Args:
             dto (DTO): Data Transfer Object
 
         Returns number of rows effected.
         """
+        rows_affected = None
         if self.exists(dto.id):
             cmd = self._dml.update(dto)
             rows_affected = self._database.update(cmd.sql, cmd.args)
-            msg = f"Updated {self._entity.__name__}.{dto.id} in the database."
-            self._logger.debug(msg)
-            return rows_affected
+
         else:
-            msg = f"Unable to update {self._entity.__name__}.{dto.id}. Not found in the database. Try insert instead."
+            msg = f"{self.__class__.__name__} was unable to update {self._entity.__name__}.{dto.id}. Not found in the database. Try insert instead."
             self._logger.error(msg)
             raise mysql.connector.ProgrammingError(msg)
+        return rows_affected
 
     def exists(self, id: int) -> bool:
         """Returns True if the entity with id exists in the database.
@@ -152,7 +164,8 @@ class DAO(ABC):
             id (int): id for the entity
         """
         cmd = self._dml.exists(id)
-        return self._database.exists(cmd.sql, cmd.args)
+        result = self._database.exists(cmd.sql, cmd.args)
+        return result
 
     def delete(self, id: int, persist=True) -> None:
         """Deletes a Entity from the registry, given an id.
@@ -163,10 +176,8 @@ class DAO(ABC):
         if self.exists(id):
             cmd = self._dml.delete(id)
             self._database.delete(cmd.sql, cmd.args)
-            msg = f"Deleted {self._entity.__name__}.{id} from the database."
-            self._logger.debug(msg)
         else:
-            msg = f"Unable to delete {self._entity.__name__}.{id}. Not found in the database."
+            msg = f"{self.__class__.__name__}  was unable to delete {self._entity.__name__}.{id}. Not found in the database."
             self._logger.error(msg)
             raise mysql.connector.ProgrammingError(msg)
 
@@ -187,25 +198,26 @@ class DAO(ABC):
 #                                 DATAFRAME DATA ACCESS OBJECT                                     #
 # ------------------------------------------------------------------------------------------------ #
 class DataFrameDAO(DAO):
-    def __init__(self, dml: DML) -> None:
-        super().__init__(dml=dml)
+    def __init__(self, dml: DML, database: Database) -> None:
+        super().__init__(dml=dml, database=database)
 
     def _row_to_dto(self, row: Tuple) -> DataFrameDTO:
         try:
             return DataFrameDTO(
                 id=row[0],
-                name=row[1],
-                description=row[2],
-                stage=row[3],
-                mode=row[4],
-                size=row[5],
-                nrows=row[6],
-                ncols=row[7],
-                nulls=row[8],
-                pct_nulls=row[9],
-                parent_id=row[10],
-                created=row[11],
-                modified=row[12],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                stage=row[4],
+                mode=row[5],
+                size=row[6],
+                nrows=row[7],
+                ncols=row[8],
+                nulls=row[9],
+                pct_nulls=row[10],
+                parent_id=row[11],
+                created=row[12],
+                modified=row[13],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -222,21 +234,22 @@ class DataFrameDAO(DAO):
 #                                 DATASET DATA ACCESS OBJECT                                       #
 # ------------------------------------------------------------------------------------------------ #
 class DatasetDAO(DAO):
-    def __init__(self, dml: DML) -> None:
-        super().__init__(dml=dml)
+    def __init__(self, dml: DML, database: Database) -> None:
+        super().__init__(dml=dml, database=database)
 
     def _row_to_dto(self, row: Tuple) -> DataFrameDTO:
         try:
             return DatasetDTO(
                 id=row[0],
-                name=row[1],
-                description=row[2],
-                datasource_id=row[3],
-                mode=row[4],
-                stage=row[5],
-                task_id=row[6],
-                created=row[7],
-                modified=row[8],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                datasource_id=row[4],
+                mode=row[5],
+                stage=row[6],
+                task_id=row[7],
+                created=row[8],
+                modified=row[9],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -255,39 +268,40 @@ class DatasetDAO(DAO):
 class ProfileDAO(DAO):
     """Profile for Tasks"""
 
-    def __init__(self, dml: DML) -> None:
-        super().__init__(dml=dml)
+    def __init__(self, dml: DML, database: Database) -> None:
+        super().__init__(dml=dml, database=database)
 
     def _row_to_dto(self, row: Tuple) -> ProfileDTO:
         try:
             return ProfileDTO(
                 id=row[0],
-                name=row[1],
-                description=row[2],
-                mode=row[3],
-                start=row[4],
-                end=row[5],
-                duration=row[6],
-                user_cpu_time=row[7],
-                percent_cpu_used=row[8],
-                total_physical_memory=row[9],
-                physical_memory_available=row[10],
-                physical_memory_used=row[11],
-                percent_physical_memory_used=row[12],
-                active_memory_used=row[13],
-                disk_usage=row[14],
-                percent_disk_usage=row[15],
-                read_count=row[16],
-                write_count=row[17],
-                read_bytes=row[18],
-                write_bytes=row[19],
-                read_time=row[20],
-                write_time=row[21],
-                bytes_sent=row[22],
-                bytes_recv=row[23],
-                parent_id=row[24],
-                created=row[25],
-                modified=row[26],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                mode=row[4],
+                start=row[5],
+                end=row[6],
+                duration=row[7],
+                user_cpu_time=row[8],
+                percent_cpu_used=row[9],
+                total_physical_memory=row[10],
+                physical_memory_available=row[11],
+                physical_memory_used=row[12],
+                percent_physical_memory_used=row[13],
+                active_memory_used=row[14],
+                disk_usage=row[15],
+                percent_disk_usage=row[16],
+                read_count=row[17],
+                write_count=row[18],
+                read_bytes=row[19],
+                write_bytes=row[20],
+                read_time=row[21],
+                write_time=row[22],
+                bytes_sent=row[23],
+                bytes_recv=row[24],
+                parent_id=row[25],
+                created=row[26],
+                modified=row[27],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -306,20 +320,21 @@ class ProfileDAO(DAO):
 class TaskDAO(DAO):
     """Task Data Access Object"""
 
-    def __init__(self, dml: DML) -> None:
-        super().__init__(dml=dml)
+    def __init__(self, dml: DML, database: Database) -> None:
+        super().__init__(dml=dml, database=database)
 
     def _row_to_dto(self, row: Tuple) -> TaskDTO:
         try:
             return TaskDTO(
                 id=row[0],
-                name=row[1],
-                description=row[2],
-                mode=row[3],
-                state=row[4],
-                job_id=row[5],
-                created=row[6],
-                modified=row[7],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                mode=row[4],
+                state=row[5],
+                job_id=row[6],
+                created=row[7],
+                modified=row[8],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -338,19 +353,20 @@ class TaskDAO(DAO):
 class JobDAO(DAO):
     """Job Data Access Object"""
 
-    def __init__(self, dml: DML) -> None:
-        super().__init__(dml=dml)
+    def __init__(self, dml: DML, database: Database) -> None:
+        super().__init__(dml=dml, database=database)
 
     def _row_to_dto(self, row: Tuple) -> JobDTO:
         try:
             return JobDTO(
                 id=row[0],
-                name=row[1],
-                description=row[2],
-                mode=row[3],
-                state=row[4],
-                created=row[5],
-                modified=row[6],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                mode=row[4],
+                state=row[5],
+                created=row[6],
+                modified=row[7],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -369,23 +385,24 @@ class JobDAO(DAO):
 class FileDAO(DAO):
     """File Data Access Object"""
 
-    def __init__(self, dml: DML) -> None:
-        super().__init__(dml=dml)
+    def __init__(self, dml: DML, database: Database) -> None:
+        super().__init__(dml=dml, database=database)
 
     def _row_to_dto(self, row: Tuple) -> FileDTO:
         try:
             return FileDTO(
                 id=row[0],
-                name=row[1],
-                description=row[2],
-                datasource_id=row[3],
-                mode=row[4],
-                stage=row[5],
-                uri=row[6],
-                size=row[7],
-                task_id=row[8],
-                created=row[9],
-                modified=row[10],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                datasource_id=row[4],
+                mode=row[5],
+                stage=row[6],
+                uri=row[7],
+                size=row[8],
+                task_id=row[9],
+                created=row[10],
+                modified=row[11],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -404,19 +421,20 @@ class FileDAO(DAO):
 class DataSourceDAO(DAO):
     """File Data Access Object"""
 
-    def __init__(self, dml: DML) -> None:
-        super().__init__(dml=dml)
+    def __init__(self, dml: DML, database: Database) -> None:
+        super().__init__(dml=dml, database=database)
 
     def _row_to_dto(self, row: Tuple) -> FileDTO:
         try:
             return DataSourceDTO(
                 id=row[0],
-                name=row[1],
-                description=row[2],
-                website=row[3],
-                mode=row[4],
-                created=row[5],
-                modified=row[6],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                website=row[4],
+                mode=row[5],
+                created=row[6],
+                modified=row[7],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -435,20 +453,21 @@ class DataSourceDAO(DAO):
 class DataSourceURLDAO(DAO):
     """File Data Access Object"""
 
-    def __init__(self, dml: DML) -> None:
-        super().__init__(dml=dml)
+    def __init__(self, dml: DML, database: Database) -> None:
+        super().__init__(dml=dml, database=database)
 
     def _row_to_dto(self, row: Tuple) -> FileDTO:
         try:
             return DataSourceURLDTO(
                 id=row[0],
-                name=row[1],
-                description=row[2],
-                url=row[3],
-                mode=row[4],
-                datasource_id=row[5],
-                created=row[6],
-                modified=row[7],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                url=row[4],
+                mode=row[5],
+                datasource_id=row[6],
+                created=row[7],
+                modified=row[8],
             )
         except TypeError:
             msg = "No data matched the query."

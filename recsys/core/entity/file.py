@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Tuesday January 3rd 2023 06:56:35 pm                                                #
+# Modified   : Saturday January 7th 2023 09:23:10 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -125,6 +125,7 @@ class File(Entity):
             task_id=self._task_id,
             created=self._created,
             modified=self._modified,
+            oid=self._oid,
         )
 
     # ------------------------------------------------------------------------------------------------ #

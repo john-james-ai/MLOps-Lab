@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday January 4th 2023 07:18:42 pm                                              #
+# Modified   : Saturday January 7th 2023 09:20:16 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,7 +33,7 @@ from recsys.core.entity.dataset import DataFrame
 @dataclass
 class CreateDataFrameTable(SQL):
     name: str = "dataframe"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(128) NOT NULL, description VARCHAR(255), stage VARCHAR(64) NOT NULL, mode VARCHAR(32) NOT NULL, size BIGINT, nrows BIGINT, ncols SMALLINT, nulls SMALLINT, pct_nulls FLOAT, parent_id SMALLINT, created DATETIME, modified DATETIME, unique(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) AS (CONCAT('dataframe_', name, '_', mode)) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), stage VARCHAR(64) NOT NULL, mode VARCHAR(32) NOT NULL, size BIGINT, nrows BIGINT, ncols SMALLINT, nulls SMALLINT, pct_nulls FLOAT, parent_id SMALLINT, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
     description: str = "Created the dataframe table."
 
@@ -175,7 +175,7 @@ class SelectAllDataset(SQL):
 @dataclass
 class DataFrameExists(SQL):
     id: int
-    sql: str = """SELECT COUNT(*) FROM dataframe WHERE id = %s;"""
+    sql: str = """SELECT EXISTS(SELECT 1 FROM dataframe WHERE id = %s LIMIT 1);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:

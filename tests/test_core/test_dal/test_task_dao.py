@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Wednesday January 4th 2023 01:23:12 pm                                              #
+# Modified   : Friday January 6th 2023 10:56:26 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -20,6 +20,7 @@ import inspect
 from datetime import datetime
 import pytest
 import logging
+import mysql.connector
 
 from recsys.core.dal.dto import DTO
 from recsys.core.dal.dao import DAO
@@ -38,15 +39,10 @@ class TestTaskDAO:  # pragma: no cover
 
     def reset_table(self, container):
         dba = container.dba.task()
-        dba.database = container.database.recsys()
         dba.reset()
 
     def get_dao(self, container) -> DAO:
-        db = container.database.recsys()
-        db.connection.close()
-        db.connection.open()
-        dao = container.dao.task()
-        dao.database = db
+        dao = container.dal.task()
         return dao
 
     # ============================================================================================ #
@@ -85,7 +81,7 @@ class TestTaskDAO:  # pragma: no cover
         )
         logger.info(single_line)
 
-    # ============================================================================================ #
+    # ================================================= =========================================== #
     def test_create_exists(self, container, jobs, caplog):
         start = datetime.now()
         logger.info(
@@ -99,7 +95,7 @@ class TestTaskDAO:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
-        dao.database.begin()
+        dao.begin()
 
         for name, task in jobs[0].tasks.items():
             dto = task.as_dto()
@@ -109,11 +105,14 @@ class TestTaskDAO:  # pragma: no cover
         for i in range(1, 6):
             assert dao.exists(i)
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
+
+        dao.begin()
 
         for i in range(1, 6):
             assert not dao.exists(i)
+
+        dao.close()
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -144,19 +143,16 @@ class TestTaskDAO:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        self.reset_table(container)
         dao = self.get_dao(container)
 
         for name, task in jobs[1].tasks.items():
             dto = task.as_dto()
             dto = dao.create(dto)
             assert isinstance(task, Task)
-            dao.database.save()
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
 
-        for i in range(1, 6):
+        for i in range(6, 11):
             assert dao.exists(i)
             logger.debug(dao.read(i))
         # ---------------------------------------------------------------------------------------- #
@@ -189,13 +185,13 @@ class TestTaskDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
 
-        for i in range(1, 6):
+        for i in range(6, 11):
             dto = dao.read(i)
             assert isinstance(dto, DTO)
             self.check_results(i, dto)
 
-        with pytest.raises(FileNotFoundError):
-            _ = dao.read(99)
+        dto = dao.read(99)
+        assert dto is None
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -267,8 +263,8 @@ class TestTaskDAO:  # pragma: no cover
         assert isinstance(dto, DTO)
         self.check_results(1, dto)
 
-        with pytest.raises(FileNotFoundError):
-            dto = dao.read_by_name_mode(name="task_1", mode='skdi')
+        dto = dao.read_by_name_mode(name="task_1", mode='skdi')
+        assert dto is None
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -300,7 +296,7 @@ class TestTaskDAO:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
-        for i in range(1, 6):
+        for i in range(6, 11):
             tasks = dao.read_by_parent_id(i)
             for id, task in tasks.items():
                 assert isinstance(task, Task)
@@ -336,30 +332,30 @@ class TestTaskDAO:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
-        dao.database.connection.begin()
+        dao.begin()
         dtos = dao.read_all()
         for i, dto in dtos.items():
             dto.state = "READY"
             dao.update(dto)
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
 
         dtos = dao.read_all()
         for i, dto in dtos.items():
             assert not dto.state == 'READY'
 
+        dao.begin()
         for i, dto in dtos.items():
             dto.state = "READY"
             dao.update(dto)
-
-        db = dao.database
-        db.save()
+        dao.save()
 
         dtos = dao.read_all()
         for i, dto in dtos.items():
             assert dto.state == 'READY'
-
+            dto.id = 8938
+            with pytest.raises(mysql.connector.ProgrammingError):
+                dao.update(dto)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -390,14 +386,13 @@ class TestTaskDAO:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
-        dao.database.begin()
-        dao.delete(1)
-        assert not dao.exists(1)
+        dao.begin()
+        dao.delete(7)
+        assert not dao.exists(7)
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
 
-        assert dao.exists(1)
+        assert dao.exists(7)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday January 4th 2023 01:24:05 pm                                              #
+# Modified   : Saturday January 7th 2023 09:09:58 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.entity.datasource import DataSource
 @dataclass
 class CreateDataSourceTable(SQL):
     name: str = "datasource"
-    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id SMALLINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(128) NOT NULL, description VARCHAR(255), website VARCHAR(255) NOT NULL, mode VARCHAR(32) NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) AS (CONCAT('datasource_', name, '_', mode)) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), website VARCHAR(255) NOT NULL, mode VARCHAR(32) NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
     description: str = "Created the datasource table"
 

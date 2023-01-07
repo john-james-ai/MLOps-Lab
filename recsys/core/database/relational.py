@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Wednesday January 4th 2023 12:42:37 pm                                              #
+# Modified   : Saturday January 7th 2023 07:25:00 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,46 +23,50 @@ import dotenv
 import mysql.connector
 from mysql.connector import errorcode
 
-from .base import AbstractConnection, AbstractDatabase
+from .base import Connection, AbstractDatabase
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                    CONNECTION                                                    #
 # ------------------------------------------------------------------------------------------------ #
-class MySQLConnection(AbstractConnection):
+class MySQLConnection(Connection):
     """MySQL Database."""
 
     def __init__(self, connector: pymysql.connect) -> None:
         super().__init__()
         self._connector = connector
-        self._database = None
+        self._is_connected = False
         self._in_transaction = False
-        self.open()
-
-    @property
-    def cursor(self) -> pymysql.connections.Connection.cursor:
-        return self._connection.cursor()
-
-    @property
-    def database(self) -> str:
-        """Returns the name of the database to which the connection has been made."""
-        return self._database
+        self._connection = None
 
     @property
     def is_connected(self) -> bool:
         """Returns the True if the connection is open, False otherwise."""
-        return self._connection.open
+        return self._is_connected
 
     @property
     def in_transaction(self) -> bool:
         """Returns the True if a transaction has been started."""
         return self._in_transaction
 
+    @property
+    def cursor(self) -> pymysql.connections.Connection.cursor:
+        """Returns a cursor from the connection."""
+        try:
+            return self._connection.cursor()
+        except mysql.connector.Error as err:  # pragma: no cover
+            self._logger.error(err)
+            raise mysql.connector.Error()
+
     def begin(self) -> None:
         """Start a transaction on the connection."""
-        self._in_transaction = True
-        self._connection.begin()
-        self._logger.debug(f"{self.__class__.__name__}  transaction started.")
+        try:
+            self._connection.begin()
+            self._in_transaction = True
+            self._logger.debug(f"{self.__class__.__name__}  transaction started.")
+        except mysql.connector.Error as err:  # pragma: no cover
+            self._logger.error(err)
+            raise mysql.connector.Error()
 
     def open(self) -> None:
         """Opens a database connection."""
@@ -75,6 +79,7 @@ class MySQLConnection(AbstractConnection):
 
         try:
             self._connection = self._connector(host=host, user=user, password=password, database=self._database, autocommit=False)
+            self._is_connected = True
             self._logger.debug(f"{self.__class__.__name__} is connected.")
         except mysql.connector.Error as err:  # pragma: no cover
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -91,42 +96,90 @@ class MySQLConnection(AbstractConnection):
 
     def close(self) -> None:
         """Closes the connection."""
-        self._connection.close()
-        self._is_connected = False
-        self._in_transaction = False
-        self._logger.debug(f"{self.__class__.__name__}  is closed.")
+        try:
+            self._connection.close()
+            self._is_connected = False
+            self._in_transaction = False
+            self._logger.debug(f"{self.__class__.__name__}  is closed.")
+        except mysql.connector.Error as err:  # pragma: no cover
+            self._logger.error(err)
+            raise mysql.connector.Error()
 
     def commit(self) -> None:
         """Commits the connection"""
-        self._connection.commit()
-        self._in_transaction = False
-        self._logger.debug(f"{self.__class__.__name__}  is committed.")
+        try:
+            self._connection.commit()
+            self._in_transaction = False
+            self._logger.debug(f"{self.__class__.__name__}  is committed.")
+        except mysql.connector.Error as err:  # pragma: no cover
+            self._logger.error(err)
+            raise mysql.connector.Error()
 
     def rollback(self) -> None:
         """Rolls back the database to the last commit."""
-        self._connection.rollback()
-        self._in_transaction = False
-        self._logger.debug(f"{self.__class__.__name__}  is rolled back.")
+        try:
+            self._connection.rollback()
+            self._in_transaction = False
+            self._logger.debug(f"{self.__class__.__name__}  is rolled back.")
+        except mysql.connector.Error as err:  # pragma: no cover
+            self._logger.error(err)
+            raise mysql.connector.Error()
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                        DATABASE                                                  #
 # ------------------------------------------------------------------------------------------------ #
 class Database(AbstractDatabase):
-    def __init__(self, connection: pymysql.connections.Connection):
+    def __init__(self, connection: Connection, autocommit: bool = True, autoclose: bool = False) -> None:
         super().__init__()
         self._connection = connection
+        self._autocommit = autocommit
+        self._autoclose = autoclose
+        self._is_connected = self._connection.is_connected
+        self._in_transaction = False
 
     @property
-    def connection(self) -> pymysql.connections.Connection:
-        return self._connection
+    def in_transaction(self) -> bool:
+        return self._in_transaction
 
-    def query(self, sql: str, args: tuple = None) -> pymysql.connections.Connection.cursor:
+    @property
+    def is_connected(self) -> bool:
+        return self._is_connected
+
+    def connect(self) -> None:
+        """Connects to the database."""
+        self._connection.open()
+        self._is_connected = True
+
+    def begin(self, sql: str = None, args: tuple = None) -> None:
+        """Starts a transaction on the underlying database connection."""
+        if not self._is_connected:
+            self.connect()
+        self._connection.begin()
+        self._in_transaction = True
+
+    def close(self) -> None:
+        """Closes the underlying database connection."""
+        self._connection.close()
+        self._is_connected = False
+        self._in_transaction = False
+
+    def save(self) -> None:
+        """Saves changes to the database."""
+        self._connection.commit()
+        self._in_transaction = False
+
+    def rollback(self) -> None:
+        """Rolls back the database to state as of last save or commit."""
+        self._connection.rollback()
+        self._in_transaction = False
+
+    def query(self, sql: str, args: tuple = None) -> Connection.cursor:
         """Executes a query on the database and returns a cursor object."""
+        self._open_session()
         cursor = self._connection.cursor
         try:
             cursor.execute(sql, args)
-            return cursor
         except mysql.connector.Error as err:  # pragma: no cover
             self._logger.error(err)
             self._logger.error("Error Code: ", err.errno)
@@ -134,23 +187,19 @@ class Database(AbstractDatabase):
             self._logger.error("Message: ", err.msg)
             raise mysql.connector.Error()
 
-    def begin(self, sql: str = None, args: tuple = None) -> None:
-        """Starts a transaction on the underlying database connection."""
-        self._connection.begin()
+        self._close_session()
+        return cursor
 
     def create(self, sql: str, args: tuple = None) -> None:
+        """Executes create DDL statements for databases and tables."""
         cursor = self.query(sql, args)
         cursor.close()
-        if not self._connection.in_transaction:
-            self.save()
 
     def insert(self, sql: str, args: tuple = None) -> int:
         """Inserts data into a table and returns the last row id."""
         cursor = self.query(sql, args)
         id = cursor.lastrowid
         cursor.close()
-        if not self._connection.in_transaction:
-            self.save()
         return id
 
     def select(self, sql: str, args: tuple = None) -> tuple:
@@ -159,18 +208,14 @@ class Database(AbstractDatabase):
         cursor = self.query(sql, args)
         row = cursor.fetchone()
         cursor.close()
-        if not self._connection.in_transaction:
-            self.save()
         return row
 
-    def selectall(self, sql: str, args: tuple = None) -> list:
+    def select_all(self, sql: str, args: tuple = None) -> list:
         """Performs a select query returning multiple instances or rows."""
         rows = []
         cursor = self.query(sql, args)
         rows = cursor.fetchall()
         cursor.close()
-        if not self._connection.in_transaction:
-            self.save()
         return rows
 
     def update(self, sql: str, args: tuple = None) -> None:
@@ -178,8 +223,6 @@ class Database(AbstractDatabase):
         cursor = self.query(sql, args)
         rowcount = cursor.rowcount
         cursor.close()
-        if not self._connection.in_transaction:
-            self.save()
         return rowcount
 
     def count(self, sql: str, args: tuple = None) -> int:
@@ -187,33 +230,33 @@ class Database(AbstractDatabase):
         cursor = self.query(sql, args)
         rows = cursor.fetchall()
         cursor.close()
-        if not self._connection.in_transaction:
-            self.save()
         return len(rows)
 
     def delete(self, sql: str, args: tuple = None) -> None:
         """Deletes existing data."""
         cursor = self.query(sql, args)
         cursor.close()
-        if not self._connection.in_transaction:
-            self.save()
 
     def drop(self, sql: str, args: tuple = None) -> None:
         """Drop a database or table."""
         cursor = self.query(sql, args)
         cursor.close()
-        if not self._connection.in_transaction:
-            self.save()
 
     def exists(self, sql: str, args: tuple = None) -> bool:
         """Returns True if the data specified by the parameters exists. Returns False otherwise."""
         cursor = self.query(sql, args)
         result = cursor.fetchone()
         cursor.close()
-        if not self._connection.in_transaction:
-            self.save()
         return result[0] == 1
 
-    def save(self) -> None:
-        """Saves changes to the database."""
-        self._connection.commit()
+    def _open_session(self) -> None:
+        """Opens a database connection if not already open."""
+        if not self._is_connected:
+            self.connect()
+
+    def _close_session(self) -> None:
+        """Saves and closes the connection, if not in transaction."""
+        if not self._in_transaction and self._autocommit:
+            self.save()
+        if not self._in_transaction and self._autoclose:
+            self.close()

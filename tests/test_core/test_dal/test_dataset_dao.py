@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Wednesday January 4th 2023 05:25:17 pm                                              #
+# Modified   : Friday January 6th 2023 10:58:13 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -38,18 +38,12 @@ single_line = f"\n{100 * '-'}"
 class TestDatasetDAO:  # pragma: no cover
     # ============================================================================================ #
     def reset_table(self, container):
-        db = container.database.recsys()
         dba = container.dba.dataset()
-        dba.database = db
         dba.reset()
-        dba.database.save()
-        dba.database.connection.close()
 
     # ---------------------------------------------------------------------------------------- #
     def get_dao(self, container) -> DAO:
-        db = container.database.recsys()
-        dao = container.dao.dataset()
-        dao.database = db
+        dao = container.dal.dataset()
         return dao
 
     # ---------------------------------------------------------------------------------------- #
@@ -99,7 +93,7 @@ class TestDatasetDAO:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
-        dao.database.begin()
+        dao.begin()
 
         for i, dataset in enumerate(datasets, start=1):
             dto = dataset.as_dto()
@@ -112,13 +106,15 @@ class TestDatasetDAO:  # pragma: no cover
             logger.debug(exists)
             assert exists
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
+
+        dao.begin()
 
         for i in range(1, 6):
             exists = dao.exists(i)
             assert not exists
-        dao.database.save()
+
+        dao.close()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -154,12 +150,10 @@ class TestDatasetDAO:  # pragma: no cover
             dto = dataset.as_dto()
             dto = dao.create(dto)
             self.check_results(i + 5, dto)
-            dao.database.save()
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
 
-        for i in range(6, 10):
+        for i in range(6, 11):
             assert dao.exists(i)
 
         # ---------------------------------------------------------------------------------------- #
@@ -192,7 +186,7 @@ class TestDatasetDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
 
-        for i in range(6, 10):
+        for i in range(6, 11):
             dto = dao.read(i)
             assert isinstance(dto, DTO)
             self.check_results(i, dto)
@@ -304,34 +298,30 @@ class TestDatasetDAO:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
-        dao.database.connection.begin()
+        dao.begin()
         dtos = dao.read_all()
         for i, dto in dtos.items():
             dto.task_id = 292
             dao.update(dto)
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
 
         dtos = dao.read_all()
         for i, dto in dtos.items():
             assert not dto.task_id == 292
 
+        dao.begin()
         for i, dto in dtos.items():
             dto.task_id = 292
             dao.update(dto)
-
-        db = dao.database
-        db.save()
+        dao.save()
 
         dtos = dao.read_all()
         for i, dto in dtos.items():
             assert dto.task_id == 292
-
-        with pytest.raises(mysql.connector.ProgrammingError):
-            bogus_dataset = datasets[0]
-            bogus_dataset.id = 7890
-            dao.update(bogus_dataset)
+            dto.id = 8938
+            with pytest.raises(mysql.connector.ProgrammingError):
+                dao.update(dto)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -363,12 +353,11 @@ class TestDatasetDAO:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
-        dao.database.begin()
+        dao.begin()
         dao.delete(6)
         assert not dao.exists(6)
 
-        cnx = dao.database.connection
-        cnx.rollback()
+        dao.rollback()
 
         assert dao.exists(6)
 
