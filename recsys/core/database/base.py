@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 3rd 2023 12:33:25 am                                                #
-# Modified   : Saturday January 7th 2023 01:01:36 pm                                               #
+# Modified   : Saturday January 7th 2023 02:40:26 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -21,6 +21,8 @@ import os
 import shelve
 from abc import abstractmethod
 from typing import Union
+import mysql.connector
+import pymysql
 
 from recsys.core.services.base import Service
 from recsys.core.dal.sql.base import OCL
@@ -38,7 +40,7 @@ class Cursor(Service):
     def __init__(self, location) -> None:
         self._location = location
         self._cursor = None
-        self._open()
+        self.open()
 
     def open(self) -> None:
         os.makedirs(os.path.dirname(self._location), exist_ok=True)
@@ -68,50 +70,9 @@ class Cursor(Service):
 #                                        CONNECTION                                                #
 # ------------------------------------------------------------------------------------------------ #
 class Connection(Service):
-    """Abstract base class for Database connections."""
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__()
-
-    @property
-    @abstractmethod
-    def is_connected(self) -> bool:
-        """Returns the True if the connection is open, False otherwise."""
-
-    @property
-    @abstractmethod
-    def in_transaction(self) -> bool:
-        """Returns the True if a transaction has been started."""
-
-    @property
-    @abstractmethod
-    def cursor(self) -> bool:
-        """Returns the cursor for the underlying connection."""
-
-    @abstractmethod
-    def open(self) -> None:
-        """Opens a connection to the database."""
-
-    @abstractmethod
-    def begin(self) -> None:
-        """Start a transaction on the connection."""
-
-    @abstractmethod
-    def close(self) -> None:
-        """Closes the connection."""
-
-    @abstractmethod
-    def commit(self) -> None:
-        """Commits the connection"""
-
-    @abstractmethod
-    def rollback(self) -> None:
-        """Rolls back the database to the last commit."""
-
-class MySQLConnection(Connection):
     """MySQL Database."""
 
-    def __init__(self, connector: pymysql.connect) -> None:
+    def __init__(self, connector: pymysql.connect = None) -> None:
         super().__init__()
         self._connector = connector
         self._is_connected = False
@@ -147,31 +108,9 @@ class MySQLConnection(Connection):
             self._logger.error(err)
             raise mysql.connector.Error()
 
+    @abstractmethod
     def open(self) -> None:
         """Opens a database connection."""
-
-        dotenv.load_dotenv()
-        host = os.getenv("MYSQL_HOST")
-        user = os.getenv("MYSQL_USER")
-        password = os.getenv("MYSQL_PASSWORD")
-        self._database = os.getenv("MYSQL_DATABASE")
-
-        try:
-            self._connection = self._connector(host=host, user=user, password=password, database=self._database, autocommit=False)
-            self._is_connected = True
-            self._logger.debug(f"{self.__class__.__name__} is connected.")
-        except mysql.connector.Error as err:  # pragma: no cover
-            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                msg = "Invalid user name or password"
-                self._logger.error(msg)
-                raise mysql.connector.Error(msg)
-            elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                msg = "Database does not exist"
-                self._logger.error(msg)
-                raise mysql.connector.Error(msg)
-            else:
-                self._logger.error(err)
-                raise mysql.connector.Error()
 
     def close(self) -> None:
         """Closes the connection."""

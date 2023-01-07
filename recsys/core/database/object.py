@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Saturday January 7th 2023 11:29:33 am                                               #
+# Modified   : Saturday January 7th 2023 02:38:54 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -100,7 +100,6 @@ class StorageCursor(Cursor):
             self._logger.error(msg)
             raise FileNotFoundError(msg)
 
-    @classmethod
     def _exists(self, ocl: OML) -> None:
         """Checks existence of an object in the storage"""
         return ocl.oid in self._cursor.keys()
@@ -175,6 +174,10 @@ class CacheCursor(Cursor):
             self._logger.error(msg)
             raise FileNotFoundError(msg)
 
+    def _exists(self, ocl: OML) -> None:
+        """Checks existence of an object in the storage"""
+        return ocl.oid in self._cursor.keys()
+
     def reset(self) -> None:
         for oid in self._cursor.keys():
             del self._cursor[oid]
@@ -204,6 +207,7 @@ class ObjectDBConnection(Connection):
         self._storage_cursor = None
         self._current_cursor = None
         self._in_transaction = False
+        self.open()
 
     @property
     def is_connected(self) -> bool:

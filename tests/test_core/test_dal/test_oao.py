@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday January 7th 2023 09:36:08 am                                               #
-# Modified   : Saturday January 7th 2023 12:50:03 pm                                               #
+# Modified   : Saturday January 7th 2023 02:41:05 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -20,8 +20,7 @@ import inspect
 from datetime import datetime
 import pytest
 import logging
-
-# Import modules to be tested
+from glob import glob
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -47,7 +46,8 @@ class TestDBA:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         container.dba.database().drop()
-        assert not container.dba.database().exists()
+        exists = container.dba.database().exists()
+        assert not exists
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -78,7 +78,8 @@ class TestDBA:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         container.dba.database().create()
-        assert container.dba.database().exists()
+        exists = container.dba.database().exists()
+        assert exists
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -92,5 +93,145 @@ class TestDBA:  # pragma: no cover
                 end.strftime("%m/%d/%Y"),
             )
 
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_reset(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        container.dba.database().reset()
+        exists = container.dba.database().exists()
+        assert exists
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+
+@pytest.mark.dba
+@pytest.mark.odba
+class TestODB:  # pragma: no cover
+
+    __location = "tests/core/dal/odb/odb.db"
+
+    # ============================================================================================ #
+    def test_create(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        container.dba.object().create()
+        pattern = self.__location + "*"
+        assert len(glob(pattern)) > 0
+        exists = container.dba.object().exists()
+        assert exists
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\nCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_drop(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        container.dba.object().drop()
+        pattern = self.__location + "*"
+        assert len(glob(pattern)) == 0
+        exists = container.dba.object().exists()
+        assert not exists
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_reset(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        container.dba.object().reset()
+        pattern = self.__location + "*"
+        assert len(glob(pattern)) > 0
+        exists = container.dba.object().exists()
+        assert exists
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
         )
         logger.info(single_line)

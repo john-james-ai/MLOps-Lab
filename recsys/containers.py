@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Saturday January 7th 2023 01:02:12 pm                                               #
+# Modified   : Saturday January 7th 2023 01:54:09 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -38,7 +38,7 @@ from recsys.core.dal.sql.task import TaskDDL, TaskDML
 from recsys.core.dal.sql.profile import ProfileDDL, ProfileDML
 from recsys.core.dal.sql.database import DatabaseDDL
 from recsys.core.dal.sql.odb import ObjectODL, ObjectOML
-from recsys.core.database.relational import Database, MySQLConnection
+from recsys.core.database.relational import Database, MySQLConnection, DatabaseConnection
 from recsys.core.database.object import ObjectDBConnection, ObjectDB
 
 
@@ -60,16 +60,17 @@ class ConnectionContainer(containers.DeclarativeContainer):
 
     config = providers.Configuration()
 
-    recsys_connection = providers.Factory(
+    rdb_connection = providers.Factory(
+        DatabaseConnection,
+        connector=pymysql.connect,
+    )
+
+    dbms_connection = providers.Factory(
         MySQLConnection,
-        pymysql.connect,
+        connector=pymysql.connect,
     )
 
-    mysql_connection = providers.Factory(
-        MySQLConnection
-    )
-
-    object_db_connection = providers.Factory(
+    odb_connection = providers.Factory(
         ObjectDBConnection,
         location=config.database.shelve.location,
     )
@@ -78,17 +79,23 @@ class ConnectionContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 class DatabaseContainer(containers.DeclarativeContainer):
 
-    recsys_connection = providers.Dependency()
-    object_db_connection = providers.Dependency()
+    rdb_connection = providers.Dependency()
+    dbms_connection = providers.Dependency()
+    odb_connection = providers.Dependency()
 
-    recsys = providers.Singleton(
+    rdb = providers.Singleton(
         Database,
-        connection=recsys_connection
+        connection=rdb_connection
     )
 
-    object_db = providers.Singleton(
+    dbms = providers.Singleton(
+        Database,
+        connection=dbms_connection
+    )
+
+    odb = providers.Singleton(
         ObjectDB,
-        connection=object_db_connection
+        connection=odb_connection
     )
 
 
@@ -121,9 +128,10 @@ class DALContainer(containers.DeclarativeContainer):
 class DBAContainer(containers.DeclarativeContainer):
 
     rdb = providers.Dependency()
+    dbms = providers.Dependency()
     odb = providers.Dependency()
 
-    database = providers.Factory(DBA, database=rdb, ddl=DatabaseDDL)
+    database = providers.Factory(DBA, database=dbms, ddl=DatabaseDDL)
 
     file = providers.Factory(DBA, database=rdb, ddl=FileDDL)
 
@@ -159,13 +167,18 @@ class Recsys(containers.DeclarativeContainer):
     connection = providers.Container(ConnectionContainer, config=config)
 
     database = providers.Container(DatabaseContainer,
-                                   recsys_connection=connection.recsys_connection,
+                                   rdb_connection=connection.rdb_connection,
+                                   dbms_connection=connection.dbms_connection,
+                                   odb_connection=connection.odb_connection
                                    )
 
     dal = providers.Container(DALContainer,
-                              rdb=database.recsys,
-                              odb=database.object_db)
+                              rdb=database.rdb,
+                              odb=database.odb
+                              )
 
     dba = providers.Container(DBAContainer,
-                              rdb=database.recsys,
-                              odb=database.object_db)
+                              rdb=database.rdb,
+                              dbms=database.dbms,
+                              odb=database.odb
+                              )

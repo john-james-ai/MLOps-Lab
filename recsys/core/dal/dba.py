@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Saturday January 7th 2023 12:47:47 pm                                               #
+# Modified   : Saturday January 7th 2023 02:05:31 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -64,35 +64,32 @@ class DBA(AbstractDBA):
         self._database.connect()
 
         self._database.create(sql=self._ddl.create.sql, args=self._ddl.create.args)
+        msg = self._ddl.create.description
+        self._logger.info(msg)
 
         self._database.save()
         self._database.close()
-
-        msg = self._ddl.create.description
-        self._logger.info(msg)
 
     def drop(self) -> None:
         """Drops a database or table."""
         self._database.connect()
 
         self._database.drop(sql=self._ddl.drop.sql, args=self._ddl.drop.args)
+        msg = self._ddl.drop.description
+        self._logger.info(msg)
 
         self._database.save()
         self._database.close()
-
-        msg = self._ddl.drop.description
-        self._logger.info(msg)
 
     def exists(self) -> None:
         """Checks existence of a database."""
         self._database.connect()
 
         result = self._database.exists(sql=self._ddl.exists.sql, args=self._ddl.exists.args)
-
-        self._database.close()
-
         msg = self._ddl.exists.description
         self._logger.info(msg)
+
+        self._database.close()
 
         return result
 

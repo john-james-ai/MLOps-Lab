@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday January 2nd 2023 06:32:13 am                                                 #
-# Modified   : Saturday January 7th 2023 12:37:40 pm                                               #
+# Modified   : Saturday January 7th 2023 02:17:49 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -43,7 +43,7 @@ class DropDatabase(SQL):
 @dataclass
 class DatabaseExists(SQL):
     name: str = "recsys"
-    sql: str = """SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'recsys';"""
+    sql: str = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'recsys';"""
     args: tuple = ()
     description: str = "Checked existence of recsys database."
 
