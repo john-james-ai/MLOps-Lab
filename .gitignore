@@ -14,8 +14,10 @@ __pycache__/
 *.xlsx
 tests/data
 
+
+
 # SQL Credentials
-setup/database/root_pwd.sql
+root_pwd.sql
 
 # Logs
 *.log
