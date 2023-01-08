@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Saturday January 7th 2023 09:32:43 am                                               #
+# Modified   : Sunday January 8th 2023 02:39:13 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.entity.profile import Profile
 @dataclass
 class CreateProfileTable(SQL):
     name: str = "profile"
-    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) AS (CONCAT('profile_', name, '_', mode)) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), mode VARCHAR(32), start DATETIME, end DATETIME, duration MEDIUMINT, user_cpu_time BIGINT, percent_cpu_used FLOAT, total_physical_memory BIGINT, physical_memory_available BIGINT, physical_memory_used BIGINT, percent_physical_memory_used FLOAT, active_memory_used BIGINT, disk_usage BIGINT, percent_disk_usage FLOAT, read_count BIGINT, write_count BIGINT, read_bytes BIGINT, write_bytes BIGINT, read_time FLOAT, write_time FLOAT, bytes_sent BIGINT, bytes_recv BIGINT, parent_id MEDIUMINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), mode VARCHAR(32), start DATETIME, end DATETIME, duration MEDIUMINT, user_cpu_time BIGINT, percent_cpu_used FLOAT, total_physical_memory BIGINT, physical_memory_available BIGINT, physical_memory_used BIGINT, percent_physical_memory_used FLOAT, active_memory_used BIGINT, disk_usage BIGINT, percent_disk_usage FLOAT, read_count BIGINT, write_count BIGINT, read_bytes BIGINT, write_bytes BIGINT, read_time FLOAT, write_time FLOAT, bytes_sent BIGINT, bytes_recv BIGINT, parent_id MEDIUMINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
     description: str = "Created the profile table."
 
@@ -74,11 +74,12 @@ class ProfileDDL(DDL):
 @dataclass
 class InsertProfile(SQL):
     dto: DTO
-    sql: str = """INSERT INTO profile (name, description, mode, start, end, duration, user_cpu_time, percent_cpu_used, total_physical_memory, physical_memory_available, physical_memory_used, percent_physical_memory_used, active_memory_used, disk_usage, percent_disk_usage, read_count, write_count, read_bytes, write_bytes, read_time, write_time, bytes_sent, bytes_recv, parent_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO profile (oid, name, description, mode, start, end, duration, user_cpu_time, percent_cpu_used, total_physical_memory, physical_memory_available, physical_memory_used, percent_physical_memory_used, active_memory_used, disk_usage, percent_disk_usage, read_count, write_count, read_bytes, write_bytes, read_time, write_time, bytes_sent, bytes_recv, parent_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
+            self.dto.oid,
             self.dto.name,
             self.dto.description,
             self.dto.mode,
@@ -114,11 +115,12 @@ class InsertProfile(SQL):
 @dataclass
 class UpdateProfile(SQL):
     dto: DTO
-    sql: str = """UPDATE profile SET name = %s, description = %s, mode = %s, start = %s, end = %s, duration = %s, user_cpu_time = %s, percent_cpu_used = %s, total_physical_memory = %s, physical_memory_available = %s, physical_memory_used = %s, percent_physical_memory_used = %s, active_memory_used = %s, disk_usage = %s, percent_disk_usage = %s, read_count = %s, write_count = %s, read_bytes = %s, write_bytes = %s, read_time = %s, write_time = %s, bytes_sent = %s, bytes_recv = %s, parent_id = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE profile SET oid = %s, name = %s, description = %s, mode = %s, start = %s, end = %s, duration = %s, user_cpu_time = %s, percent_cpu_used = %s, total_physical_memory = %s, physical_memory_available = %s, physical_memory_used = %s, percent_physical_memory_used = %s, active_memory_used = %s, disk_usage = %s, percent_disk_usage = %s, read_count = %s, write_count = %s, read_bytes = %s, write_bytes = %s, read_time = %s, write_time = %s, bytes_sent = %s, bytes_recv = %s, parent_id = %s, created = %s, modified = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
+            self.dto.oid,
             self.dto.name,
             self.dto.description,
             self.dto.mode,

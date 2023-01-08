@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 9th 2022 10:54:47 pm                                                #
-# Modified   : Saturday January 7th 2023 09:31:20 am                                               #
+# Modified   : Sunday January 8th 2023 03:15:34 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -55,6 +55,12 @@ class Profile(Entity):
     parent_id: int = None
     created: datetime = None
     modified: datetime = None
+
+    def __post_init__(self) -> None:
+        self._name = self.name
+        self._mode = self.mode
+        self.mode = self._get_mode()
+        self.oid = self._get_oid()
 
     def as_dto(self) -> ProfileDTO:
         return ProfileDTO(

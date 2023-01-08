@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Wednesday January 4th 2023 01:23:12 pm                                              #
+# Modified   : Sunday January 8th 2023 10:29:55 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -35,36 +35,46 @@ class Repo(RepoABC):
         self._context = context
         self._entity = entity
         self._dao = self._context.get_dao(self._entity)
+        self._oao = self._context.get_oao()
 
     def __len__(self) -> int:
         return len(self.get_all())
 
     def add(self, entity: Entity) -> Entity:
         """Adds an entity to the repository and returns the Entity with the id added."""
-        entity = self._dao.create(entity=entity, persist=True)
-        self._dao.save()
+        dto = self._dao.create(dto=entity.as_dto())
+        entity.id = dto.id
+        self._oao.create(entity)
         return entity
 
     def get(self, id: str) -> Entity:
         "Returns an entity with the designated id"
-        return self._dao.read(id)
+        dto = self._dao.read(id)
+        return self._oao.read(dto.oid)
+
+    def get_all(self) -> dict:
+        entities = {}
+        dtos = self._dao.read_all()
+        for dto in dtos.values():
+            entity = self._oao.read(oid=dto.oid)
+            entities[entity.id] = entity
+        return entities
 
     def get_by_name_mode(self, name: str, mode: str = None) -> Entity:
         mode = mode or self._get_mode()
-        return self._dao.read_by_name_mode(name, mode)
-
-    def get_all(self) -> dict:
-        return self._dao.read_all()
+        dto = self._dao.read_by_name_mode(name, mode)
+        return self._oao.read(dto.oid)
 
     def update(self, entity: Entity) -> None:
         """Updates an entity in the database."""
-        self._dao.update(entity=entity, persist=True)
-        self._dao.save()
+        self._dao.update(dto=entity.as_dto())
+        self._aoa.update(entity)
 
     def remove(self, id: str) -> None:
         """Removes an entity (and its children) from repository."""
+        dto = self._dao.read(id)
         self._dao.delete(id)
-        self._dao.save()
+        self._aoa.delete(dto.oid)
 
     def exists(self, id: str) -> bool:
         """Returns True if entity with id exists in the repository."""

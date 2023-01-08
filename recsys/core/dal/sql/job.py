@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Saturday January 7th 2023 09:10:26 am                                               #
+# Modified   : Sunday January 8th 2023 02:34:34 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,7 +33,7 @@ from recsys.core.entity.job import Job
 @dataclass
 class CreateJobTable(SQL):
     name: str = "job"
-    sql: str = """CREATE TABLE IF NOT EXISTS job (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) AS (CONCAT('job_', name, '_', mode)) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), mode VARCHAR(32) NOT NULL, state VARCHAR(32), created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS job (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), mode VARCHAR(32) NOT NULL, state VARCHAR(32), created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
     description: str = "Created the job table."
 
@@ -76,11 +76,12 @@ class JobDDL(DDL):
 class InsertJob(SQL):
     dto: DTO
 
-    sql: str = """INSERT INTO job (name, description, mode, state, created, modified) VALUES (%s,%s,%s,%s,%s,%s);"""
+    sql: str = """INSERT INTO job (oid, name, description, mode, state, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
+            self.dto.oid,
             self.dto.name,
             self.dto.description,
             self.dto.mode,
@@ -96,11 +97,12 @@ class InsertJob(SQL):
 @dataclass
 class UpdateJob(SQL):
     dto: DTO
-    sql: str = """UPDATE job SET name = %s, description = %s, mode = %s, state = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE job SET oid = %s, name = %s, description = %s, mode = %s, state = %s, created = %s, modified = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
+            self.dto.oid,
             self.dto.name,
             self.dto.description,
             self.dto.mode,

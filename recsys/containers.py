@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Saturday January 7th 2023 01:54:09 pm                                               #
+# Modified   : Sunday January 8th 2023 03:19:19 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -121,7 +121,7 @@ class DALContainer(containers.DeclarativeContainer):
 
     profile = providers.Factory(ProfileDAO, dml=ProfileDML, database=rdb)
 
-    object = providers.Factory(OAO, dml=ObjectOML, database=odb)
+    object = providers.Factory(OAO, oml=ObjectOML, database=odb)
 
 
 # ------------------------------------------------------------------------------------------------ #

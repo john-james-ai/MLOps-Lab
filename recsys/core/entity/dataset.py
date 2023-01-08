@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday January 7th 2023 09:17:35 am                                               #
+# Modified   : Sunday January 8th 2023 03:03:40 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -251,7 +251,6 @@ class DataFrame(DataComponent):
 
         # Possibly inherited from dataset and assigned in set_metadata if and when dataset is set.
         self._stage = None
-        self._mode = None
 
         self._size = None
         self._nrows = None

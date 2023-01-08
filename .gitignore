@@ -18,6 +18,7 @@ tests/data
 
 # SQL Credentials
 root_pwd.sql
+recsys/core/database/restart.sh
 
 # Logs
 *.log

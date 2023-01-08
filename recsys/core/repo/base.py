@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 10:47:42 pm                                             #
-# Modified   : Saturday December 31st 2022 11:20:42 pm                                             #
+# Modified   : Sunday January 8th 2023 09:47:59 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -50,10 +50,6 @@ class RepoABC(ABC):
     @abstractmethod
     def get_by_name_mode(self, name: str) -> Entity:
         """Returns an entity with the given name."""
-
-    @abstractmethod
-    def get_all(self) -> dict:
-        """Returns all aggregate root entities in the repository."""
 
     @abstractmethod
     def update(self, entity: Entity) -> None:

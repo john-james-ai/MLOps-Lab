@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Saturday January 7th 2023 02:38:54 pm                                               #
+# Modified   : Sunday January 8th 2023 03:46:34 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -197,7 +197,7 @@ class ObjectDBConnection(Connection):
 
     __cache_filename = "cache.odb"
 
-    def __init__(self, location: str, autocommit: bool = True, autoclose: bool = False) -> None:
+    def __init__(self, location: str, autocommit: bool = True, autoclose: bool = True) -> None:
         super().__init__()
         self._location = location
         self._cache_location = os.path.join(os.path.dirname(location), self.__cache_filename)

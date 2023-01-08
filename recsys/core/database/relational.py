@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Saturday January 7th 2023 02:10:36 pm                                               #
+# Modified   : Sunday January 8th 2023 01:25:12 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,6 +22,7 @@ import pymysql
 import dotenv
 import mysql.connector
 from mysql.connector import errorcode
+import subprocess
 
 from .base import Connection, AbstractDatabase
 
@@ -65,7 +66,7 @@ class MySQLConnection(Connection):
 #                                      DATABASE CONNECTION                                         #
 # ------------------------------------------------------------------------------------------------ #
 class DatabaseConnection(Connection):
-    """Connection to a MySQL Database."""
+    """Connection to a Database."""
 
     def __init__(self, connector: pymysql.connect) -> None:
         super().__init__(connector=connector)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 3rd 2023 12:33:25 am                                                #
-# Modified   : Saturday January 7th 2023 02:40:26 pm                                               #
+# Modified   : Sunday January 8th 2023 03:47:25 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -38,6 +38,7 @@ class Cursor(Service):
         location (str): The path of the shelve database file.
     """
     def __init__(self, location) -> None:
+        super().__init__()
         self._location = location
         self._cursor = None
         self.open()
@@ -45,9 +46,13 @@ class Cursor(Service):
     def open(self) -> None:
         os.makedirs(os.path.dirname(self._location), exist_ok=True)
         self._cursor = shelve.open(self._location)
+        msg = f"Object storage opened at {self._location}"
+        self._logger.debug(msg)
 
     def close(self) -> None:
         self._cursor.close()
+        msg = f"Object storage at {self._location} is closed."
+        self._logger.debug(msg)
 
     @abstractmethod
     def _insert(self, oml: OCL) -> None:

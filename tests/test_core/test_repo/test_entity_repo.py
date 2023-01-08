@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 1st 2023 02:21:02 pm                                                 #
-# Modified   : Sunday January 1st 2023 02:52:08 pm                                                 #
+# Modified   : Sunday January 8th 2023 03:17:38 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -22,7 +22,7 @@ import pytest
 import logging
 
 from recsys.core.entity.file import File
-
+from recsys.core.repo.entity import Repo
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
@@ -43,8 +43,10 @@ class TestEntityRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        table = container.table.file()
-        table.reset()
+        dba = container.dba.file()
+        dba.reset()
+        dba = container.dba.object()
+        dba.reset()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -60,7 +62,7 @@ class TestEntityRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_add_get(self, container, files, caplog):
+    def test_add_get(self, context, files, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -71,7 +73,7 @@ class TestEntityRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.file()
+        repo = Repo(context, File)
         for i, file in enumerate(files, start=1):
             file = repo.add(file)
             assert file.id == i
@@ -92,7 +94,7 @@ class TestEntityRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_by_name(self, container, caplog):
+    def test_get_by_name(self, context, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -103,7 +105,7 @@ class TestEntityRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.file()
+        repo = Repo(context, File)
         file = repo.get_by_name_mode(name="file_2")
         assert isinstance(file, File)
         assert file.id == 2
@@ -125,7 +127,7 @@ class TestEntityRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_all(self, container, caplog):
+    def test_get_all(self, context, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -136,7 +138,7 @@ class TestEntityRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.file()
+        repo = Repo(context, File)
         files = repo.get_all()
         assert isinstance(files, dict)
         for id, file in files.items():
@@ -160,7 +162,7 @@ class TestEntityRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_update(self, container, caplog):
+    def test_update(self, context, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -171,7 +173,7 @@ class TestEntityRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.file()
+        repo = Repo(context, File)
         files = repo.get_all()
         for id, file in files.items():
             file.task_id = 1234
@@ -196,7 +198,7 @@ class TestEntityRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_remove_exists(self, container, caplog):
+    def test_remove_exists(self, context, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -207,7 +209,7 @@ class TestEntityRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.file()
+        repo = Repo(context, File)
         for i in range(1, 6):
             if i % 2 == 0:
                 repo.remove(i)
@@ -234,7 +236,7 @@ class TestEntityRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_print(self, container, caplog):
+    def test_print(self, context, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -245,7 +247,7 @@ class TestEntityRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.file()
+        repo = Repo(context, File)
         repo.print()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

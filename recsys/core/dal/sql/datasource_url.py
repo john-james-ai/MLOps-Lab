@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Saturday January 7th 2023 09:19:34 am                                               #
+# Modified   : Sunday January 8th 2023 02:22:30 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.entity.datasource import DataSourceURL
 @dataclass
 class CreateDataSourceURLTable(SQL):
     name: str = "datasource_url"
-    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) AS (CONCAT('datasource_url_', name, '_', mode)) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), url VARCHAR(255) NOT NULL, mode VARCHAR(32) NOT NULL, datasource_id SMALLINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), url VARCHAR(255) NOT NULL, mode VARCHAR(32) NOT NULL, datasource_id SMALLINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
     description: str = "Created the datasource URL table."
 
@@ -74,11 +74,12 @@ class DataSourceURLDDL(DDL):
 @dataclass
 class InsertDataSourceURL(SQL):
     dto: DTO
-    sql: str = """INSERT INTO datasource_url (name, description, url, mode, datasource_id, created, modified) VALUES (%s,%s,%s,%s,%s,%s,%s);"""
+    sql: str = """INSERT INTO datasource_url (oid, name, description, url, mode, datasource_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
+            self.dto.oid,
             self.dto.name,
             self.dto.description,
             self.dto.url,
@@ -95,11 +96,12 @@ class InsertDataSourceURL(SQL):
 @dataclass
 class UpdateDataSourceURL(SQL):
     dto: DTO
-    sql: str = """UPDATE datasource_url SET name = %s, description = %s, url = %s, mode = %s, datasource_id = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE datasource_url SET oid = %s, name = %s, description = %s, url = %s, mode = %s, datasource_id = %s, created = %s, modified = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
         self.args = (
+            self.dto.oid,
             self.dto.name,
             self.dto.description,
             self.dto.url,
