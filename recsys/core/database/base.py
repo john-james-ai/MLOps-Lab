@@ -11,64 +11,18 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 3rd 2023 12:33:25 am                                                #
-# Modified   : Sunday January 8th 2023 03:47:25 pm                                                 #
+# Modified   : Monday January 9th 2023 01:22:41 am                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
 """Base Database and Connection Classes."""
-import os
-import shelve
 from abc import abstractmethod
 from typing import Union
 import mysql.connector
 import pymysql
 
 from recsys.core.services.base import Service
-from recsys.core.dal.sql.base import OCL
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                          CURSOR                                                  #
-# ------------------------------------------------------------------------------------------------ #
-class Cursor(Service):
-    """Abstract base class for object database cursors.
-
-    Args:
-        location (str): The path of the shelve database file.
-    """
-    def __init__(self, location) -> None:
-        super().__init__()
-        self._location = location
-        self._cursor = None
-        self.open()
-
-    def open(self) -> None:
-        os.makedirs(os.path.dirname(self._location), exist_ok=True)
-        self._cursor = shelve.open(self._location)
-        msg = f"Object storage opened at {self._location}"
-        self._logger.debug(msg)
-
-    def close(self) -> None:
-        self._cursor.close()
-        msg = f"Object storage at {self._location} is closed."
-        self._logger.debug(msg)
-
-    @abstractmethod
-    def _insert(self, oml: OCL) -> None:
-        """Inserts an entity into the underlying object data store."""
-
-    @abstractmethod
-    def _update(clf, oml: OCL) -> None:
-        """Updates an existing entity in the underlying object data store."""
-
-    @abstractmethod
-    def _delete(clf, oml: OCL) -> None:
-        """Deletes an existing entity from the underlying object data store."""
-
-    @abstractmethod
-    def _exists(clf, oml: OCL) -> None:
-        """Checks the existence of a object store or object in the store."""
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -80,14 +34,14 @@ class Connection(Service):
     def __init__(self, connector: pymysql.connect = None) -> None:
         super().__init__()
         self._connector = connector
-        self._is_connected = False
+        self._is_open = False
         self._in_transaction = False
         self._connection = None
 
     @property
-    def is_connected(self) -> bool:
+    def is_open(self) -> bool:
         """Returns the True if the connection is open, False otherwise."""
-        return self._is_connected
+        return self._is_open
 
     @property
     def in_transaction(self) -> bool:
@@ -121,7 +75,7 @@ class Connection(Service):
         """Closes the connection."""
         try:
             self._connection.close()
-            self._is_connected = False
+            self._is_open = False
             self._in_transaction = False
             self._logger.debug(f"{self.__class__.__name__}  is closed.")
         except mysql.connector.Error as err:  # pragma: no cover
@@ -157,16 +111,8 @@ class AbstractDatabase(Service):
         super().__init__()
 
     @abstractmethod
-    def query(self, *args, **kwargs):
-        """Executes a query on the database and returns a cursor object."""
-
-    @abstractmethod
     def begin(self, *args, **kwargs) -> None:
         """Starts a transaction on the underlying database connection."""
-
-    @abstractmethod
-    def create(self, *args, **kwargs) -> None:
-        """Create a database or table."""
 
     @abstractmethod
     def insert(self, *args, **kwargs) -> Union[int, None]:
@@ -175,10 +121,6 @@ class AbstractDatabase(Service):
     @abstractmethod
     def select(self, *args, **kwargs) -> list:
         """Performs a select query returning a single instance or row."""
-
-    @abstractmethod
-    def select_all(self, *args, **kwargs) -> list:
-        """Performs a select query returning multiple instances or rows."""
 
     @abstractmethod
     def update(self, *args, **kwargs) -> None:

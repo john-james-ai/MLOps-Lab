@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Sunday January 8th 2023 01:25:12 pm                                                 #
+# Modified   : Sunday January 8th 2023 07:33:51 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -46,7 +46,7 @@ class MySQLConnection(Connection):
 
         try:
             self._connection = self._connector(host=host, user=user, password=password, autocommit=False)
-            self._is_connected = True
+            self._is_open = True
             self._logger.debug(f"{self.__class__.__name__} is connected.")
         except mysql.connector.Error as err:  # pragma: no cover
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -82,7 +82,7 @@ class DatabaseConnection(Connection):
 
         try:
             self._connection = self._connector(host=host, user=user, password=password, database=self._database, autocommit=False)
-            self._is_connected = True
+            self._is_open = True
             self._logger.debug(f"{self.__class__.__name__} is connected.")
         except mysql.connector.Error as err:  # pragma: no cover
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -107,7 +107,7 @@ class Database(AbstractDatabase):
         self._connection = connection
         self._autocommit = autocommit
         self._autoclose = autoclose
-        self._is_connected = self._connection.is_connected
+        self._is_open = self._connection.is_open
         self._in_transaction = False
 
     @property
@@ -115,17 +115,17 @@ class Database(AbstractDatabase):
         return self._in_transaction
 
     @property
-    def is_connected(self) -> bool:
-        return self._is_connected
+    def is_open(self) -> bool:
+        return self._is_open
 
     def connect(self) -> None:
         """Connects to the database."""
         self._connection.open()
-        self._is_connected = True
+        self._is_open = True
 
     def begin(self, sql: str = None, args: tuple = None) -> None:
         """Starts a transaction on the underlying database connection."""
-        if not self._is_connected:
+        if not self._is_open:
             self.connect()
         self._connection.begin()
         self._in_transaction = True
@@ -133,7 +133,7 @@ class Database(AbstractDatabase):
     def close(self) -> None:
         """Closes the underlying database connection."""
         self._connection.close()
-        self._is_connected = False
+        self._is_open = False
         self._in_transaction = False
 
     def save(self) -> None:
@@ -228,7 +228,7 @@ class Database(AbstractDatabase):
 
     def _open_session(self) -> None:
         """Opens a database connection if not already open."""
-        if not self._is_connected:
+        if not self._is_open:
             self.connect()
 
     def _close_session(self) -> None:

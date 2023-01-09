@@ -11,16 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Sunday January 8th 2023 10:16:14 am                                                 #
+# Modified   : Sunday January 8th 2023 05:18:15 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-import os
-import dotenv
 import pytest
 from datetime import datetime
-import pymysql
 
 import recsys
 from recsys.containers import Recsys
@@ -31,7 +28,7 @@ from recsys.core.entity.datasource import DataSource
 from recsys.core.entity.profile import Profile
 from recsys.core.entity.job import Job
 from recsys.core.repo.context import Context
-from recsys.core.database.relational import Database, MySQLConnection
+
 
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
@@ -53,26 +50,6 @@ def location():
 @pytest.fixture(scope="module")
 def ratings():
     return IOService.read(RATINGS_FILEPATH)
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
-@pytest.fixture(scope="module")
-def connection():
-    dotenv.load_dotenv()
-    return MySQLConnection(connector=pymysql.connect,
-                           host=os.getenv("MYSQL_HOST"),
-                           user=os.getenv("MYSQL_USER"),
-                           password=os.getenv("MYSQL_PASSWORD"),
-                           database=os.getenv("MYSQL_DATABASE"),
-                           )
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def database(connection):
-    return Database(connection=connection)
 
 
 # ------------------------------------------------------------------------------------------------ #

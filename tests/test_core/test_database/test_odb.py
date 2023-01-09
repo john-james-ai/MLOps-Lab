@@ -10,329 +10,433 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday December 24th 2022 02:13:29 pm                                             #
-# Modified   : Friday January 6th 2023 10:35:20 pm                                                 #
+# Created    : Sunday January 8th 2023 05:31:06 pm                                                 #
+# Modified   : Monday January 9th 2023 02:41:53 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
-# Copyright  : (c) 2022 John James                                                                 #
+# Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
 import inspect
 from datetime import datetime
 import pytest
 import logging
-from mysql.connector import errors
-
-from recsys.core.database.object import ObjectDBConnection, ObjectDB
-from recsys.core.entity.file import File
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
-
-LOCATION = "tests/data/recsys.odb"
-LOCATION2 = "tests/data/recsys2.odb"
+double_line = f"\n{100 * '='}"
+single_line = f"\n{100 * '-'}"
 
 
 @pytest.mark.odb
-class TestObjCxn:  # pragma: no cover
+class TestODB:  # pragma: no cover
     # ============================================================================================ #
     def test_setup(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.database.object_db()
+        db = container.database.odb()
+        db.drop()
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\nCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_connect(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.odb()
+        db.connect()
+        assert db.is_open
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_insert_exists(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.odb()
+        for file in files:
+            db.insert(file)
+            assert db.exists(file.oid)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_read(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.odb()
+        for file in files:
+            f2 = db.select(file.oid)
+            assert file == f2
+
+        db.begin()
+        for file in files:
+            f2 = db.select(file.oid)
+            assert file == f2
+        db.close()
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_update(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.odb()
         db.drop()
 
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_connection(self, files, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        cxn = ObjectDBConnection(location=LOCATION)
-        assert cxn.is_connected
-        assert cxn.cursor is not None
-        assert not cxn.in_transaction
-
-        cxn.begin()
-        assert cxn.in_transaction
-        assert cxn.is_connected
-        assert cxn.cursor is not None
-
-        cxn.close()
-        assert not cxn.in_transaction
-        assert not cxn.is_connected
-        assert not cxn.cursor
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-
-@pytest.mark.odb
-class TestObjectDB:  # pragma: no cover
-    # ============================================================================================ #
-    def test_create(self, connection, files, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        db = ObjectDB(connection=connection)
-        cxn = db.create(location=LOCATION2)
-        assert cxn.is_connected
-        assert not cxn.in_transaction
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_insert(self, container, files, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-
-        # ---------------------------------------------------------------------------------------- #
-        db = container.database.object_db()
         for i, file in enumerate(files, start=1):
-            file.id = i
+            db.insert(file)
+            f2 = db.select(file.oid)
+            assert f2.task_id != i + 99
+
+        for i, file in enumerate(files, start=1):
+            file.task_id = i + 99
+            db.update(file)
+            f2 = db.select(file.oid)
+            assert f2.task_id == i + 99
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_update_transaction(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.odb()
+        db.drop()
+
+        for i, file in enumerate(files, start=1):
+            db.insert(file)
+            f2 = db.select(file.oid)
+            assert f2.task_id != i + 99
+
+        db.begin()
+        for i, file in enumerate(files, start=1):
+            file.task_id = i + 99
+            db.update(file)
+            f2 = db.select(file.oid)
+            assert f2.task_id == i + 99
+        db.close()
+
+        for i, file in enumerate(files, start=1):
+            f2 = db.select(file.oid)
+            assert f2.task_id != i + 99
+
+        db.begin()
+        for i, file in enumerate(files, start=1):
+            file.task_id = i + 99
+            db.update(file)
+            f2 = db.select(file.oid)
+            assert f2.task_id == i + 99
+        db.save()
+        db.close()
+
+        for i, file in enumerate(files, start=1):
+            f2 = db.select(file.oid)
+            assert f2.task_id == i + 99
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_delete(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.odb()
+        db.drop()
+
+        for i, file in enumerate(files, start=100):
+            db.insert(file)
+            assert db.exists(file.oid)
+
+        for i, file in enumerate(files, start=100):
+            db.delete(file.oid)
+            assert not db.exists(file.oid)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_delete_transaction(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.odb()
+        db.drop()
+
+        for i, file in enumerate(files, start=1):
             db.insert(file)
             f2 = db.select(file.oid)
             assert f2 == file
-            db.save()
+
+        db.begin()
+        for i, file in enumerate(files, start=1):
+            db.delete(file.oid)
+            assert not db.exists(file.oid)
+        db.close()
+
+        for i, file in enumerate(files, start=1):
+            assert db.exists(file.oid)
+            db.delete(file.oid)
+            assert not db.exists(file.oid)
+
+        for i, file in enumerate(files, start=1):
+            db.insert(file)
+            f2 = db.select(file.oid)
+            assert f2 == file
+
+        db.begin()
+        for i, file in enumerate(files, start=1):
+            db.delete(file.oid)
+            assert not db.exists(file.oid)
+        db.save()
+        db.close()
+
+        for i, file in enumerate(files, start=1):
+            assert not db.exists(file.oid)
+            with pytest.raises(FileNotFoundError):
+                db.delete(file.oid)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_transaction_wo_commit(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.odb()
+        db.drop()
+
+        db.begin()
+        for file in files:
+            db.insert(file)
+        db.close()
+
+        for file in files:
+            assert not db.exists(file.oid)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_transaction_w_commit(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.odb()
+
+        db.begin()
+        for file in files:
+            db.insert(file)
             with pytest.raises(FileExistsError):
                 db.insert(file)
-
-            db.save()   # Should log message already closed.
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_read(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        db = container.database.object_db()
-
-        entities = db.select_all()
-
-        assert len(entities) == 5
-        logger.debug(100 * "=")
-        logger.debug(entities)
-        logger.debug(100 * "-")
-
-        # ---------------------------------------------------------------------------------------- #
-        sources = ['spotify', 'movielens25m', 'tenrec']
-        for i, (id, entity) in enumerate(entities.items(), start=1):
-            assert entity.id == i
-            assert entity.oid == f"file_file_{i}_{i}_test"
-            assert entity.datasource == sources[i % 3]
-            assert entity.stage == 'extract'
-            assert entity.uri == "tests/data/movielens25m/raw/ratings.pkl"
-            assert entity.task_id == i + 22
-            assert entity.mode == 'test'
-        # ---------------------------------------------------------------------------------------- #
-        with pytest.raises(FileNotFoundError):
-            db.select(oid="2")
-
-        file = db.select("file_file_2_2_test")
-        f2 = db.query("file_file_2_2_test")
-        logger.debug(100 * "=")
-        logger.debug(f2)
-        logger.debug(100 * "-")
-        assert isinstance(file, File)
-        assert file == f2
-        # ---------------------------------------------------------------------------------------- #
-        keys = ["file_file_1_1_test", "file_file_2_2_test", "file_file_3_3_test", "dsda"]
-        entities = entities = db.select_all(keys=keys)  # Should log warning one not found.
-        assert len(entities) == 3
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_update(self, files, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        db = container.database.object_db()
-        for i, file in enumerate(files, start=1):
-            if i % 2 == 0:
-                file.id = i
-                db.update(file)
-            else:
-                file.id = 33 + i
-                logger.debug(file)
-                with pytest.raises(FileNotFoundError):
-                    db.update(file)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_delete(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        db = container.database.object_db()
-        for i in range(1, 6):
-            if i % 2 == 0:
-                oid = f"file_file_{i}_{i}_test"
-                db.delete(oid)
-
-        with pytest.raises(FileNotFoundError):
-            db.delete("29399")
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-
-    # ============================================================================================ #
-    def test_transaction(self, container, files, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        db = container.database.object_db()
-        for i, file in enumerate(files, start=1):
-            db.begin()
-            file.id = i * 14
-            db.insert(file)
-            with pytest.raises(FileNotFoundError):
-                assert not db.select(i * 14)
-
         db.save()
+        db.close()
 
-        for i in range(1, 6):
-            assert db.select(f"file_file_{i}_{i*14}_test")
-
+        for file in files:
+            assert db.exists(file.oid)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -345,26 +449,26 @@ class TestObjectDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_properties(self, container, caplog):
+    def test_no_result(self, container, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        database = container.connection.object_db_connection().database
-        assert database == "tests/data/recsys.object_db"
-
-        cxn = container.database.object_db().connection
-        assert isinstance(cxn, ObjectDBConnection)
-
+        db = container.database.odb()
+        result = db.select('dss')
+        assert result is None
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -377,28 +481,35 @@ class TestObjectDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_close(self, container, caplog):
+    def test_insert_error(self, container, files, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        cxn = container.connection.object_db_connection()
-        cxn.close()
-        assert not cxn.is_connected
-        cxn.commit()
-        assert not cxn.is_connected
-        with pytest.raises(errors.ProgrammingError):
-            cxn.close()
+        db = container.database.odb()
+        for i, file in enumerate(files, start=1):
+            if i % 2 != 0:
+                with pytest.raises(FileExistsError):
+                    db.insert(file)
 
+        db.begin()
+        for i, file in enumerate(files, start=1):
+            if i % 2 != 0:
+                with pytest.raises(FileExistsError):
+                    db.insert(file)
+        db.close()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -411,23 +522,30 @@ class TestObjectDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
 
     # ============================================================================================ #
-    def test_exists(self, container, caplog):
+    def test_update_error(self, container, files, caplog):
         start = datetime.now()
         logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
+            "\n\nStarted {} {} at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 start.strftime("%I:%M:%S %p"),
                 start.strftime("%m/%d/%Y"),
             )
         )
+        logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.database.object_db()
-        assert db.exists(oid="file_file_1_1_test")
-        assert not db.exists(oid=5)
+        db = container.database.odb()
+        db.drop()
+
+        for i, file in enumerate(files, start=1):
+            with pytest.raises(FileNotFoundError):
+                db.update(file)
+
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -440,4 +558,82 @@ class TestObjectDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+
         )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_rollback(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.odb()
+        db.begin()
+        for i, file in enumerate(files, start=1):
+            if i % 2 == 0:
+                db.insert(file)
+                assert db.exists(file.oid)
+        db.rollback()
+        for i, file in enumerate(files, start=1):
+            if i % 2 == 0:
+                assert not db.exists(file.oid)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_database_existence(self, container, files, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.odb()
+        db.drop()
+        assert not db.database_exists()
+        for i, file in enumerate(files, start=1):
+            with pytest.raises(FileNotFoundError):
+                db.update(file)
+
+        assert db.database_exists()
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)

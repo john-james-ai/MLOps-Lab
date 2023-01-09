@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday January 6th 2023 11:45:23 pm                                                 #
-# Modified   : Saturday January 7th 2023 02:26:39 pm                                               #
+# Modified   : Sunday January 8th 2023 04:43:56 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -31,7 +31,6 @@ from .base import OQL, OML, ODL
 class Create(ODL):
     location: str = "tests/core/dal/odb/odb.db"
     autocommit: bool = True
-    autoclose: bool = False
     cmd: str = "create"
 
 

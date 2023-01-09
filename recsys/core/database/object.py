@@ -11,20 +11,178 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Sunday January 8th 2023 03:46:34 pm                                                 #
+# Modified   : Monday January 9th 2023 02:38:12 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Object persistence module"""
 import os
+from abc import abstractmethod
 import shelve
 from typing import Union
 from glob import glob
 
-from .base import Connection, AbstractDatabase, Cursor
+from .base import Connection, AbstractDatabase, Service
 from recsys.core.entity.base import Entity
-from recsys.core.dal.sql.base import OCL, OQL, OML
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                          CURSOR                                                  #
+# ------------------------------------------------------------------------------------------------ #
+class Cursor(Service):
+    """Abstract base class for object database cursors.
+
+    Args:
+        location (str): The path of the shelve database file.
+    """
+    def __init__(self, location) -> None:
+        super().__init__()
+        self._location = location
+        self._cursor = None
+        self.open()
+
+    def open(self) -> None:
+        os.makedirs(os.path.dirname(self._location), exist_ok=True)
+        self._cursor = shelve.open(self._location)
+        msg = f"Object storage opened at {self._location}"
+        self._logger.debug(msg)
+
+    def close(self) -> None:
+        self._cursor.close()
+        msg = f"Object storage at {self._location} is closed."
+        self._logger.debug(msg)
+
+    def drop(self) -> None:
+        """Delete the cursor, i.e. the shelve database."""
+        pattern = self._location + ".*"
+        self._remove(pattern)
+        self._is_open = False
+        msg = f"Pattern: {pattern}."
+        self._logger.debug(msg)
+        msg = f"Dropped object store at {self._location}."
+        self._logger.info(msg)
+
+    def select(self, oid: str) -> Union[Entity, None]:
+        """Select an existing entity by oid from object storage"""
+        self.open()
+        try:
+            result = self._cursor[oid]
+        except KeyError:
+            result = None
+        self.close()
+        return result
+
+    def insert(self, entity: Entity) -> None:
+        """Inserts an entity into the underlying object data store."""
+        self.open()
+        if entity.oid not in self._cursor.keys():
+            self._cursor[entity.oid] = entity
+            msg = f"Inserted entity oid: {entity.oid}."
+            self._logger.info(msg)
+        else:
+            msg = f"Unable to insert entity oid: {entity.oid}. Entity already exists."
+            self._logger.error(msg)
+            raise FileExistsError(msg)
+        self.close()
+
+    def update(self, entity: Entity) -> None:
+        """Update an existing entity in object storage or cache."""
+        self.open()
+        if entity.oid in self._cursor.keys():
+            self._cursor[entity.oid] = entity
+            msg = f"Updated entity oid: {entity.oid}."
+            self._logger.info(msg)
+        else:
+            msg = f"Unable to update entity oid: {entity.oid}. Entity does not exist."
+            self._logger.error(msg)
+            raise FileNotFoundError(msg)
+        self.close()
+
+    @abstractmethod
+    def delete(self, oid: str) -> None:
+        """Deletes a key/value pair from object storage"""
+
+    def exists(self, oid: str) -> None:
+        """Checks existence of an object in the storage"""
+        self.open()
+        exists = oid in self._cursor.keys()
+        answer = "exists" if exists else "does not exist."
+        msg = f"Checked existence of {oid}. Entity {answer}."
+        self._logger.debug(msg)
+        self.close()
+        return exists
+
+    def _remove(self, pattern) -> None:
+        """Removes files that match the glob pattern."""
+        file_list = glob(pattern, recursive=True)
+        for filepath in file_list:
+            try:
+                os.remove(filepath)
+                msg = f"Removed {filepath}."
+                self._logger.debug(msg)
+            except OSError:  # pragma: no cover
+                msg = f"Encountered an error while deleting file at {filepath}"
+                self._logger.error(msg)
+                raise OSError(msg)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                          CACHE CURSOR                                            #
+# ------------------------------------------------------------------------------------------------ #
+class CacheCursor(Cursor):
+    """Class for object cache.
+
+    Args:
+        location (str): The path to the database file.
+
+    """
+
+    def __init__(self, location) -> None:
+        super().__init__(location=location)
+        self._location = self._set_cache_location()
+
+    @property
+    def cache(self) -> dict:
+        self.open()
+        cache = {}
+        for oid, entity in self._cursor.items():
+            cache[oid] = entity
+        return cache
+
+    def reset(self) -> None:
+        self.open()
+        for oid in self._cursor.keys():
+            del self._cursor[oid]
+        self.close()
+        msg = "Cache is reset."
+        self._logger.debug(msg)
+
+    def delete(self, oid: str) -> None:
+        """Deletes a key/value pair from object storage"""
+        self.open()
+
+        self._cursor[oid] = None
+        msg = f"Marked entity oid = {oid} for deletion."
+        self._logger.info(msg)
+
+        self.close()
+
+    def exists(self, oid: str) -> None:
+        """Checks existence of an object in the storage"""
+        self.open()
+        if oid in self._cursor.keys():
+            exists = not self._cursor[oid] is None
+        else:
+            exists = False
+        answer = "exists" if exists else "does not exist."
+        msg = f"Checked existence of {oid}. Entity {answer}."
+        self._logger.debug(msg)
+        self.close()
+        return exists
+
+    def _set_cache_location(self) -> str:
+        return os.path.join(os.path.dirname(self._location), "cache", os.path.basename(self._location))
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -41,146 +199,33 @@ class StorageCursor(Cursor):
     def __init__(self, location) -> None:
         super().__init__(location=location)
 
-    def execute(self, ocl: OCL) -> Union[Entity, None]:
-
-        commands = {"insert": self._insert, "select": self._select,
-                    "select_by_name_mode": self._select_by_name_mode,
-                    "update": self._update, "delete": self._delete,
-                    "exists": self._exists}
-
-        return commands[ocl.cmd](ocl)
-
-    def _select(self, ocl: OQL) -> Union[Entity, None]:
-        """Select an existing entity by oid from object storage"""
-        try:
-            result = self._cursor[ocl.oid]
-        except KeyError:
-            result = None
-        return result
-
-    def _select_by_name_mode(self, ocl: OQL) -> Union[Entity, None]:
-        """Select an existing entity by name and mode from object storage."""
-        try:
-            result = self._cursor[ocl.oid]
-        except KeyError:
-            result = None
-        return result
-
-    def _insert(self, ocl: OML) -> None:
-        """Inserts an entity into the underlying object data store."""
-        if ocl.oid not in self._cursor.keys():
-            self._cursor[ocl.entity.oid] = ocl.entity
-            msg = f"{self.__class__.__name__} inserted entity oid: {ocl.oid}."
-            self._logger.info(msg)
-        else:
-            msg = f"{self.__class__.__name__} unable to insert entity oid: {ocl.oid}. Entity already exists."
-            self._logger.error(msg)
-            raise FileExistsError(msg)
-
-    def _update(self, ocl: OML) -> None:
-        """Update an existing entity in object storage or cache."""
-        if ocl.oid in self._cursor.keys():
-            self._cursor[ocl.oid] = ocl.entity
-            msg = f"{self.__class__.__name__} updated entity oid: {ocl.oid}."
-            self._logger.info(msg)
-        else:
-            msg = f"{self.__class__.__name__} unable to update entity oid: {ocl.oid}. Entity does not exist."
-            self._logger.error(msg)
-            raise FileNotFoundError(msg)
-
-    def _delete(self, ocl: OML) -> None:
-        """Deletes a key/value pair from object storage"""
-        try:
-            del self._cursor[ocl.oid]
-            msg = f"Deleted object with oid = {ocl.oid} from object storage."
-            self._logger.info(msg)
-
-        except KeyError:
-            msg = f"{self.__class__.__name__} unable to delete entity oid: {ocl.oid}. Entity does not exist."
-            self._logger.error(msg)
-            raise FileNotFoundError(msg)
-
-    def _exists(self, ocl: OML) -> None:
-        """Checks existence of an object in the storage"""
-        return ocl.oid in self._cursor.keys()
-
-    @classmethod
-    def save(self, cache: dict) -> None:
+    def save(self, cache_cursor: CacheCursor) -> None:
         """Commits cache to object storage."""
+        self.open()
+        cache = cache_cursor.cache
         for oid, entity in cache.items():
             if entity is not None:
                 self._cursor[oid] = entity
+                msg = f"Saved entity {entity.oid} to object storage."
+                self._logger.debug(msg)
             else:
                 del self._cursor[oid]
+        cache_cursor.reset()
+        cache_cursor.close()
+        self.close()
 
-
-# ------------------------------------------------------------------------------------------------ #
-#                                          CACHE CURSOR                                            #
-# ------------------------------------------------------------------------------------------------ #
-class CacheCursor(Cursor):
-    """Class for object cache.
-
-    Args:
-        location (str): The path to the database file.
-
-    """
-
-    def __init__(self, location) -> None:
-        super().__init__(location=location)
-
-    @property
-    def cache(self) -> dict:
-        cache = {}
-        for oid, entity in self._cursor.items():
-            cache[oid] = entity
-        return cache
-
-    def execute(self, ocl: OCL) -> Union[Entity, None]:
-
-        commands = {"insert": self._insert,
-                    "update": self._update,
-                    "delete": self._delete}
-        return commands[ocl.cmd](ocl)
-
-    def _insert(self, ocl: OML) -> None:
-        """Inserts an entity into the underlying object cache."""
-        if ocl.oid not in self._cursor.keys():
-            self._cursor[ocl.entity.oid] = ocl.entity
-            msg = f"{self.__class__.__name__} inserted entity oid: {ocl.oid}."
-            self._logger.debug(msg)
-        else:
-            msg = f"{self.__class__.__name__} unable to insert entity oid: {ocl.oid}. Entity already exists."
-            self._logger.error(msg)
-            raise FileExistsError(msg)
-
-    def _update(self, ocl: OML) -> None:
-        """Update an existing entity in object cache."""
-        if ocl.oid in self._cursor.keys():
-            self._cursor[ocl.oid] = ocl.entity
-            msg = f"{self.__class__.__name__} updated entity oid: {ocl.oid}."
-            self._logger.debug(msg)
-        else:
-            msg = f"{self.__class__.__name__} unable to update entity oid: {ocl.oid}. Entity does not exist."
-            self._logger.error(msg)
-            raise FileNotFoundError(msg)
-
-    def _delete(self, ocl: OML) -> None:
-        """Marks a key/value pair for deletion from object storage"""
+    def delete(self, oid) -> None:
+        """Deletes a key/value pair from object storage"""
+        self.open()
         try:
-            self._cursor[ocl.oid] = None
-            msg = f"Marked object with oid = {ocl.oid} for deletion from object cache."
+            del self._cursor[oid]
+            msg = f"Deleted object with oid = {oid} from object storage."
+            self._logger.info(msg)
+
         except KeyError:
-            msg = f"{self.__class__.__name__} unable to delete entity oid: {ocl.oid}. Entity does not exist."
+            msg = f"Unable to delete entity oid: {oid}. Entity does not exist."
             self._logger.error(msg)
             raise FileNotFoundError(msg)
-
-    def _exists(self, ocl: OML) -> None:
-        """Checks existence of an object in the storage"""
-        return ocl.oid in self._cursor.keys()
-
-    def reset(self) -> None:
-        for oid in self._cursor.keys():
-            del self._cursor[oid]
         self.close()
 
 
@@ -197,88 +242,64 @@ class ObjectDBConnection(Connection):
 
     __cache_filename = "cache.odb"
 
-    def __init__(self, location: str, autocommit: bool = True, autoclose: bool = True) -> None:
+    def __init__(self, location: str, autocommit: bool = True) -> None:
         super().__init__()
         self._location = location
-        self._cache_location = os.path.join(os.path.dirname(location), self.__cache_filename)
         self._autocommit = autocommit
-        self._autoclose = autoclose
-        self._cache_cursor = None
-        self._storage_cursor = None
-        self._current_cursor = None
-        self._in_transaction = False
-        self.open()
-
-    @property
-    def is_connected(self) -> bool:
-        """Returns the True if the connection is open, False otherwise."""
-        return self._is_connected
-
-    @property
-    def in_transaction(self) -> bool:
-        """Returns the True if a transaction has been started."""
-        return self._in_transaction
-
-    @property
-    def autocommit(self) -> bool:
-        return self._autocommit
-
-    @property
-    def autoclose(self) -> bool:
-        return self._autoclose
+        self._cache = None
+        self._storage = None
+        self._build_cursors()
 
     @property
     def location(self) -> str:
         return self._location
 
     @property
-    def cache_filename(self) -> str:
-        return self.__cache_filename
+    def storage(self) -> Cursor:
+        return self._storage
 
     @property
-    def cursor(self) -> shelve:
-        """Returns a cursor from the connection."""
-        return self._current_cursor
+    def cache(self) -> Cursor:
+        return self._cache
+
+    @property
+    def autocommit(self) -> bool:
+        return self._autocommit
 
     def begin(self) -> None:
         """Starts a transaction."""
-        self._in_transaction = True
-        self._current_cursor = self._cache_cursor
-        self._logger.debug(f"{self.__class__.__name__} transaction has started.")
+        if not self._is_open:
+            self.open()
 
-    def open(self, autocommit: bool = False) -> None:
+    def open(self) -> None:
         """Opens a database connection."""
-        self._cache_cursor = CacheCursor(self._cache_location)
-        self._storage_cursor = StorageCursor(self._location)
-        if self._autocommit and not self._in_transaction:
-            self._current_cursor = self._storage_cursor
-        else:
-            self._current_cursor = self._cache_cursor
-        self._is_connected = True
-        self._logger.debug(f"{self.__class__.__name__} connection is open.")
-
-    def execute(self, ocl: OCL) -> Union[Entity, None]:
-        return self._current_cursor.execute(ocl)
+        self._storage.open()
+        self._cache.open()
+        self._logger.debug("connection is open.")
 
     def close(self) -> None:
         """Closes the current connection."""
-        self._cache_cursor.close()
-        self._storage_cursor.close()
-        self._current_connection = None
-        self._is_connected = False
-        self._in_transaction = False
-        self._logger.debug(f"{self.__class__.__name__} is closed.")
+        self._cache.reset()
+        self._cache.close()
+        self._storage.close()
+        self._logger.debug("is closed.")
 
     def commit(self) -> None:
         """Commits data to the underlying database."""
-        self._storage_cursor.save(self._cache_cursor.cache)
-        self._cache_cursor.reset()
-        self._in_transaction = False
+        self._storage.save(self._cache)
+        self._cache.reset()
 
     def rollback(self) -> None:  # pragma: no cover
         """Rolls back changes made to the database since last commit."""
-        self._cache_cursor.reset()
-        self._in_transaction = False
+        self._cache.reset()
+
+    def drop(self) -> None:
+        self._cache.drop()
+        self._storage.drop()
+
+    def _build_cursors(self) -> None:
+        self._cache = CacheCursor(self._location)
+        self._storage = StorageCursor(self._location)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -291,34 +312,29 @@ class ObjectDB(AbstractDatabase):
         super().__init__()
         self._connection = connection
         self._autocommit = connection.autocommit
-        self._autoclose = connection.autoclose
         self._in_transaction = False
-        self._is_connected = False
+        self._is_open = False
 
     @property
-    def in_transaction(self) -> bool:
-        return self._in_transaction
-
-    @property
-    def is_connected(self) -> bool:
-        return self._is_connected
+    def is_open(self) -> bool:
+        return self._is_open
 
     def connect(self) -> None:
         """Connects to the database."""
         self._connection.open()
-        self._is_connected = True
+        self._is_open = True
 
     def begin(self) -> None:
         """Starts a transaction on the underlying database connection."""
-        if not self._is_connected:
-            self.connect()
         self._connection.begin()
         self._in_transaction = True
+        msg = "Transaction has started"
+        self._logger.info(msg)
 
     def close(self) -> None:
         """Closes the underlying database connection."""
         self._connection.close()
-        self._is_connected = False
+        self._is_open = False
         self._in_transaction = False
 
     def save(self) -> None:
@@ -331,84 +347,63 @@ class ObjectDB(AbstractDatabase):
         self._connection.rollback()
         self._in_transaction = False
 
-    def query(self, ocl: OCL) -> Union[Entity, None]:
-        """Executes a query on the database."""
-        self._open_session()
-        cursor = self._connection.cursor
-        result = cursor.execute(ocl)
-        self._close_session()
+    def select(self, oid: str) -> Entity:
+        if self._in_transaction:
+            result = self._connection.cache.select(oid)
+            if result is None:
+                result = self._connection.storage.select(oid)
+        else:
+            result = self._connection.storage.select(oid)
         return result
 
-    def insert(self, ocl: OCL) -> int:
+    def insert(self, entity: Entity) -> int:
         """Inserts an object into object storage."""
-        self.query(ocl)
-
-    def select(self, ocl: OCL) -> tuple:
-        """Performs a select query returning a single instance or row."""
-        return self.query(ocl)
-
-    def select_all(self, ocl: OCL) -> list:
-        """Performs a select query returning multiple instances or rows."""
-        return self.query(ocl)
-
-    def update(self, ocl: OCL) -> None:
-        """Performs an update on existing data in the database."""
-        self.query(ocl)
-        return 1
-
-    def delete(self, ocl: OCL) -> None:
-        """Deletes existing data."""
-        self.query(ocl)
-
-    def create(self, ocl: OCL) -> None:
-        """Executes create OCL statement for databases and tables."""
-        self._connection = ObjectDBConnection(location=ocl.location,
-                                              autocommit=ocl.autocommit,
-                                              autoclose=ocl.autoclose)
-        msg = f"Created an object store at {ocl.location}: autocommit={ocl.autocommit}; autoclose={ocl.autoclose}."
-        self._logger.info(msg)
-
-    def drop(self, ocl: OCL) -> None:
-        """Drop a database or table."""
-        storage_pattern = ocl.location + "*"
-        cache_pattern = os.path.join(os.path.dirname(ocl.location), self._connection.cache_filename) + "*"
-        if self._connection.location == ocl.location:
-            self.close()
-        self._remove(storage_pattern, shelf='storage')
-        self._remove(cache_pattern, shelf='cache')
-        msg = f"Dropped object store at {ocl.location}."
-        self._logger.info(msg)
-
-    def exists(self, ocl: OCL) -> bool:
-        """Returns True if the data specified by the parameters exists. Returns False otherwise."""
-        if hasattr(ocl, "location"):
-            pattern = ocl.location + "*"
-            return len(glob(pattern)) > 0
-        else:
-            return self.query(ocl)
-
-    def _open_session(self) -> None:
-        """Opens a database connection if not already open."""
-        if not self._is_connected:
-            self.connect()
-
-    def _close_session(self) -> None:
-        """Saves and closes the connection, if not in transaction."""
-        if not self._in_transaction and self._autocommit:
-            self.save()
-        if not self._in_transaction and self._autoclose:
-            self.close()
-
-    def _remove(self, pattern, shelf: str) -> None:
-        """Removes files that match the glob pattern."""
-        file_list = glob(pattern, recursive=True)
-        for filepath in file_list:
-            try:
-                os.remove(filepath)
-                msg = f"Removed {filepath} from {shelf}."
-                self._logger.debug(msg)
-
-            except OSError:
-                msg = f"Error while deleting file at {filepath}"
+        if self._in_transaction:
+            if not self._connection.storage.exists(entity.oid) and not self._connection.cache.exists(entity.oid):
+                self._connection.cache.insert(entity)
+            else:
+                msg = f"Unable to insert entity oid = {entity.oid}. Entity already exists."
                 self._logger.error(msg)
-                raise OSError(msg)
+                raise FileExistsError(msg)
+        else:
+            self._connection.storage.insert(entity)
+
+    def update(self, entity) -> None:
+        """Performs an update on existing data in the database."""
+        if self._in_transaction:
+            if not self._connection.cache.exists(entity.oid):
+                self._cache(entity.oid)
+            self._connection.cache.update(entity)
+        else:
+            self._connection.storage.update(entity)
+
+    def delete(self, oid: str) -> None:
+        """Deletes existing data."""
+        if self._in_transaction:
+            if not self._connection.cache.exists(oid):
+                self._cache(oid)
+            self._connection.cache.delete(oid)
+        else:
+            self._connection.storage.delete(oid)
+
+    def drop(self) -> None:
+        """Drop database."""
+        self._connection.drop()
+
+    def exists(self, oid: str) -> bool:
+        """Returns True if the data specified by the parameters exists. Returns False otherwise."""
+        if self._in_transaction:
+            return self._connection.cache.exists(oid)
+        else:
+            return self._connection.storage.exists(oid)
+
+    def database_exists(self) -> bool:
+        pattern = self._connection.location + ".*"
+        return len(glob(pattern)) > 0
+
+    def _cache(self, oid: str) -> None:
+        """Copies an entity from storage to cache"""
+        entity = self._connection.storage.select(oid)
+        self._connection.cache.insert(entity)
+        msg = f"Copied entity {oid} from storage to cache."
+        self._logger.debug(msg)
