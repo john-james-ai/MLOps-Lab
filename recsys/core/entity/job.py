@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Monday January 9th 2023 10:27:00 pm                                                 #
+# Modified   : Tuesday January 10th 2023 01:51:16 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -242,8 +242,13 @@ class Task(JobComponent):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def job(self) -> Job:
-        return self._job
+    def parent(self) -> Job:
+        return self._parent
+
+    # -------------------------------------------------------------------------------------------- #
+    @parent.setter
+    def parent(self, parent: Job) -> None:
+        self._parent = parent
 
     # ------------------------------------------------------------------------------------------------ #
     def as_dto(self) -> TaskDTO:
@@ -254,7 +259,7 @@ class Task(JobComponent):
             description=self._description,
             mode=self._mode,
             state=self._state,
-            job_id=self._job.id,
+            parent_id=self._parent.id,
             created=self._created,
             modified=self._modified,
         )

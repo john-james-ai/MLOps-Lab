@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Monday January 9th 2023 05:59:55 pm                                                 #
+# Modified   : Tuesday January 10th 2023 01:44:36 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -300,7 +300,7 @@ class TestTaskDAO:  # pragma: no cover
             tasks = dao.read_by_parent_id(i)
             for id, task in tasks.items():
                 assert isinstance(task, Task)
-                assert task.job_id == i
+                assert task.parent_id == i
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

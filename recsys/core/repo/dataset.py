@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Tuesday January 10th 2023 12:37:32 am                                               #
+# Modified   : Tuesday January 10th 2023 01:53:39 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -42,13 +42,16 @@ class DatasetRepo(RepoABC):
 
     def add(self, entity: Entity) -> Entity:
         """Adds an entity to the repository and returns the Entity with the id added."""
+
+        dto = self._dataset_dao.create(entity.as_dto())
+        entity.id = dto.id
+
         for name, dataframe in entity.dataframes.items():
+            dataframe.parent = entity
             dto = self._dataframe_dao.create(dto=dataframe.as_dto())
             dataframe.id = dto.id
             entity.update_dataframe(dataframe)
 
-        dto = self._dataset_dao.create(entity.as_dto())
-        entity.id = dto.id
         self._oao.create(entity)
         return entity
 

@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Datasetname   : /tests/test_core/test_repo/test_dataset_repo.py                                     #
+# Datasetname   : /tests/test_core/test_repo/test_dataset_repo.py                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 1st 2023 02:21:02 pm                                                 #
-# Modified   : Tuesday January 10th 2023 12:27:32 am                                               #
+# Modified   : Tuesday January 10th 2023 01:22:05 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -19,9 +19,10 @@
 import inspect
 from datetime import datetime
 import pytest
+import pandas as pd
 import logging
 
-from recsys.core.entity.dataset import Dataset
+from recsys.core.entity.dataset import Dataset, DataFrame
 from recsys.core.repo.dataset import DatasetRepo
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -286,6 +287,12 @@ class TestDatasetRepo:  # pragma: no cover
             assert dataset.id == i
             f2 = repo.get(i)
             assert dataset == f2
+            for df in f2.dataframes.values():
+                assert isinstance(df, DataFrame)
+                assert isinstance(df.data, pd.DataFrame)
+                assert df.nrows > 100
+                assert df.ncols > 3
+                assert df.parent == f2
 
         self.reset_db(container)
         # ---------------------------------------------------------------------------------------- #
@@ -324,6 +331,12 @@ class TestDatasetRepo:  # pragma: no cover
         assert dataset.id == 2
         assert dataset.name == "dataset_name_2"
         assert dataset.mode == 'test'
+        for df in dataset.dataframes.values():
+            assert isinstance(df, DataFrame)
+            assert isinstance(df.data, pd.DataFrame)
+            assert df.nrows > 100
+            assert df.ncols > 3
+            assert df.parent == dataset
 
         self.reset_db(container)
         # ---------------------------------------------------------------------------------------- #

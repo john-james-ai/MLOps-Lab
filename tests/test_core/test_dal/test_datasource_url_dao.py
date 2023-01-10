@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Monday January 9th 2023 06:00:43 pm                                                 #
+# Modified   : Tuesday January 10th 2023 02:02:04 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -100,7 +100,7 @@ class TestDataSourceURLDAO:  # pragma: no cover
 
         for j, (name, datasource_url) in enumerate(datasources[0].urls.items(), start=1):
             dto = datasource_url.as_dto()
-            dto.datasource_id = j
+            dto.parent_id = j
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)
@@ -151,7 +151,7 @@ class TestDataSourceURLDAO:  # pragma: no cover
 
         for j, (name, datasource_url) in enumerate(datasources[0].urls.items(), start=1):
             dto = datasource_url.as_dto()
-            dto.datasource_id = j
+            dto.parent_id = j
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Monday January 9th 2023 11:36:22 pm                                                 #
+# Modified   : Tuesday January 10th 2023 02:09:28 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -56,7 +56,7 @@ def ratings():
 @pytest.fixture(scope="module")
 def datasource(ratings):
     datasource = DataSource(
-        name=f"datasource_id_{1}",
+        name=f"datasource_name_{1}",
         description=f"Datasource Description {1}",
         website="www.spotify.com",
     )
@@ -234,7 +234,7 @@ def datasources():
         )
         for j in range(1, 6):
             datasource_url = datasource.create_url(
-                name=f"datasource_url_{j}",
+                name=f"datasource_url_{j}_of_datasource_{i}",
                 url=f"www.url_{j}.com",
                 description=f"Description for datasource_url {j} of datasource {i}"
             )

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 27th 2022 05:33:26 pm                                              #
-# Modified   : Sunday January 1st 2023 05:42:37 am                                                 #
+# Modified   : Tuesday January 10th 2023 02:02:04 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -26,6 +26,8 @@ from recsys.core.entity.datasource import DataSource, DataSourceURL
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
+double_line = f"\n{100 * '='}"
+single_line = f"\n{100 * '-'}"
 
 
 @pytest.mark.datasource
@@ -157,7 +159,7 @@ class TestDataSource:  # pragma: no cover
             dto = url.as_dto()
             assert dto.name == f"datasource_url_name_{i}"
             assert dto.url == f"www.spotify.resource_{i}.com"
-            assert dto.datasource_id == datasource.id
+            assert dto.parent_id == datasource.id
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -282,3 +284,43 @@ class TestDataSource:  # pragma: no cover
                 end.strftime("%m/%d/%Y"),
             )
         )
+
+    # ============================================================================================ #
+    def test_update(self, datasources, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        for datasource in datasources:
+            datasource.website = "www.updated.com"
+            for url in datasource.urls.values():
+                url.url = "www.updated.com"
+                datasource.update_url(url)
+
+        for datasource in datasources:
+            assert datasource.website == "www.updated.com"
+            for url in datasource.urls.values():
+                assert url.url == "www.updated.com"
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)

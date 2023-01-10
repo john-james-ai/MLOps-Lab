@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:58:21 pm                                             #
-# Modified   : Sunday January 1st 2023 06:55:19 am                                                 #
+# Modified   : Tuesday January 10th 2023 02:17:08 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,15 +22,26 @@ import pytest
 import logging
 
 from recsys.core.entity.datasource import DataSource, DataSourceURL
-
+from recsys.core.repo.datasource import DataSourceRepo
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
+double_line = f"\n{100 * '='}"
+single_line = f"\n{100 * '-'}\n"
 
 
 @pytest.mark.repo
 @pytest.mark.datasource_repo
 class TestDataSourceRepo:  # pragma: no cover
+
+    def reset_db(self, container) -> None:
+        dba = container.dba.datasource()
+        dba.reset()
+        dba = container.dba.datasource_url()
+        dba.reset()
+        dba = container.dba.object()
+        dba.reset()
+
     # ============================================================================================ #
     def test_setup(self, container, caplog):
         start = datetime.now()
@@ -43,10 +54,7 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        table = container.table.datasource()
-        table.reset()
-        table = container.table.datasource_url()
-        table.reset()
+        self.reset_db(container)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -62,7 +70,206 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_add_get(self, container, datasources, caplog):
+    def test_xaction_insert_no_commit(self, container, context, datasources, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        repo = DataSourceRepo(context)
+        context.begin()
+        for f1 in datasources.copy():
+            f2 = repo.add(f1)
+            assert repo.exists(f2.id)
+        context.close()
+
+        for i in range(1, 6):
+            assert not repo.exists(i)
+
+        self.reset_db(container)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_xaction_insert_commit(self, container, context, datasources, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        repo = DataSourceRepo(context)
+        context.begin()
+        ids = []
+        for f3 in datasources.copy():
+            f4 = repo.add(f3)
+            assert repo.exists(f4.id)
+            ids.append(f4.id)
+        context.save()
+        context.close()
+
+        for i in ids:
+            assert repo.exists(i)
+        self.reset_db(container)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_xaction_update(self, container, context, datasources, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        repo = DataSourceRepo(context)
+
+        for datasource in datasources:
+            repo.add(datasource)
+
+        context.begin()
+        for i, datasource in enumerate(datasources, start=1):
+            f1 = repo.get(i)
+            f1.website = f"www.website_{99 + i}.com"
+            repo.update(f1)
+            f2 = repo.get(i)
+            assert f2.website == f"www.website_{99 + i}.com"
+        context.close()
+
+        for i in range(1, 6):
+            f3 = repo.get(i)
+            assert not f3.website == f"www.website_{99 + i}.com"
+
+        context.begin()
+        for i in range(1, 6):
+            f4 = repo.get(i)
+            f4.website = f"www.website_{99 + i}.com"
+            repo.update(f4)
+            f5 = repo.get(i)
+            assert f5.website == f"www.website_{99 + i}.com"
+        context.save()
+        context.close()
+
+        for i in range(1, 6):
+            f6 = repo.get(i)
+            assert f6.website == f"www.website_{99 + i}.com"
+
+        self.reset_db(container)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_xaction_delete(self, container, context, datasources, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        repo = DataSourceRepo(context)
+
+        for datasource in datasources:
+            repo.add(datasource)
+
+        context.begin()
+        for i in range(1, 6):
+            repo.remove(i)
+            assert not repo.exists(i)
+        context.rollback()
+        context.close()
+
+        for i in range(1, 6):
+            assert repo.exists(i)
+
+        context.begin()
+        for i in range(1, 6):
+            repo.remove(i)
+            assert not repo.exists(i)
+        context.save()
+        context.close()
+
+        for i in range(1, 6):
+            assert not repo.exists(i)
+
+        self.reset_db(container)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_add_get(self, context, container, datasources, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -73,12 +280,18 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.datasource()
+        repo = DataSourceRepo(context)
         for i, datasource in enumerate(datasources, start=1):
             datasource = repo.add(datasource)
             assert datasource.id == i
-            j2 = repo.get(i)
-            assert datasource == j2
+            f2 = repo.get(i)
+            assert datasource == f2
+            for df in f2.urls.values():
+                assert isinstance(df, DataSourceURL)
+                assert "url" in df.url
+                assert df.parent == f2
+
+        self.reset_db(container)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -94,7 +307,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_by_name(self, container, caplog):
+    def test_get_by_name(self, container, datasources, context, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -105,13 +318,21 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.datasource()
-        datasource = repo.get_by_name_mode(name="spotify")
+        repo = DataSourceRepo(context)
+
+        for datasource in datasources:
+            repo.add(datasource)
+
+        datasource = repo.get_by_name_mode(name="tenrec_2")
         assert isinstance(datasource, DataSource)
-        for name, datasource_url in datasource.urls.items():
-            assert isinstance(datasource_url, DataSourceURL)
-            assert datasource_url.name == name
-            assert datasource_url.datasource == datasource
+        assert datasource.id == 2
+        assert datasource.name == "tenrec_2"
+        assert datasource.mode == 'test'
+        for df in datasource.urls.values():
+            assert isinstance(df, DataSourceURL)
+            assert df.parent == datasource
+
+        self.reset_db(container)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -127,7 +348,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_all(self, container, caplog):
+    def test_update(self, container, context, datasources, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -138,59 +359,21 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.datasource()
-        datasources = repo.get_all()
-        logger.debug(datasources)
-        assert isinstance(datasources, dict)
-        for i, datasource in datasources.items():
-            assert isinstance(datasource, DataSource)
-            assert datasource.id == i
-            assert datasource.oid is not None
-            logger.debug(datasource.urls)
-            for j, datasource_url in datasource.urls.items():
-                assert isinstance(datasource_url, DataSourceURL)
-                assert datasource_url.name == j
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
+        repo = DataSourceRepo(context)
 
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
+        for datasource in datasources:
+            repo.add(datasource)
 
-    # ============================================================================================ #
-    def test_update(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\n\tStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.datasource()
-        datasources = repo.get_all()
-        for i, datasource in datasources.items():
-            datasource.state = "COMPLETE"
-            for j, datasource_url in datasource.urls.items():
-                datasource_url.state = "COMPLETE"
-                datasource.update_url(datasource_url)
+        for i in range(1, 6):
+            datasource = repo.get(i)
+            datasource.website = f"www.website_{99 + i}.com"
             repo.update(datasource)
 
-        datasources = repo.get_all()
-        for i, datasource in datasources.items():
-            assert datasource.state == "COMPLETE"
-            for j, datasource_url in datasource.urls.items():
-                assert datasource_url.state == "COMPLETE"
+        for i in range(1, 6):
+            datasource = repo.get(i)
+            assert datasource.website == f"www.website_{99 + i}.com"
 
+        self.reset_db(container)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -206,7 +389,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_remove_exists(self, container, caplog):
+    def test_remove_exists(self, container, datasources, context, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -217,7 +400,11 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.datasource()
+        repo = DataSourceRepo(context)
+
+        for datasource in datasources:
+            repo.add(datasource)
+
         for i in range(1, 6):
             if i % 2 == 0:
                 repo.remove(i)
@@ -225,10 +412,12 @@ class TestDataSourceRepo:  # pragma: no cover
 
         for i in range(1, 6):
             if i % 2 == 0:
-                with pytest.raises(FileNotFoundError):
-                    repo.get(i)
+                assert repo.get(i) == []
+                assert repo.exists(i) is False
             else:
                 assert repo.exists(i)
+
+        self.reset_db(container)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -244,7 +433,7 @@ class TestDataSourceRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_print(self, container, caplog):
+    def test_print(self, context, datasources, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -255,7 +444,11 @@ class TestDataSourceRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = container.repos.datasource()
+        repo = DataSourceRepo(context)
+
+        for datasource in datasources:
+            repo.add(datasource)
+
         repo.print()
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Wednesday January 4th 2023 01:23:12 pm                                              #
+# Modified   : Tuesday January 10th 2023 01:57:47 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -35,61 +35,73 @@ class DataSourceRepo(RepoABC):
         self._context = context
         self._datasource_dao = self._context.get_dao(DataSource)
         self._datasource_url_dao = self._context.get_dao(DataSourceURL)
+        self._oao = self._context.get_oao()
 
     def __len__(self) -> int:
-        return len(self.get_all())
+        return len(self._datasource_dao.read_all())
 
     def add(self, entity: Entity) -> Entity:
         """Adds an entity to the repository and returns the Entity with the id added."""
-        for name, ds_url in entity.urls.items():
-            datasource_url = self._datasource_url_dao.create(entity=ds_url, persist=False)
-            self._datasource_url_dao.save()
+
+        dto = self._datasource_dao.create(entity.as_dto())
+        entity.id = dto.id
+
+        for name, datasource_url in entity.urls.items():
+            datasource_url.parent = entity
+            dto = self._datasource_url_dao.create(dto=datasource_url.as_dto())
+            datasource_url.id = dto.id
             entity.update_url(datasource_url)
 
-        entity = self._datasource_dao.create(entity=entity, persist=True)
-        self._datasource_dao.save()
+        self._oao.create(entity)
         return entity
 
     def get(self, id: str) -> Entity:
         "Returns an entity with the designated id"
-        return self._datasource_dao.read(id)
+        result = []
+        dto = self._datasource_dao.read(id)
+        if dto:
+            result = self._oao.read(dto.oid)
+        return result
 
     def get_by_name_mode(self, name: str, mode: str = None) -> Entity:
+        result = []
         mode = mode or self._get_mode()
-        return self._datasource_dao.read_by_name_mode(name, mode)
-
-    def get_all(self) -> dict:
-        return self._datasource_dao.read_all()
+        dto = self._datasource_dao.read_by_name_mode(name, mode)
+        if dto:
+            result = self._oao.read(dto.oid)
+        return result
 
     def update(self, entity: Entity) -> None:
         """Updates an entity in the database."""
-        self._datasource_dao.update(entity=entity, persist=True)
-        self._datasource_dao.save()
-        for _, datasource_url in entity.urls.items():
-            self._datasource_url_dao.update(datasource_url, persist=False)
-        self._datasource_url_dao.save()
+        for datasource_url in entity.urls.values():
+            self._datasource_url_dao.update(datasource_url.as_dto())
+
+        self._datasource_dao.update(dto=entity.as_dto())   # Update DataSource metadata
+        self._oao.update(entity)  # Persist datasource in object storage
 
     def remove(self, id: str) -> None:
         """Removes an entity (and its children) from repository."""
-        entity = self.get(id)
-        for _, datasource_url in entity.urls.items():
-            self._datasource_url_dao.delete(datasource_url.id, persist=False)
-        self._datasource_url_dao.save()
-        self._datasource_dao.delete(id)
-        self._datasource_dao.save()
+        dto = self._datasource_dao.read(id)
+        datasource = self._oao.read(dto.oid)
+        for datasource_url in datasource.urls.values():
+            self._datasource_url_dao.delete(datasource_url.id)
+
+        self._datasource_dao.delete(id)   # Delete DataSource metadata
+        self._oao.delete(datasource.oid)  # Delete datasource from object storage
 
     def exists(self, id: str) -> bool:
         """Returns True if entity with id exists in the repository."""
         return self._datasource_dao.exists(id)
 
     def print(self) -> None:
-        """Prints the repository contents as a DataFrame."""
-        entities = self.get_all()
-        for name, entity in entities.items():
+        """Prints the repository contents as a DataSourceURL."""
+        dtos = self._datasource_dao.read_all()
+        for dto in dtos.values():
+            datasource = self._oao.read(dto.oid)
             print("\n\n")
-            print(entity)
+            print(datasource)
             print(120 * "=")
-            print(50 * " ", "DataSource URLs")
+            print(50 * " ", "DataSourceURLs")
             print(120 * "_")
-            datasource_urls = self._datasource_url_dao.read_by_parent_id(parent=entity)
-            print(datasource_urls)
+            dfs = datasource.get_urls()
+            print(dfs)

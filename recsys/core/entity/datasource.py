@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Monday January 9th 2023 10:27:33 pm                                                 #
+# Modified   : Tuesday January 10th 2023 02:19:42 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,6 +19,7 @@
 """DataSourceURL Entity Module"""
 from abc import abstractmethod
 from typing import Union, Dict
+import pandas as pd
 from datetime import datetime
 
 from recsys.core.entity.base import Entity
@@ -100,6 +101,11 @@ class DataSource(DataSourceComponent):
         return self._website
 
     # -------------------------------------------------------------------------------------------- #
+    @website.setter
+    def website(self, website: str) -> None:
+        self._website = website
+
+    # -------------------------------------------------------------------------------------------- #
     @property
     def is_composite(self) -> str:
         return self._is_composite
@@ -128,6 +134,14 @@ class DataSource(DataSourceComponent):
             msg = f"DataSource {self._name} has no url with name = {name}."
             self._logger.error(msg)
             raise FileNotFoundError(msg)
+
+    # -------------------------------------------------------------------------------------------- #
+    def get_urls(self) -> pd.DataFrame:
+        d = {}
+        for name, url in self._urls.items():
+            d[name] = url.as_dict()
+        df = pd.DataFrame.from_dict(data=d, orient="index")
+        return df
 
     # -------------------------------------------------------------------------------------------- #
     def update_url(self, url: DataSourceComponent) -> None:
@@ -220,9 +234,19 @@ class DataSourceURL(DataSourceComponent):
         return self._url
 
     # -------------------------------------------------------------------------------------------- #
+    @url.setter
+    def url(self, url: str) -> None:
+        self._url = url
+
+    # -------------------------------------------------------------------------------------------- #
     @property
-    def datasource(self) -> DataSource:
-        return self._datasource
+    def parent(self) -> DataSource:
+        return self._parent
+
+    # -------------------------------------------------------------------------------------------- #
+    @parent.setter
+    def parent(self, parent: DataSource) -> None:
+        self._parent = parent
 
     # ------------------------------------------------------------------------------------------------ #
     def as_dto(self) -> DataSourceURLDTO:
@@ -233,7 +257,7 @@ class DataSourceURL(DataSourceComponent):
             description=self._description,
             url=self._url,
             mode=self._mode,
-            datasource_id=self._datasource.id,
+            parent_id=self._parent.id,
             created=self._created,
             modified=self._modified,
         )

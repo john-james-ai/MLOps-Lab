@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday January 8th 2023 03:09:16 pm                                                 #
+# Modified   : Tuesday January 10th 2023 01:44:56 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,7 +33,7 @@ from recsys.core.entity.job import Task
 @dataclass
 class CreateTaskTable(SQL):
     name: str = "task"
-    sql: str = """CREATE TABLE IF NOT EXISTS task (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), mode VARCHAR(32) NOT NULL, state VARCHAR(32), job_id MEDIUMINT, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS task (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), mode VARCHAR(32) NOT NULL, state VARCHAR(32), parent_id MEDIUMINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
     args: tuple = ()
     description: str = "Created the task table."
 
@@ -75,7 +75,7 @@ class TaskDDL(DDL):
 @dataclass
 class InsertTask(SQL):
     dto: DTO
-    sql: str = """INSERT INTO task (oid, name, description, mode, state, job_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO task (oid, name, description, mode, state, parent_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -85,7 +85,7 @@ class InsertTask(SQL):
             self.dto.description,
             self.dto.mode,
             self.dto.state,
-            self.dto.job_id,
+            self.dto.parent_id,
             self.dto.created,
             self.dto.modified,
         )
@@ -97,7 +97,7 @@ class InsertTask(SQL):
 @dataclass
 class UpdateTask(SQL):
     dto: DTO
-    sql: str = """UPDATE task SET oid = %s, name = %s, description = %s, mode = %s, state = %s, job_id = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE task SET oid = %s, name = %s, description = %s, mode = %s, state = %s, parent_id = %s, created = %s, modified = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -107,7 +107,7 @@ class UpdateTask(SQL):
             self.dto.description,
             self.dto.mode,
             self.dto.state,
-            self.dto.job_id,
+            self.dto.parent_id,
             self.dto.created,
             self.dto.modified,
             self.dto.id,
@@ -131,12 +131,12 @@ class SelectTask(SQL):
 
 @dataclass
 class SelectTaskByParentId(SQL):
-    job_id: int
-    sql: str = """SELECT * FROM task WHERE job_id = %s;"""
+    parent_id: int
+    sql: str = """SELECT * FROM task WHERE parent_id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
-        self.args = (self.job_id,)
+        self.args = (self.parent_id,)
 
 # ------------------------------------------------------------------------------------------------ #
 

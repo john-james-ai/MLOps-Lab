@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Monday January 9th 2023 11:21:38 pm                                                 #
+# Modified   : Tuesday January 10th 2023 01:49:05 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -304,6 +304,11 @@ class DataFrame(DataComponent):
     @property
     def parent(self) -> Dataset:
         return self._parent
+
+    # -------------------------------------------------------------------------------------------- #
+    @parent.setter
+    def parent(self, parent: Dataset) -> None:
+        self._parent = parent
 
     # -------------------------------------------------------------------------------------------- #
     @property
