@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Tuesday January 10th 2023 01:51:16 am                                               #
+# Modified   : Tuesday January 10th 2023 03:20:07 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,6 +19,7 @@
 """Task Entity Module"""
 from abc import abstractmethod
 from typing import Union, Dict
+import pandas as pd
 from datetime import datetime
 
 from recsys.core.entity.base import Entity
@@ -100,7 +101,7 @@ class Job(JobComponent):
             return False
 
     def __len__(self) -> int:
-        return len(self._tasks)
+        return len(self._tasks.values())
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -143,6 +144,14 @@ class Job(JobComponent):
             raise FileNotFoundError(msg)
 
     # -------------------------------------------------------------------------------------------- #
+    def get_tasks(self) -> pd.DataFrame:
+        d = {}
+        for name, task in self._tasks.items():
+            d[name] = task.as_dict()
+        df = pd.DataFrame.from_dict(data=d, orient="index")
+        return df
+
+    # -------------------------------------------------------------------------------------------- #
     def update_task(self, task: JobComponent) -> None:
         self._tasks[task.name] = task
         self._modified = datetime.now()
@@ -178,7 +187,7 @@ class Task(JobComponent):
     Args:
         name (str): Short, yet descriptive lowercase name for Task object.
         description (str): Describes the Task object. Default's to job's description if None.
-        job (Job): The job Job instance. Optional.
+        job (Job): The parent Job instance.
         mode (str): Mode for which the Task is created. If None, defaults to mode from environment
             variable.
 
@@ -193,7 +202,7 @@ class Task(JobComponent):
     ) -> None:
         super().__init__(name=name, description=description, mode=mode)
 
-        self._job = job
+        self._parent = job
         self._is_composite = False
         self._state = STATES[0]
 
@@ -217,7 +226,7 @@ class Task(JobComponent):
             return (self._name == other.name
                     and self._description == other.description
                     and self._mode == other.mode
-                    and self._job == other.job)
+                    and self._parent == other.parent)
         else:
             return False
 
