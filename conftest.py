@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Tuesday January 10th 2023 02:09:28 am                                               #
+# Modified   : Tuesday January 10th 2023 02:38:36 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -204,6 +204,12 @@ def jobs():
             job.add_task(task)
         jobs.append(job)
     return jobs
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def job(jobs):
+    return jobs[0]
 
 
 # ------------------------------------------------------------------------------------------------ #

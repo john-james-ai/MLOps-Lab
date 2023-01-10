@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Monday January 9th 2023 05:56:44 pm                                                 #
+# Modified   : Tuesday January 10th 2023 02:28:49 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -332,7 +332,7 @@ class TaskDAO(DAO):
                 description=row[3],
                 mode=row[4],
                 state=row[5],
-                job_id=row[6],
+                parent_id=row[6],
                 created=row[7],
                 modified=row[8],
             )
