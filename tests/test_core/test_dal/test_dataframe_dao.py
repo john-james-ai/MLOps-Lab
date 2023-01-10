@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Sunday January 8th 2023 01:29:23 pm                                                 #
+# Modified   : Monday January 9th 2023 06:00:43 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -195,7 +195,7 @@ class TestDataFrameDAO:  # pragma: no cover
             self.check_results(dto)
 
         result = dao.read(99)
-        assert result is None
+        assert result == []
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -269,7 +269,7 @@ class TestDataFrameDAO:  # pragma: no cover
         self.check_results(dto)
 
         dto = dao.read_by_name_mode(name="dataframe_1", mode='skdi')
-        assert dto is None
+        assert dto == []
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Saturday January 7th 2023 12:47:12 pm                                               #
+# Modified   : Monday January 9th 2023 05:56:44 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -94,7 +94,7 @@ class DAO(ABC):
 
         Returns a DTO
         """
-        result = None
+        result = []
         cmd = self._dml.select(id)
         row = self._database.select(cmd.sql, cmd.args)
         if row is not None:
@@ -109,7 +109,7 @@ class DAO(ABC):
 
         Returns a Data Transfer Object (DTO)
         """
-        result = None
+        result = []
         cmd = self._dml.select_by_name_mode(name, mode)
         row = self._database.select(cmd.sql, cmd.args)
         if row is not None:

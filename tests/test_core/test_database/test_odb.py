@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 8th 2023 05:31:06 pm                                                 #
-# Modified   : Monday January 9th 2023 02:41:53 pm                                                 #
+# Modified   : Monday January 9th 2023 06:00:43 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -468,7 +468,7 @@ class TestODB:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         db = container.database.odb()
         result = db.select('dss')
-        assert result is None
+        assert result == []
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

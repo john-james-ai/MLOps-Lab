@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Sunday January 8th 2023 03:19:02 pm                                                 #
+# Modified   : Monday January 9th 2023 05:28:56 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -107,17 +107,16 @@ class ODBA(AbstractDBA):
         super().__init__(ddl=ddl, database=database)
 
     def create(self) -> None:
-        """Creates an object store."""
-        self._database.create(ocl=self._ddl.create)
+        """Creates an object database."""
+        raise NotImplementedError()
 
     def drop(self) -> None:
         """Drops a database or table."""
-        self._database.drop(ocl=self._ddl.drop)
+        self._database.drop()
 
     def exists(self) -> None:
         """Checks existence of a database."""
-        return self._database.exists(ocl=self._ddl.exists)
+        return self._database.exists()
 
     def reset(self) -> None:
         self.drop()
-        self.create()

@@ -11,15 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday January 6th 2023 11:49:31 pm                                                 #
-# Modified   : Sunday January 8th 2023 10:33:55 am                                                 #
+# Modified   : Monday January 9th 2023 05:56:44 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
 """Object Access Object Module."""
 import logging
-from collections import OrderedDict
-from typing import Dict, List
 
 from recsys.core.dal.sql.odb import OML
 from recsys.core.database.object import ObjectDB
@@ -72,10 +70,7 @@ class OAO:
 
         Returns: the Entity
         """
-        ocl = self._oml.insert(entity)
-        self._database.insert(ocl)
-        msg = f"{self.__class__.__name__} inserted {entity.__class__.__name__}.{entity.oid} - {entity.name} into the database."
-        self._logger.debug(msg)
+        self._database.insert(entity)
         return entity
 
     def read(self, oid: int) -> Entity:
@@ -86,10 +81,7 @@ class OAO:
 
         Returns a Entity
         """
-        result = None
-        ocl = self._oml.select(oid)
-        result = self._database.select(ocl)
-        return result
+        return self._database.select(oid)
 
     def read_by_name_mode(self, name: str, mode: str) -> Entity:
         """Obtains an entity Entity with the designated name and mode.
@@ -99,75 +91,32 @@ class OAO:
 
         Returns a Data Transfer Object (Entity)
         """
-        result = None
+        result = []
         ocl = self._oml.select_by_name_mode(name, mode)
-        result = self._database.select(ocl)
+        result = self._database.select(ocl.oid)
         return result
 
-    def read_all(self) -> Dict[str, Entity]:
-        """Returns a dictionary of all entity data transfere objects of the in the database."""
-        result = {}
-        ocl = self._oml.select_all()
-        entities = self._database.select_all(ocl)
-        if entities is not None:
-            result = self._rows_to_dict(entities)
-        return result
-
-    def update(self, entity: Entity) -> int:
+    def update(self, entity: Entity) -> None:
         """Updates an existing entity.
 
         Args:
             entity (Entity): Entity
 
-        Returns number of rows effected.
         """
-        rows_affected = 0
-        if self.exists(entity.oid):
-            ocl = self._oml.update(entity)
-            rows_affected = self._database.update(ocl)
-            msg = f"{self.__class__.__name__} updated {entity.__class__.__name__}.{entity.oid} - {entity.name} in the database."
-            self._logger.debug(msg)
-        else:
-            msg = f"{self.__class__.__name__} was unable to update {self._entity.__name__}.{entity.oid}. Not found in the database. Try insert instead."
-            self._logger.error(msg)
-            raise FileNotFoundError(msg)
-        return rows_affected
+        self._database.update(entity)
 
-    def exists(self, oid: int) -> bool:
+    def exists(self, oid: str) -> bool:
         """Returns True if the entity with id exists in the database.
 
         Args:
             id (int): id for the entity
         """
-        ocl = self._oml.exists(oid)
-        result = self._database.exists(ocl)
-        return result
+        return self._database.exists(oid)
 
-    def delete(self, oid: int, persist=True) -> None:
+    def delete(self, oid: str) -> None:
         """Deletes a Entity from the registry, given an id.
         Args:
             id (int): The id for the entity to delete.
 
         """
-        if self.exists(oid):
-            entity = self.read(oid)
-            ocl = self._oml.delete(oid)
-            self._database.delete(ocl)
-            if entity is not None:
-                msg = f"{self.__class__.__name__} deleted {entity.__class__.__name__}.{entity.oid} - {entity.name} from the database."
-                self._logger.debug(msg)
-            else:
-                msg = f"{self.__class__.__name__} was unable to delete entity oid: {oid}. Not found in the database."
-                self._logger.debug(msg)
-                raise FileNotFoundError(msg)
-        else:
-            msg = f"{self.__class__.__name__} was unable to delete entity oid: {oid}. Not found in the database."
-            self._logger.error(msg)
-            raise FileNotFoundError(msg)
-
-    def _rows_to_dict(self, entities: List) -> Dict:
-        """Converts the results from a list to a dictionary of Entities."""
-        results_dict = OrderedDict()
-        for entity in entities:
-            results_dict[entity.oid] = entity
-        return results_dict
+        self._database.delete(oid)

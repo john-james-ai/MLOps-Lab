@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Sunday January 8th 2023 07:33:51 pm                                                 #
+# Modified   : Monday January 9th 2023 07:12:43 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,7 +22,6 @@ import pymysql
 import dotenv
 import mysql.connector
 from mysql.connector import errorcode
-import subprocess
 
 from .base import Connection, AbstractDatabase
 
@@ -221,7 +220,7 @@ class Database(AbstractDatabase):
         result = cursor.fetchone()
         cursor.close()
         self._logger.debug(result)
-        if result is None:
+        if result == []:
             return False
         else:
             return result[0] == 1
