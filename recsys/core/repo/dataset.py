@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Wednesday January 4th 2023 01:23:12 pm                                              #
+# Modified   : Monday January 9th 2023 11:21:15 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -35,48 +35,59 @@ class DatasetRepo(RepoABC):
         self._context = context
         self._dataset_dao = self._context.get_dao(Dataset)
         self._dataframe_dao = self._context.get_dao(DataFrame)
+        self._oao = self._context.get_oao()
 
     def __len__(self) -> int:
-        return len(self.get_all())
+        return len(self._dao.read_all())
 
     def add(self, entity: Entity) -> Entity:
         """Adds an entity to the repository and returns the Entity with the id added."""
         for name, dataframe in entity.dataframes.items():
-            dataframe = self._dataframe_dao.create(entity=dataframe, persist=False)
-            self._dataframe_dao.save()
+            dataframe = self._dataframe_dao.create(entity=dataframe)
             entity.update_dataframe(dataframe)
 
-        entity = self._dataset_dao.create(entity=entity, persist=True)
-        self._dataset_dao.save()
+        entity = self._dataset_dao.create(entity=entity)
+        self._oao.create(entity)
         return entity
 
     def get(self, id: str) -> Entity:
         "Returns an entity with the designated id"
-        return self._dataset_dao.read(id)
+        result = []
+        dto = self._dataset_dao.read(id)
+        if dto:
+            result = self._oao.read(dto.oid)
+        return result
 
     def get_by_name_mode(self, name: str, mode: str = None) -> Entity:
+        result = []
         mode = mode or self._get_mode()
-        return self._dataset_dao.read_by_name_mode(name, mode)
-
-    def get_all(self) -> dict:
-        return self._dataset_dao.read_all()
+        dto = self._dataset_dao.read_by_name_mode(name, mode)
+        if dto:
+            result = self._oao.read(dto.oid)
+        return result
 
     def update(self, entity: Entity) -> None:
         """Updates an entity in the database."""
-        self._dataset_dao.update(entity=entity, persist=True)
-        self._dataset_dao.save()
-        for _, dataframe in entity.dataframes.items():
-            self._dataframe_dao.update(entity=dataframe, persist=False)
-        self._dataframe_dao.save()
+        for dataframe in entity.dataframes.values():
+            if self._dataframe_dao.exists(dataframe.id):
+                self._dataframe_dao.update(dataframe)
+            else:
+                dataframe = self._dataframe_dao.insert(dataframe)  # Adds id to new dataframe members
+                entity.update_dataframe(dataframe)
+
+        self._dataset_dao.update(entity=entity)   # Update Dataset metadata
+        self._oao.update(entity)  # Persist dataset in object storage
 
     def remove(self, id: str) -> None:
         """Removes an entity (and its children) from repository."""
-        entity = self.get(id)
-        for _, dataframe in entity.dataframes.items():
-            self._dataframe_dao.delete(dataframe.id, persist=False)
-        self._dataframe_dao.save()
-        self._dataset_dao.delete(id)
-        self._dataset_dao.save()
+        dto = self._dataset_dao.get(id)
+        dataset = self._oao.get(dto.oid)
+        for dataframe in dataset.dataframes.values():
+            if self._dataframe_dao.exists(dataframe.id):
+                self._dataframe_dao.delete(dataframe.id)
+
+        self._dataset_dao.delete(id)   # Delete Dataset metadata
+        self._oao.delete(dataset.oid)  # Delete dataset from object storage
 
     def exists(self, id: str) -> bool:
         """Returns True if entity with id exists in the repository."""
@@ -84,12 +95,12 @@ class DatasetRepo(RepoABC):
 
     def print(self) -> None:
         """Prints the repository contents as a DataFrame."""
-        entities = self.get_all()
+        entities = self.dataset_dao.read_all()
         for name, entity in entities.items():
             print("\n\n")
             print(entity)
             print(120 * "=")
             print(50 * " ", "DataFrames")
             print(120 * "_")
-            dataframes = self._dataframe_dao.read_by_parent_id(parent=entity)
-            print(dataframes)
+            dfs = entity.get_dataframes()
+            print(dfs)

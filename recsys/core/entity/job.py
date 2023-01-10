@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday January 7th 2023 09:27:25 am                                               #
+# Modified   : Monday January 9th 2023 10:27:00 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -80,15 +80,14 @@ class Job(JobComponent):
         self._tasks = {}
         self._state = STATES[0]
         self._is_composite = True
-        self._task_count = 0
 
         self._validate()
 
     def __str__(self) -> str:
-        return f"Job Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tMode: {self._mode}\n\tState: {self._state}\n\tTasks: {self._task_count}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"Job Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tMode: {self._mode}\n\tState: {self._state}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._name}, {self._description}, {self._mode}, {self._state}, {self._task_count}, {self._created}, {self._modified}"
+        return f"{self._id}, {self._name}, {self._description}, {self._mode}, {self._state}, {self._created}, {self._modified}"
 
     def __eq__(self, other: JobComponent) -> bool:
         if self.__class__.__name__ == other.__class__.__name__:
@@ -132,7 +131,6 @@ class Job(JobComponent):
     def add_task(self, task: JobComponent) -> None:
         self._tasks[task.name] = task
         self._modified = datetime.now()
-        self._task_count = len(self._tasks)
         self._logger.debug(f"just added task {task.name} to {self._name}")
 
     # -------------------------------------------------------------------------------------------- #
@@ -148,13 +146,11 @@ class Job(JobComponent):
     def update_task(self, task: JobComponent) -> None:
         self._tasks[task.name] = task
         self._modified = datetime.now()
-        self._task_count = len(self._tasks)
         self._logger.debug(f"just updated task {task.name} in {self._name}")
 
     # -------------------------------------------------------------------------------------------- #
     def remove_task(self, name: str) -> None:
         del self._tasks[name]
-        self._task_count = len(self._tasks)
         self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #

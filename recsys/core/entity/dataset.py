@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Sunday January 8th 2023 03:03:40 pm                                                 #
+# Modified   : Monday January 9th 2023 11:21:38 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -147,11 +147,6 @@ class Dataset(DataComponent):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def dataframe_names(self) -> list:
-        return list(self._dataframes.keys())
-
-    # -------------------------------------------------------------------------------------------- #
-    @property
     def task_id(self) -> str:
         """Id for the Task that created the Dataset."""
         return self._task_id
@@ -176,6 +171,14 @@ class Dataset(DataComponent):
             msg = f"Dataset {self._name} has no dataframe with name = {name}."
             self._logger.error(msg)
             raise FileNotFoundError(msg)
+
+    # -------------------------------------------------------------------------------------------- #
+    def get_dataframes(self) -> pd.DataFrame:
+        d = {}
+        for name, dataframe in self._dataframes.items():
+            d[name] = dataframe.as_dict()
+        df = pd.DataFrame.from_dict(data=d, orient="index")
+        return df
 
     # -------------------------------------------------------------------------------------------- #
     def update_dataframe(self, dataframe: DataComponent) -> None:

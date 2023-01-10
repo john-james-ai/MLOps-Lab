@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Monday January 9th 2023 05:28:22 pm                                                 #
+# Modified   : Monday January 9th 2023 11:36:22 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -26,7 +26,7 @@ from recsys.core.entity.file import File
 from recsys.core.entity.dataset import DataFrame, Dataset
 from recsys.core.entity.datasource import DataSource
 from recsys.core.entity.profile import Profile
-from recsys.core.entity.job import Job
+from recsys.core.entity.job import Job, Task
 from recsys.core.repo.context import Context
 
 
@@ -204,6 +204,21 @@ def jobs():
             job.add_task(task)
         jobs.append(job)
     return jobs
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def tasks(jobs):
+    tasks = []
+    for i in range(1, 6):
+        task = Task(name=f"task_{i}",
+                    description=f"Description for task {i}.",
+                    job=jobs[i - 1]
+                    )
+        task.id = i
+        tasks.append(task)
+
+    return tasks
 
 
 # ------------------------------------------------------------------------------------------------ #
