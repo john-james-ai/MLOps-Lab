@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Monday January 9th 2023 11:21:15 pm                                                 #
+# Modified   : Tuesday January 10th 2023 12:37:32 am                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -38,15 +38,17 @@ class DatasetRepo(RepoABC):
         self._oao = self._context.get_oao()
 
     def __len__(self) -> int:
-        return len(self._dao.read_all())
+        return len(self._dataset_dao.read_all())
 
     def add(self, entity: Entity) -> Entity:
         """Adds an entity to the repository and returns the Entity with the id added."""
         for name, dataframe in entity.dataframes.items():
-            dataframe = self._dataframe_dao.create(entity=dataframe)
+            dto = self._dataframe_dao.create(dto=dataframe.as_dto())
+            dataframe.id = dto.id
             entity.update_dataframe(dataframe)
 
-        entity = self._dataset_dao.create(entity=entity)
+        dto = self._dataset_dao.create(entity.as_dto())
+        entity.id = dto.id
         self._oao.create(entity)
         return entity
 
@@ -69,22 +71,17 @@ class DatasetRepo(RepoABC):
     def update(self, entity: Entity) -> None:
         """Updates an entity in the database."""
         for dataframe in entity.dataframes.values():
-            if self._dataframe_dao.exists(dataframe.id):
-                self._dataframe_dao.update(dataframe)
-            else:
-                dataframe = self._dataframe_dao.insert(dataframe)  # Adds id to new dataframe members
-                entity.update_dataframe(dataframe)
+            self._dataframe_dao.update(dataframe.as_dto())
 
-        self._dataset_dao.update(entity=entity)   # Update Dataset metadata
+        self._dataset_dao.update(dto=entity.as_dto())   # Update Dataset metadata
         self._oao.update(entity)  # Persist dataset in object storage
 
     def remove(self, id: str) -> None:
         """Removes an entity (and its children) from repository."""
-        dto = self._dataset_dao.get(id)
-        dataset = self._oao.get(dto.oid)
+        dto = self._dataset_dao.read(id)
+        dataset = self._oao.read(dto.oid)
         for dataframe in dataset.dataframes.values():
-            if self._dataframe_dao.exists(dataframe.id):
-                self._dataframe_dao.delete(dataframe.id)
+            self._dataframe_dao.delete(dataframe.id)
 
         self._dataset_dao.delete(id)   # Delete Dataset metadata
         self._oao.delete(dataset.oid)  # Delete dataset from object storage
@@ -95,12 +92,13 @@ class DatasetRepo(RepoABC):
 
     def print(self) -> None:
         """Prints the repository contents as a DataFrame."""
-        entities = self.dataset_dao.read_all()
-        for name, entity in entities.items():
+        dtos = self._dataset_dao.read_all()
+        for dto in dtos.values():
+            dataset = self._oao.read(dto.oid)
             print("\n\n")
-            print(entity)
+            print(dataset)
             print(120 * "=")
             print(50 * " ", "DataFrames")
             print(120 * "_")
-            dfs = entity.get_dataframes()
+            dfs = dataset.get_dataframes()
             print(dfs)
