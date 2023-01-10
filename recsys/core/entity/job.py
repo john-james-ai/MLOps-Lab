@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Tuesday January 10th 2023 03:20:07 am                                               #
+# Modified   : Tuesday January 10th 2023 02:32:17 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -28,7 +28,7 @@ from recsys import STATES
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                    DATASET COMPONENT                                             #
+#                                      JOB  COMPONENT                                             #
 # ------------------------------------------------------------------------------------------------ #
 class JobComponent(Entity):
     """Base component class from which Task (Leaf) and Job (Composite) objects derive."""
@@ -58,7 +58,7 @@ class JobComponent(Entity):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                        DATASETS                                                  #
+#                                          JOB S                                                  #
 # ------------------------------------------------------------------------------------------------ #
 class Job(JobComponent):
     """Collection of Task objects.
@@ -179,7 +179,7 @@ class Job(JobComponent):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                        DATASET                                                   #
+#                                          TASK                                                    #
 # ------------------------------------------------------------------------------------------------ #
 class Task(JobComponent):
     """Task is a pipeline step or operation in execution.
