@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Friday January 6th 2023 10:57:34 pm                                                 #
+# Modified   : Monday January 9th 2023 05:59:55 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -192,7 +192,7 @@ class TestFileDAO:  # pragma: no cover
             self.check_results(i, dto)
 
         dto = dao.read(99)
-        assert dto is None
+        assert dto == []
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -265,7 +265,7 @@ class TestFileDAO:  # pragma: no cover
         self.check_results(1, dto)
 
         dto = dao.read_by_name_mode(name="file_1", mode='skdi')
-        assert dto is None
+        assert dto == []
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

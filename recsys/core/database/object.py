@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Monday January 9th 2023 02:38:12 pm                                                 #
+# Modified   : Monday January 9th 2023 06:01:38 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -69,7 +69,7 @@ class Cursor(Service):
         try:
             result = self._cursor[oid]
         except KeyError:
-            result = None
+            result = []
         self.close()
         return result
 
@@ -172,7 +172,7 @@ class CacheCursor(Cursor):
         """Checks existence of an object in the storage"""
         self.open()
         if oid in self._cursor.keys():
-            exists = not self._cursor[oid] is None
+            exists = not self._cursor[oid] == []
         else:
             exists = False
         answer = "exists" if exists else "does not exist."
@@ -350,7 +350,7 @@ class ObjectDB(AbstractDatabase):
     def select(self, oid: str) -> Entity:
         if self._in_transaction:
             result = self._connection.cache.select(oid)
-            if result is None:
+            if result == []:
                 result = self._connection.storage.select(oid)
         else:
             result = self._connection.storage.select(oid)

@@ -11,13 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Sunday January 8th 2023 10:29:55 am                                                 #
+# Modified   : Monday January 9th 2023 06:02:56 pm                                                 #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Entity Repository. Serves as generic repository supporting basic CRUD functionality."""
 import pandas as pd
+import mysql.connector
 
 from recsys.core.entity.base import Entity
 from .base import RepoABC
@@ -38,7 +39,7 @@ class Repo(RepoABC):
         self._oao = self._context.get_oao()
 
     def __len__(self) -> int:
-        return len(self.get_all())
+        return len(self._dao.read_all())
 
     def add(self, entity: Entity) -> Entity:
         """Adds an entity to the repository and returns the Entity with the id added."""
@@ -49,43 +50,50 @@ class Repo(RepoABC):
 
     def get(self, id: str) -> Entity:
         "Returns an entity with the designated id"
+        result = []
         dto = self._dao.read(id)
-        return self._oao.read(dto.oid)
-
-    def get_all(self) -> dict:
-        entities = {}
-        dtos = self._dao.read_all()
-        for dto in dtos.values():
-            entity = self._oao.read(oid=dto.oid)
-            entities[entity.id] = entity
-        return entities
+        if dto:
+            result = self._oao.read(dto.oid)
+        return result
 
     def get_by_name_mode(self, name: str, mode: str = None) -> Entity:
+        result = []
         mode = mode or self._get_mode()
         dto = self._dao.read_by_name_mode(name, mode)
-        return self._oao.read(dto.oid)
+        if dto:
+            result = self._oao.read(dto.oid)
+        return result
 
     def update(self, entity: Entity) -> None:
         """Updates an entity in the database."""
         self._dao.update(dto=entity.as_dto())
-        self._aoa.update(entity)
+        self._oao.update(entity)
 
     def remove(self, id: str) -> None:
         """Removes an entity (and its children) from repository."""
         dto = self._dao.read(id)
         self._dao.delete(id)
-        self._aoa.delete(dto.oid)
+        self._oao.delete(dto.oid)
 
     def exists(self, id: str) -> bool:
         """Returns True if entity with id exists in the repository."""
-        return self._dao.exists(id)
+        if self._dao.exists(id):
+            dto = self._dao.read(id)
+            if self._oao.exists(dto.oid):
+                return True
+            else:  # pragma: no cover
+                msg = f"Integrity Error. Metadata exists for id = {id}, but object does not."
+                self._logger.error(msg)
+                raise mysql.connector.errors.DatabaseError(msg)
+        else:
+            return False
 
     def print(self) -> None:
         """Prints the repository contents as a DataFrame."""
         df = pd.DataFrame()
-        entities = self.get_all()
+        entities = self._dao.read_all()
         for entity in entities.values():
-            data = entity.as_dto().as_dict()
+            data = entity.as_dict()
             entity_df = pd.DataFrame(data=data, index=[entity.id])
             df = pd.concat([df, entity_df], axis=0)
         print(120 * "=")
