@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Tuesday January 10th 2023 01:53:39 am                                               #
+# Modified   : Tuesday January 10th 2023 06:50:20 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,7 +30,7 @@ from .context import Context
 class DatasetRepo(RepoABC):
     """Dataset aggregate repository. """
 
-    def __init__(self, context: Context) -> None:
+    def __init__(self, context: Context, *args, **kwargs) -> None:
         super().__init__()
         self._context = context
         self._dataset_dao = self._context.get_dao(Dataset)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 25th 2022 12:55:35 pm                                               #
-# Modified   : Sunday January 1st 2023 03:21:37 pm                                                 #
+# Modified   : Tuesday January 10th 2023 07:25:54 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,110 +19,66 @@
 """Unit of Work Module"""
 from abc import ABC, abstractmethod
 
-from dependency_injector.wiring import inject, Provide
-
-from recsys.containers import RepoContainer
-from recsys.containers import Recsys
-from recsys.core.repo.entity import Repo
-from recsys.core.repo.context import Context
 from recsys.core.entity.base import Entity
+from recsys.core.repo.context import Context
+from recsys.core.repo.entity import Repo
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                 UNIT OF WORK ABC                                                 #
 # ------------------------------------------------------------------------------------------------ #
-class UnitOfWorkAbstract(ABC):
+class UnitOfWorkABC(ABC):  # pragma: no cover
 
-    @property
-    @abstractmethod
-    def current_job(self) -> Entity:
-        """Returns the current job"""
+    def __init__(self, context: Context) -> None:
+        self._context = context
 
     @abstractmethod
-    @current_job.setter
-    def current_job(self, job: Entity) -> None:
-        """Sets the current job for the unit of work."""
+    def register(self, name: str, repo: type(Repo), entity: type(Entity) = None) -> None:
+        """Returns an instantiated datasource repository."""
 
-    @property
     @abstractmethod
-    def datasource(self) -> Repo:
-        """Returns an instantiated datasource repossitory."""
-
-    @property
-    @abstractmethod
-    def file(self) -> Repo:
-        """Returns an instantiated file repossitory."""
-
-    @property
-    @abstractmethod
-    def dataset(self) -> Repo:
-        """Returns an instantiated dataset repossitory."""
-
-    @property
-    @abstractmethod
-    def job(self) -> Repo:
-        """Returns an instantiated Job repossitory."""
-
-    @property
-    @abstractmethod
-    def profile(self) -> Repo:
-        """Returns an instantiated Task repossitory."""
+    def get_repo(self, name) -> Repo:
+        """Returns an instantiated file repository."""
 
     @abstractmethod
     def save(self):
         """Save changes."""
 
+    @abstractmethod
+    def rollback(self):
+        """Rolls back changes since last save."""
+
+
 # ------------------------------------------------------------------------------------------------ #
 #                                     UNIT OF WORK ABC                                             #
 # ------------------------------------------------------------------------------------------------ #
-
-
-class UnitOfWork(UnitOfWorkAbstract):
-    """Unit of Work object containing all Entity repossitories and the current context entity.
+class UnitOfWork(UnitOfWorkABC):
+    """Unit of Work object containing all Entity repositories and the current context entity.
 
     Args:
         context (Context): Contains the database context in terms of Database Access Objects.
 
     """
 
-    @inject
-    def __init__(
-        self,
-        context: Context = Provide[Recsys.context.context],
-        repos: RepoContainer = Provide[Recsys.repos],
-    ) -> None:
-        self._context = context()
-        self._repos = repos
+    def __init__(self, context: Context) -> None:
+        self._context = context
+        self._in_transaction = False
+        self._repos = {}
 
-        self._current_job = None
+    def register(self, name: str, repo: type(Repo), entity: type(Entity) = None) -> None:
+        self._begin()
+        self._repos[name] = repo(context=self._context, entity=entity)
 
-    @property
-    def current_job(self) -> Entity:
-        return self._current_job
-
-    @current_job.setter
-    def current_job(self, job: Entity) -> None:
-        self._current_job = job
-
-    @property
-    def file(self) -> Repo:
-        return self._repos.file()
-
-    @property
-    def datasource(self) -> Repo:
-        return self._repos.datasource()
-
-    @property
-    def dataset(self) -> Repo:
-        return self._repos.dataset()
-
-    @property
-    def job(self) -> Repo:
-        return self._repos.job()
-
-    @property
-    def profile(self) -> Repo:
-        return self._repos.profile()
+    def get_repo(self, name) -> Repo:
+        return self._repos[name]
 
     def save(self) -> None:
         self._context.save()
+
+    def rollback(self) -> None:
+        self._context.rollback()
+
+    def _begin(self) -> None:
+        """Begins a transaction if not already in one."""
+        if not self._in_transaction:
+            self._context.begin()

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Sunday January 8th 2023 03:19:19 pm                                                 #
+# Modified   : Tuesday January 10th 2023 05:18:29 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -40,6 +40,8 @@ from recsys.core.dal.sql.database import DatabaseDDL
 from recsys.core.dal.sql.odb import ObjectODL, ObjectOML
 from recsys.core.database.relational import Database, MySQLConnection, DatabaseConnection
 from recsys.core.database.object import ObjectDBConnection, ObjectDB
+from recsys.core.repo.context import Context
+from recsys.core.repo.uow import UnitOfWork
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -153,6 +155,16 @@ class DBAContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
+class RepoContainer(containers.DeclarativeContainer):
+
+    dal = providers.Dependency()
+
+    context = providers.Factory(Context, dal=dal)
+
+    uow = providers.Factory(UnitOfWork, context=context)
+
+
+# ------------------------------------------------------------------------------------------------ #
 class Recsys(containers.DeclarativeContainer):
 
     dotenv.load_dotenv()
@@ -182,3 +194,5 @@ class Recsys(containers.DeclarativeContainer):
                               dbms=database.dbms,
                               odb=database.odb
                               )
+
+    repo = providers.Container(RepoContainer, dal=dal)
