@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 25th 2022 12:55:35 pm                                               #
-# Modified   : Tuesday January 10th 2023 07:25:54 pm                                               #
+# Modified   : Tuesday January 10th 2023 07:58:58 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -55,6 +55,10 @@ class UnitOfWorkABC(ABC):  # pragma: no cover
 class UnitOfWork(UnitOfWorkABC):
     """Unit of Work object containing all Entity repositories and the current context entity.
 
+    A transaction is started when the first entity database context is registered. Transactions
+    are extant until an explicit save or rollback is called. Begin starts a transaction unless
+    an existing transaction is open. Nested transactions are not supported.
+
     Args:
         context (Context): Contains the database context in terms of Database Access Objects.
 
@@ -66,19 +70,22 @@ class UnitOfWork(UnitOfWorkABC):
         self._repos = {}
 
     def register(self, name: str, repo: type(Repo), entity: type(Entity) = None) -> None:
-        self._begin()
+        self.begin()
         self._repos[name] = repo(context=self._context, entity=entity)
 
     def get_repo(self, name) -> Repo:
         return self._repos[name]
 
-    def save(self) -> None:
-        self._context.save()
-
-    def rollback(self) -> None:
-        self._context.rollback()
-
-    def _begin(self) -> None:
+    def begin(self) -> None:
         """Begins a transaction if not already in one."""
         if not self._in_transaction:
             self._context.begin()
+            self._in_transaction = True
+
+    def save(self) -> None:
+        self._context.save()
+        self._in_transaction = False
+
+    def rollback(self) -> None:
+        self._context.rollback()
+        self._in_transaction = False

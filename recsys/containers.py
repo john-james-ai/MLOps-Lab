@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Tuesday January 10th 2023 05:18:29 pm                                               #
+# Modified   : Wednesday January 11th 2023 02:57:39 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -42,6 +42,7 @@ from recsys.core.database.relational import Database, MySQLConnection, DatabaseC
 from recsys.core.database.object import ObjectDBConnection, ObjectDB
 from recsys.core.repo.context import Context
 from recsys.core.repo.uow import UnitOfWork
+from recsys.core.services.operators.data.source import DataSourceBuilder
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -165,14 +166,27 @@ class RepoContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
+class DataSourcesContainer(containers.DeclarativeContainer):
+
+    config = providers.Configuration()
+
+    movielens = providers.Factory(DataSourceBuilder, config=config.datasources.movielens)
+
+    spotify = providers.Factory(DataSourceBuilder, config=config.datasources.spotify)
+
+    tenrec = providers.Factory(DataSourceBuilder, config=config.datasources.tenrec)
+
+
+# ------------------------------------------------------------------------------------------------ #
 class Recsys(containers.DeclarativeContainer):
 
     dotenv.load_dotenv()
     mode = os.getenv("MODE")
     logging_config_filepath = os.path.join('config', mode, "logging.yml")
     database_config_filepath = os.path.join('config', mode, "database.yml")
+    datasources_config_filepath = "recsys/setup/datasources.yml"
 
-    config = providers.Configuration(yaml_files=[logging_config_filepath, database_config_filepath])
+    config = providers.Configuration(yaml_files=[logging_config_filepath, database_config_filepath, datasources_config_filepath])
 
     core = providers.Container(CoreContainer, config=config)
 
@@ -196,3 +210,5 @@ class Recsys(containers.DeclarativeContainer):
                               )
 
     repo = providers.Container(RepoContainer, dal=dal)
+
+    datasources = providers.Container(DataSourcesContainer, config=config)

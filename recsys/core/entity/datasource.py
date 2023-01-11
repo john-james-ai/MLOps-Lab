@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Tuesday January 10th 2023 02:19:42 am                                               #
+# Modified   : Wednesday January 11th 2023 02:38:27 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -27,7 +27,7 @@ from recsys.core.dal.dto import DataSourceURLDTO, DataSourceDTO
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                    DATASET COMPONENT                                             #
+#                                   DATASOURCE COMPONENT                                           #
 # ------------------------------------------------------------------------------------------------ #
 class DataSourceComponent(Entity):
     """Base component class from which DataSourceURL (Leaf) and DataSource (Composite) objects derive."""
@@ -51,7 +51,7 @@ class DataSourceComponent(Entity):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                        DATASETS                                                  #
+#                                      DATASOURCE                                                  #
 # ------------------------------------------------------------------------------------------------ #
 class DataSource(DataSourceComponent):
     """Collection of DataSourceURL objects.
@@ -170,7 +170,7 @@ class DataSource(DataSourceComponent):
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                        DATASET                                                   #
+#                                        DATASOURCE                                                #
 # ------------------------------------------------------------------------------------------------ #
 class DataSourceURL(DataSourceComponent):
     """DataSourceURL encapsulates tabular data, metadata, and access behaviors for data used in this package.

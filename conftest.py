@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Tuesday January 10th 2023 07:15:09 pm                                               #
+# Modified   : Wednesday January 11th 2023 03:00:16 am                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -37,7 +37,7 @@ DATA_SOURCE_FILEPATH = "tests/data/datasources.xlsx"
 JOB_CONFIG_FILEPATH = "recsys/data/movielens25m/config.yml"
 
 # ------------------------------------------------------------------------------------------------ #
-collect_ignore_glob = ["*er.py"]
+collect_ignore_glob = ["*test_builder.py"]
 # ------------------------------------------------------------------------------------------------ #
 
 
