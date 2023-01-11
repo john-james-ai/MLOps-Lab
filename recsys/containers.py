@@ -11,12 +11,11 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Wednesday January 11th 2023 02:57:39 am                                             #
+# Modified   : Wednesday January 11th 2023 05:04:50 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-import os
 import logging.config  # pragma: no cover
 import pymysql
 import dotenv
@@ -61,8 +60,6 @@ class CoreContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 class ConnectionContainer(containers.DeclarativeContainer):
 
-    config = providers.Configuration()
-
     rdb_connection = providers.Factory(
         DatabaseConnection,
         connector=pymysql.connect,
@@ -75,7 +72,6 @@ class ConnectionContainer(containers.DeclarativeContainer):
 
     odb_connection = providers.Factory(
         ObjectDBConnection,
-        location=config.database.shelve.location,
     )
 
 
@@ -181,16 +177,12 @@ class DataSourcesContainer(containers.DeclarativeContainer):
 class Recsys(containers.DeclarativeContainer):
 
     dotenv.load_dotenv()
-    mode = os.getenv("MODE")
-    logging_config_filepath = os.path.join('config', mode, "logging.yml")
-    database_config_filepath = os.path.join('config', mode, "database.yml")
-    datasources_config_filepath = "recsys/setup/datasources.yml"
 
-    config = providers.Configuration(yaml_files=[logging_config_filepath, database_config_filepath, datasources_config_filepath])
+    config = providers.Configuration(yaml_files=["config.yml"])
 
     core = providers.Container(CoreContainer, config=config)
 
-    connection = providers.Container(ConnectionContainer, config=config)
+    connection = providers.Container(ConnectionContainer)
 
     database = providers.Container(DatabaseContainer,
                                    rdb_connection=connection.rdb_connection,

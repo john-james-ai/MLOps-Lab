@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Monday January 9th 2023 07:12:43 pm                                                 #
+# Modified   : Wednesday January 11th 2023 03:59:35 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -39,9 +39,9 @@ class MySQLConnection(Connection):
         """Opens a database connection."""
 
         dotenv.load_dotenv()
-        host = os.getenv("MYSQL_HOST")
-        user = os.getenv("MYSQL_USER")
-        password = os.getenv("MYSQL_PASSWORD")
+        host = os.getenv("DBMS_HOST")
+        user = os.getenv("DBMS_USER")
+        password = os.getenv("DBMS_PASSWORD")
 
         try:
             self._connection = self._connector(host=host, user=user, password=password, autocommit=False)
@@ -74,10 +74,14 @@ class DatabaseConnection(Connection):
         """Opens a database connection."""
 
         dotenv.load_dotenv()
+        mode = os.getenv("MODE")
         host = os.getenv("DATABASE_HOST")
         user = os.getenv("DATABASE_USER")
         password = os.getenv("DATABASE_PASSWORD")
-        self._database = os.getenv("DATABASE_NAME")
+        database = os.getenv("DATABASE_NAME")
+
+        # To support multiple modes, databases will appended with a suffix containing the mode as follows:
+        self._database = f"{database}_{mode}"
 
         try:
             self._connection = self._connector(host=host, user=user, password=password, database=self._database, autocommit=False)

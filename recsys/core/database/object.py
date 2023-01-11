@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Monday January 9th 2023 06:01:38 pm                                                 #
+# Modified   : Wednesday January 11th 2023 05:19:13 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,6 +19,7 @@
 """Object persistence module"""
 import os
 from abc import abstractmethod
+import dotenv
 import shelve
 from typing import Union
 from glob import glob
@@ -242,9 +243,9 @@ class ObjectDBConnection(Connection):
 
     __cache_filename = "cache.odb"
 
-    def __init__(self, location: str, autocommit: bool = True) -> None:
+    def __init__(self, autocommit: bool = True) -> None:
         super().__init__()
-        self._location = location
+        self._location = self._set_location()
         self._autocommit = autocommit
         self._cache = None
         self._storage = None
@@ -297,6 +298,14 @@ class ObjectDBConnection(Connection):
         self._cache.drop()
         self._storage.drop()
 
+    def _set_location(self) -> str:
+        """Obtains the database location based upon the current mode environment variable."""
+        dotenv.load_dotenv()
+        mode = os.getenv("MODE")
+        location = os.getenv("ODB_LOCATION")
+        name = os.getenv("ODB_NAME")
+        return os.path.join(location, mode, name)
+
     def _build_cursors(self) -> None:
         self._cache = CacheCursor(self._location)
         self._storage = StorageCursor(self._location)
@@ -318,6 +327,10 @@ class ObjectDB(AbstractDatabase):
     @property
     def is_open(self) -> bool:
         return self._is_open
+
+    @property
+    def connection(self) -> Connection:
+        return self._connection
 
     def connect(self) -> None:
         """Connects to the database."""
