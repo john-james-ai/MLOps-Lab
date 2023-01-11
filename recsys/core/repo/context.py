@@ -11,14 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 10:51:29 pm                                             #
-# Modified   : Sunday January 8th 2023 03:26:52 pm                                                 #
+# Modified   : Tuesday January 10th 2023 07:20:00 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Context Module."""
 from dependency_injector import containers
-from dependency_injector.wiring import Provide, inject
 
 from recsys.core.dal.dao import DAO
 from recsys.core.dal.oao import OAO
@@ -28,7 +27,6 @@ from recsys.core.entity.datasource import DataSource, DataSourceURL
 from recsys.core.entity.job import Task, Job
 from recsys.core.entity.file import File
 from recsys.core.entity.profile import Profile
-from recsys.containers import Recsys
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -36,8 +34,7 @@ from recsys.containers import Recsys
 # ------------------------------------------------------------------------------------------------ #
 class Context:
 
-    @inject
-    def __init__(self, dal: containers = Provide[Recsys.dal]) -> None:
+    def __init__(self, dal: containers.DeclarativeContainer) -> None:
         self._dal = dal
         self._rdb = dal.rdb()
         self._odb = dal.odb()

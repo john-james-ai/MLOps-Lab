@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 19th 2022 03:34:43 pm                                               #
-# Modified   : Sunday January 1st 2023 01:54:46 am                                                 #
+# Modified   : Tuesday January 10th 2023 05:59:15 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -47,7 +47,7 @@ class Builder(ABC):
         """Builds the job object."""
 
     @abstractmethod
-    def build_operations(self, pipeline: Pipeline) -> None:
+    def build_operators(self, pipeline: Pipeline) -> None:
         """Builds the pipeline object."""
 
 
@@ -94,7 +94,7 @@ class PipelineBuilder(Builder):
         self._pipeline.mode = self._config.mode
         self._pipeline.uow = self._uow
 
-    def build_operations(self) -> None:
+    def build_operators(self) -> None:
         for task in self._config.tasks:
             task = SimpleNamespace(**task)
             module = importlib.import_module(name=task.module)
@@ -135,5 +135,5 @@ class Director:
         self._builder.pipeline = self._pipeline
         self._builder.build_config(config)
         self._builder.build_pipeline()
-        self._builder.build_operations()
+        self._builder.build_operators()
         return self._builder.pipeline

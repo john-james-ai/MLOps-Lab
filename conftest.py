@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Tuesday January 10th 2023 02:38:36 am                                               #
+# Modified   : Tuesday January 10th 2023 07:15:09 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -281,8 +281,7 @@ def container():
     container = Recsys()
     container.init_resources()
     container.wire(modules=[recsys.containers,
-                            "recsys.setup.reset_db",
-                            "recsys.core.repo.context"])
+                            "recsys.setup.reset_db"])
     return container
 
 
