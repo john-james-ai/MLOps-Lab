@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_core/test_dal/test_oao.py                                               #
+# Filename   : /tests/test_core/test_dal/test_dba.py                                               #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday January 7th 2023 09:36:08 am                                               #
-# Modified   : Saturday January 7th 2023 02:41:05 pm                                               #
+# Modified   : Wednesday January 11th 2023 05:23:19 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -183,7 +183,8 @@ class TestODB:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         container.dba.object().drop()
-        pattern = self.__location + "*"
+        location = container.database.odb().connection.location
+        pattern = location + ".*"
         assert len(glob(pattern)) == 0
         exists = container.dba.object().exists()
         assert not exists
@@ -217,8 +218,6 @@ class TestODB:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         container.dba.object().reset()
-        pattern = self.__location + "*"
-        assert len(glob(pattern)) > 0
         exists = container.dba.object().exists()
         assert exists
         # ---------------------------------------------------------------------------------------- #

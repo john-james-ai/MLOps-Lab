@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Monday January 9th 2023 06:00:43 pm                                                 #
+# Modified   : Wednesday January 11th 2023 05:38:58 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -99,6 +99,7 @@ class TestDataFrameDAO:  # pragma: no cover
         for j, (name, dataframe) in enumerate(datasets[0].dataframes.items(), start=1):
             dto = dataframe.as_dto()
             dto.datasource_id = j
+            dto.parent_id = j   # Add this manually for unit test. Repository testing will Ensure that dataframes are added after dataset ids are are created.
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)
@@ -150,6 +151,7 @@ class TestDataFrameDAO:  # pragma: no cover
         for j, (name, dataframe) in enumerate(datasets[0].dataframes.items(), start=1):
             dto = dataframe.as_dto()
             dto.datasource_id = j
+            dto.parent_id = j   # Add this manually for unit test. Repository testing will Ensure that dataframes are added after dataset ids are are created.
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)

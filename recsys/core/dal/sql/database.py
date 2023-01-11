@@ -11,11 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday January 2nd 2023 06:32:13 am                                                 #
-# Modified   : Saturday January 7th 2023 02:17:49 pm                                               #
+# Modified   : Wednesday January 11th 2023 04:11:38 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
+import os
+import dotenv
 from dataclasses import dataclass
 
 from recsys.core.dal.sql.base import SQL, DDL
@@ -25,27 +27,42 @@ from recsys.core.dal.sql.base import SQL, DDL
 @dataclass
 class CreateDatabase(SQL):
     name: str = 'recsys'
-    sql: str = """CREATE DATABASE IF NOT EXISTS recsys;"""
+    sql: str = None
     args: tuple = ()
     description: str = "Created the recsys database"
+
+    def __post_init__(self) -> None:
+        dotenv.load_dotenv()
+        mode = os.getenv("MODE")
+        self.sql = f"""CREATE DATABASE IF NOT EXISTS recsys_{mode};"""
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class DropDatabase(SQL):
     name: str = "recsys"
-    sql: str = """DROP DATABASE IF EXISTS recsys;"""
+    sql: str = None
     args: tuple = ()
     description: str = "Dropped the recsys database."
+
+    def __post_init__(self) -> None:
+        dotenv.load_dotenv()
+        mode = os.getenv("MODE")
+        self.sql = f"""DROP DATABASE IF EXISTS recsys_{mode};"""
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class DatabaseExists(SQL):
     name: str = "recsys"
-    sql: str = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'recsys';"""
+    sql: str = None
     args: tuple = ()
     description: str = "Checked existence of recsys database."
+
+    def __post_init__(self) -> None:
+        dotenv.load_dotenv()
+        mode = os.getenv("MODE")
+        self.sql = f"""SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'recsys_{mode}';"""
 
 
 # ------------------------------------------------------------------------------------------------ #

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 3rd 2023 03:04:52 pm                                                #
-# Modified   : Sunday January 8th 2023 07:33:51 pm                                                 #
+# Modified   : Wednesday January 11th 2023 05:28:13 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -30,6 +30,7 @@ double_line = f"\n{100 * '='}"
 single_line = f"\n{100 * '-'}\n"
 
 
+@pytest.mark.dao
 @pytest.mark.database
 class TestDatabase:  # pragma: no cover
     def reset_table(self, container):
@@ -78,7 +79,7 @@ class TestDatabase:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.dal.database()
+        db = container.dba.database()
         assert not db.is_open
         assert not db.in_transaction
 
@@ -117,7 +118,7 @@ class TestDatabase:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.dal.database()
+        db = container.dba.database()
         db.begin()
         for file in files:
             dto = file.as_dto()
@@ -175,7 +176,7 @@ class TestDatabase:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.dal.database()
+        db = container.dba.database()
         db.begin()
         for i in range(6, 11):
             dml = FileDML.select(id=i)
@@ -216,7 +217,7 @@ class TestDatabase:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.dal.database()
+        db = container.dba.database()
         db.begin()
         for i, file in enumerate(files, start=6):
             file.id = i
@@ -261,7 +262,7 @@ class TestDatabase:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.dal.database()
+        db = container.dba.database()
         db.begin()
         for i, file in enumerate(files, start=1):
             file.id = i * 88
@@ -300,7 +301,7 @@ class TestDatabase:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.dal.database()
+        db = container.dba.database()
         db.begin()
         dml = FileDML.select_all()
         count = db.count(sql=dml.sql, args=dml.args)
@@ -336,7 +337,7 @@ class TestDatabase:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.dal.database()
+        db = container.dba.database()
         db.begin()
         for i in range(6, 11):
             dml = FileDML.delete(i)
@@ -379,7 +380,7 @@ class TestDatabase:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         # Reset file table
-        db = container.dal.database()
+        db = container.dba.database()
         db.connect()
 
         # Before
@@ -439,7 +440,7 @@ class TestDatabase:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.dal.database()
+        db = container.dba.database()
         db.connect()
         db.close()
 
