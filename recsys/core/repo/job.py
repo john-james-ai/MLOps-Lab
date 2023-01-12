@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Tuesday January 10th 2023 06:50:41 pm                                               #
+# Modified   : Wednesday January 11th 2023 07:12:36 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -62,10 +62,9 @@ class JobRepo(RepoABC):
             result = self._oao.read(dto.oid)
         return result
 
-    def get_by_name_mode(self, name: str, mode: str = None) -> Entity:
+    def get_by_name(self, name: str) -> Entity:
         result = []
-        mode = mode or self._get_mode()
-        dto = self._job_dao.read_by_name_mode(name, mode)
+        dto = self._job_dao.read_by_name(name)
         if dto:
             result = self._oao.read(dto.oid)
         return result

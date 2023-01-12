@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday January 8th 2023 03:12:30 pm                                                 #
+# Modified   : Wednesday January 11th 2023 06:48:50 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.entity.datasource import DataSource
 @dataclass
 class CreateDataSourceTable(SQL):
     name: str = "datasource"
-    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), website VARCHAR(255) NOT NULL, mode VARCHAR(32) NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), website VARCHAR(255) NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name));"""
     args: tuple = ()
     description: str = "Created the datasource table"
 
@@ -74,7 +74,7 @@ class DataSourceDDL(DDL):
 @dataclass
 class InsertDataSource(SQL):
     dto: DTO
-    sql: str = """INSERT INTO datasource (oid, name, description, website, mode, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO datasource (oid, name, description, website, created, modified) VALUES (%s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -83,7 +83,6 @@ class InsertDataSource(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.website,
-            self.dto.mode,
             self.dto.created,
             self.dto.modified,
         )
@@ -95,7 +94,7 @@ class InsertDataSource(SQL):
 @dataclass
 class UpdateDataSource(SQL):
     dto: DTO
-    sql: str = """UPDATE datasource SET oid = %s, name = %s, description = %s, website = %s, mode = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE datasource SET oid = %s, name = %s, description = %s, website = %s, created = %s, modified = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -104,7 +103,6 @@ class UpdateDataSource(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.website,
-            self.dto.mode,
             self.dto.created,
             self.dto.modified,
             self.dto.id,
@@ -127,14 +125,13 @@ class SelectDataSource(SQL):
 
 
 @dataclass
-class SelectDataSourceByNameMode(SQL):
+class SelectDataSourceByName(SQL):
     name: str
-    mode: str
-    sql: str = """SELECT * FROM datasource WHERE name = %s AND mode = %s;"""
+    sql: str = """SELECT * FROM datasource WHERE name = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
-        self.args = (self.name, self.mode,)
+        self.args = (self.name,)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -177,7 +174,7 @@ class DataSourceDML(DML):
     insert: type(SQL) = InsertDataSource
     update: type(SQL) = UpdateDataSource
     select: type(SQL) = SelectDataSource
-    select_by_name_mode: type(SQL) = SelectDataSourceByNameMode
+    select_by_name: type(SQL) = SelectDataSourceByName
     select_all: type(SQL) = SelectAllDataSource
     exists: type(SQL) = DataSourceExists
     delete: type(SQL) = DeleteDataSource

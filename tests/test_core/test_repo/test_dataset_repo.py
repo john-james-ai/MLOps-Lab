@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 1st 2023 02:21:02 pm                                                 #
-# Modified   : Tuesday January 10th 2023 01:22:05 am                                               #
+# Modified   : Wednesday January 11th 2023 07:55:11 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -35,6 +35,7 @@ single_line = f"\n{100 * '-'}\n"
 @pytest.mark.dataset_repo
 class TestDatasetRepo:  # pragma: no cover
 
+    # ============================================================================================ #
     def reset_db(self, container) -> None:
         dba = container.dba.dataset()
         dba.reset()
@@ -44,7 +45,7 @@ class TestDatasetRepo:  # pragma: no cover
         dba.reset()
 
     # ============================================================================================ #
-    def test_setup(self, container, caplog):
+    def test_setup(self, container, context, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -83,6 +84,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
+        context = container.repo.context()
         repo = DatasetRepo(context)
         context.begin()
         for f1 in datasets.copy():
@@ -270,7 +272,7 @@ class TestDatasetRepo:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_add_get(self, context, container, datasets, caplog):
+    def test_add_get(self, container, context, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -310,7 +312,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_by_name(self, container, datasets, context, caplog):
+    def test_get_by_name(self, container, context, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -326,11 +328,10 @@ class TestDatasetRepo:  # pragma: no cover
         for dataset in datasets:
             repo.add(dataset)
 
-        dataset = repo.get_by_name_mode(name="dataset_name_2")
+        dataset = repo.get_by_name(name="dataset_name_2")
         assert isinstance(dataset, Dataset)
         assert dataset.id == 2
         assert dataset.name == "dataset_name_2"
-        assert dataset.mode == 'test'
         for df in dataset.dataframes.values():
             assert isinstance(df, DataFrame)
             assert isinstance(df.data, pd.DataFrame)
@@ -395,7 +396,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_remove_exists(self, container, datasets, context, caplog):
+    def test_remove_exists(self, container, context, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -439,7 +440,7 @@ class TestDatasetRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_print(self, context, datasets, caplog):
+    def test_print(self, datasets, container, context, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(

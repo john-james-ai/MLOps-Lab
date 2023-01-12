@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 1st 2023 02:21:02 pm                                                 #
-# Modified   : Monday January 9th 2023 07:26:44 pm                                                 #
+# Modified   : Wednesday January 11th 2023 07:59:13 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -317,12 +317,11 @@ class TestEntityRepo:  # pragma: no cover
         for file in files:
             repo.add(file)
 
-        file = repo.get_by_name_mode(name="file_2")
+        file = repo.get_by_name(name="file_2")
         assert isinstance(file, File)
         assert file.id == 2
         assert file.name == "file_2"
         assert file.size > 0
-        assert file.mode == 'test'
 
         self.reset_db(container)
         # ---------------------------------------------------------------------------------------- #

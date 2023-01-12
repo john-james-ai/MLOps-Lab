@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 1st 2023 02:21:02 pm                                                 #
-# Modified   : Tuesday January 10th 2023 02:25:46 pm                                               #
+# Modified   : Wednesday January 11th 2023 08:09:51 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -322,11 +322,10 @@ class TestJobRepo:  # pragma: no cover
         for job in jobs:
             repo.add(job)
 
-        job = repo.get_by_name_mode(name="job_name_2")
+        job = repo.get_by_name(name="job_name_2")
         assert isinstance(job, Job)
         assert job.id == 2
         assert job.name == "job_name_2"
-        assert job.mode == 'test'
         for df in job.tasks.values():
             assert isinstance(df, Task)
             assert df.parent == job

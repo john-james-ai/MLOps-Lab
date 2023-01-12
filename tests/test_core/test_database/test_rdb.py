@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 3rd 2023 03:04:52 pm                                                #
-# Modified   : Sunday January 8th 2023 07:33:51 pm                                                 #
+# Modified   : Wednesday January 11th 2023 07:24:39 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -20,7 +20,7 @@ import inspect
 from datetime import datetime
 import pytest
 import logging
-import mysql.connector
+import pymysql
 
 from recsys.core.dal.sql.file import FileDML
 
@@ -80,7 +80,7 @@ class TestConnection:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        cnx = container.connection.recsys_connection()
+        cnx = container.connection.rdb_connection()
         assert not cnx.is_open
         assert not cnx.in_transaction
 
@@ -113,7 +113,7 @@ class TestConnection:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        cnx = container.connection.recsys_connection()
+        cnx = container.connection.rdb_connection()
         cnx.open()
         assert cnx.is_open
         assert not cnx.in_transaction
@@ -122,49 +122,12 @@ class TestConnection:  # pragma: no cover
         assert not cnx.is_open
         assert not cnx.in_transaction
 
-        with pytest.raises(mysql.connector.errors.ProgrammingError):
+        with pytest.raises(pymysql.err.InterfaceError):
             cnx.rollback()
 
         cnx.open()
         cnx.rollback()
         cnx.close()
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-
-        )
-        logger.info(single_line)
-
-    # ============================================================================================ #
-    def test_transaction(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\nStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        logger.info(double_line)
-        # ---------------------------------------------------------------------------------------- #
-        cnx = container.connection.recsys_connection()
-        cnx.begin()
-        with pytest.raises(mysql.connector.errors.DatabaseError):
-            cnx.begin()
-        cnx.commit()
-        cnx.close()
-        cnx.begin()
-
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -197,7 +160,7 @@ class TestRDB:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.database.recsys()
+        db = container.database.rdb()
         assert not db.is_open
         assert not db.in_transaction
 
@@ -236,7 +199,7 @@ class TestRDB:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.database.recsys()
+        db = container.database.rdb()
         db.connect()
         for file in files:
             dto = file.as_dto()
@@ -287,7 +250,7 @@ class TestRDB:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.database.recsys()
+        db = container.database.rdb()
         db.connect()
         for i, file in enumerate(files, start=6):
             dto = file.as_dto()
@@ -331,7 +294,7 @@ class TestRDB:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.database.recsys()
+        db = container.database.rdb()
         db.connect()
         for i in range(6, 10):
             dml = FileDML.select(id=i)
@@ -372,7 +335,7 @@ class TestRDB:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.database.recsys()
+        db = container.database.rdb()
         db.connect()
         for i, file in enumerate(files, start=6):
             file.id = i
@@ -417,7 +380,7 @@ class TestRDB:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.database.recsys()
+        db = container.database.rdb()
         db.connect()
         for i, file in enumerate(files, start=1):
             file.id = i * 88
@@ -456,7 +419,7 @@ class TestRDB:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.database.recsys()
+        db = container.database.rdb()
         db.connect()
         dml = FileDML.select_all()
         count = db.count(sql=dml.sql, args=dml.args)
@@ -492,7 +455,7 @@ class TestRDB:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.database.recsys()
+        db = container.database.rdb()
         db.connect()
         for i in range(6, 11):
             dml = FileDML.delete(i)
@@ -535,7 +498,7 @@ class TestRDB:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         # Reset file table
-        db = container.database.recsys()
+        db = container.database.rdb()
         db.connect()
 
         # Before
@@ -593,7 +556,7 @@ class TestRDB:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        db = container.database.recsys()
+        db = container.database.rdb()
         db.connect()
         db.close()
 

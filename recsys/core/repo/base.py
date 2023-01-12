@@ -11,14 +11,12 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 10:47:42 pm                                             #
-# Modified   : Sunday January 8th 2023 09:47:59 am                                                 #
+# Modified   : Wednesday January 11th 2023 07:11:16 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 from abc import ABC, abstractmethod
-import os
-import dotenv
 import logging
 
 from recsys.core.entity.base import Entity
@@ -48,7 +46,7 @@ class RepoABC(ABC):
         """Returns an entity with the designated id"""
 
     @abstractmethod
-    def get_by_name_mode(self, name: str) -> Entity:
+    def get_by_name(self, name: str) -> Entity:
         """Returns an entity with the given name."""
 
     @abstractmethod
@@ -66,7 +64,3 @@ class RepoABC(ABC):
     @abstractmethod
     def print(self) -> None:
         """Prints the repository contents as a DataFrame."""
-
-    def _get_mode(self) -> str:
-        dotenv.load_dotenv()
-        return os.getenv("MODE")

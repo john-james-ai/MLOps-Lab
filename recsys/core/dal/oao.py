@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday January 6th 2023 11:49:31 pm                                                 #
-# Modified   : Monday January 9th 2023 05:56:44 pm                                                 #
+# Modified   : Wednesday January 11th 2023 07:01:42 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -83,16 +83,15 @@ class OAO:
         """
         return self._database.select(oid)
 
-    def read_by_name_mode(self, name: str, mode: str) -> Entity:
-        """Obtains an entity Entity with the designated name and mode.
+    def read_by_name(self, name: str) -> Entity:
+        """Obtains an entity Entity with the designated name.
         Args:
             name (str): The name assigned to the entity.
-            mode (str): Mode, i.e. 'dev', 'prod', or 'test'
 
         Returns a Data Transfer Object (Entity)
         """
         result = []
-        ocl = self._oml.select_by_name_mode(name, mode)
+        ocl = self._oml.select_by_name(name)
         result = self._database.select(ocl.oid)
         return result
 

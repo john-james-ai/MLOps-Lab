@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Wednesday January 11th 2023 03:59:35 pm                                             #
+# Modified   : Wednesday January 11th 2023 07:28:31 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -105,7 +105,7 @@ class DatabaseConnection(Connection):
 #                                        DATABASE                                                  #
 # ------------------------------------------------------------------------------------------------ #
 class Database(AbstractDatabase):
-    def __init__(self, connection: Connection, autocommit: bool = True, autoclose: bool = False) -> None:
+    def __init__(self, connection: Connection, autocommit: bool = False, autoclose: bool = False) -> None:
         super().__init__()
         self._connection = connection
         self._autocommit = autocommit

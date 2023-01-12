@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Tuesday January 10th 2023 01:45:36 am                                               #
+# Modified   : Wednesday January 11th 2023 07:00:56 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -60,7 +60,6 @@ class ProfileDTO(DTO):
     oid: str
     name: str
     description: str
-    mode: str
     start: datetime
     end: datetime
     duration: int
@@ -96,7 +95,6 @@ class DataFrameDTO(DTO):
     name: str
     description: str
     stage: str
-    mode: str
     size: int
     nrows: int
     ncols: int
@@ -117,7 +115,6 @@ class DatasetDTO(DTO):
     name: str
     description: str
     datasource_id: int
-    mode: str
     stage: str
     task_id: int
     created: datetime
@@ -133,7 +130,6 @@ class JobDTO(DTO):
     oid: str
     name: str
     description: str
-    mode: str
     state: str
     created: datetime
     modified: datetime
@@ -148,7 +144,6 @@ class TaskDTO(DTO):
     oid: str
     name: str
     description: str
-    mode: str
     state: str
     parent_id: int
     created: datetime
@@ -165,7 +160,6 @@ class FileDTO(DTO):
     name: str
     description: str
     datasource_id: int
-    mode: str
     stage: str
     uri: str
     size: int
@@ -184,7 +178,6 @@ class DataSourceDTO(DTO):
     name: str
     description: str
     website: str
-    mode: str
     created: datetime
     modified: datetime
 
@@ -199,7 +192,6 @@ class DataSourceURLDTO(DTO):
     name: str
     description: str
     url: str
-    mode: str
     parent_id: int
     created: datetime
     modified: datetime

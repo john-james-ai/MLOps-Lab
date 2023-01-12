@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 8th 2023 05:31:06 pm                                                 #
-# Modified   : Monday January 9th 2023 06:00:43 pm                                                 #
+# Modified   : Wednesday January 11th 2023 07:30:46 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -332,7 +332,8 @@ class TestODB:  # pragma: no cover
         db.begin()
         for i, file in enumerate(files, start=1):
             db.delete(file.oid)
-            assert not db.exists(file.oid)
+            exists = db.exists(file.oid)
+            assert not exists
         db.close()
 
         for i, file in enumerate(files, start=1):
