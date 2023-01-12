@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Tuesday January 10th 2023 01:36:26 am                                               #
+# Modified   : Wednesday January 11th 2023 06:43:19 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,7 +33,7 @@ from recsys.core.entity.dataset import DataFrame
 @dataclass
 class CreateDataFrameTable(SQL):
     name: str = "dataframe"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), stage VARCHAR(64) NOT NULL, mode VARCHAR(32) NOT NULL, size BIGINT, nrows BIGINT, ncols SMALLINT, nulls SMALLINT, pct_nulls FLOAT, parent_id SMALLINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), stage VARCHAR(64) NOT NULL, size BIGINT, nrows BIGINT, ncols SMALLINT, nulls SMALLINT, pct_nulls FLOAT, parent_id SMALLINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name));"""
     args: tuple = ()
     description: str = "Created the dataframe table."
 
@@ -75,7 +75,7 @@ class DataFrameDDL(DDL):
 @dataclass
 class InsertDataFrame(SQL):
     dto: DTO
-    sql: str = """INSERT INTO dataframe (oid, name, description, stage, mode, size, nrows, ncols, nulls, pct_nulls, parent_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO dataframe (oid, name, description, stage, size, nrows, ncols, nulls, pct_nulls, parent_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -84,7 +84,6 @@ class InsertDataFrame(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.stage,
-            self.dto.mode,
             self.dto.size,
             self.dto.nrows,
             self.dto.ncols,
@@ -102,7 +101,7 @@ class InsertDataFrame(SQL):
 @dataclass
 class UpdateDataFrame(SQL):
     dto: DTO
-    sql: str = """UPDATE dataframe SET oid = %s, name = %s, description = %s, stage = %s, mode = %s, size = %s, nrows = %s, ncols = %s, nulls = %s, pct_nulls = %s, parent_id = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE dataframe SET oid = %s, name = %s, description = %s, stage = %s, size = %s, nrows = %s, ncols = %s, nulls = %s, pct_nulls = %s, parent_id = %s, created = %s, modified = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -111,7 +110,6 @@ class UpdateDataFrame(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.stage,
-            self.dto.mode,
             self.dto.size,
             self.dto.nrows,
             self.dto.ncols,
@@ -152,14 +150,13 @@ class SelectDataFrameByParentId(SQL):
 
 
 @dataclass
-class SelectDataFrameByNameMode(SQL):
+class SelectDataFrameByName(SQL):
     name: str
-    mode: str
-    sql: str = """SELECT * FROM dataframe WHERE name = %s AND mode = %s;"""
+    sql: str = """SELECT * FROM dataframe WHERE name = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
-        self.args = (self.name, self.mode,)
+        self.args = (self.name)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -202,7 +199,7 @@ class DataFrameDML(DML):
     insert: type(SQL) = InsertDataFrame
     update: type(SQL) = UpdateDataFrame
     select: type(SQL) = SelectDataFrame
-    select_by_name_mode: type(SQL) = SelectDataFrameByNameMode
+    select_by_name: type(SQL) = SelectDataFrameByName
     select_by_dataset_id: type(SQL) = SelectDataFrameByParentId
     select_all: type(SQL) = SelectAllDataset
     exists: type(SQL) = DataFrameExists

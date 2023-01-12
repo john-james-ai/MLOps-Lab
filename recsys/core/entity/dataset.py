@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Tuesday January 10th 2023 01:49:05 am                                               #
+# Modified   : Wednesday January 11th 2023 07:07:15 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,8 +32,8 @@ from recsys.core.dal.dto import DataFrameDTO, DatasetDTO
 class DataComponent(Entity):
     """Base component class from which DataFrame (Leaf) and Dataset (Composite) objects derive."""
 
-    def __init__(self, name: str, description: str = None, mode: str = None) -> None:
-        super().__init__(name=name, description=description, mode=mode)
+    def __init__(self, name: str, description: str = None) -> None:
+        super().__init__(name=name, description=description)
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -70,8 +70,6 @@ class Dataset(DataComponent):
         task_id (Task): The Id for the Task that created the Dataset. Optional. Defaults to 0.
         data (pd.DataFrame): Data payload. If provided, a DataFrame object is automatically
             generated and added to the Dataset.
-        mode (str): Mode for which the DataFrame is created. If None, defaults to mode from environment
-            variable.
     """
 
     def __init__(
@@ -80,11 +78,10 @@ class Dataset(DataComponent):
         datasource_id: int,
         stage: str,
         description: str = None,
-        mode: str = None,
         task_id: int = 0,
         data: pd.DataFrame = None,
     ) -> None:
-        super().__init__(name=name, description=description, mode=mode)
+        super().__init__(name=name, description=description)
         self._datasource_id = datasource_id
         self._stage = stage
         self._task_id = task_id
@@ -102,10 +99,10 @@ class Dataset(DataComponent):
         return len(self._dataframes)
 
     def __str__(self) -> str:
-        return f"Dataset Id: {self._id}\n\tData source: {self._datasource_id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tMode: {self._mode}\n\tStage: {self._stage}\n\tDataFrames: {self.dataframe_count}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"Dataset Id: {self._id}\n\tData source: {self._datasource_id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tStage: {self._stage}\n\tDataFrames: {self.dataframe_count}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._datasource_id}, {self._name}, {self._description}, {self._mode}, {self._stage}, {self.dataframe_count}, {self._created}, {self._modified}"
+        return f"{self._id}, {self._datasource_id}, {self._name}, {self._description}, {self._stage}, {self.dataframe_count}, {self._created}, {self._modified}"
 
     def __eq__(self, other: DataComponent) -> bool:
         if self.__class__.__name__ == other.__class__.__name__:
@@ -113,7 +110,6 @@ class Dataset(DataComponent):
                     and self.name == other.name
                     and self.description == other.description
                     and self.datasource_id == other.datasource_id
-                    and self.mode == other.mode
                     and self.stage == other.stage
                     and self.task_id == other.task_id)
         else:
@@ -200,7 +196,6 @@ class Dataset(DataComponent):
             name=self._name,
             description=self._description,
             datasource_id=self._datasource_id,
-            mode=self._mode,
             stage=self._stage,
             task_id=self._task_id,
             created=self._created,
@@ -216,7 +211,7 @@ class Dataset(DataComponent):
         to the Dataset, except for the data.
         """
         dataframe = DataFrame(name=self._name, data=data, parent=self, stage=self._stage,
-                              description=self._description, mode=self._mode)
+                              description=self._description)
         self.add_dataframe(dataframe)
 
 
@@ -231,8 +226,6 @@ class DataFrame(DataComponent):
         description (str): Describes the DataFrame object. Default's to dataset's description if None.
         data (pd.DataFrame): Payload in pandas DataFrame format.
         stage (str): The data processing stage for which the Dataframe is created.
-        mode (str): Mode for which the DataFrame is created. If None, defaults to mode from environment
-            variable.
         parent (Dataset): The parent Dataset object in which this DataFrame is composed.
 
     """
@@ -244,9 +237,8 @@ class DataFrame(DataComponent):
         parent: Dataset,
         stage: str = None,
         description: str = None,
-        mode: str = None,
     ) -> None:
-        super().__init__(name=name, description=description, mode=mode)
+        super().__init__(name=name, description=description)
 
         self._data = data
         self._parent = parent
@@ -265,10 +257,10 @@ class DataFrame(DataComponent):
         self._validate()
 
     def __str__(self) -> str:
-        return f"DataFrame Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tMode: {self._mode}\n\tStage: {self._stage}\n\tSize: {self._size}\n\tRows: {self._nrows}\n\tColumns: {self._ncols}\n\tNulls: {self._nulls}\n\tPct Nulls: {self._pct_nulls}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"DataFrame Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tStage: {self._stage}\n\tSize: {self._size}\n\tRows: {self._nrows}\n\tColumns: {self._ncols}\n\tNulls: {self._nulls}\n\tPct Nulls: {self._pct_nulls}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._name}, {self._description}, {self._mode}, {self._stage}, {self._size}, {self._nrows}, {self._ncols}, {self._nulls}, {self._pct_nulls}, {self._created}, {self._modified}"
+        return f"{self._id}, {self._name}, {self._description}, {self._stage}, {self._size}, {self._nrows}, {self._ncols}, {self._nulls}, {self._pct_nulls}, {self._created}, {self._modified}"
 
     def __eq__(self, other) -> bool:
         """Compares two Dataset for equality.
@@ -350,7 +342,6 @@ class DataFrame(DataComponent):
             name=self._name,
             description=self._description,
             stage=self._stage,
-            mode=self._mode,
             size=self._size,
             nrows=self._nrows,
             ncols=self._ncols,
@@ -371,7 +362,6 @@ class DataFrame(DataComponent):
             self._name = self._name or self._parent.name
             self._description = self._description or self._parent.description
             self._stage = self._stage or self._parent.stage
-            self._mode = self._mode or self._parent.mode
 
     def _set_data_metadata(self) -> None:
         if self._data is not None:

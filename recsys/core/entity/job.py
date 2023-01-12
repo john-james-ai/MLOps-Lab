@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Tuesday January 10th 2023 02:32:17 pm                                               #
+# Modified   : Wednesday January 11th 2023 07:10:01 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,8 +33,8 @@ from recsys import STATES
 class JobComponent(Entity):
     """Base component class from which Task (Leaf) and Job (Composite) objects derive."""
 
-    def __init__(self, name: str, description: str = None, mode: str = None) -> None:
-        super().__init__(name=name, description=description, mode=mode)
+    def __init__(self, name: str, description: str = None) -> None:
+        super().__init__(name=name, description=description)
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -66,17 +66,14 @@ class Job(JobComponent):
     Args:
         name (str): Job name
         description (str): Job Description
-        mode (str): Mode for which the Task is created. If None, defaults to mode from environment
-            variable.
     """
 
     def __init__(
         self,
         name: str,
         description: str = None,
-        mode: str = None,
     ) -> None:
-        super().__init__(name=name, description=description, mode=mode)
+        super().__init__(name=name, description=description)
 
         self._tasks = {}
         self._state = STATES[0]
@@ -85,17 +82,16 @@ class Job(JobComponent):
         self._validate()
 
     def __str__(self) -> str:
-        return f"Job Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tMode: {self._mode}\n\tState: {self._state}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"Job Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tState: {self._state}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._name}, {self._description}, {self._mode}, {self._state}, {self._created}, {self._modified}"
+        return f"{self._id}, {self._name}, {self._description}, {self._state}, {self._created}, {self._modified}"
 
     def __eq__(self, other: JobComponent) -> bool:
         if self.__class__.__name__ == other.__class__.__name__:
             return (self.is_composite == other.is_composite
                     and self.name == other.name
                     and self.description == other.description
-                    and self.mode == other.mode
                     and self.state == other.state)
         else:
             return False
@@ -170,7 +166,6 @@ class Job(JobComponent):
             oid=self._oid,
             name=self._name,
             description=self._description,
-            mode=self._mode,
             state=self._state,
             created=self._created,
             modified=self._modified,
@@ -188,8 +183,6 @@ class Task(JobComponent):
         name (str): Short, yet descriptive lowercase name for Task object.
         description (str): Describes the Task object. Default's to job's description if None.
         job (Job): The parent Job instance.
-        mode (str): Mode for which the Task is created. If None, defaults to mode from environment
-            variable.
 
     """
 
@@ -198,9 +191,8 @@ class Task(JobComponent):
         name: str,
         job: Job,
         description: str = None,
-        mode: str = None,
     ) -> None:
-        super().__init__(name=name, description=description, mode=mode)
+        super().__init__(name=name, description=description)
 
         self._parent = job
         self._is_composite = False
@@ -209,10 +201,10 @@ class Task(JobComponent):
         self._validate()
 
     def __str__(self) -> str:
-        return f"Task Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tMode: {self._mode}\n\tState: {self._state}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"Task Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tState: {self._state}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._name}, {self._description}, {self._mode}, {self._state}, {self._created}, {self._modified}"
+        return f"{self._id}, {self._name}, {self._description}, {self._state}, {self._created}, {self._modified}"
 
     def __eq__(self, other) -> bool:
         """Compares two Job for equality.
@@ -225,7 +217,6 @@ class Task(JobComponent):
         if isinstance(other, Task):
             return (self._name == other.name
                     and self._description == other.description
-                    and self._mode == other.mode
                     and self._parent == other.parent)
         else:
             return False
@@ -266,7 +257,6 @@ class Task(JobComponent):
             oid=self._oid,
             name=self._name,
             description=self._description,
-            mode=self._mode,
             state=self._state,
             parent_id=self._parent.id,
             created=self._created,

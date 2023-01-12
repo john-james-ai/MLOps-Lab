@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Wednesday January 11th 2023 05:19:13 pm                                             #
+# Modified   : Wednesday January 11th 2023 07:38:00 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -173,7 +173,7 @@ class CacheCursor(Cursor):
         """Checks existence of an object in the storage"""
         self.open()
         if oid in self._cursor.keys():
-            exists = not self._cursor[oid] == []
+            exists = not self._cursor[oid] is None
         else:
             exists = False
         answer = "exists" if exists else "does not exist."

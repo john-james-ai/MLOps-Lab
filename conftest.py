@@ -1,4 +1,4 @@
-#!/usr/bin/mode python3
+#!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
@@ -10,11 +10,11 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday December 3rd 2022 09:37:10 am                                              #
-# Modified   : Wednesday January 11th 2023 05:36:19 pm                                             #
+# Created    : Wednesday January 11th 2023 06:32:03 pm                                             #
+# Modified   : Wednesday January 11th 2023 08:00:50 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
-# Copyright  : (c) 2022 John James                                                                 #
+# Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
 import pytest
 from datetime import datetime
@@ -27,8 +27,6 @@ from recsys.core.entity.dataset import DataFrame, Dataset
 from recsys.core.entity.datasource import DataSource
 from recsys.core.entity.profile import Profile
 from recsys.core.entity.job import Job, Task
-from recsys.core.repo.context import Context
-
 
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
@@ -77,7 +75,6 @@ def file():
         datasource="movielens25m",
         stage="extract",
         uri="tests/data/movielens25m/raw/ratings.pkl",
-        mode="test",
         task_id=55,
     )
     return file
@@ -95,7 +92,6 @@ def files():
             stage="extract",
             uri="tests/data/movielens25m/raw/ratings.pkl",
             task_id=i + 22,
-            mode='test',
         )
         files.append(file)
     return files
@@ -131,7 +127,6 @@ def profiles():
         profile = Profile(
             name=f"profile_dto_{i}",
             description=f"Description for Profile {i}",
-            mode='test',
             start=datetime.now(),
             end=datetime.now(),
             duration=i + 1000,
@@ -170,7 +165,6 @@ def datasets(ratings):
             datasource_id=i + 5,
             description=f"Description for Dataset # {i}",
             stage="extract",
-            mode="test",
         )
         for j in range(1, 6):
             j = j + (i - 1)
@@ -179,7 +173,6 @@ def datasets(ratings):
                 data=ratings,
                 parent=dataset,
                 description=f"Description for dataframe {j} of dataset {i}",
-                mode="test",
                 stage="extract",
             )
             dataset.add_dataframe(dataframe)
@@ -195,7 +188,6 @@ def jobs():
         job = Job(
             name=f"job_name_{i}",
             description=f"Description for Job # {i}",
-            mode="test"
         )
         for j in range(1, 6):
             task = job.create_task(name=f"task_{j}_job_{i}",
@@ -259,7 +251,6 @@ def dataframe_dicts():
             "name": f"dataframe_{i}",
             "description": f"Description for DataFrame {i}",
             "datasource": "movielens25m",
-            "mode": "test",
             "stage": "interim",
             "task_id": i + i,
         }
@@ -287,5 +278,5 @@ def container():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def context():
-    return Context()
+def context(container):
+    return container.repo.context()

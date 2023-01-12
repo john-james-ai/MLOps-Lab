@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Wednesday January 11th 2023 02:38:27 am                                             #
+# Modified   : Wednesday January 11th 2023 07:07:41 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,8 +32,8 @@ from recsys.core.dal.dto import DataSourceURLDTO, DataSourceDTO
 class DataSourceComponent(Entity):
     """Base component class from which DataSourceURL (Leaf) and DataSource (Composite) objects derive."""
 
-    def __init__(self, name: str, description: str = None, mode: str = None) -> None:
-        super().__init__(name=name, description=description, mode=mode)
+    def __init__(self, name: str, description: str = None) -> None:
+        super().__init__(name=name, description=description)
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -162,7 +162,6 @@ class DataSource(DataSourceComponent):
             name=self._name,
             description=self._description,
             website=self._website,
-            mode=self._mode,
             created=self._created,
             modified=self._modified,
         )
@@ -180,8 +179,6 @@ class DataSourceURL(DataSourceComponent):
         description (str): Describes the DataSourceURL object. Default's to datasource's description if None.
         url (pd.DataSourceURL): Payload in pandas DataSourceURL format.
         datasource (DataSource): The datasource DataSource instance. Optional.
-        mode (str): Mode for which the DataSourceURL is created. If None, defaults to mode from environment
-            variable.
 
     """
 
@@ -256,7 +253,6 @@ class DataSourceURL(DataSourceComponent):
             name=self._name,
             description=self._description,
             url=self._url,
-            mode=self._mode,
             parent_id=self._parent.id,
             created=self._created,
             modified=self._modified,

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Tuesday January 10th 2023 02:28:49 pm                                               #
+# Modified   : Wednesday January 11th 2023 06:59:56 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -101,16 +101,14 @@ class DAO(ABC):
             result = self._row_to_dto(row)
         return result
 
-    def read_by_name_mode(self, name: str, mode: str) -> DTO:
-        """Obtains an entity DTO with the designated name and mode.
+    def read_by_name(self, name: str) -> DTO:
+        """Obtains an entity DTO with the designated name.
         Args:
             name (str): The name assigned to the entity.
-            mode (str): Mode, i.e. 'dev', 'prod', or 'test'
-
         Returns a Data Transfer Object (DTO)
         """
         result = []
-        cmd = self._dml.select_by_name_mode(name, mode)
+        cmd = self._dml.select_by_name(name)
         row = self._database.select(cmd.sql, cmd.args)
         if row is not None:
             result = self._row_to_dto(row)
@@ -209,15 +207,14 @@ class DataFrameDAO(DAO):
                 name=row[2],
                 description=row[3],
                 stage=row[4],
-                mode=row[5],
-                size=row[6],
-                nrows=row[7],
-                ncols=row[8],
-                nulls=row[9],
-                pct_nulls=row[10],
-                parent_id=row[11],
-                created=row[12],
-                modified=row[13],
+                size=row[5],
+                nrows=row[6],
+                ncols=row[7],
+                nulls=row[8],
+                pct_nulls=row[9],
+                parent_id=row[10],
+                created=row[11],
+                modified=row[12],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -245,11 +242,10 @@ class DatasetDAO(DAO):
                 name=row[2],
                 description=row[3],
                 datasource_id=row[4],
-                mode=row[5],
-                stage=row[6],
-                task_id=row[7],
-                created=row[8],
-                modified=row[9],
+                stage=row[5],
+                task_id=row[6],
+                created=row[7],
+                modified=row[8],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -278,30 +274,29 @@ class ProfileDAO(DAO):
                 oid=row[1],
                 name=row[2],
                 description=row[3],
-                mode=row[4],
-                start=row[5],
-                end=row[6],
-                duration=row[7],
-                user_cpu_time=row[8],
-                percent_cpu_used=row[9],
-                total_physical_memory=row[10],
-                physical_memory_available=row[11],
-                physical_memory_used=row[12],
-                percent_physical_memory_used=row[13],
-                active_memory_used=row[14],
-                disk_usage=row[15],
-                percent_disk_usage=row[16],
-                read_count=row[17],
-                write_count=row[18],
-                read_bytes=row[19],
-                write_bytes=row[20],
-                read_time=row[21],
-                write_time=row[22],
-                bytes_sent=row[23],
-                bytes_recv=row[24],
-                parent_id=row[25],
-                created=row[26],
-                modified=row[27],
+                start=row[4],
+                end=row[5],
+                duration=row[6],
+                user_cpu_time=row[7],
+                percent_cpu_used=row[8],
+                total_physical_memory=row[9],
+                physical_memory_available=row[10],
+                physical_memory_used=row[11],
+                percent_physical_memory_used=row[12],
+                active_memory_used=row[13],
+                disk_usage=row[14],
+                percent_disk_usage=row[15],
+                read_count=row[16],
+                write_count=row[17],
+                read_bytes=row[18],
+                write_bytes=row[19],
+                read_time=row[20],
+                write_time=row[21],
+                bytes_sent=row[22],
+                bytes_recv=row[23],
+                parent_id=row[24],
+                created=row[25],
+                modified=row[26],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -330,11 +325,10 @@ class TaskDAO(DAO):
                 oid=row[1],
                 name=row[2],
                 description=row[3],
-                mode=row[4],
-                state=row[5],
-                parent_id=row[6],
-                created=row[7],
-                modified=row[8],
+                state=row[4],
+                parent_id=row[5],
+                created=row[6],
+                modified=row[7],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -363,10 +357,9 @@ class JobDAO(DAO):
                 oid=row[1],
                 name=row[2],
                 description=row[3],
-                mode=row[4],
-                state=row[5],
-                created=row[6],
-                modified=row[7],
+                state=row[4],
+                created=row[5],
+                modified=row[6],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -396,13 +389,12 @@ class FileDAO(DAO):
                 name=row[2],
                 description=row[3],
                 datasource_id=row[4],
-                mode=row[5],
-                stage=row[6],
-                uri=row[7],
-                size=row[8],
-                task_id=row[9],
-                created=row[10],
-                modified=row[11],
+                stage=row[5],
+                uri=row[6],
+                size=row[7],
+                task_id=row[8],
+                created=row[9],
+                modified=row[10],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -432,9 +424,8 @@ class DataSourceDAO(DAO):
                 name=row[2],
                 description=row[3],
                 website=row[4],
-                mode=row[5],
-                created=row[6],
-                modified=row[7],
+                created=row[5],
+                modified=row[6],
             )
         except TypeError:
             msg = "No data matched the query."
@@ -464,10 +455,9 @@ class DataSourceURLDAO(DAO):
                 name=row[2],
                 description=row[3],
                 url=row[4],
-                mode=row[5],
-                datasource_id=row[6],
-                created=row[7],
-                modified=row[8],
+                datasource_id=row[5],
+                created=row[6],
+                modified=row[7],
             )
         except TypeError:
             msg = "No data matched the query."

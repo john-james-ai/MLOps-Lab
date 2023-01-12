@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday January 4th 2023 11:14:20 pm                                              #
-# Modified   : Friday January 6th 2023 10:42:14 pm                                                 #
+# Modified   : Wednesday January 11th 2023 06:45:30 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -160,7 +160,7 @@ class TestContext:  # pragma: no cover
         for i, dataset in enumerate(datasets, start=1):
             assert ds_dao.exists(i)
             for name, dataframe in dataset.dataframes.items():
-                df = df_dao.read_by_name_mode(name, mode="test")
+                df = df_dao.read_by_name(name, mode="test")
                 assert isinstance(df, DataFrameDTO)
 
         cntx.rollback()
@@ -171,7 +171,7 @@ class TestContext:  # pragma: no cover
         for i, dataset in enumerate(datasets, start=1):
             assert not ds_dao.exists(i)
             for name, dataframe in dataset.dataframes.items():
-                df = df_dao.read_by_name_mode(name, mode="test")
+                df = df_dao.read_by_name(name, mode="test")
                 assert not isinstance(df, DataFrameDTO)
 
         # ---------------------------------------------------------------------------------------- #
@@ -225,9 +225,9 @@ class TestContext:  # pragma: no cover
         cntx.begin()
         for dataset in datasets:
             for name, dataframe in dataset.dataframes.items():
-                df = df_dao.read_by_name_mode(name, mode="test")
+                df = df_dao.read_by_name(name, mode="test")
                 assert df_dao.exists(df.id)
-            ds = ds_dao.read_by_name_mode(name=dataset.name, mode=dataset.mode)
+            ds = ds_dao.read_by_name(name=dataset.name, mode=dataset.mode)
             assert ds_dao.exists(ds.id)
         cntx.close()
         # ---------------------------------------------------------------------------------------- #

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Sunday January 8th 2023 02:31:56 pm                                                 #
+# Modified   : Wednesday January 11th 2023 06:49:49 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,7 +32,7 @@ from recsys.core.entity.file import File
 @dataclass
 class CreateFileTable(SQL):
     name: str = "file"
-    sql: str = """CREATE TABLE IF NOT EXISTS file (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), datasource_id SMALLINT NOT NULL, mode VARCHAR(32) NOT NULL, stage VARCHAR(64) NOT NULL, uri VARCHAR(255) NOT NULL, size BIGINT DEFAULT 0, task_id MEDIUMINT DEFAULT 0, created DATETIME, modified DATETIME, UNIQUE(name, mode));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS file (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), datasource_id SMALLINT NOT NULL, stage VARCHAR(64) NOT NULL, uri VARCHAR(255) NOT NULL, size BIGINT DEFAULT 0, task_id MEDIUMINT DEFAULT 0, created DATETIME, modified DATETIME, UNIQUE(name));"""
     args: tuple = ()
     description: str = "Created the file table"
 
@@ -74,7 +74,7 @@ class FileDDL(DDL):
 @dataclass
 class InsertFile(SQL):
     dto: DTO
-    sql: str = """INSERT INTO file (oid, name, description, datasource_id, mode, stage, uri, size, task_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO file (oid, name, description, datasource_id, stage, uri, size, task_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -83,7 +83,6 @@ class InsertFile(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.datasource_id,
-            self.dto.mode,
             self.dto.stage,
             self.dto.uri,
             self.dto.size,
@@ -99,7 +98,7 @@ class InsertFile(SQL):
 @dataclass
 class UpdateFile(SQL):
     dto: DTO
-    sql: str = """UPDATE file SET oid = %s, name = %s, description = %s, datasource_id = %s, mode = %s, stage = %s, uri = %s, size = %s, task_id = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE file SET oid = %s, name = %s, description = %s, datasource_id = %s, stage = %s, uri = %s, size = %s, task_id = %s, created = %s, modified = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -108,7 +107,6 @@ class UpdateFile(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.datasource_id,
-            self.dto.mode,
             self.dto.stage,
             self.dto.uri,
             self.dto.size,
@@ -135,14 +133,13 @@ class SelectFile(SQL):
 
 
 @dataclass
-class SelectFileByNameMode(SQL):
+class SelectFileByName(SQL):
     name: str
-    mode: str
-    sql: str = """SELECT * FROM file WHERE name = %s  AND mode = %s ;"""
+    sql: str = """SELECT * FROM file WHERE name = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
-        self.args = (self.name, self.mode,)
+        self.args = (self.name,)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -185,7 +182,7 @@ class FileDML(DML):
     insert: type(SQL) = InsertFile
     update: type(SQL) = UpdateFile
     select: type(SQL) = SelectFile
-    select_by_name_mode: type(SQL) = SelectFileByNameMode
+    select_by_name: type(SQL) = SelectFileByName
     select_all: type(SQL) = SelectAllFile
     exists: type(SQL) = FileExists
     delete: type(SQL) = DeleteFile

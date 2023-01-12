@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday January 6th 2023 11:45:23 pm                                                 #
-# Modified   : Sunday January 8th 2023 04:43:56 pm                                                 #
+# Modified   : Wednesday January 11th 2023 06:51:04 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -77,16 +77,15 @@ class Select(OQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class SelectByNameMode(OQL):
+class SelectByName(OQL):
     entity: type(Entity)
     name: str
-    mode: str
     oid: str = None
-    cmd: str = "select_by_name_mode"
+    cmd: str = "select_by_name"
     args: Any = None
 
     def __post_init__(self) -> None:
-        self.oid = self.entity.lower() + "_" + self.name + "_" + self.mode
+        self.oid = self.entity.lower() + "_" + self.name
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -120,6 +119,6 @@ class ObjectOML:
     insert: type(Insert) = Insert
     update: type(Update) = Update
     select: type(Select) = Select
-    select_by_name_mode: type(SelectByNameMode) = SelectByNameMode
+    select_by_name: type(SelectByName) = SelectByName
     delete: type(Delete) = Delete
     exists: type(Exists) = Exists

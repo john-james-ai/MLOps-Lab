@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Tuesday January 10th 2023 12:03:36 am                                               #
+# Modified   : Wednesday January 11th 2023 08:08:44 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -49,8 +49,12 @@ class Repo(RepoABC):
 
     def get(self, id: str) -> Entity:
         "Returns an entity with the designated id"
+        entity = []
         dto = self._dao.read(id)
-        return self._oao.read(dto.oid)
+        try:
+            return self._oao.read(dto.oid)
+        except AttributeError:
+            return entity
 
     def get_all(self) -> dict:
         entities = {}
@@ -60,21 +64,20 @@ class Repo(RepoABC):
             entities[entity.id] = entity
         return entities
 
-    def get_by_name_mode(self, name: str, mode: str = None) -> Entity:
-        mode = mode or self._get_mode()
-        dto = self._dao.read_by_name_mode(name, mode)
+    def get_by_name(self, name: str) -> Entity:
+        dto = self._dao.read_by_name(name)
         return self._oao.read(dto.oid)
 
     def update(self, entity: Entity) -> None:
         """Updates an entity in the database."""
         self._dao.update(dto=entity.as_dto())
-        self._aoa.update(entity)
+        self._oao.update(entity)
 
     def remove(self, id: str) -> None:
         """Removes an entity (and its children) from repository."""
         dto = self._dao.read(id)
         self._dao.delete(id)
-        self._aoa.delete(dto.oid)
+        self._oao.delete(dto.oid)
 
     def exists(self, id: str) -> bool:
         """Returns True if entity with id exists in the repository."""

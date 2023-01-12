@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Monday January 9th 2023 05:59:55 pm                                                 #
+# Modified   : Wednesday January 11th 2023 06:45:30 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -243,7 +243,7 @@ class TestFileDAO:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_read_by_name_mode(self, container, caplog):
+    def test_read_by_name(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -257,11 +257,11 @@ class TestFileDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = self.test_get_dao(container)
 
-        dto = dao.read_by_name_mode(name="job_name_1", mode='test')
+        dto = dao.read_by_name(name="job_name_1", mode='test')
         assert isinstance(dto, DTO)
         self.check_results(1, dto)
 
-        dto = dao.read_by_name_mode(name="job_1", mode='skdi')
+        dto = dao.read_by_name(name="job_1", mode='skdi')
         assert dto == []
 
         # ---------------------------------------------------------------------------------------- #

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:58:21 pm                                             #
-# Modified   : Tuesday January 10th 2023 02:17:08 am                                               #
+# Modified   : Wednesday January 11th 2023 07:58:44 pm                                             #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -323,11 +323,10 @@ class TestDataSourceRepo:  # pragma: no cover
         for datasource in datasources:
             repo.add(datasource)
 
-        datasource = repo.get_by_name_mode(name="tenrec_2")
+        datasource = repo.get_by_name(name="tenrec_2")
         assert isinstance(datasource, DataSource)
         assert datasource.id == 2
         assert datasource.name == "tenrec_2"
-        assert datasource.mode == 'test'
         for df in datasource.urls.values():
             assert isinstance(df, DataSourceURL)
             assert df.parent == datasource
