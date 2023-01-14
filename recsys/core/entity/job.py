@@ -11,19 +11,22 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Wednesday January 11th 2023 07:10:01 pm                                             #
+# Modified   : Saturday January 14th 2023 03:03:02 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Task Entity Module"""
 from abc import abstractmethod
-from typing import Union, Dict
+from typing import Union, Dict, Any
 import pandas as pd
 from datetime import datetime
 
 from recsys.core.entity.base import Entity
+from recsys.core.entity.event import Event
+from recsys.core.workflow.operator.base import Operator
 from recsys.core.dal.dto import TaskDTO, JobDTO
+from recsys.core.repo.uow import UnitOfWork
 from recsys import STATES
 
 
@@ -38,9 +41,16 @@ class JobComponent(Entity):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    @abstractmethod
     def state(self) -> str:
-        """Data processing stage in which the Job Component is created."""
+        """Returns the state of the component."""
+        return self._state
+
+    # -------------------------------------------------------------------------------------------- #
+    @state.setter
+    def state(self, state: str) -> None:
+        """Sets the state of the component."""
+        self._state = state
+        self._validate()
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -52,6 +62,7 @@ class JobComponent(Entity):
     @abstractmethod
     def as_dto(self) -> Union[TaskDTO, Dict[int, TaskDTO]]:
         """Creates a dto representation of the Job Component."""
+
     # -------------------------------------------------------------------------------------------- #
     def _validate(self) -> None:
         super()._validate()
@@ -89,10 +100,12 @@ class Job(JobComponent):
 
     def __eq__(self, other: JobComponent) -> bool:
         if self.__class__.__name__ == other.__class__.__name__:
-            return (self.is_composite == other.is_composite
-                    and self.name == other.name
-                    and self.description == other.description
-                    and self.state == other.state)
+            return (
+                self.is_composite == other.is_composite
+                and self.name == other.name
+                and self.description == other.description
+                and self.state == other.state
+            )
         else:
             return False
 
@@ -105,15 +118,16 @@ class Job(JobComponent):
         return self._is_composite
 
     # -------------------------------------------------------------------------------------------- #
-    @property
-    def state(self) -> str:
-        """The overall state of the job."""
-        return self._state
-
-    @state.setter
-    def state(self, state: str) -> None:
-        self._state = state
-        self._modified = datetime.now()
+    def run(self, uow: UnitOfWork, data: Any = None) -> None:
+        for task in self._tasks.values():
+            try:
+                self._start(task=task, uow=uow)
+                data = task.run(uow=uow, data=data)
+                self._end(task=task, uow=uow)
+            except Exception:
+                self._failed(task=task, uow=uow)
+                raise
+        return data
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -121,11 +135,8 @@ class Job(JobComponent):
         return self._tasks
 
     # -------------------------------------------------------------------------------------------- #
-    def create_task(self, name: str, description: str) -> JobComponent:
-        return Task(name=name, job=self, description=description)
-
-    # -------------------------------------------------------------------------------------------- #
     def add_task(self, task: JobComponent) -> None:
+        task.parent = self
         self._tasks[task.name] = task
         self._modified = datetime.now()
         self._logger.debug(f"just added task {task.name} to {self._name}")
@@ -143,20 +154,31 @@ class Job(JobComponent):
     def get_tasks(self) -> pd.DataFrame:
         d = {}
         for name, task in self._tasks.items():
-            d[name] = task.as_dict()
+            d[name] = task.as_dto().as_dict()
         df = pd.DataFrame.from_dict(data=d, orient="index")
         return df
 
     # -------------------------------------------------------------------------------------------- #
     def update_task(self, task: JobComponent) -> None:
-        self._tasks[task.name] = task
-        self._modified = datetime.now()
-        self._logger.debug(f"just updated task {task.name} in {self._name}")
+        if task.name in self._tasks.keys():
+            task.parent = self
+            self._tasks[task.name] = task
+            self._modified = datetime.now()
+            self._logger.debug(f"just updated task {task.name} in {self._name}")
+        else:
+            msg = f"Task {task.name} does not exist in job {self._name}. Did you mean add_task?"
+            self._logger.error(msg)
+            raise KeyError(msg)
 
     # -------------------------------------------------------------------------------------------- #
     def remove_task(self, name: str) -> None:
-        del self._tasks[name]
-        self._modified = datetime.now()
+        try:
+            del self._tasks[name]
+            self._modified = datetime.now()
+        except KeyError:
+            msg = f"Unable to delete task. Task {name} does not exist in job {self._name}."
+            self._logger.error(msg)
+            raise KeyError(msg)
 
     # -------------------------------------------------------------------------------------------- #
     def as_dto(self) -> JobDTO:
@@ -172,6 +194,29 @@ class Job(JobComponent):
         )
         return dto
 
+    # -------------------------------------------------------------------------------------------- #
+    def _start(self, task: Entity, uow: UnitOfWork) -> None:
+        task.state = STATES[2]
+        self.update_task(task)
+        self.save(uow)
+
+    # -------------------------------------------------------------------------------------------- #
+    def _end(self, task: Entity, uow: UnitOfWork) -> None:
+        task.state = STATES[4]
+        self.update_task(task)
+        self.save(uow)
+
+    # -------------------------------------------------------------------------------------------- #
+    def _failed(self, task: Entity, uow: UnitOfWork) -> None:
+        task.state = STATES[3]
+        self.update_task(task)
+        self.save(uow)
+
+    # -------------------------------------------------------------------------------------------- #
+    def save(self, uow=UnitOfWork) -> None:
+        repo = uow.get_repo("job")
+        repo.update(self)
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                                          TASK                                                    #
@@ -182,6 +227,7 @@ class Task(JobComponent):
     Args:
         name (str): Short, yet descriptive lowercase name for Task object.
         description (str): Describes the Task object. Default's to job's description if None.
+        operator (Operator): An instance of an operator object.
         job (Job): The parent Job instance.
 
     """
@@ -189,12 +235,13 @@ class Task(JobComponent):
     def __init__(
         self,
         name: str,
-        job: Job,
+        operator: Operator,
         description: str = None,
     ) -> None:
         super().__init__(name=name, description=description)
 
-        self._parent = job
+        self._operator = operator
+        self._parent = None
         self._is_composite = False
         self._state = STATES[0]
 
@@ -215,9 +262,12 @@ class Task(JobComponent):
         """
 
         if isinstance(other, Task):
-            return (self._name == other.name
-                    and self._description == other.description
-                    and self._parent == other.parent)
+            return (
+                self._name == other.name
+                and self._operator == other._operator
+                and self._description == other.description
+                and self._parent == other.parent
+            )
         else:
             return False
 
@@ -231,26 +281,33 @@ class Task(JobComponent):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def state(self) -> str:
-        """The overall state of the task."""
-        return self._state
-
-    @state.setter
-    def state(self, state: str) -> None:
-        self._state = state
-        self._modified = datetime.now()
+    def parent(self) -> Job:
+        return self._parent
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def parent(self) -> Job:
-        return self._parent
+    def operator(self) -> Job:
+        return self._operator
 
     # -------------------------------------------------------------------------------------------- #
     @parent.setter
     def parent(self, parent: Job) -> None:
         self._parent = parent
 
-    # ------------------------------------------------------------------------------------------------ #
+    # -------------------------------------------------------------------------------------------- #
+    def run(self, uow: UnitOfWork, data: Any = None) -> Union[None, Any]:
+        """Runs the task through delegation to an operator."""
+        try:
+            self._start(uow=uow)
+            data = self._operator.execute(uow=uow, data=data)
+            self._end(uow=uow)
+            return data
+
+        except Exception:
+            self._failed(uow=uow)
+            raise
+
+    # -------------------------------------------------------------------------------------------- #
     def as_dto(self) -> TaskDTO:
         return TaskDTO(
             id=self._id,
@@ -262,3 +319,39 @@ class Task(JobComponent):
             created=self._created,
             modified=self._modified,
         )
+
+    # -------------------------------------------------------------------------------------------- #
+    def _start(self, uow: UnitOfWork) -> None:
+        eventname = "start_" + self._name
+        eventdesc = "Started " + self._description
+        event = Event(
+            name=eventname, description=eventdesc, job_oid=self._parent.oid, task_oid=self._oid
+        )
+        repo = uow.get_repo("event")
+        repo.add(event)
+        self._logger.info(eventdesc)
+
+    def _end(self, uow: UnitOfWork) -> None:
+        eventname = "completed_" + self._name
+        eventdesc = "Completed " + self._description
+        event = Event(
+            name=eventname, description=eventdesc, job_oid=self._parent.oid, task_oid=self._oid
+        )
+        repo = uow.get_repo("event")
+        repo.add(event)
+        self._logger.info(eventdesc)
+
+    def _failed(self, uow: UnitOfWork) -> None:
+        eventname = "failed_" + self._name
+        eventdesc = "Failed " + self._description
+        event = Event(
+            name=eventname, description=eventdesc, job_oid=self._parent.oid, task_oid=self._oid
+        )
+        repo = uow.get_repo("event")
+        repo.add(event)
+        self._logger.info(eventdesc)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                          JOB                                                    #
+# ------------------------------------------------------------------------------------------------ #

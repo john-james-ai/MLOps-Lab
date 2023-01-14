@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 08:30:24 pm                                                #
-# Modified   : Wednesday January 11th 2023 07:04:42 pm                                             #
+# Modified   : Saturday January 14th 2023 03:03:02 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,6 +21,7 @@ from datetime import datetime
 import logging
 
 import recsys
+from recsys.core.services.io import IOService
 from recsys.core.services.validation import Validator
 
 # ------------------------------------------------------------------------------------------------ #
@@ -54,7 +55,6 @@ class Entity(ABC):
     def id(self, id: int) -> None:
         if self._id is None:
             self._id = id
-            self._modified = datetime.now()
         elif self._id != id:
             msg = "Item re-assignment is not supported for 'id' instance variable."
             self._logger.error(msg)
@@ -71,14 +71,6 @@ class Entity(ABC):
     @property
     def description(self) -> str:
         return self._description
-
-    @property
-    def created(self) -> str:
-        return self._created
-
-    @property
-    def modified(self) -> str:
-        return self._modified
 
     @abstractmethod
     def as_dto(self):
