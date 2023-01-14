@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Wednesday January 11th 2023 06:59:56 pm                                             #
+# Modified   : Saturday January 14th 2023 04:59:35 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,18 @@ import logging
 import mysql.connector
 
 from recsys.core.database.relational import Database
-from .dto import DTO, DataFrameDTO, DatasetDTO, ProfileDTO, TaskDTO, JobDTO, FileDTO, DataSourceDTO, DataSourceURLDTO
+from .dto import (
+    DTO,
+    DataFrameDTO,
+    DatasetDTO,
+    ProfileDTO,
+    TaskDTO,
+    JobDTO,
+    FileDTO,
+    DataSourceDTO,
+    DataSourceURLDTO,
+    EventDTO,
+)
 from .sql.base import DML
 from recsys.core.entity.base import Entity
 
@@ -49,6 +60,8 @@ class DAO(ABC):
         self._logger = logging.getLogger(
             f"{self.__module__}.{self.__class__.__name__}",
         )
+        msg = f"Instantiated {self.__class__.__name__} at {id(self)} with database {self._database.database} at {id(self._database)}."
+        self._logger.debug(msg)
 
     def __len__(self) -> int:
         """Returns the number of rows in the underlying table."""
@@ -82,7 +95,7 @@ class DAO(ABC):
         """
         cmd = self._dml.insert(dto)
         dto.id = self._database.insert(cmd.sql, cmd.args)
-        msg = f"{self.__class__.__name__} inserted {self._entity.__name__}.{dto.id} - {dto.name} into the database."
+        msg = f"{self.__class__.__name__} inserted {self._entity.__name__}.{dto.id} - {dto.name} into {self._database.database} at {id(self._database)}."
         self._logger.debug(msg)
         return dto
 
@@ -150,7 +163,7 @@ class DAO(ABC):
             rows_affected = self._database.update(cmd.sql, cmd.args)
 
         else:
-            msg = f"{self.__class__.__name__} was unable to update {self._entity.__name__}.{dto.id}. Not found in the database. Try insert instead."
+            msg = f"{self.__class__.__name__} was unable to update {self._entity.__name__}.{dto.id}. Not found in {self._database.database}. Try insert instead."
             self._logger.error(msg)
             raise mysql.connector.ProgrammingError(msg)
         return rows_affected
@@ -175,7 +188,7 @@ class DAO(ABC):
             cmd = self._dml.delete(id)
             self._database.delete(cmd.sql, cmd.args)
         else:
-            msg = f"{self.__class__.__name__}  was unable to delete {self._entity.__name__}.{id}. Not found in the database."
+            msg = f"{self.__class__.__name__}  was unable to delete {self._entity.__name__}.{id}. Not found in {self._database.database}."
             self._logger.error(msg)
             raise mysql.connector.ProgrammingError(msg)
 
@@ -241,9 +254,9 @@ class DatasetDAO(DAO):
                 oid=row[1],
                 name=row[2],
                 description=row[3],
-                datasource_id=row[4],
+                datasource_oid=row[4],
                 stage=row[5],
-                task_id=row[6],
+                task_oid=row[6],
                 created=row[7],
                 modified=row[8],
             )
@@ -388,11 +401,11 @@ class FileDAO(DAO):
                 oid=row[1],
                 name=row[2],
                 description=row[3],
-                datasource_id=row[4],
+                datasource_oid=row[4],
                 stage=row[5],
                 uri=row[6],
                 size=row[7],
-                task_id=row[8],
+                task_oid=row[8],
                 created=row[9],
                 modified=row[10],
             )
@@ -455,7 +468,39 @@ class DataSourceURLDAO(DAO):
                 name=row[2],
                 description=row[3],
                 url=row[4],
-                datasource_id=row[5],
+                datasource_oid=row[5],
+                created=row[6],
+                modified=row[7],
+            )
+        except TypeError:
+            msg = "No data matched the query."
+            self._logger.info(msg)
+            raise FileNotFoundError(msg)
+
+        except IndexError as e:  # pragma: no cover
+            msg = f"Index error in_row_to_dto method.\n{e}"
+            self._logger.error(msg)
+            raise IndexError(msg)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                   EVENT ACCESS OBJECT                                            #
+# ------------------------------------------------------------------------------------------------ #
+class EventDAO(DAO):
+    """File Data Access Object"""
+
+    def __init__(self, dml: DML, database: Database) -> None:
+        super().__init__(dml=dml, database=database)
+
+    def _row_to_dto(self, row: Tuple) -> EventDTO:
+        try:
+            return EventDTO(
+                id=row[0],
+                oid=row[1],
+                name=row[2],
+                description=row[3],
+                job_oid=row[4],
+                task_oid=row[5],
                 created=row[6],
                 modified=row[7],
             )

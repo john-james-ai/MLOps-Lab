@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+# ================================================================================================ #
+# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Version    : 0.1.0                                                                               #
+# Python     : 3.10.6                                                                              #
+# Filename   : /recsys/data/etl/datasources.yml                                                    #
+# ------------------------------------------------------------------------------------------------ #
+# Author     : John James                                                                          #
+# Email      : john.james.ai.studio@gmail.com                                                      #
+# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# ------------------------------------------------------------------------------------------------ #
+# Created    : Thursday January 12th 2023 08:43:18 pm                                              #
+# Modified   : Saturday January 14th 2023 06:30:23 am                                              #
+# ------------------------------------------------------------------------------------------------ #
+# License    : MIT License                                                                         #
+# Copyright  : (c) 2023 John James                                                                 #
+# ================================================================================================ #
+datasources:
+  name: load_data_source_metadata
+  description: Creates DataSource objects and loads them into the Database
+  tasks:
+  - name: load_movielens25m
+    description: Creates DataSource for movielens25m and loads it into the Database
+    operator:
+      name: datasource_loader
+      description: Data source loader
+      classname: DataSourceLoader
+      module: recsys.core.workflow.operators.loader
+      params:
+        datasource:
+          name: movielens25m
+          website: https://grouplens.org/datasets/movielens/
+          description: GroupLens Research has collected and made available rating data sets from the MovieLens web site (https://movielens.org).
+          urls:
+          - name: movielens25m
+            url: https://files.grouplens.org/datasets/movielens/ml-25m.zip
+            description: MovieLens 25M movie ratings. Stable benchmark dataset. 25 million ratings and one million tag applications applied to 62,000 movies by 162,000 users. Includes tag genome data with 15 million relevance scores across 1,129 tags. Released 12/2019.
+  - name: load_spotify
+    description: Creates DataSource for spotify and loads it into the Database
+    operator:
+      name: datasource_loader
+      description: Data source loader
+      classname: DataSourceLoader
+      module: recsys.core.workflow.operators.loader
+      params:
+        datasource:
+          name: spotify
+          website: https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge/dataset_files
+          description: A dataset and open-ended challenge for music recommendation research
+          urls:
+          - name: spotify_million_playlist
+            url: https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge/dataset_files?unique_download_uri=191312&challenge_id=277
+            description: The dataset contains 1,000,000 playlists, including playlist titles and track titles, created by users on the Spotify platform between January 2010 and October 2017.
+          - name: spotify_million_playlist_challenge
+            url: https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge/dataset_files?unique_download_uri=191313&challenge_id=277
+            description: As part of the challenge, we release a separate challenge dataset ("test set") that consists of 10,000 playlists with incomplete information.
+  - name: load_tenrec
+    description: Creates DataSource for tenrec and loads it into the Database
+    operator:
+      name: datasource_loader
+      description: Data source loader
+      classname: DataSourceLoader
+      module: recsys.core.workflow.operators.loader
+      params:
+        datasource:
+          name: tenrec
+          website: https://github.com/yuangh-x/2022-NIPS-Tenrec
+          description: A Large-scale Multipurpose Benchmark Dataset for Recommender Systems
+          urls:
+          - name: tenrec_download_link
+            url: https://static.qblv.qq.com/qblv/h5/algo-frontend/tenrec_dataset.html
+            description: Tenrec is a large-scale multipurpose benchmark dataset for recommender systems where data was collected from two feeds (articles and videos) recommendation platforms of Tencent.

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Wednesday January 11th 2023 06:45:30 pm                                             #
+# Modified   : Friday January 13th 2023 08:22:13 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -36,7 +36,6 @@ single_line = f"\n{100 * '-'}"
 @pytest.mark.dao
 @pytest.mark.task_dao
 class TestTaskDAO:  # pragma: no cover
-
     def reset_table(self, container):
         dba = container.dba.task()
         dba.reset()
@@ -47,10 +46,10 @@ class TestTaskDAO:  # pragma: no cover
 
     # ============================================================================================ #
     def check_results(self, i, dto) -> None:
-        assert (dto.id == i or dto.id == 5 + i)
+        assert dto.id == i or dto.id == 5 + i
         assert isinstance(dto, DTO)
         assert "task_" in dto.name
-        assert dto.mode == 'test'
+        assert dto.mode == "test"
 
     # ============================================================================================ #
     def test_setup(self, container, caplog):
@@ -126,7 +125,6 @@ class TestTaskDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -204,7 +202,6 @@ class TestTaskDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -240,7 +237,6 @@ class TestTaskDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -259,11 +255,11 @@ class TestTaskDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
 
-        dto = dao.read_by_name(name="task_1_job_2", mode='test')
+        dto = dao.read_by_name(name="task_1_job_2", mode="test")
         assert isinstance(dto, DTO)
         self.check_results(1, dto)
 
-        dto = dao.read_by_name(name="task_1", mode='skdi')
+        dto = dao.read_by_name(name="task_1", mode="skdi")
         assert dto == []
 
         # ---------------------------------------------------------------------------------------- #
@@ -278,7 +274,6 @@ class TestTaskDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -314,7 +309,6 @@ class TestTaskDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -335,24 +329,24 @@ class TestTaskDAO:  # pragma: no cover
         dao.begin()
         dtos = dao.read_all()
         for i, dto in dtos.items():
-            dto.state = "READY"
+            dto.state = STATES[1]
             dao.update(dto)
 
         dao.rollback()
 
         dtos = dao.read_all()
         for i, dto in dtos.items():
-            assert not dto.state == 'READY'
+            assert not dto.state == "READY"
 
         dao.begin()
         for i, dto in dtos.items():
-            dto.state = "READY"
+            dto.state = STATES[1]
             dao.update(dto)
         dao.save()
 
         dtos = dao.read_all()
         for i, dto in dtos.items():
-            assert dto.state == 'READY'
+            assert dto.state == "READY"
             dto.id = 8938
             with pytest.raises(mysql.connector.ProgrammingError):
                 dao.update(dto)
@@ -368,7 +362,6 @@ class TestTaskDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -405,6 +398,5 @@ class TestTaskDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)

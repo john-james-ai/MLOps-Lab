@@ -11,11 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday January 11th 2023 06:52:38 pm                                             #
+# Modified   : Friday January 13th 2023 02:27:44 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+import os
+import dotenv
+
 from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
@@ -33,7 +36,7 @@ from recsys.core.entity.job import Task
 @dataclass
 class CreateTaskTable(SQL):
     name: str = "task"
-    sql: str = """CREATE TABLE IF NOT EXISTS task (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), state VARCHAR(32), parent_id MEDIUMINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS task (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), state VARCHAR(32), parent_id MEDIUMINT NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
     args: tuple = ()
     description: str = "Created the task table."
 
@@ -53,15 +56,20 @@ class DropTaskTable(SQL):
 @dataclass
 class TaskTableExists(SQL):
     name: str = "task"
-    sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'task';"""
+    sql: str = None
     args: tuple = ()
-    description: str = "Checked the existence of the task table."
+    description: str = "Checked existence of task table."
+
+    def __post_init__(self) -> None:
+        dotenv.load_dotenv()
+        mode = os.getenv("MODE")
+        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}' AND TABLE_NAME = 'task';"""
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class TaskDDL(DDL):
-    entity: type(Entity) = Task
+    entity: type[Entity] = Task
     create: SQL = CreateTaskTable()
     drop: SQL = DropTaskTable()
     exists: SQL = TaskTableExists()
@@ -75,7 +83,7 @@ class TaskDDL(DDL):
 @dataclass
 class InsertTask(SQL):
     dto: DTO
-    sql: str = """INSERT INTO task (oid, name, description, state, parent_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO task (oid, name, description, state, parent_id) VALUES (%s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -85,8 +93,6 @@ class InsertTask(SQL):
             self.dto.description,
             self.dto.state,
             self.dto.parent_id,
-            self.dto.created,
-            self.dto.modified,
         )
 
 
@@ -96,7 +102,7 @@ class InsertTask(SQL):
 @dataclass
 class UpdateTask(SQL):
     dto: DTO
-    sql: str = """UPDATE task SET oid = %s, name = %s, description = %s, state = %s, parent_id = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE task SET oid = %s, name = %s, description = %s, state = %s, parent_id = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -106,8 +112,6 @@ class UpdateTask(SQL):
             self.dto.description,
             self.dto.state,
             self.dto.parent_id,
-            self.dto.created,
-            self.dto.modified,
             self.dto.id,
         )
 
@@ -124,6 +128,7 @@ class SelectTask(SQL):
     def __post_init__(self) -> None:
         self.args = (self.id,)
 
+
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -135,6 +140,7 @@ class SelectTaskByParentId(SQL):
 
     def __post_init__(self) -> None:
         self.args = (self.parent_id,)
+
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -160,6 +166,7 @@ class SelectAllTasks(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 
+
 @dataclass
 class TaskExists(SQL):
     id: int
@@ -184,12 +191,12 @@ class DeleteTask(SQL):
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class TaskDML(DML):
-    entity: type(Entity) = Task
-    insert: type(SQL) = InsertTask
-    update: type(SQL) = UpdateTask
-    select: type(SQL) = SelectTask
-    select_by_name: type(SQL) = SelectTaskByName
-    select_by_parent_id: type(SQL) = SelectTaskByParentId
-    select_all: type(SQL) = SelectAllTasks
-    exists: type(SQL) = TaskExists
-    delete: type(SQL) = DeleteTask
+    entity: type[Entity] = Task
+    insert: type[SQL] = InsertTask
+    update: type[SQL] = UpdateTask
+    select: type[SQL] = SelectTask
+    select_by_name: type[SQL] = SelectTaskByName
+    select_by_parent_id: type[SQL] = SelectTaskByParentId
+    select_all: type[SQL] = SelectAllTasks
+    exists: type[SQL] = TaskExists
+    delete: type[SQL] = DeleteTask

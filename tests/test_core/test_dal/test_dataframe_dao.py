@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Wednesday January 11th 2023 06:45:30 pm                                             #
+# Modified   : Saturday January 14th 2023 05:00:53 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -98,8 +98,8 @@ class TestDataFrameDAO:  # pragma: no cover
 
         for j, (name, dataframe) in enumerate(datasets[0].dataframes.items(), start=1):
             dto = dataframe.as_dto()
-            dto.datasource_id = j
-            dto.parent_id = j   # Add this manually for unit test. Repository testing will Ensure that dataframes are added after dataset ids are are created.
+            dto.datasource_oid = j
+            dto.parent_id = j  # Add this manually for unit test. Repository testing will Ensure that dataframes are added after dataset ids are are created.
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)
@@ -129,7 +129,6 @@ class TestDataFrameDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -150,8 +149,8 @@ class TestDataFrameDAO:  # pragma: no cover
 
         for j, (name, dataframe) in enumerate(datasets[0].dataframes.items(), start=1):
             dto = dataframe.as_dto()
-            dto.datasource_id = j
-            dto.parent_id = j   # Add this manually for unit test. Repository testing will Ensure that dataframes are added after dataset ids are are created.
+            dto.datasource_oid = j
+            dto.parent_id = j  # Add this manually for unit test. Repository testing will Ensure that dataframes are added after dataset ids are are created.
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)
@@ -211,7 +210,6 @@ class TestDataFrameDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -247,7 +245,6 @@ class TestDataFrameDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -266,11 +263,11 @@ class TestDataFrameDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
 
-        dto = dao.read_by_name(name="dataframe_3_dataset_1", mode='test')
+        dto = dao.read_by_name(name="dataframe_3_dataset_1", mode="test")
         assert isinstance(dto, DTO)
         self.check_results(dto)
 
-        dto = dao.read_by_name(name="dataframe_1", mode='skdi')
+        dto = dao.read_by_name(name="dataframe_1", mode="skdi")
         assert dto == []
 
         # ---------------------------------------------------------------------------------------- #
@@ -285,7 +282,6 @@ class TestDataFrameDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -340,7 +336,6 @@ class TestDataFrameDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -381,6 +376,5 @@ class TestDataFrameDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)

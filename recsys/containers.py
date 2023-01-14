@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Wednesday January 11th 2023 05:04:50 pm                                             #
+# Modified   : Saturday January 14th 2023 06:34:07 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,11 +22,13 @@ import dotenv
 
 from dependency_injector import containers, providers  # pragma: no cover
 
+from recsys.core.dal.sql.rdb import DatabaseDDL as RecsysDatabaseDDL
+from recsys.core.dal.sql.edb import DatabaseDDL as EventsDatabaseDDL
 from recsys.core.services.io import IOService
 from recsys.core.dal.dba import DBA, ODBA
 from recsys.core.dal.oao import OAO
 from recsys.core.dal.dao import FileDAO, DatasetDAO, DataFrameDAO, DataSourceDAO, DataSourceURLDAO
-from recsys.core.dal.dao import JobDAO, TaskDAO, ProfileDAO
+from recsys.core.dal.dao import JobDAO, TaskDAO, ProfileDAO, EventDAO
 from recsys.core.dal.sql.file import FileDDL, FileDML
 from recsys.core.dal.sql.datasource import DataSourceDDL, DataSourceDML
 from recsys.core.dal.sql.datasource_url import DataSourceURLDDL, DataSourceURLDML
@@ -35,13 +37,19 @@ from recsys.core.dal.sql.dataframe import DataFrameDDL, DataFrameDML
 from recsys.core.dal.sql.job import JobDDL, JobDML
 from recsys.core.dal.sql.task import TaskDDL, TaskDML
 from recsys.core.dal.sql.profile import ProfileDDL, ProfileDML
-from recsys.core.dal.sql.database import DatabaseDDL
+from recsys.core.dal.sql.event import EventDDL, EventDML
 from recsys.core.dal.sql.odb import ObjectODL, ObjectOML
 from recsys.core.database.relational import Database, MySQLConnection, DatabaseConnection
 from recsys.core.database.object import ObjectDBConnection, ObjectDB
 from recsys.core.repo.context import Context
 from recsys.core.repo.uow import UnitOfWork
-from recsys.core.services.operators.data.source import DataSourceBuilder
+from recsys.core.repo.entity import Repo
+from recsys.core.repo.dataset import DatasetRepo
+from recsys.core.repo.datasource import DataSourceRepo
+from recsys.core.repo.job import JobRepo
+from recsys.core.entity.base import EntityFactory
+from recsys.core.entity.dataset import DatasetBuilder
+from recsys.core.entity.datasource import DataSourceBuilder
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -60,14 +68,27 @@ class CoreContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 class ConnectionContainer(containers.DeclarativeContainer):
 
+    recsys_database = providers.Dependency()
+    events_database = providers.Dependency()
+
+    dbms_connection = providers.Factory(
+        MySQLConnection, connector=pymysql.connect, autocommit=False, autoclose=False
+    )
+
     rdb_connection = providers.Factory(
         DatabaseConnection,
         connector=pymysql.connect,
+        database=recsys_database,
+        autocommit=False,
+        autoclose=False,
     )
 
-    dbms_connection = providers.Factory(
-        MySQLConnection,
+    edb_connection = providers.Factory(
+        DatabaseConnection,
         connector=pymysql.connect,
+        database=events_database,
+        autocommit=True,
+        autoclose=False,
     )
 
     odb_connection = providers.Factory(
@@ -78,30 +99,25 @@ class ConnectionContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 class DatabaseContainer(containers.DeclarativeContainer):
 
-    rdb_connection = providers.Dependency()
     dbms_connection = providers.Dependency()
+    rdb_connection = providers.Dependency()
+    edb_connection = providers.Dependency()
     odb_connection = providers.Dependency()
 
-    rdb = providers.Singleton(
-        Database,
-        connection=rdb_connection
-    )
+    dbms = providers.Singleton(Database, connection=dbms_connection)
 
-    dbms = providers.Singleton(
-        Database,
-        connection=dbms_connection
-    )
+    rdb = providers.Singleton(Database, connection=rdb_connection)
 
-    odb = providers.Singleton(
-        ObjectDB,
-        connection=odb_connection
-    )
+    edb = providers.Singleton(Database, connection=edb_connection)
+
+    odb = providers.Singleton(ObjectDB, connection=odb_connection)
 
 
 # ------------------------------------------------------------------------------------------------ #
 class DALContainer(containers.DeclarativeContainer):
 
     rdb = providers.Dependency()
+    edb = providers.Dependency()
     odb = providers.Dependency()
 
     file = providers.Factory(FileDAO, dml=FileDML, database=rdb)
@@ -120,17 +136,22 @@ class DALContainer(containers.DeclarativeContainer):
 
     profile = providers.Factory(ProfileDAO, dml=ProfileDML, database=rdb)
 
+    event = providers.Factory(EventDAO, dml=EventDML, database=edb)
+
     object = providers.Factory(OAO, oml=ObjectOML, database=odb)
 
 
 # ------------------------------------------------------------------------------------------------ #
 class DBAContainer(containers.DeclarativeContainer):
 
-    rdb = providers.Dependency()
     dbms = providers.Dependency()
+    rdb = providers.Dependency()
+    edb = providers.Dependency()
     odb = providers.Dependency()
 
-    database = providers.Factory(DBA, database=dbms, ddl=DatabaseDDL)
+    recsys_database = providers.Factory(DBA, database=dbms, ddl=RecsysDatabaseDDL)
+
+    events_database = providers.Factory(DBA, database=dbms, ddl=EventsDatabaseDDL)
 
     file = providers.Factory(DBA, database=rdb, ddl=FileDDL)
 
@@ -148,6 +169,8 @@ class DBAContainer(containers.DeclarativeContainer):
 
     profile = providers.Factory(DBA, database=rdb, ddl=ProfileDDL)
 
+    event = providers.Factory(DBA, database=edb, ddl=EventDDL)
+
     object = providers.Factory(ODBA, database=odb, ddl=ObjectODL)
 
 
@@ -158,19 +181,33 @@ class RepoContainer(containers.DeclarativeContainer):
 
     context = providers.Factory(Context, dal=dal)
 
-    uow = providers.Factory(UnitOfWork, context=context)
+    file = providers.Factory(Repo, context=context, entity="file")
+
+    profile = providers.Factory(Repo, context=context, entity="profile")
+
+    event = providers.Factory(Repo, context=context, entity="event")
+
+    datasource = providers.Factory(DataSourceRepo, context=context)
+
+    dataset = providers.Factory(DatasetRepo, context=context)
+
+    job = providers.Factory(JobRepo, context=context)
 
 
 # ------------------------------------------------------------------------------------------------ #
-class DataSourcesContainer(containers.DeclarativeContainer):
+class WorkContainer(containers.DeclarativeContainer):
 
-    config = providers.Configuration()
+    repos = providers.Dependency()
 
-    movielens = providers.Factory(DataSourceBuilder, config=config.datasources.movielens)
+    unit = providers.Factory(UnitOfWork, repos=repos)
 
-    spotify = providers.Factory(DataSourceBuilder, config=config.datasources.spotify)
 
-    tenrec = providers.Factory(DataSourceBuilder, config=config.datasources.tenrec)
+# ------------------------------------------------------------------------------------------------ #
+class BuilderContainer(containers.DeclarativeContainer):
+
+    factory = providers.Factory(EntityFactory)
+    factory().register_builder("dataset", DatasetBuilder())
+    factory().register_builder("datasource", DataSourceBuilder())
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -179,28 +216,32 @@ class Recsys(containers.DeclarativeContainer):
     dotenv.load_dotenv()
 
     config = providers.Configuration(yaml_files=["config.yml"])
+    config_datasources = providers.Configuration(yaml_files=["recsys.data.etl.datasources.yml"])
 
     core = providers.Container(CoreContainer, config=config)
 
-    connection = providers.Container(ConnectionContainer)
+    connection = providers.Container(
+        ConnectionContainer,
+        recsys_database=config.databases.recsys,
+        events_database=config.databases.events,
+    )
 
-    database = providers.Container(DatabaseContainer,
-                                   rdb_connection=connection.rdb_connection,
-                                   dbms_connection=connection.dbms_connection,
-                                   odb_connection=connection.odb_connection
-                                   )
+    database = providers.Container(
+        DatabaseContainer,
+        dbms_connection=connection.dbms_connection,
+        rdb_connection=connection.rdb_connection,
+        edb_connection=connection.edb_connection,
+        odb_connection=connection.odb_connection,
+    )
 
-    dal = providers.Container(DALContainer,
-                              rdb=database.rdb,
-                              odb=database.odb
-                              )
+    dal = providers.Container(DALContainer, rdb=database.rdb, edb=database.edb, odb=database.odb)
 
-    dba = providers.Container(DBAContainer,
-                              rdb=database.rdb,
-                              dbms=database.dbms,
-                              odb=database.odb
-                              )
+    dba = providers.Container(
+        DBAContainer, dbms=database.dbms, rdb=database.rdb, edb=database.edb, odb=database.odb
+    )
 
     repo = providers.Container(RepoContainer, dal=dal)
 
-    datasources = providers.Container(DataSourcesContainer, config=config)
+    work = providers.Container(WorkContainer, repos=repo)
+
+    entity = providers.Container(BuilderContainer)

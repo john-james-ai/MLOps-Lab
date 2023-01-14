@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Wednesday January 11th 2023 07:07:41 pm                                             #
+# Modified   : Saturday January 14th 2023 03:02:17 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,6 +22,7 @@ from typing import Union, Dict
 import pandas as pd
 from datetime import datetime
 
+from .base import Builder
 from recsys.core.entity.base import Entity
 from recsys.core.dal.dto import DataSourceURLDTO, DataSourceDTO
 
@@ -45,6 +46,7 @@ class DataSourceComponent(Entity):
     @abstractmethod
     def as_dto(self) -> Union[Dict[int, DataSourceDTO], Dict[int, DataSourceURLDTO]]:
         """Creates a dto representation of the DataSource Component."""
+
     # -------------------------------------------------------------------------------------------- #
     def _validate(self) -> None:
         super()._validate()
@@ -84,10 +86,12 @@ class DataSource(DataSourceComponent):
 
     def __eq__(self, other: DataSourceComponent) -> bool:
         if self.__class__.__name__ == other.__class__.__name__:
-            return (self.is_composite == other.is_composite
-                    and self.name == other.name
-                    and self.description == other.description
-                    and self.website == other.website)
+            return (
+                self.is_composite == other.is_composite
+                and self.name == other.name
+                and self.description == other.description
+                and self.website == other.website
+            )
         else:
             return False
 
@@ -116,7 +120,9 @@ class DataSource(DataSourceComponent):
         return self._urls
 
     # -------------------------------------------------------------------------------------------- #
-    def create_url(self, url: str, name: str = None, description: str = None) -> DataSourceComponent:
+    def create_url(
+        self, url: str, name: str = None, description: str = None
+    ) -> DataSourceComponent:
         name = name or self._name
         description = description or self._description
         return DataSourceURL(name=name, url=url, datasource=self, description=description)
@@ -139,7 +145,7 @@ class DataSource(DataSourceComponent):
     def get_urls(self) -> pd.DataFrame:
         d = {}
         for name, url in self._urls.items():
-            d[name] = url.as_dict()
+            d[name] = url.as_dto().as_dict()
         df = pd.DataFrame.from_dict(data=d, orient="index")
         return df
 

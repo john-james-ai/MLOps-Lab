@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Wednesday January 11th 2023 07:07:15 pm                                             #
+# Modified   : Saturday January 14th 2023 06:42:21 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,6 +22,7 @@ from datetime import datetime
 import pandas as pd
 from typing import Union, Dict
 
+from .base import Builder
 from recsys.core.entity.base import Entity
 from recsys.core.dal.dto import DataFrameDTO, DatasetDTO
 
@@ -51,6 +52,7 @@ class DataComponent(Entity):
     @abstractmethod
     def as_dto(self) -> Union[DataFrameDTO, Dict[int, DataFrameDTO]]:
         """Creates a dto representation of the Dataset Component."""
+
     # -------------------------------------------------------------------------------------------- #
     def _validate(self) -> None:
         super()._validate()
@@ -65,9 +67,9 @@ class Dataset(DataComponent):
     Args:
         name (str): Short, yet descriptive lowercase name for Dataset object.
         description (str): Describes the Dataset object.
-        datasource_id (int): The id for the datasource.
+        datasource_oid (str): The object id for the datasource.
         stage (str): The stage of the data processing lifecycle to which the Dataset belongs.
-        task_id (Task): The Id for the Task that created the Dataset. Optional. Defaults to 0.
+        task_oid (str): The object id for the Task that created the Dataset. Optional. Defaults to 0.
         data (pd.DataFrame): Data payload. If provided, a DataFrame object is automatically
             generated and added to the Dataset.
     """
@@ -75,16 +77,16 @@ class Dataset(DataComponent):
     def __init__(
         self,
         name: str,
-        datasource_id: int,
+        datasource_oid: str,
         stage: str,
         description: str = None,
-        task_id: int = 0,
+        task_oid: str = 0,
         data: pd.DataFrame = None,
     ) -> None:
         super().__init__(name=name, description=description)
-        self._datasource_id = datasource_id
+        self._datasource_oid = datasource_oid
         self._stage = stage
-        self._task_id = task_id
+        self._task_oid = task_oid
 
         self._dataframes = {}
         self._is_composite = True
@@ -99,19 +101,21 @@ class Dataset(DataComponent):
         return len(self._dataframes)
 
     def __str__(self) -> str:
-        return f"Dataset Id: {self._id}\n\tData source: {self._datasource_id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tStage: {self._stage}\n\tDataFrames: {self.dataframe_count}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"Dataset Id: {self._id}\n\tData source: {self._datasource_oid}\n\tName: {self._name}\n\tDescription: {self._description}\n\tStage: {self._stage}\n\tDataFrames: {self.dataframe_count}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._datasource_id}, {self._name}, {self._description}, {self._stage}, {self.dataframe_count}, {self._created}, {self._modified}"
+        return f"{self._id}, {self._datasource_oid}, {self._name}, {self._description}, {self._stage}, {self.dataframe_count}, {self._created}, {self._modified}"
 
     def __eq__(self, other: DataComponent) -> bool:
         if self.__class__.__name__ == other.__class__.__name__:
-            return (self.is_composite == other.is_composite
-                    and self.name == other.name
-                    and self.description == other.description
-                    and self.datasource_id == other.datasource_id
-                    and self.stage == other.stage
-                    and self.task_id == other.task_id)
+            return (
+                self.is_composite == other.is_composite
+                and self.name == other.name
+                and self.description == other.description
+                and self.datasource_oid == other.datasource_oid
+                and self.stage == other.stage
+                and self.task_oid == other.task_oid
+            )
         else:
             return False
 
@@ -126,9 +130,9 @@ class Dataset(DataComponent):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def datasource_id(self) -> str:
+    def datasource_oid(self) -> str:
         """Datasource from which the Dataset Component has derived."""
-        return self._datasource_id
+        return self._datasource_oid
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -143,13 +147,13 @@ class Dataset(DataComponent):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def task_id(self) -> str:
+    def task_oid(self) -> str:
         """Id for the Task that created the Dataset."""
-        return self._task_id
+        return self._task_oid
 
-    @task_id.setter
-    def task_id(self, task_id: int) -> None:
-        self._task_id = task_id
+    @task_oid.setter
+    def task_oid(self, task_oid: str) -> None:
+        self._task_oid = task_oid
         self._modified = datetime.now()
 
     # -------------------------------------------------------------------------------------------- #
@@ -195,9 +199,9 @@ class Dataset(DataComponent):
             oid=self._oid,
             name=self._name,
             description=self._description,
-            datasource_id=self._datasource_id,
+            datasource_oid=self._datasource_oid,
             stage=self._stage,
-            task_id=self._task_id,
+            task_oid=self._task_oid,
             created=self._created,
             modified=self._modified,
         )
@@ -210,13 +214,18 @@ class Dataset(DataComponent):
         The DataFrame is generated as a clone of the Dataset and added to the Dataset. It is identical
         to the Dataset, except for the data.
         """
-        dataframe = DataFrame(name=self._name, data=data, parent=self, stage=self._stage,
-                              description=self._description)
+        dataframe = DataFrame(
+            name=self._name,
+            data=data,
+            parent=self,
+            stage=self._stage,
+            description=self._description,
+        )
         self.add_dataframe(dataframe)
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                        DATASET                                                   #
+#                                        DATAFRAME                                                 #
 # ------------------------------------------------------------------------------------------------ #
 class DataFrame(DataComponent):
     """DataFrame encapsulates tabular data, metadata, and access behaviors for data used in this package.
@@ -245,7 +254,7 @@ class DataFrame(DataComponent):
         self._is_composite = False
 
         # Possibly inherited from dataset and assigned in set_metadata if and when dataset is set.
-        self._stage = None
+        self._stage = stage
 
         self._size = None
         self._nrows = None
@@ -322,6 +331,7 @@ class DataFrame(DataComponent):
     @property
     def pct_nulls(self) -> int:
         return self._pct_nulls
+
     # ------------------------------------------------------------------------------------------------ #
     # Data Access methods
 
@@ -371,3 +381,39 @@ class DataFrame(DataComponent):
                 self._ncols = self._data.shape[1]
                 self._nulls = self._data.isnull().sum().sum()
                 self._pct_nulls = (self._nulls / (self._nrows * self._ncols)) * 100
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                       DATASET BUILDER                                            #
+# ------------------------------------------------------------------------------------------------ #
+class DatasetBuilder(Builder):
+    def __init__(self) -> None:
+        super().__init__()
+        self._instance = None
+
+    def __call__(self, config) -> Dataset:
+        if not self._instance:
+            self._instance = self._build_dataset(config)
+        return self._instance
+
+    def _build_dataset(self, config) -> Dataset:
+        config = config.get("dataset")
+        dataset = Dataset(
+            name=config.get("name"),
+            description=config.get("description"),
+            stage=config.get("stage"),
+            datasource_oid=config.get("datasource_oid"),
+            task_oid=config.get("task_oid"),
+            data=self._io.read(config.get("data")),
+        )
+        for df_config in config.get("dataframes"):
+            self._logger.debug(df_config)
+            dataframe = DataFrame(
+                name=df_config.get("name"),
+                description=df_config.get("description"),
+                parent=dataset,
+                stage=df_config.get("stage"),
+                data=self._io.read(df_config.get("data")),
+            )
+            dataset.add_dataframe(dataframe=dataframe)
+        return dataset

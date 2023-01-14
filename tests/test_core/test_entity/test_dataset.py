@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 27th 2022 05:33:26 pm                                              #
-# Modified   : Monday January 9th 2023 11:54:56 pm                                                 #
+# Modified   : Saturday January 14th 2023 05:00:56 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,6 +24,7 @@ import logging
 
 # Import modules to be tested
 from recsys.core.entity.dataset import Dataset, DataFrame
+
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
@@ -47,15 +48,15 @@ class TestDataset:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         d = Dataset(
             name=inspect.stack()[0][3],
-            datasource_id=2,
-            stage='interim',
-            description='Dataset for ' + inspect.stack()[0][3],
+            datasource_oid=2,
+            stage="interim",
+            description="Dataset for " + inspect.stack()[0][3],
         )
         assert d.is_composite is True
         assert d.name == inspect.stack()[0][3]
-        assert d.datasource_id == 2
-        assert d.mode == 'test'
-        assert d.stage == 'interim'
+        assert d.datasource_oid == 2
+        assert d.mode == "test"
+        assert d.stage == "interim"
         assert d.dataframe_count == 0  # No children
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -86,16 +87,16 @@ class TestDataset:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         d = Dataset(
             name=inspect.stack()[0][3],
-            datasource_id=2,
-            stage='interim',
-            description='Dataset for ' + inspect.stack()[0][3],
+            datasource_oid=2,
+            stage="interim",
+            description="Dataset for " + inspect.stack()[0][3],
             data=ratings,
         )
         assert d.is_composite is True
         assert d.name == inspect.stack()[0][3]
-        assert d.datasource_id == 2
-        assert d.mode == 'test'
-        assert d.stage == 'interim'
+        assert d.datasource_oid == 2
+        assert d.mode == "test"
+        assert d.stage == "interim"
         assert d.dataframe_count == 1
 
         # ---------------------------------------------------------------------------------------- #
@@ -126,11 +127,11 @@ class TestDataset:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         d = Dataset(
             name=inspect.stack()[0][3],
-            datasource_id=2,
-            stage='interim',
-            description='Dataset for ' + inspect.stack()[0][3],
+            datasource_oid=2,
+            stage="interim",
+            description="Dataset for " + inspect.stack()[0][3],
             data=ratings,
-            task_id=tasks[0].id
+            task_id=tasks[0].id,
         )
         assert d.dataframe_count == 1
 
@@ -139,9 +140,9 @@ class TestDataset:  # pragma: no cover
         assert dto.id == 5
         assert dto.oid == "dataset_" + dto.name + "_" + dto.mode
         assert dto.name == inspect.stack()[0][3]
-        assert dto.datasource_id == 2
-        assert dto.mode == 'test'
-        assert dto.stage == 'interim'
+        assert dto.datasource_oid == 2
+        assert dto.mode == "test"
+        assert dto.stage == "interim"
         assert dto.task_id == 1
 
         assert isinstance(dto.created, datetime)
@@ -175,21 +176,21 @@ class TestDataset:  # pragma: no cover
         with pytest.raises(ValueError):
             _ = Dataset(
                 name=inspect.stack()[0][3],
-                datasource_id=2,
-                stage='interixm',
-                description='Dataset for ' + inspect.stack()[0][3],
+                datasource_oid=2,
+                stage="interixm",
+                description="Dataset for " + inspect.stack()[0][3],
                 data=ratings,
-                task_id=tasks[0].id
+                task_id=tasks[0].id,
             )
 
         with pytest.raises(TypeError):
             _ = Dataset(
                 name=inspect.stack()[0][3],
-                datasource_id=2,
-                stage='interim',
-                description='Dataset for ' + inspect.stack()[0][3],
+                datasource_oid=2,
+                stage="interim",
+                description="Dataset for " + inspect.stack()[0][3],
                 data=5,
-                task_id=tasks[0].id
+                task_id=tasks[0].id,
             )
 
         # ---------------------------------------------------------------------------------------- #
@@ -220,9 +221,9 @@ class TestDataset:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         d = Dataset(
             name=inspect.stack()[0][3],
-            datasource_id=2,
-            stage='interim',
-            description='Dataset for ' + inspect.stack()[0][3],
+            datasource_oid=2,
+            stage="interim",
+            description="Dataset for " + inspect.stack()[0][3],
             data=ratings,
             task_id=tasks[0].id,
         )
@@ -231,7 +232,7 @@ class TestDataset:  # pragma: no cover
         assert d.dataframe_count == 1
 
         with pytest.raises(FileNotFoundError):
-            d.get_dataframe(name='33')
+            d.get_dataframe(name="33")
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -261,31 +262,25 @@ class TestDataset:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         d = Dataset(
             name=inspect.stack()[0][3],
-            datasource_id=2,
-            stage='interim',
-            description='Dataset for ' + inspect.stack()[0][3],
+            datasource_oid=2,
+            stage="interim",
+            description="Dataset for " + inspect.stack()[0][3],
             data=ratings,
             task_id=tasks[0].id,
         )
         df1 = DataFrame(
-            name='new_dataframe',
-            data=ratings,
-            parent=d,
-            description='some new dataframe'
+            name="new_dataframe", data=ratings, parent=d, description="some new dataframe"
         )
         assert isinstance(df1, DataFrame)
 
         d.add_dataframe(df1)
         assert d.dataframe_count == 2
 
-        df2 = d.get_dataframe(name='new_dataframe')
+        df2 = d.get_dataframe(name="new_dataframe")
         assert df1 == df2
 
         df3 = DataFrame(
-            name='new_dataframe',
-            data=ratings,
-            parent=d,
-            description='some new dataframe'
+            name="new_dataframe", data=ratings, parent=d, description="some new dataframe"
         )
         d.add_dataframe(df3)
         assert df3.parent == d
@@ -318,15 +313,15 @@ class TestDataset:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         d = Dataset(
             name=inspect.stack()[0][3],
-            datasource_id=2,
-            stage='interim',
-            description='Dataset for ' + inspect.stack()[0][3],
+            datasource_oid=2,
+            stage="interim",
+            description="Dataset for " + inspect.stack()[0][3],
             data=ratings,
             task_id=tasks[0].id,
         )
         d.remove_dataframe(name=inspect.stack()[0][3])
 
-        assert d.dataframe_count == 0   # Zero DataFrames
+        assert d.dataframe_count == 0  # Zero DataFrames
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -356,9 +351,9 @@ class TestDataset:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         d = Dataset(
             name=inspect.stack()[0][3],
-            datasource_id=2,
-            stage='interim',
-            description='Dataset for ' + inspect.stack()[0][3],
+            datasource_oid=2,
+            stage="interim",
+            description="Dataset for " + inspect.stack()[0][3],
             data=ratings,
             task_id=tasks[0].id,
         )
@@ -393,17 +388,14 @@ class TestDataset:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         d = Dataset(
             name=inspect.stack()[0][3],
-            datasource_id=2,
-            stage='interim',
-            description='Dataset for ' + inspect.stack()[0][3],
+            datasource_oid=2,
+            stage="interim",
+            description="Dataset for " + inspect.stack()[0][3],
             data=ratings,
             task_id=tasks[0].id,
         )
         df = DataFrame(
-            name='new_dataframe',
-            data=ratings,
-            parent=d,
-            description='some new dataframe'
+            name="new_dataframe", data=ratings, parent=d, description="some new dataframe"
         )
         assert df.is_composite is False
         assert len(df) != 0
@@ -446,9 +438,9 @@ class TestDataset:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         d = Dataset(
             name=inspect.stack()[0][3],
-            datasource_id=2,
-            stage='interim',
-            description='Dataset for ' + inspect.stack()[0][3],
+            datasource_oid=2,
+            stage="interim",
+            description="Dataset for " + inspect.stack()[0][3],
             data=ratings,
             task_id=tasks[0].id,
         )
@@ -459,7 +451,7 @@ class TestDataset:  # pragma: no cover
 
         dto = df.as_dto()
         assert dto.name == inspect.stack()[0][3]
-        assert dto.stage == 'interim'
+        assert dto.stage == "interim"
         assert dto.parent_id == 9
         assert dto.size > 0
         assert dto.nrows > 100
@@ -498,9 +490,9 @@ class TestDataset:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         d = Dataset(
             name=inspect.stack()[0][3],
-            datasource_id=2,
-            stage='interim',
-            description='Dataset for ' + inspect.stack()[0][3],
+            datasource_oid=2,
+            stage="interim",
+            description="Dataset for " + inspect.stack()[0][3],
             data=ratings,
             task_id=tasks[0].id,
         )
@@ -519,7 +511,6 @@ class TestDataset:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -538,9 +529,9 @@ class TestDataset:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         d = Dataset(
             name=inspect.stack()[0][3],
-            datasource_id=2,
-            stage='interim',
-            description='Dataset for ' + inspect.stack()[0][3],
+            datasource_oid=2,
+            stage="interim",
+            description="Dataset for " + inspect.stack()[0][3],
             data=ratings,
             task_id=tasks[0].id,
         )
@@ -560,7 +551,6 @@ class TestDataset:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -592,7 +582,6 @@ class TestDataset:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -633,6 +622,5 @@ class TestDataset:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)

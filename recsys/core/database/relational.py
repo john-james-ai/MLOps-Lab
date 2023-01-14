@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Wednesday January 11th 2023 07:28:31 pm                                             #
+# Modified   : Friday January 13th 2023 09:11:25 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -32,8 +32,11 @@ from .base import Connection, AbstractDatabase
 class MySQLConnection(Connection):
     """MySQL Database."""
 
-    def __init__(self, connector: pymysql.connect) -> None:
-        super().__init__(connector=connector)
+    def __init__(
+        self, connector: pymysql.connect, autocommit: bool = False, autoclose: bool = False
+    ) -> None:
+        super().__init__(connector=connector, autocommit=autocommit, autoclose=autoclose)
+        self._database = "MySQL"
 
     def open(self) -> None:
         """Opens a database connection."""
@@ -44,7 +47,9 @@ class MySQLConnection(Connection):
         password = os.getenv("DBMS_PASSWORD")
 
         try:
-            self._connection = self._connector(host=host, user=user, password=password, autocommit=False)
+            self._connection = self._connector(
+                host=host, user=user, password=password, autocommit=False
+            )
             self._is_open = True
             self._logger.debug(f"{self.__class__.__name__} is connected.")
         except mysql.connector.Error as err:  # pragma: no cover
@@ -67,26 +72,38 @@ class MySQLConnection(Connection):
 class DatabaseConnection(Connection):
     """Connection to a Database."""
 
-    def __init__(self, connector: pymysql.connect) -> None:
-        super().__init__(connector=connector)
+    def __init__(
+        self,
+        connector: pymysql.connect,
+        database: str,
+        autocommit: bool = False,
+        autoclose: bool = False,
+    ) -> None:
+        super().__init__(connector=connector, autocommit=autocommit, autoclose=autoclose)
+        self._database = database
+        msg = f"Database connection on {self._database} is instantiated at {id(self._database)}."
+        self._logger.debug(msg)
 
     def open(self) -> None:
         """Opens a database connection."""
 
         dotenv.load_dotenv()
-        mode = os.getenv("MODE")
         host = os.getenv("DATABASE_HOST")
         user = os.getenv("DATABASE_USER")
         password = os.getenv("DATABASE_PASSWORD")
-        database = os.getenv("DATABASE_NAME")
-
-        # To support multiple modes, databases will appended with a suffix containing the mode as follows:
-        self._database = f"{database}_{mode}"
 
         try:
-            self._connection = self._connector(host=host, user=user, password=password, database=self._database, autocommit=False)
+            self._connection = self._connector(
+                host=host,
+                user=user,
+                password=password,
+                database=self._database,
+                autocommit=self._autocommit,
+            )
             self._is_open = True
-            self._logger.debug(f"{self.__class__.__name__} is connected.")
+            self._logger.debug(
+                f"{self.__class__.__name__}.{self._database} is connected at {id(self._database)}."
+            )
         except mysql.connector.Error as err:  # pragma: no cover
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                 msg = "Invalid user name or password"
@@ -105,13 +122,18 @@ class DatabaseConnection(Connection):
 #                                        DATABASE                                                  #
 # ------------------------------------------------------------------------------------------------ #
 class Database(AbstractDatabase):
-    def __init__(self, connection: Connection, autocommit: bool = False, autoclose: bool = False) -> None:
+    def __init__(self, connection: Connection) -> None:
         super().__init__()
         self._connection = connection
-        self._autocommit = autocommit
-        self._autoclose = autoclose
+        self._autocommit = connection.autocommit
+        self._autoclose = connection.autoclose
         self._is_open = self._connection.is_open
+        self._database = self._connection.database
         self._in_transaction = False
+
+    @property
+    def database(self) -> str:
+        return self._database
 
     @property
     def in_transaction(self) -> bool:
@@ -146,8 +168,9 @@ class Database(AbstractDatabase):
 
     def rollback(self) -> None:
         """Rolls back the database to state as of last save or commit."""
-        self._connection.rollback()
-        self._in_transaction = False
+        if self._in_transaction:
+            self._connection.rollback()
+            self._in_transaction = False
 
     def query(self, sql: str, args: tuple = None) -> Connection.cursor:
         """Executes a query on the database and returns a cursor object."""

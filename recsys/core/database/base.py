@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 3rd 2023 12:33:25 am                                                #
-# Modified   : Monday January 9th 2023 01:22:41 am                                                 #
+# Modified   : Friday January 13th 2023 08:39:42 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -31,12 +31,28 @@ from recsys.core.services.base import Service
 class Connection(Service):
     """MySQL Database."""
 
-    def __init__(self, connector: pymysql.connect = None) -> None:
+    def __init__(
+        self, connector: pymysql.connect = None, autocommit: bool = False, autoclose: bool = False
+    ) -> None:
         super().__init__()
+        self._autocommit = autocommit
+        self._autoclose = autoclose
         self._connector = connector
         self._is_open = False
         self._in_transaction = False
         self._connection = None
+
+    @property
+    def database(self) -> str:
+        self._database
+
+    @property
+    def autocommit(self) -> str:
+        self._autocommit
+
+    @property
+    def autoclose(self) -> str:
+        self._autoclose
 
     @property
     def is_open(self) -> bool:
@@ -62,7 +78,9 @@ class Connection(Service):
         try:
             self._connection.begin()
             self._in_transaction = True
-            self._logger.debug(f"{self.__class__.__name__}  transaction started.")
+            self._logger.debug(
+                f"{self.__class__.__name__}  transaction started on {self._database}."
+            )
         except mysql.connector.Error as err:  # pragma: no cover
             self._logger.error(err)
             raise mysql.connector.Error()
@@ -77,7 +95,7 @@ class Connection(Service):
             self._connection.close()
             self._is_open = False
             self._in_transaction = False
-            self._logger.debug(f"{self.__class__.__name__}  is closed.")
+            self._logger.debug(f"{self.__class__.__name__}  {self._database} is closed.")
         except mysql.connector.Error as err:  # pragma: no cover
             self._logger.error(err)
             raise mysql.connector.Error()
@@ -87,7 +105,7 @@ class Connection(Service):
         try:
             self._connection.commit()
             self._in_transaction = False
-            self._logger.debug(f"{self.__class__.__name__}  is committed.")
+            self._logger.debug(f"{self.__class__.__name__} {self._database} is committed.")
         except mysql.connector.Error as err:  # pragma: no cover
             self._logger.error(err)
             raise mysql.connector.Error()
@@ -97,7 +115,7 @@ class Connection(Service):
         try:
             self._connection.rollback()
             self._in_transaction = False
-            self._logger.debug(f"{self.__class__.__name__}  is rolled back.")
+            self._logger.debug(f"{self.__class__.__name__} {self._database} is rolled back.")
         except mysql.connector.Error as err:  # pragma: no cover
             self._logger.error(err)
             raise mysql.connector.Error()

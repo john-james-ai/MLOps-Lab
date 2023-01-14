@@ -4,40 +4,42 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_core/test_workflow/test_builder.py                                      #
+# Filename   : /tests/test_core/test_entity/test_factory.py                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday December 30th 2022 07:21:43 pm                                               #
-# Modified   : Saturday January 14th 2023 03:02:14 pm                                              #
+# Created    : Saturday January 14th 2023 06:10:02 am                                              #
+# Modified   : Saturday January 14th 2023 06:45:47 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
-# Copyright  : (c) 2022 John James                                                                 #
+# Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
 import inspect
 from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.entity.job import Job, Task
-from recsys.core.workflow.orchestrator import Orchestrator
-from recsys.core.workflow.operator.base import Operator
-from recsys.core.workflow.builder.base import Director, DataSourceJobBuilder, JobBuilder
+from recsys.core.services.io import IOService
+from recsys.core.entity.dataset import Dataset, DataFrame
+from recsys.core.entity.datasource import DataSource, DataSourceURL
+from recsys.core.entity.dataset import DatasetBuilder
+from recsys.core.entity.datasource import DataSourceBuilder
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 double_line = f"\n{100 * '='}"
 single_line = f"\n{100 * '-'}"
-config_filepath = "recsys/data/etl/datasources.yml"
+dataset_filepath = "tests/test_core/test_entity/dataset.yml"
+datasource_filepath = "tests/test_core/test_entity/datasource.yml"
 
 
-@pytest.mark.dsb
-class TestDataSourceBuilder:  # pragma: no cover
+@pytest.mark.factory
+class TestEntityFactory:  # pragma: no cover
     # ============================================================================================ #
-    def test_setup(self, container, caplog):
+    def test_dataset(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -49,19 +51,52 @@ class TestDataSourceBuilder:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dba = container.dba.job()
-        dba.reset()
-        dba = container.dba.task()
-        dba.reset()
-        dba = container.dba.event()
-        dba.reset()
-        dba = container.dba.object()
-        dba.reset()
-        dba = container.dba.datasource()
-        dba.reset()
-        dba = container.dba.datasource_url()
-        dba.reset()
+        factory = container.entity.factory()
+        factory.register_builder("dataset", DatasetBuilder())
+        factory.register_builder("datasource", DataSourceBuilder())
+        config = IOService.read(dataset_filepath)
+        logger.debug(config)
+        dataset = factory.create("dataset", config)
+        assert isinstance(dataset, Dataset)
+        for dataframe in dataset.dataframes.values():
+            assert isinstance(dataframe, DataFrame)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
 
+        logger.info(
+            "\nCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_datasource(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        factory = container.entity.factory()
+
+        factory.register_builder("datasource", DataSourceBuilder())
+        config = IOService.read(datasource_filepath)
+        logger.debug(config)
+        datasource = factory.create("datasource", config)
+        assert isinstance(datasource, DataSource)
+        for url in datasource.urls.values():
+            assert isinstance(url, DataSourceURL)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -78,7 +113,7 @@ class TestDataSourceBuilder:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_dsb(self, container, caplog):
+    def test_teardown(self, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -90,37 +125,13 @@ class TestDataSourceBuilder:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        # Test Build
-        builder = DataSourceJobBuilder(config_filepath=config_filepath)
-        dir = Director()
-        dir.builder = builder
-        job = dir.build_datasource_job()
-        assert isinstance(job, Job)
-        assert len(job) == 3
-        for task in job.tasks.values():
-            assert isinstance(task, Task)
-            assert isinstance(task.operator, Operator)
-            assert task.operator.name == "datasource_loader"
-        # ---------------------------------------------------------------------------------------- #
-        # Test Execution
-        uow = container.work.unit()
-        pipe = Orchestrator(uow=uow)
-        pipe.job = job
-        pipe.run()
-        repo = uow.get_repo("datasource")
-        logger.debug(repo.print())
-        # ---------------------------------------------------------------------------------------- #
-        dir.builder.reset()
-        assert dir.builder.job is None
-        builder = dir.builder
-        assert isinstance(builder, JobBuilder)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
 
         logger.info(
-            "\nCompleted {} {} in {} seconds at {} on {}".format(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
                 self.__class__.__name__,
                 inspect.stack()[0][3],
                 duration,

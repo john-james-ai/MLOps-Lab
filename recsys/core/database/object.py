@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Wednesday January 11th 2023 07:38:00 pm                                             #
+# Modified   : Friday January 13th 2023 06:48:27 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -37,6 +37,7 @@ class Cursor(Service):
     Args:
         location (str): The path of the shelve database file.
     """
+
     def __init__(self, location) -> None:
         super().__init__()
         self._location = location
@@ -183,7 +184,9 @@ class CacheCursor(Cursor):
         return exists
 
     def _set_cache_location(self) -> str:
-        return os.path.join(os.path.dirname(self._location), "cache", os.path.basename(self._location))
+        return os.path.join(
+            os.path.dirname(self._location), "cache", os.path.basename(self._location)
+        )
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -243,10 +246,9 @@ class ObjectDBConnection(Connection):
 
     __cache_filename = "cache.odb"
 
-    def __init__(self, autocommit: bool = True) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self._location = self._set_location()
-        self._autocommit = autocommit
         self._cache = None
         self._storage = None
         self._build_cursors()
@@ -262,10 +264,6 @@ class ObjectDBConnection(Connection):
     @property
     def cache(self) -> Cursor:
         return self._cache
-
-    @property
-    def autocommit(self) -> bool:
-        return self._autocommit
 
     def begin(self) -> None:
         """Starts a transaction."""
@@ -317,10 +315,9 @@ class ObjectDBConnection(Connection):
 class ObjectDB(AbstractDatabase):
     """Manages object persistence."""
 
-    def __init__(self, connection: type(Connection)) -> None:
+    def __init__(self, connection: type[Connection], *args, **kwargs) -> None:
         super().__init__()
         self._connection = connection
-        self._autocommit = connection.autocommit
         self._in_transaction = False
         self._is_open = False
 
@@ -372,7 +369,9 @@ class ObjectDB(AbstractDatabase):
     def insert(self, entity: Entity) -> int:
         """Inserts an object into object storage."""
         if self._in_transaction:
-            if not self._connection.storage.exists(entity.oid) and not self._connection.cache.exists(entity.oid):
+            if not self._connection.storage.exists(
+                entity.oid
+            ) and not self._connection.cache.exists(entity.oid):
                 self._connection.cache.insert(entity)
             else:
                 msg = f"Unable to insert entity oid = {entity.oid}. Entity already exists."

@@ -11,16 +11,20 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday January 11th 2023 06:46:32 pm                                             #
+# Modified   : Saturday January 14th 2023 05:06:03 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+import os
+import dotenv
+
 from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
 from recsys.core.entity.base import Entity
 from recsys.core.entity.dataset import Dataset
+
 # ================================================================================================ #
 #                                        DATASET                                                   #
 # ================================================================================================ #
@@ -32,7 +36,7 @@ from recsys.core.entity.dataset import Dataset
 @dataclass
 class CreateDatasetTable(SQL):
     name: str = "dataset"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), datasource_id SMALLINT NOT NULL, stage VARCHAR(64) NOT NULL, task_id MEDIUMINT DEFAULT 0, created DATETIME, modified DATETIME, UNIQUE(name));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataset (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), datasource_oid VARCHAR(255) NOT NULL, stage VARCHAR(64) NOT NULL, task_oid VARCHAR(255), created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
     args: tuple = ()
     description: str = "Created the dataset table."
 
@@ -52,15 +56,20 @@ class DropDatasetTable(SQL):
 @dataclass
 class DatasetTableExists(SQL):
     name: str = "dataset"
-    sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'dataset';"""
+    sql: str = None
     args: tuple = ()
     description: str = "Checked existence of dataset table."
+
+    def __post_init__(self) -> None:
+        dotenv.load_dotenv()
+        mode = os.getenv("MODE")
+        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}' AND TABLE_NAME = 'dataset';"""
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class DatasetDDL(DDL):
-    entity: type(Entity) = Dataset
+    entity: type[Entity] = Dataset
     create: SQL = CreateDatasetTable()
     drop: SQL = DropDatasetTable()
     exists: SQL = DatasetTableExists()
@@ -74,7 +83,7 @@ class DatasetDDL(DDL):
 @dataclass
 class InsertDataset(SQL):
     dto: DTO
-    sql: str = """INSERT INTO dataset (oid, name, description, datasource_id, stage, task_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO dataset (oid, name, description, datasource_oid, stage, task_oid) VALUES (%s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -82,11 +91,9 @@ class InsertDataset(SQL):
             self.dto.oid,
             self.dto.name,
             self.dto.description,
-            self.dto.datasource_id,
+            self.dto.datasource_oid,
             self.dto.stage,
-            self.dto.task_id,
-            self.dto.created,
-            self.dto.modified,
+            self.dto.task_oid,
         )
 
 
@@ -96,7 +103,7 @@ class InsertDataset(SQL):
 @dataclass
 class UpdateDataset(SQL):
     dto: DTO
-    sql: str = """UPDATE dataset SET oid = %s, name = %s, description = %s, datasource_id = %s, stage = %s, task_id = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE dataset SET oid = %s, name = %s, description = %s, datasource_oid = %s, stage = %s, task_oid = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -104,11 +111,9 @@ class UpdateDataset(SQL):
             self.dto.oid,
             self.dto.name,
             self.dto.description,
-            self.dto.datasource_id,
+            self.dto.datasource_oid,
             self.dto.stage,
-            self.dto.task_id,
-            self.dto.created,
-            self.dto.modified,
+            self.dto.task_oid,
             self.dto.id,
         )
 
@@ -124,6 +129,7 @@ class SelectDataset(SQL):
 
     def __post_init__(self) -> None:
         self.args = (self.id,)
+
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -174,11 +180,11 @@ class DeleteDataset(SQL):
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class DatasetDML(DML):
-    entity: type(Entity) = Dataset
-    insert: type(SQL) = InsertDataset
-    update: type(SQL) = UpdateDataset
-    select: type(SQL) = SelectDataset
-    select_by_name: type(SQL) = SelectDatasetByName
-    select_all: type(SQL) = SelectAllDataset
-    exists: type(SQL) = DatasetExists
-    delete: type(SQL) = DeleteDataset
+    entity: type[Entity] = Dataset
+    insert: type[SQL] = InsertDataset
+    update: type[SQL] = UpdateDataset
+    select: type[SQL] = SelectDataset
+    select_by_name: type[SQL] = SelectDatasetByName
+    select_all: type[SQL] = SelectAllDataset
+    exists: type[SQL] = DatasetExists
+    delete: type[SQL] = DeleteDataset

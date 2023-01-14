@@ -11,16 +11,17 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 25th 2022 12:55:35 pm                                               #
-# Modified   : Tuesday January 10th 2023 07:58:58 pm                                               #
+# Modified   : Friday January 13th 2023 11:49:55 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Unit of Work Module"""
 from abc import ABC, abstractmethod
+import logging
 
-from recsys.core.entity.base import Entity
-from recsys.core.repo.context import Context
+from dependency_injector import providers
+
 from recsys.core.repo.entity import Repo
 
 
@@ -28,17 +29,18 @@ from recsys.core.repo.entity import Repo
 #                                 UNIT OF WORK ABC                                                 #
 # ------------------------------------------------------------------------------------------------ #
 class UnitOfWorkABC(ABC):  # pragma: no cover
-
-    def __init__(self, context: Context) -> None:
-        self._context = context
-
-    @abstractmethod
-    def register(self, name: str, repo: type(Repo), entity: type(Entity) = None) -> None:
-        """Returns an instantiated datasource repository."""
+    def __init__(self) -> None:
+        self._logger = logging.getLogger(
+            f"{self.__module__}.{self.__class__.__name__}",
+        )
 
     @abstractmethod
     def get_repo(self, name) -> Repo:
         """Returns an instantiated file repository."""
+
+    @abstractmethod
+    def begin(self):
+        """Starts a transaction."""
 
     @abstractmethod
     def save(self):
@@ -47,6 +49,10 @@ class UnitOfWorkABC(ABC):  # pragma: no cover
     @abstractmethod
     def rollback(self):
         """Rolls back changes since last save."""
+
+    @abstractmethod
+    def close(self):
+        """Closes the unit of work."""
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -64,20 +70,41 @@ class UnitOfWork(UnitOfWorkABC):
 
     """
 
-    def __init__(self, context: Context) -> None:
-        self._context = context
-        self._in_transaction = False
+    def __init__(self, repos: providers.Container) -> None:
+        super().__init__()
+        self._context = repos.context()
         self._repos = {}
+        self._repos["file"] = repos.file()
+        self._repos["profile"] = repos.profile()
+        self._repos["datasource"] = repos.datasource()
+        self._repos["dataset"] = repos.dataset()
+        self._repos["job"] = repos.job()
+        self._repos["event"] = repos.event()
+        self._in_transaction = False
+        self._job = None
+        # self.begin()  # Unit of work is started at instantiation.
+        msg = f"Instantiated UoW at {id(self)}."
+        self._logger.debug(msg)
 
-    def register(self, name: str, repo: type(Repo), entity: type(Entity) = None) -> None:
+    def __enter__(self):
+        """Start a transaction"""
         self.begin()
-        self._repos[name] = repo(context=self._context, entity=entity)
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if exc_type:
+            self.rollback()
+            self._logger.error(f"Exception Type: {exc_type}")
+            self._logger.error(f"Exception Value: {exc_value}")
+            self._logger.error(f"Exception Traceback: {exc_tb}")
+        else:
+            self.save()
+            self.close()
 
     def get_repo(self, name) -> Repo:
         return self._repos[name]
 
     def begin(self) -> None:
-        """Begins a transaction if not already in one."""
         if not self._in_transaction:
             self._context.begin()
             self._in_transaction = True
@@ -89,3 +116,6 @@ class UnitOfWork(UnitOfWorkABC):
     def rollback(self) -> None:
         self._context.rollback()
         self._in_transaction = False
+
+    def close(self) -> None:
+        self._context.close()

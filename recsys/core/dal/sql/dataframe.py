@@ -11,11 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday January 11th 2023 06:43:19 pm                                             #
+# Modified   : Friday January 13th 2023 02:28:28 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+import os
+import dotenv
+
 from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
@@ -33,7 +36,7 @@ from recsys.core.entity.dataset import DataFrame
 @dataclass
 class CreateDataFrameTable(SQL):
     name: str = "dataframe"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), stage VARCHAR(64) NOT NULL, size BIGINT, nrows BIGINT, ncols SMALLINT, nulls SMALLINT, pct_nulls FLOAT, parent_id SMALLINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), stage VARCHAR(64) NOT NULL, size BIGINT, nrows BIGINT, ncols SMALLINT, nulls SMALLINT, pct_nulls FLOAT, parent_id SMALLINT NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
     args: tuple = ()
     description: str = "Created the dataframe table."
 
@@ -53,15 +56,20 @@ class DropDataFrameTable(SQL):
 @dataclass
 class DataFrameTableExists(SQL):
     name: str = "dataframe"
-    sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'dataframe';"""
+    sql: str = None
     args: tuple = ()
     description: str = "Checked existence of dataframe table."
+
+    def __post_init__(self) -> None:
+        dotenv.load_dotenv()
+        mode = os.getenv("MODE")
+        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}' AND TABLE_NAME = 'dataframe';"""
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class DataFrameDDL(DDL):
-    entity: type(Entity) = DataFrame
+    entity: type[Entity] = DataFrame
     create: SQL = CreateDataFrameTable()
     drop: SQL = DropDataFrameTable()
     exists: SQL = DataFrameTableExists()
@@ -75,7 +83,7 @@ class DataFrameDDL(DDL):
 @dataclass
 class InsertDataFrame(SQL):
     dto: DTO
-    sql: str = """INSERT INTO dataframe (oid, name, description, stage, size, nrows, ncols, nulls, pct_nulls, parent_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO dataframe (oid, name, description, stage, size, nrows, ncols, nulls, pct_nulls, parent_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -90,8 +98,6 @@ class InsertDataFrame(SQL):
             self.dto.nulls,
             self.dto.pct_nulls,
             self.dto.parent_id,
-            self.dto.created,
-            self.dto.modified,
         )
 
 
@@ -101,7 +107,7 @@ class InsertDataFrame(SQL):
 @dataclass
 class UpdateDataFrame(SQL):
     dto: DTO
-    sql: str = """UPDATE dataframe SET oid = %s, name = %s, description = %s, stage = %s, size = %s, nrows = %s, ncols = %s, nulls = %s, pct_nulls = %s, parent_id = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE dataframe SET oid = %s, name = %s, description = %s, stage = %s, size = %s, nrows = %s, ncols = %s, nulls = %s, pct_nulls = %s, parent_id = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -116,8 +122,6 @@ class UpdateDataFrame(SQL):
             self.dto.nulls,
             self.dto.pct_nulls,
             self.dto.parent_id,
-            self.dto.created,
-            self.dto.modified,
             self.dto.id,
         )
 
@@ -134,6 +138,7 @@ class SelectDataFrame(SQL):
     def __post_init__(self) -> None:
         self.args = (self.id,)
 
+
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -146,6 +151,7 @@ class SelectDataFrameByParentId(SQL):
     def __post_init__(self) -> None:
         self.args = (self.dataset_id,)
 
+
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -156,7 +162,7 @@ class SelectDataFrameByName(SQL):
     args: tuple = ()
 
     def __post_init__(self) -> None:
-        self.args = (self.name)
+        self.args = self.name
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -195,12 +201,12 @@ class DeleteDataFrame(SQL):
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class DataFrameDML(DML):
-    entity: type(Entity) = DataFrame
-    insert: type(SQL) = InsertDataFrame
-    update: type(SQL) = UpdateDataFrame
-    select: type(SQL) = SelectDataFrame
-    select_by_name: type(SQL) = SelectDataFrameByName
-    select_by_dataset_id: type(SQL) = SelectDataFrameByParentId
-    select_all: type(SQL) = SelectAllDataset
-    exists: type(SQL) = DataFrameExists
-    delete: type(SQL) = DeleteDataFrame
+    entity: type[Entity] = DataFrame
+    insert: type[SQL] = InsertDataFrame
+    update: type[SQL] = UpdateDataFrame
+    select: type[SQL] = SelectDataFrame
+    select_by_name: type[SQL] = SelectDataFrameByName
+    select_by_dataset_id: type[SQL] = SelectDataFrameByParentId
+    select_all: type[SQL] = SelectAllDataset
+    exists: type[SQL] = DataFrameExists
+    delete: type[SQL] = DeleteDataFrame

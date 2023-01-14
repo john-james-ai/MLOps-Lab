@@ -11,11 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Wednesday January 11th 2023 06:50:34 pm                                             #
+# Modified   : Friday January 13th 2023 02:30:41 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+import os
+import dotenv
+
 from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
@@ -33,7 +36,7 @@ from recsys.core.entity.job import Job
 @dataclass
 class CreateJobTable(SQL):
     name: str = "job"
-    sql: str = """CREATE TABLE IF NOT EXISTS job (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), state VARCHAR(32), created DATETIME, modified DATETIME, UNIQUE(name));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS job (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), state VARCHAR(32), created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
     args: tuple = ()
     description: str = "Created the job table."
 
@@ -53,15 +56,20 @@ class DropJobTable(SQL):
 @dataclass
 class JobTableExists(SQL):
     name: str = "job"
-    sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'job';"""
+    sql: str = None
     args: tuple = ()
-    description: str = "Checked existence of the job table."
+    description: str = "Checked existence of job table."
+
+    def __post_init__(self) -> None:
+        dotenv.load_dotenv()
+        mode = os.getenv("MODE")
+        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}' AND TABLE_NAME = 'job';"""
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class JobDDL(DDL):
-    entity: type(Entity) = Job
+    entity: type[Entity] = Job
     create: SQL = CreateJobTable()
     drop: SQL = DropJobTable()
     exists: SQL = JobTableExists()
@@ -76,7 +84,7 @@ class JobDDL(DDL):
 class InsertJob(SQL):
     dto: DTO
 
-    sql: str = """INSERT INTO job (oid, name, description, state, created, modified) VALUES (%s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO job (oid, name, description, state) VALUES (%s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -85,8 +93,6 @@ class InsertJob(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.state,
-            self.dto.created,
-            self.dto.modified,
         )
 
 
@@ -96,7 +102,7 @@ class InsertJob(SQL):
 @dataclass
 class UpdateJob(SQL):
     dto: DTO
-    sql: str = """UPDATE job SET oid = %s, name = %s, description = %s, state = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE job SET oid = %s, name = %s, description = %s, state = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -105,8 +111,6 @@ class UpdateJob(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.state,
-            self.dto.created,
-            self.dto.modified,
             self.dto.id,
         )
 
@@ -122,6 +126,7 @@ class SelectJob(SQL):
 
     def __post_init__(self) -> None:
         self.args = (self.id,)
+
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -143,6 +148,7 @@ class SelectJobByName(SQL):
 class SelectAllJob(SQL):
     sql: str = """SELECT * FROM job;"""
     args: tuple = ()
+
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -171,11 +177,11 @@ class DeleteJob(SQL):
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class JobDML(DML):
-    entity: type(Entity) = Job
-    insert: type(SQL) = InsertJob
-    update: type(SQL) = UpdateJob
-    select: type(SQL) = SelectJob
-    select_by_name: type(SQL) = SelectJobByName
-    select_all: type(SQL) = SelectAllJob
-    exists: type(SQL) = JobExists
-    delete: type(SQL) = DeleteJob
+    entity: type[Entity] = Job
+    insert: type[SQL] = InsertJob
+    update: type[SQL] = UpdateJob
+    select: type[SQL] = SelectJob
+    select_by_name: type[SQL] = SelectJobByName
+    select_all: type[SQL] = SelectAllJob
+    exists: type[SQL] = JobExists
+    delete: type[SQL] = DeleteJob
