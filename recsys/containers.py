@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Saturday January 14th 2023 06:34:07 am                                              #
+# Modified   : Saturday January 14th 2023 08:16:43 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -47,9 +47,10 @@ from recsys.core.repo.entity import Repo
 from recsys.core.repo.dataset import DatasetRepo
 from recsys.core.repo.datasource import DataSourceRepo
 from recsys.core.repo.job import JobRepo
-from recsys.core.entity.base import EntityFactory
-from recsys.core.entity.dataset import DatasetBuilder
-from recsys.core.entity.datasource import DataSourceBuilder
+from recsys.core.factory.dataset import DataFrameFactory, DatasetFactory
+from recsys.core.factory.datasource import DataSourceFactory, DataSourceURLFactory
+from recsys.core.factory.event import EventFactory
+from recsys.core.factory.job import JobFactory, TaskFactory
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -203,11 +204,15 @@ class WorkContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class BuilderContainer(containers.DeclarativeContainer):
+class FactoryContainer(containers.DeclarativeContainer):
 
-    factory = providers.Factory(EntityFactory)
-    factory().register_builder("dataset", DatasetBuilder())
-    factory().register_builder("datasource", DataSourceBuilder())
+    dataset = providers.Factory(DatasetFactory)
+    dataframe = providers.Factory(DataFrameFactory)
+    datasource = providers.Factory(DataSourceFactory)
+    datasource_url = providers.Factory(DataSourceURLFactory)
+    job = providers.Factory(JobFactory)
+    task = providers.Factory(TaskFactory)
+    event = providers.Factory(EventFactory)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -244,4 +249,4 @@ class Recsys(containers.DeclarativeContainer):
 
     work = providers.Container(WorkContainer, repos=repo)
 
-    entity = providers.Container(BuilderContainer)
+    factory = providers.Container(FactoryContainer)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday January 14th 2023 06:42:21 am                                              #
+# Modified   : Saturday January 14th 2023 09:19:11 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,7 +22,6 @@ from datetime import datetime
 import pandas as pd
 from typing import Union, Dict
 
-from .base import Builder
 from recsys.core.entity.base import Entity
 from recsys.core.dal.dto import DataFrameDTO, DatasetDTO
 
@@ -77,10 +76,10 @@ class Dataset(DataComponent):
     def __init__(
         self,
         name: str,
-        datasource_oid: str,
         stage: str,
         description: str = None,
-        task_oid: str = 0,
+        datasource_oid: str = None,
+        task_oid: str = None,
         data: pd.DataFrame = None,
     ) -> None:
         super().__init__(name=name, description=description)
@@ -242,10 +241,10 @@ class DataFrame(DataComponent):
     def __init__(
         self,
         name: str,
-        data: pd.DataFrame,
-        parent: Dataset,
-        stage: str = None,
+        stage: str,
+        parent: Dataset = None,
         description: str = None,
+        data: pd.DataFrame = None,
     ) -> None:
         super().__init__(name=name, description=description)
 
@@ -381,39 +380,3 @@ class DataFrame(DataComponent):
                 self._ncols = self._data.shape[1]
                 self._nulls = self._data.isnull().sum().sum()
                 self._pct_nulls = (self._nulls / (self._nrows * self._ncols)) * 100
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                       DATASET BUILDER                                            #
-# ------------------------------------------------------------------------------------------------ #
-class DatasetBuilder(Builder):
-    def __init__(self) -> None:
-        super().__init__()
-        self._instance = None
-
-    def __call__(self, config) -> Dataset:
-        if not self._instance:
-            self._instance = self._build_dataset(config)
-        return self._instance
-
-    def _build_dataset(self, config) -> Dataset:
-        config = config.get("dataset")
-        dataset = Dataset(
-            name=config.get("name"),
-            description=config.get("description"),
-            stage=config.get("stage"),
-            datasource_oid=config.get("datasource_oid"),
-            task_oid=config.get("task_oid"),
-            data=self._io.read(config.get("data")),
-        )
-        for df_config in config.get("dataframes"):
-            self._logger.debug(df_config)
-            dataframe = DataFrame(
-                name=df_config.get("name"),
-                description=df_config.get("description"),
-                parent=dataset,
-                stage=df_config.get("stage"),
-                data=self._io.read(df_config.get("data")),
-            )
-            dataset.add_dataframe(dataframe=dataframe)
-        return dataset

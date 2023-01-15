@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 30th 2022 07:21:43 pm                                               #
-# Modified   : Saturday January 14th 2023 03:02:14 pm                                              #
+# Modified   : Saturday January 14th 2023 09:05:12 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,7 @@ import logging
 from recsys.core.entity.job import Job, Task
 from recsys.core.workflow.orchestrator import Orchestrator
 from recsys.core.workflow.operator.base import Operator
-from recsys.core.workflow.builder.base import Director, DataSourceJobBuilder, JobBuilder
+from recsys.core.factory.base import Director, JobBuilder
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -91,16 +91,16 @@ class TestDataSourceBuilder:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         # Test Build
-        builder = DataSourceJobBuilder(config_filepath=config_filepath)
+        builder = JobBuilder()
         dir = Director()
         dir.builder = builder
-        job = dir.build_datasource_job()
+        job = dir.build_job()
         assert isinstance(job, Job)
         assert len(job) == 3
         for task in job.tasks.values():
             assert isinstance(task, Task)
             assert isinstance(task.operator, Operator)
-            assert task.operator.name == "datasource_loader"
+            assert task.operator.name == "DataSourceLoader"
         # ---------------------------------------------------------------------------------------- #
         # Test Execution
         uow = container.work.unit()

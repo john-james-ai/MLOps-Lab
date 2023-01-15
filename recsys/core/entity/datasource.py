@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday January 14th 2023 03:02:17 pm                                              #
+# Modified   : Saturday January 14th 2023 09:20:09 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -22,7 +22,6 @@ from typing import Union, Dict
 import pandas as pd
 from datetime import datetime
 
-from .base import Builder
 from recsys.core.entity.base import Entity
 from recsys.core.dal.dto import DataSourceURLDTO, DataSourceDTO
 
@@ -192,7 +191,7 @@ class DataSourceURL(DataSourceComponent):
         self,
         name: str,
         url: str,
-        datasource: DataSource,
+        datasource: DataSource = None,
         description: str = None,
     ) -> None:
         super().__init__(name=name, description=description)

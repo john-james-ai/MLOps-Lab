@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday January 14th 2023 03:03:02 pm                                              #
+# Modified   : Saturday January 14th 2023 06:36:47 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -235,7 +235,7 @@ class Task(JobComponent):
     def __init__(
         self,
         name: str,
-        operator: Operator,
+        operator: Operator = None,
         description: str = None,
     ) -> None:
         super().__init__(name=name, description=description)
@@ -285,14 +285,19 @@ class Task(JobComponent):
         return self._parent
 
     # -------------------------------------------------------------------------------------------- #
-    @property
-    def operator(self) -> Job:
-        return self._operator
-
-    # -------------------------------------------------------------------------------------------- #
     @parent.setter
     def parent(self, parent: Job) -> None:
         self._parent = parent
+
+    # -------------------------------------------------------------------------------------------- #
+    @property
+    def operator(self) -> Operator:
+        return self._operator
+
+    # -------------------------------------------------------------------------------------------- #
+    @operator.setter
+    def operator(self, operator: Operator) -> None:
+        self._operator = operator
 
     # -------------------------------------------------------------------------------------------- #
     def run(self, uow: UnitOfWork, data: Any = None) -> Union[None, Any]:

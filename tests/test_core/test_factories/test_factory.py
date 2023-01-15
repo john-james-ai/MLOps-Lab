@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /tests/test_core/test_entity/test_factory.py                                        #
+# Filename   : /tests/test_core/test_factories/test_factory.py                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Saturday January 14th 2023 06:10:02 am                                              #
-# Modified   : Saturday January 14th 2023 06:45:47 am                                              #
+# Created    : Saturday January 14th 2023 09:22:14 pm                                              #
+# Modified   : Saturday January 14th 2023 09:52:26 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -21,25 +21,20 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.services.io import IOService
-from recsys.core.entity.dataset import Dataset, DataFrame
-from recsys.core.entity.datasource import DataSource, DataSourceURL
-from recsys.core.entity.dataset import DatasetBuilder
-from recsys.core.entity.datasource import DataSourceBuilder
+from recsys.core.factory.base import Factory
+from recsys.core import entity
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
 double_line = f"\n{100 * '='}"
 single_line = f"\n{100 * '-'}"
-dataset_filepath = "tests/test_core/test_entity/dataset.yml"
-datasource_filepath = "tests/test_core/test_entity/datasource.yml"
 
 
 @pytest.mark.factory
-class TestEntityFactory:  # pragma: no cover
+class TestFactory:  # pragma: no cover
     # ============================================================================================ #
-    def test_dataset(self, container, caplog):
+    def test_setup(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -51,15 +46,8 @@ class TestEntityFactory:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        factory = container.entity.factory()
-        factory.register_builder("dataset", DatasetBuilder())
-        factory.register_builder("datasource", DataSourceBuilder())
-        config = IOService.read(dataset_filepath)
-        logger.debug(config)
-        dataset = factory.create("dataset", config)
-        assert isinstance(dataset, Dataset)
-        for dataframe in dataset.dataframes.values():
-            assert isinstance(dataframe, DataFrame)
+        factory = container.factory()
+        assert isinstance(factory.dataset(), Factory)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -76,7 +64,7 @@ class TestEntityFactory:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_datasource(self, container, caplog):
+    def test_dataset(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -88,15 +76,17 @@ class TestEntityFactory:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        factory = container.entity.factory()
+        factory = container.factory()
+        config = {
+            "name": "somedataset",
+            "description": "somedesc",
+            "stage": "interim",
+            "datasource_oid": "datasource_spotify",
+            "task_oid": "test_task",
+        }
+        dataset = factory.dataset()(config)
+        assert isinstance(dataset, entity.dataset.Dataset)
 
-        factory.register_builder("datasource", DataSourceBuilder())
-        config = IOService.read(datasource_filepath)
-        logger.debug(config)
-        datasource = factory.create("datasource", config)
-        assert isinstance(datasource, DataSource)
-        for url in datasource.urls.values():
-            assert isinstance(url, DataSourceURL)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -113,7 +103,7 @@ class TestEntityFactory:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_teardown(self, caplog):
+    def test_dataframe(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -125,7 +115,84 @@ class TestEntityFactory:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
+        factory = container.factory()
+        config = {
+            "name": "somedataset",
+            "description": "somedesc",
+            "stage": "interim",
+        }
+        dataframe = factory.dataframe()(config)
+        assert isinstance(dataframe, entity.dataset.DataFrame)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
 
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_job(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        factory = container.factory()
+        config = {
+            "name": "somedataset",
+            "description": "somedesc",
+        }
+        job = factory.job()(config)
+        assert isinstance(job, entity.job.Job)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_task(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        factory = container.factory()
+        config = {
+            "name": "somedataset",
+            "description": "somedesc",
+        }
+        task = factory.task()(config)
+        assert isinstance(task, entity.job.Task)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

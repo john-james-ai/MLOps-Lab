@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday January 11th 2023 06:32:03 pm                                             #
-# Modified   : Saturday January 14th 2023 05:00:52 am                                              #
+# Modified   : Saturday January 14th 2023 09:33:29 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -37,7 +37,7 @@ DATA_SOURCE_FILEPATH = "tests/data/datasources.xlsx"
 JOB_CONFIG_FILEPATH = "recsys/data/movielens25m/config.yml"
 
 # ------------------------------------------------------------------------------------------------ #
-# collect_ignore_glob = ["*test_builder.py"]
+collect_ignore_glob = ["*test_builder.py"]
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -257,7 +257,7 @@ def job_config():
 def container():
     container = Recsys()
     container.init_resources()
-    container.wire(modules=[recsys.containers])
+    container.wire(modules=[recsys.containers, "recsys.core.workflow.build.job"])
     return container
 
 
