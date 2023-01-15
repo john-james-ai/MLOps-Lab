@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/dal/sql/datasource_url.py                                              #
+# Filename   : /recsys/core/dal/sql/event.py                                                       #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday January 13th 2023 02:29:21 pm                                                #
+# Created    : Thursday December 8th 2022 02:06:04 pm                                              #
+# Modified   : Friday January 13th 2023 06:35:32 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,10 +23,10 @@ from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
 from recsys.core.entity.base import Entity
-from recsys.core.entity.datasource import DataSourceURL
+from recsys.core.entity.event import Event
 
 # ================================================================================================ #
-#                                        DATASET                                                   #
+#                                        PROFILE                                                   #
 # ================================================================================================ #
 
 
@@ -34,45 +34,45 @@ from recsys.core.entity.datasource import DataSourceURL
 #                                          DDL                                                     #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class CreateDataSourceURLTable(SQL):
-    name: str = "datasource_url"
-    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), url VARCHAR(255) NOT NULL, parent_id SMALLINT NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
+class CreateEventTable(SQL):
+    name: str = "event"
+    sql: str = """CREATE TABLE IF NOT EXISTS event (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), job_oid VARCHAR(255) NOT NULL, task_oid VARCHAR(255) NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);"""
     args: tuple = ()
-    description: str = "Created the datasource URL table."
+    description: str = "Created the event table."
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DropDataSourceURLTable(SQL):
-    name: str = "datasource_url"
-    sql: str = """DROP TABLE IF EXISTS datasource_url;"""
+class DropEventTable(SQL):
+    name: str = "event"
+    sql: str = """DROP TABLE IF EXISTS event;"""
     args: tuple = ()
-    description: str = "Dropped the datasource URL table."
+    description: str = "Dropped the event table."
 
 
 # ------------------------------------------------------------------------------------------------ #
 
 
 @dataclass
-class DataSourceURLTableExists(SQL):
-    name: str = "datasource_url"
+class EventTableExists(SQL):
+    name: str = "event"
     sql: str = None
     args: tuple = ()
-    description: str = "Checked existence of datasource_url table."
+    description: str = "Checked existence of event table."
 
     def __post_init__(self) -> None:
         dotenv.load_dotenv()
         mode = os.getenv("MODE")
-        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}' AND TABLE_NAME = 'datasource_url';"""
+        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}_events' AND TABLE_NAME = 'event';"""
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DataSourceURLDDL(DDL):
-    entity: type[Entity] = DataSourceURL
-    create: SQL = CreateDataSourceURLTable()
-    drop: SQL = DropDataSourceURLTable()
-    exists: SQL = DataSourceURLTableExists()
+class EventDDL(DDL):
+    entity: type[Entity] = Event
+    create: SQL = CreateEventTable()
+    drop: SQL = DropEventTable()
+    exists: SQL = EventTableExists()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -81,9 +81,9 @@ class DataSourceURLDDL(DDL):
 
 
 @dataclass
-class InsertDataSourceURL(SQL):
+class InsertEvent(SQL):
     dto: DTO
-    sql: str = """INSERT INTO datasource_url (oid, name, description, url, parent_id) VALUES (%s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO event (oid, name, description, job_oid, task_oid) VALUES (%s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -91,8 +91,8 @@ class InsertDataSourceURL(SQL):
             self.dto.oid,
             self.dto.name,
             self.dto.description,
-            self.dto.url,
-            self.dto.parent_id,
+            self.dto.job_oid,
+            self.dto.task_oid,
         )
 
 
@@ -100,9 +100,9 @@ class InsertDataSourceURL(SQL):
 
 
 @dataclass
-class UpdateDataSourceURL(SQL):
+class UpdateEvent(SQL):
     dto: DTO
-    sql: str = """UPDATE datasource_url SET oid = %s, name = %s, description = %s, url = %s, parent_id = %s WHERE id = %s;"""
+    sql: str = """UPDATE event SET oid = %s, name = %s, description = %s, job_oid = %s, task_oid = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -110,8 +110,8 @@ class UpdateDataSourceURL(SQL):
             self.dto.oid,
             self.dto.name,
             self.dto.description,
-            self.dto.url,
-            self.dto.parent_id,
+            self.dto.job_oid,
+            self.dto.task_oid,
             self.dto.id,
         )
 
@@ -120,9 +120,9 @@ class UpdateDataSourceURL(SQL):
 
 
 @dataclass
-class SelectDataSourceURL(SQL):
+class SelectEvent(SQL):
     id: int
-    sql: str = """SELECT * FROM datasource_url WHERE id = %s;"""
+    sql: str = """SELECT * FROM event WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -133,22 +133,9 @@ class SelectDataSourceURL(SQL):
 
 
 @dataclass
-class SelectDataSourceURLByParentId(SQL):
-    parent_id: int
-    sql: str = """SELECT * FROM datasource_url WHERE parent_id = %s;"""
-    args: tuple = ()
-
-    def __post_init__(self) -> None:
-        self.args = (self.parent_id,)
-
-
-# ------------------------------------------------------------------------------------------------ #
-
-
-@dataclass
-class SelectDataSourceURLByName(SQL):
+class SelectEventByName(SQL):
     name: str
-    sql: str = """SELECT * FROM datasource_url WHERE name = %s;"""
+    sql: str = """SELECT * FROM event WHERE name = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -159,8 +146,8 @@ class SelectDataSourceURLByName(SQL):
 
 
 @dataclass
-class SelectAllDataSourceURL(SQL):
-    sql: str = """SELECT * FROM datasource_url;"""
+class SelectAllEvents(SQL):
+    sql: str = """SELECT * FROM event;"""
     args: tuple = ()
 
 
@@ -168,9 +155,9 @@ class SelectAllDataSourceURL(SQL):
 
 
 @dataclass
-class DataSourceURLExists(SQL):
+class EventExists(SQL):
     id: int
-    sql: str = """SELECT EXISTS(SELECT 1 FROM datasource_url WHERE id = %s LIMIT 1);"""
+    sql: str = """SELECT EXISTS(SELECT 1 FROM event WHERE id = %s LIMIT 1);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -179,9 +166,9 @@ class DataSourceURLExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DeleteDataSourceURL(SQL):
+class DeleteEvent(SQL):
     id: int
-    sql: str = """DELETE FROM datasource_url WHERE id = %s;"""
+    sql: str = """DELETE FROM event WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -190,13 +177,12 @@ class DeleteDataSourceURL(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DataSourceURLDML(DML):
-    entity: type[Entity] = DataSourceURL
-    insert: type[SQL] = InsertDataSourceURL
-    update: type[SQL] = UpdateDataSourceURL
-    select: type[SQL] = SelectDataSourceURL
-    select_by_name: type[SQL] = SelectDataSourceURLByName
-    select_by_parent_id: type[SQL] = SelectDataSourceURLByParentId
-    select_all: type[SQL] = SelectAllDataSourceURL
-    exists: type[SQL] = DataSourceURLExists
-    delete: type[SQL] = DeleteDataSourceURL
+class EventDML(DML):
+    entity: type[Entity] = Event
+    insert: type[SQL] = InsertEvent
+    update: type[SQL] = UpdateEvent
+    select: type[SQL] = SelectEvent
+    select_by_name: type[SQL] = SelectEventByName
+    select_all: type[SQL] = SelectAllEvents
+    exists: type[SQL] = EventExists
+    delete: type[SQL] = DeleteEvent

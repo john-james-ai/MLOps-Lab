@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday November 13th 2022 05:00:30 pm                                               #
-# Modified   : Friday December 30th 2022 04:25:09 pm                                               #
+# Modified   : Friday January 13th 2023 08:18:08 am                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -47,4 +47,4 @@ STAGES = ["setup", "extract", "raw", "split", "interim", "final"]
 # ------------------------------------------------------------------------------------------------ #
 #                                         STATES                                                   #
 # ------------------------------------------------------------------------------------------------ #
-STATES = ['CREATED', 'READY', 'IN-PROGRESS', 'FAILED', 'COMPLETE']
+STATES = ["CREATED", "LOADED", "IN-PROGRESS", "FAILED", "COMPLETE"]

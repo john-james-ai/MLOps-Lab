@@ -11,16 +11,20 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Wednesday January 11th 2023 06:51:55 pm                                             #
+# Modified   : Friday January 13th 2023 02:30:41 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
+import os
+import dotenv
+
 from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
 from recsys.core.entity.base import Entity
 from recsys.core.entity.profile import Profile
+
 # ================================================================================================ #
 #                                        PROFILE                                                   #
 # ================================================================================================ #
@@ -32,7 +36,7 @@ from recsys.core.entity.profile import Profile
 @dataclass
 class CreateProfileTable(SQL):
     name: str = "profile"
-    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), start DATETIME, end DATETIME, duration MEDIUMINT, user_cpu_time BIGINT, percent_cpu_used FLOAT, total_physical_memory BIGINT, physical_memory_available BIGINT, physical_memory_used BIGINT, percent_physical_memory_used FLOAT, active_memory_used BIGINT, disk_usage BIGINT, percent_disk_usage FLOAT, read_count BIGINT, write_count BIGINT, read_bytes BIGINT, write_bytes BIGINT, read_time FLOAT, write_time FLOAT, bytes_sent BIGINT, bytes_recv BIGINT, parent_id MEDIUMINT NOT NULL, created DATETIME, modified DATETIME, UNIQUE(name));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS profile  (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), start DATETIME, end DATETIME, duration MEDIUMINT, user_cpu_time BIGINT, percent_cpu_used FLOAT, total_physical_memory BIGINT, physical_memory_available BIGINT, physical_memory_used BIGINT, percent_physical_memory_used FLOAT, active_memory_used BIGINT, disk_usage BIGINT, percent_disk_usage FLOAT, read_count BIGINT, write_count BIGINT, read_bytes BIGINT, write_bytes BIGINT, read_time FLOAT, write_time FLOAT, bytes_sent BIGINT, bytes_recv BIGINT, parent_id MEDIUMINT NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
     args: tuple = ()
     description: str = "Created the profile table."
 
@@ -52,15 +56,20 @@ class DropProfileTable(SQL):
 @dataclass
 class ProfileTableExists(SQL):
     name: str = "profile"
-    sql: str = """SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_NAME = 'profile';"""
+    sql: str = None
     args: tuple = ()
-    description: str = "Checked existence of the profile table."
+    description: str = "Checked existence of profile table."
+
+    def __post_init__(self) -> None:
+        dotenv.load_dotenv()
+        mode = os.getenv("MODE")
+        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}' AND TABLE_NAME = 'profile';"""
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class ProfileDDL(DDL):
-    entity: type(Entity) = Profile
+    entity: type[Entity] = Profile
     create: SQL = CreateProfileTable()
     drop: SQL = DropProfileTable()
     exists: SQL = ProfileTableExists()
@@ -74,7 +83,7 @@ class ProfileDDL(DDL):
 @dataclass
 class InsertProfile(SQL):
     dto: DTO
-    sql: str = """INSERT INTO profile (oid, name, description, start, end, duration, user_cpu_time, percent_cpu_used, total_physical_memory, physical_memory_available, physical_memory_used, percent_physical_memory_used, active_memory_used, disk_usage, percent_disk_usage, read_count, write_count, read_bytes, write_bytes, read_time, write_time, bytes_sent, bytes_recv, parent_id, created, modified) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO profile (oid, name, description, start, end, duration, user_cpu_time, percent_cpu_used, total_physical_memory, physical_memory_available, physical_memory_used, percent_physical_memory_used, active_memory_used, disk_usage, percent_disk_usage, read_count, write_count, read_bytes, write_bytes, read_time, write_time, bytes_sent, bytes_recv, parent_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -103,8 +112,6 @@ class InsertProfile(SQL):
             self.dto.bytes_sent,
             self.dto.bytes_recv,
             self.dto.parent_id,
-            self.dto.created,
-            self.dto.modified,
         )
 
 
@@ -114,7 +121,7 @@ class InsertProfile(SQL):
 @dataclass
 class UpdateProfile(SQL):
     dto: DTO
-    sql: str = """UPDATE profile SET oid = %s, name = %s, description = %s, start = %s, end = %s, duration = %s, user_cpu_time = %s, percent_cpu_used = %s, total_physical_memory = %s, physical_memory_available = %s, physical_memory_used = %s, percent_physical_memory_used = %s, active_memory_used = %s, disk_usage = %s, percent_disk_usage = %s, read_count = %s, write_count = %s, read_bytes = %s, write_bytes = %s, read_time = %s, write_time = %s, bytes_sent = %s, bytes_recv = %s, parent_id = %s, created = %s, modified = %s WHERE id = %s;"""
+    sql: str = """UPDATE profile SET oid = %s, name = %s, description = %s, start = %s, end = %s, duration = %s, user_cpu_time = %s, percent_cpu_used = %s, total_physical_memory = %s, physical_memory_available = %s, physical_memory_used = %s, percent_physical_memory_used = %s, active_memory_used = %s, disk_usage = %s, percent_disk_usage = %s, read_count = %s, write_count = %s, read_bytes = %s, write_bytes = %s, read_time = %s, write_time = %s, bytes_sent = %s, bytes_recv = %s, parent_id = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -143,8 +150,6 @@ class UpdateProfile(SQL):
             self.dto.bytes_sent,
             self.dto.bytes_recv,
             self.dto.parent_id,
-            self.dto.created,
-            self.dto.modified,
             self.dto.id,
         )
 
@@ -160,6 +165,7 @@ class SelectProfile(SQL):
 
     def __post_init__(self) -> None:
         self.args = (self.id,)
+
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -181,6 +187,7 @@ class SelectProfileByName(SQL):
 class SelectAllProfiles(SQL):
     sql: str = """SELECT * FROM profile;"""
     args: tuple = ()
+
 
 # ------------------------------------------------------------------------------------------------ #
 
@@ -209,11 +216,11 @@ class DeleteProfile(SQL):
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class ProfileDML(DML):
-    entity: type(Entity) = Profile
-    insert: type(SQL) = InsertProfile
-    update: type(SQL) = UpdateProfile
-    select: type(SQL) = SelectProfile
-    select_by_name: type(SQL) = SelectProfileByName
-    select_all: type(SQL) = SelectAllProfiles
-    exists: type(SQL) = ProfileExists
-    delete: type(SQL) = DeleteProfile
+    entity: type[Entity] = Profile
+    insert: type[SQL] = InsertProfile
+    update: type[SQL] = UpdateProfile
+    select: type[SQL] = SelectProfile
+    select_by_name: type[SQL] = SelectProfileByName
+    select_all: type[SQL] = SelectAllProfiles
+    exists: type[SQL] = ProfileExists
+    delete: type[SQL] = DeleteProfile

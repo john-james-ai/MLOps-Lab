@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 9th 2022 10:54:47 pm                                                #
-# Modified   : Wednesday January 11th 2023 07:10:29 pm                                             #
+# Modified   : Friday January 13th 2023 02:59:01 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -27,6 +27,7 @@ from recsys.core.dal.dto import ProfileDTO
 @dataclass
 class Profile(Entity):
     """Profile Entity and DTO are nearly identical. Entity has Null defaults."""
+
     id: int = None
     oid: str = None
     name: str = None

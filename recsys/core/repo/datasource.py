@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Wednesday January 11th 2023 07:12:03 pm                                             #
+# Modified   : Friday January 13th 2023 04:00:02 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,7 +19,6 @@
 """DataSource Repository"""
 
 from recsys.core.entity.base import Entity
-from recsys.core.entity.datasource import DataSource, DataSourceURL
 from .base import RepoABC
 from .context import Context
 
@@ -28,13 +27,13 @@ from .context import Context
 #                                           REPOSITORY                                             #
 # ------------------------------------------------------------------------------------------------ #
 class DataSourceRepo(RepoABC):
-    """DataSource aggregate repository. """
+    """DataSource aggregate repository."""
 
     def __init__(self, context: Context, *args, **kwargs) -> None:
         super().__init__()
         self._context = context
-        self._datasource_dao = self._context.get_dao(DataSource)
-        self._datasource_url_dao = self._context.get_dao(DataSourceURL)
+        self._datasource_dao = self._context.get_dao("datasource")
+        self._datasource_url_dao = self._context.get_dao("datasourceurl")
         self._oao = self._context.get_oao()
 
     def __len__(self) -> int:
@@ -70,12 +69,21 @@ class DataSourceRepo(RepoABC):
             result = self._oao.read(dto.oid)
         return result
 
+    def get_all(self) -> dict:
+        entities = {}
+        dtos = self._datasource_dao.read_all()
+        for dto in dtos.values():
+            entity = self._oao.read(oid=dto.oid)
+            if hasattr(entity, "id"):
+                entities[entity.id] = entity
+        return entities
+
     def update(self, entity: Entity) -> None:
         """Updates an entity in the database."""
         for datasource_url in entity.urls.values():
             self._datasource_url_dao.update(datasource_url.as_dto())
 
-        self._datasource_dao.update(dto=entity.as_dto())   # Update DataSource metadata
+        self._datasource_dao.update(dto=entity.as_dto())  # Update DataSource metadata
         self._oao.update(entity)  # Persist datasource in object storage
 
     def remove(self, id: str) -> None:
@@ -85,7 +93,7 @@ class DataSourceRepo(RepoABC):
         for datasource_url in datasource.urls.values():
             self._datasource_url_dao.delete(datasource_url.id)
 
-        self._datasource_dao.delete(id)   # Delete DataSource metadata
+        self._datasource_dao.delete(id)  # Delete DataSource metadata
         self._oao.delete(datasource.oid)  # Delete datasource from object storage
 
     def exists(self, id: str) -> bool:

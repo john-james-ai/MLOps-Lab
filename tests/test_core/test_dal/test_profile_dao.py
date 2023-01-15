@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Wednesday January 11th 2023 06:45:30 pm                                             #
+# Modified   : Saturday January 14th 2023 05:00:53 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -98,7 +98,7 @@ class TestProfileDAO:  # pragma: no cover
 
         for j, profile in enumerate(profiles, start=1):
             dto = profile.as_dto()
-            dto.datasource_id = j
+            dto.datasource_oid = j
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)
@@ -128,7 +128,6 @@ class TestProfileDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -149,7 +148,7 @@ class TestProfileDAO:  # pragma: no cover
 
         for j, profile in enumerate(profiles, start=1):
             dto = profile.as_dto()
-            dto.datasource_id = j
+            dto.datasource_oid = j
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)
@@ -209,7 +208,6 @@ class TestProfileDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -245,7 +243,6 @@ class TestProfileDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -264,11 +261,11 @@ class TestProfileDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
 
-        dto = dao.read_by_name(name="profile_dto_3", mode='test')
+        dto = dao.read_by_name(name="profile_dto_3", mode="test")
         assert isinstance(dto, DTO)
         self.check_results(dto)
 
-        dto = dao.read_by_name(name="profile_1", mode='skdi')
+        dto = dao.read_by_name(name="profile_1", mode="skdi")
         assert dto == []
 
         # ---------------------------------------------------------------------------------------- #
@@ -283,7 +280,6 @@ class TestProfileDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -338,7 +334,6 @@ class TestProfileDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -379,6 +374,5 @@ class TestProfileDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)

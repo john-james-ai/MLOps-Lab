@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Wednesday January 11th 2023 07:12:36 pm                                             #
+# Modified   : Friday January 13th 2023 04:00:34 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -19,7 +19,6 @@
 """Job Repository"""
 
 from recsys.core.entity.base import Entity
-from recsys.core.entity.job import Job, Task
 from .base import RepoABC
 from .context import Context
 
@@ -28,13 +27,13 @@ from .context import Context
 #                                           REPOSITORY                                             #
 # ------------------------------------------------------------------------------------------------ #
 class JobRepo(RepoABC):
-    """Job aggregate repository. """
+    """Job aggregate repository."""
 
     def __init__(self, context: Context, *args, **kwargs) -> None:
         super().__init__()
         self._context = context
-        self._job_dao = self._context.get_dao(Job)
-        self._task_dao = self._context.get_dao(Task)
+        self._job_dao = self._context.get_dao("job")
+        self._task_dao = self._context.get_dao("task")
         self._oao = self._context.get_oao()
 
     def __len__(self) -> int:
@@ -69,12 +68,21 @@ class JobRepo(RepoABC):
             result = self._oao.read(dto.oid)
         return result
 
+    def get_all(self) -> dict:
+        entities = {}
+        dtos = self._job_dao.read_all()
+        for dto in dtos.values():
+            entity = self._oao.read(oid=dto.oid)
+            if hasattr(entity, "id"):
+                entities[entity.id] = entity
+        return entities
+
     def update(self, entity: Entity) -> None:
         """Updates an entity in the database."""
         for task in entity.tasks.values():
             self._task_dao.update(task.as_dto())
 
-        self._job_dao.update(dto=entity.as_dto())   # Update job metadata
+        self._job_dao.update(dto=entity.as_dto())  # Update job metadata
         self._oao.update(entity)  # Persist job in object storage
 
     def remove(self, id: str) -> None:
@@ -84,7 +92,7 @@ class JobRepo(RepoABC):
         for task in job.tasks.values():
             self._task_dao.delete(task.id)
 
-        self._job_dao.delete(id)   # Delete job metadata
+        self._job_dao.delete(id)  # Delete job metadata
         self._oao.delete(job.oid)  # Delete job from object storage
 
     def exists(self, id: str) -> bool:

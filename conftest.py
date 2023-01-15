@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday January 11th 2023 06:32:03 pm                                             #
-# Modified   : Wednesday January 11th 2023 08:00:50 pm                                             #
+# Modified   : Saturday January 14th 2023 09:33:29 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -27,6 +27,8 @@ from recsys.core.entity.dataset import DataFrame, Dataset
 from recsys.core.entity.datasource import DataSource
 from recsys.core.entity.profile import Profile
 from recsys.core.entity.job import Job, Task
+from tests.data.operator import MockOperator, BadOperator
+
 
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
@@ -59,7 +61,11 @@ def datasource(ratings):
         website="www.spotify.com",
     )
     for i in range(1, 6):
-        url = datasource.create_url(url=f"www.spotify.resource_{i}.com", name=f"datasource_url_name_{i}", description=f"Description for DataFrame {i}")
+        url = datasource.create_url(
+            url=f"www.spotify.resource_{i}.com",
+            name=f"datasource_url_name_{i}",
+            description=f"Description for DataFrame {i}",
+        )
         datasource.add_url(url)
 
     return datasource
@@ -88,7 +94,7 @@ def files():
         file = File(
             name=f"file_{i}",
             description=f"Test File Description {i}",
-            datasource_id=i % 3,
+            datasource_oid=i % 3,
             stage="extract",
             uri="tests/data/movielens25m/raw/ratings.pkl",
             task_id=i + 22,
@@ -148,8 +154,6 @@ def profiles():
             bytes_sent=i + 17000,
             bytes_recv=i + 18000,
             parent_id=i * 20,
-            created=datetime.now(),
-            modified=datetime.now(),
         )
         profiles.append(profile)
     return profiles
@@ -162,7 +166,7 @@ def datasets(ratings):
     for i in range(1, 6):
         dataset = Dataset(
             name=f"dataset_name_{i}",
-            datasource_id=i + 5,
+            datasource_oid=i + 5,
             description=f"Description for Dataset # {i}",
             stage="extract",
         )
@@ -182,38 +186,20 @@ def datasets(ratings):
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def jobs():
-    jobs = []
-    for i in range(1, 6):
-        job = Job(
-            name=f"job_name_{i}",
-            description=f"Description for Job # {i}",
-        )
-        for j in range(1, 6):
-            task = job.create_task(name=f"task_{j}_job_{i}",
-                                   description=f"Description for task {j} of job {i}"
-                                   )
-            job.add_task(task)
-        jobs.append(job)
-    return jobs
-
-
-# ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
 def job(jobs):
     return jobs[0]
 
 
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def tasks(jobs):
     tasks = []
     for i in range(1, 6):
-        task = Task(name=f"task_{i}",
-                    description=f"Description for task {i}.",
-                    job=jobs[i - 1]
-                    )
+        task = Task(
+            name=f"task_{i}", description=f"Description for task {i}.", operator=MockOperator()
+        )
         task.id = i
+        task.parent = jobs[i - 1]
         tasks.append(task)
 
     return tasks
@@ -223,18 +209,18 @@ def tasks(jobs):
 @pytest.fixture(scope="function")
 def datasources():
     datasources = []
-    sources = ['spotify', 'movielens25m', 'tenrec']
+    sources = ["spotify", "movielens25m", "tenrec"]
     for i in range(1, 6):
         datasource = DataSource(
             name=f"{sources[i % 3]}_{i}",
             description=f"Description for DataSource # {i}",
-            website="www.some_website.com"
+            website="www.some_website.com",
         )
         for j in range(1, 6):
             datasource_url = datasource.create_url(
                 name=f"datasource_url_{j}_of_datasource_{i}",
                 url=f"www.url_{j}.com",
-                description=f"Description for datasource_url {j} of datasource {i}"
+                description=f"Description for datasource_url {j} of datasource {i}",
             )
             datasource.add_url(datasource_url)
         datasources.append(datasource)
@@ -267,12 +253,11 @@ def job_config():
 
 
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope='module', autouse=True)
+@pytest.fixture(scope="class", autouse=True)
 def container():
     container = Recsys()
     container.init_resources()
-    container.wire(modules=[recsys.containers,
-                            "recsys.setup.reset_db"])
+    container.wire(modules=[recsys.containers, "recsys.core.workflow.build.job"])
     return container
 
 
@@ -280,3 +265,54 @@ def container():
 @pytest.fixture(scope="module")
 def context(container):
     return container.repo.context()
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def mockjob():
+    job = Job(name="test_mockjob", description="Test Mock Job")
+    for i in range(1, 6):
+        task = Task(
+            name=f"test_mockjob_{i}", description=f"Test MockJob Task {i}", operator=MockOperator()
+        )
+        job.add_task(task)
+    return job
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def badjob():
+    job = Job(name="test_badjob", description="Test Bad Job")
+    for i in range(1, 6):
+        task = Task(
+            name=f"test_badjob_{i}", description=f"Test BadJob Task {i}", operator=BadOperator()
+        )
+        job.add_task(task)
+    return job
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="function")
+def jobs(container):
+    jobs = []
+    for i in range(1, 6):
+        job = Job(
+            name=f"job_name_{i}",
+            description=f"Description for Job # {i}",
+        )
+        for j in range(1, 6):
+            if j == 5:
+                task = Task(
+                    name=f"task_{j}_badjob_{i}",
+                    description=f"Description for task {j} of job {i}",
+                    operator=BadOperator(),
+                )
+            else:
+                task = Task(
+                    name=f"task_{j}_mockjob_{i}",
+                    description=f"Description for task {j} of job {i}",
+                    operator=MockOperator(),
+                )
+            job.add_task(task)
+        jobs.append(job)
+    return jobs

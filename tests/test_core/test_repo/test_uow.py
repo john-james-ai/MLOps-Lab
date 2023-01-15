@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 10th 2023 06:03:41 pm                                               #
-# Modified   : Tuesday January 10th 2023 07:29:36 pm                                               #
+# Modified   : Thursday January 12th 2023 09:52:22 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -22,8 +22,6 @@ import pytest
 import logging
 
 from recsys.core.repo.uow import UnitOfWork
-from recsys.core.entity.file import File
-from recsys.core.entity.profile import Profile
 from recsys.core.repo.entity import Repo
 from recsys.core.repo.dataset import DatasetRepo
 from recsys.core.repo.datasource import DataSourceRepo
@@ -44,13 +42,8 @@ class TestUOW:  # pragma: no cover
         dba.reset()
         dba = container.dba.object()
         dba.reset()
-        uow = container.repo.uow()
+        uow = container.work.unit()
         assert isinstance(uow, UnitOfWork)
-        uow.register(name="file", repo=Repo, entity=File)
-        uow.register(name="profile", repo=Repo, entity=Profile)
-        uow.register(name="dataset", repo=DatasetRepo)
-        uow.register(name="datasource", repo=DataSourceRepo)
-        uow.register(name="job", repo=JobRepo)
         return uow
 
     def test_setup(self, container, caplog):
@@ -87,7 +80,7 @@ class TestUOW:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_file_wo_save(self, container, files, caplog):
+    def test_file_w_rollback(self, container, files, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -100,11 +93,12 @@ class TestUOW:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         uow = self.test_reset(container)
-        repo = uow.get_repo('file')
-        for file in files:
-            repo.add(file)
+        with uow as unit:
+            repo = unit.get_repo('file')
+            for file in files:
+                repo.add(file)
 
-        uow.rollback()
+            unit.rollback()
 
         for i in range(1, 6):
             assert not repo.exists(i)
@@ -126,7 +120,7 @@ class TestUOW:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_file_w_save(self, container, files, caplog):
+    def test_file_w_exit_context(self, container, files, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -139,13 +133,11 @@ class TestUOW:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         uow = self.test_reset(container)
-        repo = uow.get_repo('file')
-        for file in files:
-            repo.add(file)
+        with uow as unit:
+            repo = unit.get_repo('file')
+            for file in files:
+                repo.add(file)
 
-        uow.save()
-
-        # No save, should not have committed to database.
         for i in range(1, 6):
             assert repo.exists(i)
 

@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+# ================================================================================================ #
+# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Version    : 0.1.0                                                                               #
+# Python     : 3.10.6                                                                              #
+# Filename   : /tests/test_core/test_entity/dataset.yml                                            #
+# ------------------------------------------------------------------------------------------------ #
+# Author     : John James                                                                          #
+# Email      : john.james.ai.studio@gmail.com                                                      #
+# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# ------------------------------------------------------------------------------------------------ #
+# Created    : Saturday January 14th 2023 06:11:07 am                                              #
+# Modified   : Saturday January 14th 2023 06:41:56 am                                              #
+# ------------------------------------------------------------------------------------------------ #
+# License    : MIT License                                                                         #
+# Copyright  : (c) 2023 John James                                                                 #
+# ================================================================================================ #
+dataset:
+  name: test_dataset
+  description: test_dataset_description
+  stage: interim
+  datasource_oid: datasource_of_some_sort
+  task_oid: task_some_task
+  data: tests/data/movielens25m/raw/movies.csv
+  dataframes:
+  - name: test_dataframe_1
+    description: Test DataFrame Description 1
+    stage: interim
+    data: tests/data/movielens25m/raw/movies.csv
+  - name: test_dataframe_2
+    description: Test DataFrame Description 2
+    stage: interim
+    data: tests/data/movielens25m/raw/movies.csv
+
+

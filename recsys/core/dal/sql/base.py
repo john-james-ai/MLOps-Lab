@@ -11,13 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 16th 2022 02:57:58 am                                               #
-# Modified   : Saturday January 7th 2023 11:37:54 am                                               #
+# Modified   : Friday January 13th 2023 02:30:41 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 from dataclasses import dataclass
 from abc import ABC
+
 # ------------------------------------------------------------------------------------------------ #
 
 # ------------------------------------------------------------------------------------------------ #
@@ -48,12 +49,13 @@ class DDL(ABC):  # pragma: no cover
 @dataclass
 class DML(ABC):  # pragma: no cover
     """Base class for entity Data Manipulation Language (DML)."""
-    insert: type(SQL) = None
-    update: type(SQL) = None
-    select: type(SQL) = None
-    select_all: type(SQL) = None
-    exists: type(SQL) = None
-    delete: type(SQL) = None
+
+    insert: type[SQL] = None
+    update: type[SQL] = None
+    select: type[SQL] = None
+    select_all: type[SQL] = None
+    exists: type[SQL] = None
+    delete: type[SQL] = None
 
 
 # ------------------------------------------------------------------------------------------------ #

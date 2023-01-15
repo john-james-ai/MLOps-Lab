@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Wednesday January 11th 2023 08:08:44 pm                                             #
+# Modified   : Friday January 13th 2023 03:58:04 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -30,11 +30,11 @@ from .context import Context
 class Repo(RepoABC):
     """Repository base class"""
 
-    def __init__(self, context: Context, entity: type(Entity)) -> None:
+    def __init__(self, context: Context, entity: str) -> None:
         super().__init__()
         self._context = context
         self._entity = entity
-        self._dao = self._context.get_dao(self._entity)
+        self._dao = self._context.get_dao(entity)
         self._oao = self._context.get_oao()
 
     def __len__(self) -> int:
@@ -61,7 +61,8 @@ class Repo(RepoABC):
         dtos = self._dao.read_all()
         for dto in dtos.values():
             entity = self._oao.read(oid=dto.oid)
-            entities[entity.id] = entity
+            if hasattr(entity, "id"):
+                entities[entity.id] = entity
         return entities
 
     def get_by_name(self, name: str) -> Entity:
@@ -92,6 +93,6 @@ class Repo(RepoABC):
             entity_df = pd.DataFrame(data=data, index=[entity.id])
             df = pd.concat([df, entity_df], axis=0)
         print(120 * "=")
-        print(40 * " ", f"\t\t{self._entity.__name__} Repository")
+        print(40 * " ", f"\t\t{self._entity} Repository")
         print(120 * "_")
         print(df)

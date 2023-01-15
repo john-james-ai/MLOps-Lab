@@ -11,69 +11,123 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 02:32:23 pm                                              #
-# Modified   : Saturday January 7th 2023 12:47:47 pm                                               #
+# Modified   : Friday January 13th 2023 06:03:43 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Main Module."""
 from dependency_injector.wiring import Provide, inject
+from dependency_injector.providers import Factory
 
+from recsys.core.dal.dba import DBA, ODBA
 from recsys.containers import Recsys
-from recsys.core.dal.dba import DBA
+
 
 # ------------------------------------------------------------------------------------------------ #
-
-
 @inject
-def build_file_table(file_table: DBA = Provide[Recsys.table.file]) -> None:
-    file_table.reset()
+def reset_edb(dba=Provide[Recsys.dba.events_database]):
+    dba.reset()
+    assert dba.exists()
+
+
+# ------------------------------------------------------------------------------------------------ #
+@inject
+def reset_rdb(dba=Provide[Recsys.dba.recsys_database]):
+    dba.reset()
+    assert dba.exists()
+
+
+# ------------------------------------------------------------------------------------------------ #
+@inject
+def reset_odb(dba=Provide[Recsys.dba.object]):
+    dba.reset()
+    assert dba.exists()
+
+
+# ------------------------------------------------------------------------------------------------ #
+@inject
+def build_event_table(event_table: Factory[DBA] = Provide[Recsys.dba.event]) -> None:
+    event_table.create()
+    assert event_table.exists()
+
+
+# ------------------------------------------------------------------------------------------------ #
+@inject
+def build_file_table(file_table: Factory[DBA] = Provide[Recsys.dba.file]) -> None:
+    file_table.create()
     assert file_table.exists()
 
 
+# ------------------------------------------------------------------------------------------------ #
 @inject
-def build_datasource_table(datasource_table: DBA = Provide[Recsys.table.datasource]) -> None:
-    datasource_table.reset()
+def build_datasource_table(datasource_table: Factory[DBA] = Provide[Recsys.dba.datasource]) -> None:
+    datasource_table.create()
     assert datasource_table.exists()
 
 
+# ------------------------------------------------------------------------------------------------ #
 @inject
-def build_datasource_url_table(datasource_url_table: DBA = Provide[Recsys.table.datasource_url]) -> None:
-    datasource_url_table.reset()
+def build_datasource_url_table(
+    datasource_url_table: Factory[DBA] = Provide[Recsys.dba.datasource_url],
+) -> None:
+    datasource_url_table.create()
     assert datasource_url_table.exists()
 
 
+# ------------------------------------------------------------------------------------------------ #
 @inject
-def build_dataframe_table(dataframe_table: DBA = Provide[Recsys.table.dataframe]) -> None:
-    dataframe_table.reset()
+def build_dataframe_table(dataframe_table: Factory[DBA] = Provide[Recsys.dba.dataframe]) -> None:
+    dataframe_table.create()
     assert dataframe_table.exists()
 
 
+# ------------------------------------------------------------------------------------------------ #
 @inject
-def build_dataset_table(dataset_table: DBA = Provide[Recsys.table.dataset]) -> None:
-    dataset_table.reset()
+def build_dataset_table(dataset_table: Factory[DBA] = Provide[Recsys.dba.dataset]) -> None:
+    dataset_table.create()
     assert dataset_table.exists()
 
 
+# ------------------------------------------------------------------------------------------------ #
 @inject
-def build_job_table(job_table: DBA = Provide[Recsys.table.job]) -> None:
-    job_table.reset()
+def build_job_table(job_table: Factory[DBA] = Provide[Recsys.dba.job]) -> None:
+    job_table.create()
     assert job_table.exists()
 
 
+# ------------------------------------------------------------------------------------------------ #
 @inject
-def build_task_table(task_table: DBA = Provide[Recsys.table.task]) -> None:
-    task_table.reset()
+def build_task_table(task_table: Factory[DBA] = Provide[Recsys.dba.task]) -> None:
+    task_table.create()
     assert task_table.exists()
 
 
+# ------------------------------------------------------------------------------------------------ #
 @inject
-def build_profile_table(task_table: DBA = Provide[Recsys.table.profile]) -> None:
-    task_table.reset()
-    assert task_table.exists()
+def build_profile_table(profile_table: Factory[DBA] = Provide[Recsys.dba.profile]) -> None:
+    profile_table.create()
+    assert profile_table.exists()
 
 
-def build_tables():
+# ------------------------------------------------------------------------------------------------ #
+@inject
+def build_object_db(odb: Factory[ODBA] = Provide[Recsys.dba.object]) -> None:
+    odb.create()
+    assert odb.exists()
+
+
+# ------------------------------------------------------------------------------------------------ #
+def reset():
+    reset_edb()
+    reset_rdb()
+    reset_odb()
+
+
+# ------------------------------------------------------------------------------------------------ #
+def rebuild():
+    build_event_table()
+    build_profile_table()
     build_file_table()
     build_datasource_table()
     build_datasource_url_table()
@@ -81,20 +135,23 @@ def build_tables():
     build_dataset_table()
     build_job_table()
     build_task_table()
-    build_profile_table()
+    build_object_db()
 
 
 # ------------------------------------------------------------------------------------------------ #
 def wireup():
     recsys = Recsys()
     recsys.core.init_resources()
-    recsys.wire(modules=[__name__, "recsys.core.repo.context"])
+    recsys.wire(modules=[__name__])
 
 
+# ------------------------------------------------------------------------------------------------ #
 def main():
     wireup()
-    build_tables()
+    reset()
+    rebuild()
 
 
+# ------------------------------------------------------------------------------------------------ #
 if __name__ == "__main__":
     main()

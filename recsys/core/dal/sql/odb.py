@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday January 6th 2023 11:45:23 pm                                                 #
-# Modified   : Wednesday January 11th 2023 06:51:04 pm                                             #
+# Modified   : Friday January 13th 2023 02:30:27 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -78,7 +78,7 @@ class Select(OQL):
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
 class SelectByName(OQL):
-    entity: type(Entity)
+    entity: type[Entity]
     name: str
     oid: str = None
     cmd: str = "select_by_name"

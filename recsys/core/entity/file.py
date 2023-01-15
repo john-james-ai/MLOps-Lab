@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Wednesday January 11th 2023 07:08:21 pm                                             #
+# Modified   : Saturday January 14th 2023 05:10:31 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -33,37 +33,37 @@ class File(Entity):
     Args:
         name (str): Short, yet descriptive lowercase name for File object.
         description (str): Describes the File object. Default's to parent's description if None.
-        datasource_id (str): Source of File
+        datasource_oid (str): Source of File
         stage (str): Data processing stage, i.e. extract or raw.
         uri (str): The path to the file on disk.
-        task_id (int): The identifier for the Task object which created the File object.
+        task_oid (int): The identifier for the Task object which created the File object.
 
     """
 
     def __init__(
         self,
         name: str,
-        datasource_id: int,
+        datasource_oid: int,
         stage: str,
         uri: str,
         description: str = None,
-        task_id: int = 0
+        task_oid: str = 0,
     ) -> None:
         super().__init__(name=name, description=description)
-        self._datasource_id = datasource_id
+        self._datasource_oid = datasource_oid
         self._stage = stage
         self._uri = uri
-        self._task_id = task_id
+        self._task_oid = task_oid
 
         self._size = None
         self._set_metadata()
         self._validate()
 
     def __str__(self) -> str:
-        return f"File Id: {self._id}\n\t OID: {self._oid}\n\tData source: {self._datasource_id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tStage: {self._stage}\n\tSize: {self._size}\n\tTask Id: {self._task_id}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"File Id: {self._id}\n\t OID: {self._oid}\n\tData source: {self._datasource_oid}\n\tName: {self._name}\n\tDescription: {self._description}\n\tStage: {self._stage}\n\tSize: {self._size}\n\tTask Id: {self._task_oid}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
     def __repr__(self) -> str:
-        return f"{self._id}, {self._oid}, {self._datasource_id}, {self._name}, {self._description}, {self._stage}, {self._size}, {self._task_id}, {self._created}, {self._modified}"
+        return f"{self._id}, {self._oid}, {self._datasource_oid}, {self._name}, {self._description}, {self._stage}, {self._size}, {self._task_oid}, {self._created}, {self._modified}"
 
     def __eq__(self, other) -> bool:
         """Compares two File for equality.
@@ -78,9 +78,9 @@ class File(Entity):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def datasource_id(self) -> str:
+    def datasource_oid(self) -> str:
         """Datasource from which the File Component has derived."""
-        return self._datasource_id
+        return self._datasource_oid
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -100,12 +100,12 @@ class File(Entity):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def task_id(self) -> int:
-        return self._task_id
+    def task_oid(self) -> int:
+        return self._task_oid
 
-    @task_id.setter
-    def task_id(self, task_id: int) -> None:
-        self._task_id = task_id
+    @task_oid.setter
+    def task_oid(self, task_oid: str) -> None:
+        self._task_oid = task_oid
         self._modified = datetime.now()
 
     # ------------------------------------------------------------------------------------------------ #
@@ -115,11 +115,11 @@ class File(Entity):
             oid=self._oid,
             name=self._name,
             description=self._description,
-            datasource_id=self._datasource_id,
+            datasource_oid=self._datasource_oid,
             stage=self._stage,
             uri=self._uri,
             size=self._size,
-            task_id=self._task_id,
+            task_oid=self._task_oid,
             created=self._created,
             modified=self._modified,
         )
