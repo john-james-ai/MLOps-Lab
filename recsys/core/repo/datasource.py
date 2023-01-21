@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Friday January 13th 2023 04:00:02 pm                                                #
+# Modified   : Friday January 20th 2023 06:17:30 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -45,7 +45,7 @@ class DataSourceRepo(RepoABC):
         dto = self._datasource_dao.create(entity.as_dto())
         entity.id = dto.id
 
-        for name, datasource_url in entity.urls.items():
+        for datasource_url in entity.urls.values():
             datasource_url.parent = entity
             dto = self._datasource_url_dao.create(dto=datasource_url.as_dto())
             datasource_url.id = dto.id

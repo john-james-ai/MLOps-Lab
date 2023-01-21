@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/services/orchestrator.py                                               #
+# Filename   : /recsys/core/workflow/orchestrator.py                                               #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday January 12th 2023 09:09:55 pm                                              #
-# Modified   : Friday January 13th 2023 11:57:33 pm                                                #
+# Modified   : Friday January 20th 2023 10:53:48 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -21,7 +21,7 @@ from typing import Any
 
 from recsys.core.services.base import Service
 from recsys.core.repo.uow import UnitOfWork
-from recsys.core.entity.job import Job
+from recsys.core.workflow.process import Job
 from recsys import STATES
 
 
@@ -62,6 +62,7 @@ class Orchestrator(Service):
                 self._end(uow=uow)
             except Exception:  # pragma: no cover
                 self._failed(uow=uow)
+                raise
 
         return self._data
 

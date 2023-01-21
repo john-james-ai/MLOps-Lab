@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday January 13th 2023 08:05:33 am                                                #
-# Modified   : Saturday January 14th 2023 04:53:43 am                                              #
+# Modified   : Friday January 20th 2023 10:16:49 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -22,7 +22,7 @@ import pytest
 import logging
 
 from recsys.core.workflow.orchestrator import Orchestrator
-from recsys.core.entity.job import Job
+from recsys.core.workflow.process import Job
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)

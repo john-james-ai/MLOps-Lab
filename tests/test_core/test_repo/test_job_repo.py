@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 1st 2023 02:21:02 pm                                                 #
-# Modified   : Wednesday January 11th 2023 08:09:51 pm                                             #
+# Modified   : Friday January 20th 2023 10:16:46 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -21,8 +21,9 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.entity.job import Job, Task
+from recsys.core.workflow.process import Job, Task
 from recsys.core.repo.job import JobRepo
+
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
@@ -33,7 +34,6 @@ single_line = f"\n{100 * '-'}\n"
 @pytest.mark.repo
 @pytest.mark.job_repo
 class TestJobRepo:  # pragma: no cover
-
     def reset_db(self, container) -> None:
         dba = container.dba.job()
         dba.reset()
@@ -105,7 +105,6 @@ class TestJobRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -147,7 +146,6 @@ class TestJobRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -209,7 +207,6 @@ class TestJobRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -264,7 +261,6 @@ class TestJobRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 

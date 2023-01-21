@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Friday January 13th 2023 09:11:25 pm                                                #
+# Modified   : Friday January 20th 2023 06:10:46 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -157,13 +157,15 @@ class Database(AbstractDatabase):
 
     def close(self) -> None:
         """Closes the underlying database connection."""
-        self._connection.close()
+        if self._connection.is_open:
+            self._connection.close()
         self._is_open = False
         self._in_transaction = False
 
     def save(self) -> None:
         """Saves changes to the database."""
-        self._connection.commit()
+        if self._connection.is_open:
+            self._connection.commit()
         self._in_transaction = False
 
     def rollback(self) -> None:

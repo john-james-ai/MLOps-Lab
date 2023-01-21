@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday January 14th 2023 09:19:11 pm                                              #
+# Modified   : Saturday January 21st 2023 02:49:20 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -356,7 +356,7 @@ class DataFrame(DataComponent):
             ncols=self._ncols,
             nulls=self._nulls,
             pct_nulls=self._pct_nulls,
-            parent_id=self._parent.id,
+            parent_oid=self._parent.id,
             created=self._created,
             modified=self._modified,
         )

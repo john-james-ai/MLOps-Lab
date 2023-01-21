@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Friday January 13th 2023 08:22:13 am                                                #
+# Modified   : Saturday January 21st 2023 02:49:23 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,7 +24,8 @@ import mysql.connector
 
 from recsys.core.dal.dto import DTO
 from recsys.core.dal.dao import DAO
-from recsys.core.entity.job import Task
+from recsys.core.workflow.process import Task
+from recsys import STATES
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -292,10 +293,10 @@ class TestTaskDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
         for i in range(6, 11):
-            tasks = dao.read_by_parent_id(i)
+            tasks = dao.read_by_parent_oid(i)
             for id, task in tasks.items():
                 assert isinstance(task, Task)
-                assert task.parent_id == i
+                assert task.parent_oid == i
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

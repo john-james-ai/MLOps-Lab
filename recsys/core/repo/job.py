@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:14:54 pm                                             #
-# Modified   : Friday January 13th 2023 04:00:34 pm                                                #
+# Modified   : Friday January 20th 2023 08:00:45 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -44,7 +44,7 @@ class JobRepo(RepoABC):
         dto = self._job_dao.create(entity.as_dto())
         entity.id = dto.id
 
-        for name, task in entity.tasks.items():
+        for task in entity.tasks.values():
             task.parent = entity
             dto = self._task_dao.create(dto=task.as_dto())
             task.id = dto.id

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Friday January 13th 2023 06:35:32 pm                                                #
+# Modified   : Saturday January 21st 2023 03:41:53 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
 from recsys.core.entity.base import Entity
-from recsys.core.entity.event import Event
+from recsys.core.workflow.event import Event
 
 # ================================================================================================ #
 #                                        PROFILE                                                   #
@@ -36,7 +36,7 @@ from recsys.core.entity.event import Event
 @dataclass
 class CreateEventTable(SQL):
     name: str = "event"
-    sql: str = """CREATE TABLE IF NOT EXISTS event (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), job_oid VARCHAR(255) NOT NULL, task_oid VARCHAR(255) NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);"""
+    sql: str = """CREATE TABLE IF NOT EXISTS event (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(64), process_type VARCHAR(128) NOT NULL, process_oid VARCHAR(128) NOT NULL, parent_oid VARCHAR(128) NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);"""
     args: tuple = ()
     description: str = "Created the event table."
 
@@ -83,7 +83,7 @@ class EventDDL(DDL):
 @dataclass
 class InsertEvent(SQL):
     dto: DTO
-    sql: str = """INSERT INTO event (oid, name, description, job_oid, task_oid) VALUES (%s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO event (oid, name, description, process_type, process_oid, parent_oid) VALUES (%s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -91,8 +91,9 @@ class InsertEvent(SQL):
             self.dto.oid,
             self.dto.name,
             self.dto.description,
-            self.dto.job_oid,
-            self.dto.task_oid,
+            self.dto.process_type,
+            self.dto.process_oid,
+            self.dto.parent_oid,
         )
 
 
@@ -102,7 +103,7 @@ class InsertEvent(SQL):
 @dataclass
 class UpdateEvent(SQL):
     dto: DTO
-    sql: str = """UPDATE event SET oid = %s, name = %s, description = %s, job_oid = %s, task_oid = %s WHERE id = %s;"""
+    sql: str = """UPDATE event SET oid = %s, name = %s, description = %s, process_type = %s, process_oid = %s, parent_oid = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -110,8 +111,9 @@ class UpdateEvent(SQL):
             self.dto.oid,
             self.dto.name,
             self.dto.description,
-            self.dto.job_oid,
-            self.dto.task_oid,
+            self.dto.process_type,
+            self.dto.process_oid,
+            self.dto.parent_oid,
             self.dto.id,
         )
 

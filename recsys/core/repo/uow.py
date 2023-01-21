@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 25th 2022 12:55:35 pm                                               #
-# Modified   : Friday January 13th 2023 11:49:55 pm                                                #
+# Modified   : Friday January 20th 2023 09:43:49 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -61,28 +61,30 @@ class UnitOfWorkABC(ABC):  # pragma: no cover
 class UnitOfWork(UnitOfWorkABC):
     """Unit of Work object containing all Entity repositories and the current context entity.
 
-    A transaction is started when the first entity database context is registered. Transactions
-    are extant until an explicit save or rollback is called. Begin starts a transaction unless
-    an existing transaction is open. Nested transactions are not supported.
+    A transaction is started when the unit of work is instantiated. Transactions
+    are extant until an explicit save or rollback is called. Begin starts a transaction only if
+    the prior transaction has been closed or garbage collected. Nested transactions are not supported.
 
     Args:
-        context (Context): Contains the database context in terms of Database Access Objects.
+        entities (providers.Container): A container of entity repositories that share a common context.
+
+    Release Notes:
+    1. job, event, and profile repositories were removed as they contain non-entities which
+        are subject to a different persistence and lifetime regimes. Entity repositories
+        are included for transaction isolation. Events, jobs, and job profiles are not
+        transaction isolated.
 
     """
 
-    def __init__(self, repos: providers.Container) -> None:
+    def __init__(self, entities: providers.Container) -> None:
         super().__init__()
-        self._context = repos.context()
+        self._context = entities.context()
         self._repos = {}
-        self._repos["file"] = repos.file()
-        self._repos["profile"] = repos.profile()
-        self._repos["datasource"] = repos.datasource()
-        self._repos["dataset"] = repos.dataset()
-        self._repos["job"] = repos.job()
-        self._repos["event"] = repos.event()
+        self._repos["file"] = entities.file()
+        self._repos["datasource"] = entities.datasource()
+        self._repos["dataset"] = entities.dataset()
         self._in_transaction = False
         self._job = None
-        # self.begin()  # Unit of work is started at instantiation.
         msg = f"Instantiated UoW at {id(self)}."
         self._logger.debug(msg)
 

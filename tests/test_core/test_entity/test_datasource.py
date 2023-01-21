@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 27th 2022 05:33:26 pm                                              #
-# Modified   : Tuesday January 10th 2023 02:02:04 am                                               #
+# Modified   : Saturday January 21st 2023 02:49:25 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,6 +23,7 @@ import logging
 
 # Import modules to be tested
 from recsys.core.entity.datasource import DataSource, DataSourceURL
+
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
@@ -47,7 +48,7 @@ class TestDataSource:  # pragma: no cover
         d = DataSource(
             name=inspect.stack()[0][3],
             website="www.spotify.com",
-            description='DataSource for ' + inspect.stack()[0][3],
+            description="DataSource for " + inspect.stack()[0][3],
         )
         assert d.is_composite is True
         assert d.name == inspect.stack()[0][3]
@@ -84,7 +85,7 @@ class TestDataSource:  # pragma: no cover
         assert datasource.url_count == 5
 
         with pytest.raises(FileNotFoundError):
-            datasource.get_url(name='33')
+            datasource.get_url(name="33")
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -115,12 +116,12 @@ class TestDataSource:  # pragma: no cover
         d = DataSource(
             name=inspect.stack()[0][3],
             website="www.myweb.com",
-            description='DataSource for ' + inspect.stack()[0][3],
+            description="DataSource for " + inspect.stack()[0][3],
         )
         assert datasource != d
         d = datasource
         assert datasource == d
-        d = {'d': 'dompos'}
+        d = {"d": "dompos"}
         assert datasource != d
 
         # ---------------------------------------------------------------------------------------- #
@@ -159,7 +160,7 @@ class TestDataSource:  # pragma: no cover
             dto = url.as_dto()
             assert dto.name == f"datasource_url_name_{i}"
             assert dto.url == f"www.spotify.resource_{i}.com"
-            assert dto.parent_id == datasource.id
+            assert dto.parent_oid == datasource.id
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -188,16 +189,14 @@ class TestDataSource:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         url1 = datasource.create_url(
-            name='new_dataframe',
-            description='some new dataframe',
-            url="www.somenewurl.com"
+            name="new_dataframe", description="some new dataframe", url="www.somenewurl.com"
         )
         assert isinstance(url1, DataSourceURL)
 
         datasource.add_url(url1)
         assert datasource.url_count == 6
 
-        url2 = datasource.get_url(name='new_dataframe')
+        url2 = datasource.get_url(name="new_dataframe")
         assert url1 == url2
         assert url1 != {"some": "dict"}
 
@@ -321,6 +320,5 @@ class TestDataSource:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)

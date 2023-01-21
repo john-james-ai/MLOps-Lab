@@ -11,13 +11,13 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday January 14th 2023 07:43:33 pm                                              #
-# Modified   : Saturday January 14th 2023 09:54:44 pm                                              #
+# Modified   : Friday January 20th 2023 10:17:00 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
 from recsys.core.factory.base import Factory
-from recsys.core.entity.job import Job, Task
+from recsys.core.workflow.process import Job, Task
 
 
 # ------------------------------------------------------------------------------------------------ #

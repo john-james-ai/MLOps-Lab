@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday January 4th 2023 11:14:20 pm                                              #
-# Modified   : Wednesday January 11th 2023 06:45:30 pm                                             #
+# Modified   : Friday January 20th 2023 10:16:41 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -24,10 +24,19 @@ import logging
 from recsys.core.entity.dataset import Dataset
 from recsys.core.entity.dataset import DataFrame
 from recsys.core.entity.datasource import DataSource, DataSourceURL
-from recsys.core.entity.job import Job, Task
+from recsys.core.workflow.process import Job, Task
 from recsys.core.entity.file import File
-from recsys.core.entity.profile import Profile
-from recsys.core.dal.dao import DatasetDAO, DataFrameDAO, FileDAO, JobDAO, TaskDAO, DataSourceDAO, DataSourceURLDAO, ProfileDAO
+from recsys.core.workflow.profile import Profile
+from recsys.core.dal.dao import (
+    DatasetDAO,
+    DataFrameDAO,
+    FileDAO,
+    JobDAO,
+    TaskDAO,
+    DataSourceDAO,
+    DataSourceURLDAO,
+    ProfileDAO,
+)
 from recsys.core.dal.dto import DataFrameDTO
 from recsys.core.repo.context import Context
 
@@ -74,7 +83,6 @@ class TestContext:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -186,7 +194,6 @@ class TestContext:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -242,6 +249,5 @@ class TestContext:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)

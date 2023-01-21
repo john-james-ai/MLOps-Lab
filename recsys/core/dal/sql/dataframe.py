@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday January 13th 2023 02:28:28 pm                                                #
+# Modified   : Saturday January 21st 2023 02:51:21 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -36,7 +36,7 @@ from recsys.core.entity.dataset import DataFrame
 @dataclass
 class CreateDataFrameTable(SQL):
     name: str = "dataframe"
-    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), stage VARCHAR(64) NOT NULL, size BIGINT, nrows BIGINT, ncols SMALLINT, nulls SMALLINT, pct_nulls FLOAT, parent_id SMALLINT NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS dataframe (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), stage VARCHAR(64) NOT NULL, size BIGINT, nrows BIGINT, ncols SMALLINT, nulls SMALLINT, pct_nulls FLOAT, parent_oid VARCHAR(128) NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
     args: tuple = ()
     description: str = "Created the dataframe table."
 
@@ -83,7 +83,7 @@ class DataFrameDDL(DDL):
 @dataclass
 class InsertDataFrame(SQL):
     dto: DTO
-    sql: str = """INSERT INTO dataframe (oid, name, description, stage, size, nrows, ncols, nulls, pct_nulls, parent_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO dataframe (oid, name, description, stage, size, nrows, ncols, nulls, pct_nulls, parent_oid) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -97,7 +97,7 @@ class InsertDataFrame(SQL):
             self.dto.ncols,
             self.dto.nulls,
             self.dto.pct_nulls,
-            self.dto.parent_id,
+            self.dto.parent_oid,
         )
 
 
@@ -107,7 +107,7 @@ class InsertDataFrame(SQL):
 @dataclass
 class UpdateDataFrame(SQL):
     dto: DTO
-    sql: str = """UPDATE dataframe SET oid = %s, name = %s, description = %s, stage = %s, size = %s, nrows = %s, ncols = %s, nulls = %s, pct_nulls = %s, parent_id = %s WHERE id = %s;"""
+    sql: str = """UPDATE dataframe SET oid = %s, name = %s, description = %s, stage = %s, size = %s, nrows = %s, ncols = %s, nulls = %s, pct_nulls = %s, parent_oid = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -121,7 +121,7 @@ class UpdateDataFrame(SQL):
             self.dto.ncols,
             self.dto.nulls,
             self.dto.pct_nulls,
-            self.dto.parent_id,
+            self.dto.parent_oid,
             self.dto.id,
         )
 
