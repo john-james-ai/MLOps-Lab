@@ -11,13 +11,14 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 30th 2022 10:04:01 am                                               #
-# Modified   : Saturday January 14th 2023 09:17:44 pm                                              #
+# Modified   : Friday January 20th 2023 06:40:20 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Loader Module."""
 from typing import Any
+from types import SimpleNamespace
 
 from dependency_injector.wiring import Provide, inject
 from dependency_injector import containers
@@ -35,17 +36,22 @@ class DataSourceLoader(Operator):
     """Loads DataSource objects into the repository.
 
     Args:
-        datasource (DataSource): The DataSource to load.
+        config (dict): Dictionary with a single key: 'datasource'. The values describe the
+            name, description, website, and urls for the datasource.
+        factory (Container): A container of entity factories. (Should be called an
+            industry, but i thought factory.entity provided better semantics.)
 
     """
 
     @inject
     def __init__(
-        self, datasource: dict, factory: containers.DeclarativeContainer = Provide[Recsys.factory]
+        self, config: dict, factory: containers.DeclarativeContainer = Provide[Recsys.factory]
     ) -> None:
         super().__init__()
-        self._datasource = datasource
-        self._factory = factory()
+        datasource = SimpleNamespace(**config["datasource"])
+        setattr(self, "datasource", datasource)
+        self._datasource = config["datasource"]
+        self._factory = factory
 
     def execute(self, uow: UnitOfWork, data: Any = None) -> None:
         """Loads the DataSource into the Repository."""
@@ -57,8 +63,8 @@ class DataSourceLoader(Operator):
 
     def _build_datasource(self) -> DataSource:
         """Constructs the DataSource object."""
-        datasource = self._factory.datasource(**self._datasource["datasource"])
-        for urlconfig in self._datasource["urls"]:
-            url = self._factory.datasource_url(**urlconfig)
+        datasource = self._factory.datasource()(**self._datasource)
+        for urlconfig in self._datasource.urls:
+            url = self._factory.datasource_url()(**urlconfig)
             datasource.add_url(url)
         return datasource

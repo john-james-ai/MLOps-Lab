@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Wednesday January 11th 2023 06:45:30 pm                                             #
+# Modified   : Saturday January 21st 2023 02:49:22 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -100,7 +100,7 @@ class TestDataSourceURLDAO:  # pragma: no cover
 
         for j, (name, datasource_url) in enumerate(datasources[0].urls.items(), start=1):
             dto = datasource_url.as_dto()
-            dto.parent_id = j
+            dto.parent_oid = j
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)
@@ -130,7 +130,6 @@ class TestDataSourceURLDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -151,7 +150,7 @@ class TestDataSourceURLDAO:  # pragma: no cover
 
         for j, (name, datasource_url) in enumerate(datasources[0].urls.items(), start=1):
             dto = datasource_url.as_dto()
-            dto.parent_id = j
+            dto.parent_oid = j
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)
@@ -211,7 +210,6 @@ class TestDataSourceURLDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -247,7 +245,6 @@ class TestDataSourceURLDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -266,11 +263,11 @@ class TestDataSourceURLDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
 
-        dto = dao.read_by_name(name="datasource_url_2", mode='test')
+        dto = dao.read_by_name(name="datasource_url_2", mode="test")
         assert isinstance(dto, DTO)
         self.check_results(dto)
 
-        dto = dao.read_by_name(name="datasource_url_1", mode='skdi')
+        dto = dao.read_by_name(name="datasource_url_1", mode="skdi")
         assert dto == []
 
         # ---------------------------------------------------------------------------------------- #
@@ -285,7 +282,6 @@ class TestDataSourceURLDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -304,10 +300,10 @@ class TestDataSourceURLDAO:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         dao = self.get_dao(container)
         for i in range(6, 11):
-            urls = dao.read_by_parent_id(i)
+            urls = dao.read_by_parent_oid(i)
             for id, datasource_url in urls.items():
                 assert isinstance(datasource_url, DataSourceURL)
-                assert datasource_url.parent_id == i
+                assert datasource_url.parent_oid == i
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -321,7 +317,6 @@ class TestDataSourceURLDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -376,7 +371,6 @@ class TestDataSourceURLDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -417,6 +411,5 @@ class TestDataSourceURLDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)

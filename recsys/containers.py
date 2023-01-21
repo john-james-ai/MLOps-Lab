@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 11:21:14 am                                              #
-# Modified   : Saturday January 14th 2023 08:16:43 pm                                              #
+# Modified   : Saturday January 21st 2023 04:40:25 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -69,8 +69,8 @@ class CoreContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 class ConnectionContainer(containers.DeclarativeContainer):
 
-    recsys_database = providers.Dependency()
-    events_database = providers.Dependency()
+    recsys_database = providers.Configuration()
+    events_database = providers.Configuration()
 
     dbms_connection = providers.Factory(
         MySQLConnection, connector=pymysql.connect, autocommit=False, autoclose=False
@@ -115,34 +115,6 @@ class DatabaseContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class DALContainer(containers.DeclarativeContainer):
-
-    rdb = providers.Dependency()
-    edb = providers.Dependency()
-    odb = providers.Dependency()
-
-    file = providers.Factory(FileDAO, dml=FileDML, database=rdb)
-
-    datasource = providers.Factory(DataSourceDAO, dml=DataSourceDML, database=rdb)
-
-    datasource_url = providers.Factory(DataSourceURLDAO, dml=DataSourceURLDML, database=rdb)
-
-    dataframe = providers.Factory(DataFrameDAO, dml=DataFrameDML, database=rdb)
-
-    dataset = providers.Factory(DatasetDAO, dml=DatasetDML, database=rdb)
-
-    job = providers.Factory(JobDAO, dml=JobDML, database=rdb)
-
-    task = providers.Factory(TaskDAO, dml=TaskDML, database=rdb)
-
-    profile = providers.Factory(ProfileDAO, dml=ProfileDML, database=rdb)
-
-    event = providers.Factory(EventDAO, dml=EventDML, database=edb)
-
-    object = providers.Factory(OAO, oml=ObjectOML, database=odb)
-
-
-# ------------------------------------------------------------------------------------------------ #
 class DBAContainer(containers.DeclarativeContainer):
 
     dbms = providers.Dependency()
@@ -164,11 +136,11 @@ class DBAContainer(containers.DeclarativeContainer):
 
     dataset = providers.Factory(DBA, database=rdb, ddl=DatasetDDL)
 
-    job = providers.Factory(DBA, database=rdb, ddl=JobDDL)
+    job = providers.Factory(DBA, database=edb, ddl=JobDDL)
 
-    task = providers.Factory(DBA, database=rdb, ddl=TaskDDL)
+    task = providers.Factory(DBA, database=edb, ddl=TaskDDL)
 
-    profile = providers.Factory(DBA, database=rdb, ddl=ProfileDDL)
+    profile = providers.Factory(DBA, database=edb, ddl=ProfileDDL)
 
     event = providers.Factory(DBA, database=edb, ddl=EventDDL)
 
@@ -176,21 +148,61 @@ class DBAContainer(containers.DeclarativeContainer):
 
 
 # ------------------------------------------------------------------------------------------------ #
-class RepoContainer(containers.DeclarativeContainer):
+class DALContainer(containers.DeclarativeContainer):
+
+    rdb = providers.Dependency()
+    edb = providers.Dependency()
+    odb = providers.Dependency()
+
+    file = providers.Factory(FileDAO, dml=FileDML, database=rdb)
+
+    datasource = providers.Factory(DataSourceDAO, dml=DataSourceDML, database=rdb)
+
+    datasource_url = providers.Factory(DataSourceURLDAO, dml=DataSourceURLDML, database=rdb)
+
+    dataframe = providers.Factory(DataFrameDAO, dml=DataFrameDML, database=rdb)
+
+    dataset = providers.Factory(DatasetDAO, dml=DatasetDML, database=rdb)
+
+    job = providers.Factory(JobDAO, dml=JobDML, database=edb)
+
+    task = providers.Factory(TaskDAO, dml=TaskDML, database=edb)
+
+    profile = providers.Factory(ProfileDAO, dml=ProfileDML, database=edb)
+
+    event = providers.Factory(EventDAO, dml=EventDML, database=edb)
+
+    object = providers.Factory(OAO, oml=ObjectOML, database=odb)
+
+
+# ------------------------------------------------------------------------------------------------ #
+class ContextContainer(containers.DeclarativeContainer):
 
     dal = providers.Dependency()
 
     context = providers.Factory(Context, dal=dal)
 
+
+# ------------------------------------------------------------------------------------------------ #
+class EntityRepoContainer(containers.DeclarativeContainer):
+
+    context = providers.Dependency()
+
     file = providers.Factory(Repo, context=context, entity="file")
-
-    profile = providers.Factory(Repo, context=context, entity="profile")
-
-    event = providers.Factory(Repo, context=context, entity="event")
 
     datasource = providers.Factory(DataSourceRepo, context=context)
 
     dataset = providers.Factory(DatasetRepo, context=context)
+
+
+# ------------------------------------------------------------------------------------------------ #
+class EventRepoContainer(containers.DeclarativeContainer):
+
+    context = providers.Dependency()
+
+    profile = providers.Factory(Repo, context=context, entity="profile")
+
+    event = providers.Factory(Repo, context=context, entity="event")
 
     job = providers.Factory(JobRepo, context=context)
 
@@ -198,13 +210,13 @@ class RepoContainer(containers.DeclarativeContainer):
 # ------------------------------------------------------------------------------------------------ #
 class WorkContainer(containers.DeclarativeContainer):
 
-    repos = providers.Dependency()
+    entities = providers.Dependency()
 
-    unit = providers.Factory(UnitOfWork, repos=repos)
+    unit = providers.Factory(UnitOfWork, entities=entities)
 
 
 # ------------------------------------------------------------------------------------------------ #
-class FactoryContainer(containers.DeclarativeContainer):
+class ObjectFactoryContainer(containers.DeclarativeContainer):
 
     dataset = providers.Factory(DatasetFactory)
     dataframe = providers.Factory(DataFrameFactory)
@@ -239,14 +251,18 @@ class Recsys(containers.DeclarativeContainer):
         odb_connection=connection.odb_connection,
     )
 
-    dal = providers.Container(DALContainer, rdb=database.rdb, edb=database.edb, odb=database.odb)
-
     dba = providers.Container(
         DBAContainer, dbms=database.dbms, rdb=database.rdb, edb=database.edb, odb=database.odb
     )
 
-    repo = providers.Container(RepoContainer, dal=dal)
+    dal = providers.Container(DALContainer, rdb=database.rdb, edb=database.edb, odb=database.odb)
 
-    work = providers.Container(WorkContainer, repos=repo)
+    context = providers.Container(ContextContainer, dal=dal)
 
-    factory = providers.Container(FactoryContainer)
+    entities = providers.Container(EntityRepoContainer, context=context)
+
+    events = providers.Container(EventRepoContainer, context=context)
+
+    work = providers.Container(WorkContainer, entities=entities)
+
+    factory = providers.Container(ObjectFactoryContainer)

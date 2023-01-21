@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday January 13th 2023 02:30:41 pm                                                #
+# Modified   : Saturday January 21st 2023 02:59:45 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
 from recsys.core.entity.base import Entity
-from recsys.core.entity.job import Job
+from recsys.core.workflow.process import Job
 
 # ================================================================================================ #
 #                                         JOB                                                      #
@@ -63,7 +63,7 @@ class JobTableExists(SQL):
     def __post_init__(self) -> None:
         dotenv.load_dotenv()
         mode = os.getenv("MODE")
-        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}' AND TABLE_NAME = 'job';"""
+        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}_events' AND TABLE_NAME = 'job';"""
 
 
 # ------------------------------------------------------------------------------------------------ #

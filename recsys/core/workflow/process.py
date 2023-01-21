@@ -4,74 +4,37 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/entity/job.py                                                          #
+# Filename   : /recsys/core/workflow/process.py                                                    #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday January 14th 2023 06:36:47 pm                                              #
+# Modified   : Saturday January 21st 2023 05:07:09 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-"""Task Entity Module"""
-from abc import abstractmethod
-from typing import Union, Dict, Any
+"""Process Module"""
+from typing import Union, Any
 import pandas as pd
 from datetime import datetime
 
-from recsys.core.entity.base import Entity
-from recsys.core.entity.event import Event
+from dependency_injector.wiring import Provide, inject
+
+from recsys.core.workflow.base import Process
+from recsys.core.workflow.callback import JobCallback, TaskCallback
 from recsys.core.workflow.operator.base import Operator
-from recsys.core.dal.dto import TaskDTO, JobDTO
+from recsys.core.dal.dao import DTO, JobDTO, TaskDTO
 from recsys.core.repo.uow import UnitOfWork
 from recsys import STATES
 
 
 # ------------------------------------------------------------------------------------------------ #
-#                                      JOB  COMPONENT                                             #
+#                                          JOB                                                     #
 # ------------------------------------------------------------------------------------------------ #
-class JobComponent(Entity):
-    """Base component class from which Task (Leaf) and Job (Composite) objects derive."""
-
-    def __init__(self, name: str, description: str = None) -> None:
-        super().__init__(name=name, description=description)
-
-    # -------------------------------------------------------------------------------------------- #
-    @property
-    def state(self) -> str:
-        """Returns the state of the component."""
-        return self._state
-
-    # -------------------------------------------------------------------------------------------- #
-    @state.setter
-    def state(self, state: str) -> None:
-        """Sets the state of the component."""
-        self._state = state
-        self._validate()
-
-    # -------------------------------------------------------------------------------------------- #
-    @property
-    @abstractmethod
-    def is_composite(self) -> str:
-        """True for Jobs and False for Tasks."""
-
-    # -------------------------------------------------------------------------------------------- #
-    @abstractmethod
-    def as_dto(self) -> Union[TaskDTO, Dict[int, TaskDTO]]:
-        """Creates a dto representation of the Job Component."""
-
-    # -------------------------------------------------------------------------------------------- #
-    def _validate(self) -> None:
-        super()._validate()
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                          JOB S                                                  #
-# ------------------------------------------------------------------------------------------------ #
-class Job(JobComponent):
+class Job(Process):
     """Collection of Task objects.
 
     Args:
@@ -79,18 +42,15 @@ class Job(JobComponent):
         description (str): Job Description
     """
 
-    def __init__(
-        self,
-        name: str,
-        description: str = None,
-    ) -> None:
+    @inject
+    def __init__(self, name: str, description: str = None, callback=Callback) -> None:
         super().__init__(name=name, description=description)
 
+        self._callback = callback
         self._tasks = {}
         self._state = STATES[0]
         self._is_composite = True
-
-        self._validate()
+        self._on_create()
 
     def __str__(self) -> str:
         return f"Job Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tState: {self._state}\n\tCreated: {self._created}\n\tModified: {self._modified}"
@@ -98,7 +58,7 @@ class Job(JobComponent):
     def __repr__(self) -> str:
         return f"{self._id}, {self._name}, {self._description}, {self._state}, {self._created}, {self._modified}"
 
-    def __eq__(self, other: JobComponent) -> bool:
+    def __eq__(self, other: Process) -> bool:
         if self.__class__.__name__ == other.__class__.__name__:
             return (
                 self.is_composite == other.is_composite
@@ -119,14 +79,16 @@ class Job(JobComponent):
 
     # -------------------------------------------------------------------------------------------- #
     def run(self, uow: UnitOfWork, data: Any = None) -> None:
+        self._on_start()
+
         for task in self._tasks.values():
             try:
-                self._start(task=task, uow=uow)
                 data = task.run(uow=uow, data=data)
-                self._end(task=task, uow=uow)
             except Exception:
-                self._failed(task=task, uow=uow)
+                self._on_fail()
                 raise
+
+        self._on_end()
         return data
 
     # -------------------------------------------------------------------------------------------- #
@@ -135,7 +97,7 @@ class Job(JobComponent):
         return self._tasks
 
     # -------------------------------------------------------------------------------------------- #
-    def add_task(self, task: JobComponent) -> None:
+    def add_task(self, task: Process) -> None:
         task.parent = self
         self._tasks[task.name] = task
         self._modified = datetime.now()
@@ -159,7 +121,7 @@ class Job(JobComponent):
         return df
 
     # -------------------------------------------------------------------------------------------- #
-    def update_task(self, task: JobComponent) -> None:
+    def update_task(self, task: Process) -> None:
         if task.name in self._tasks.keys():
             task.parent = self
             self._tasks[task.name] = task
@@ -181,7 +143,7 @@ class Job(JobComponent):
             raise KeyError(msg)
 
     # -------------------------------------------------------------------------------------------- #
-    def as_dto(self) -> JobDTO:
+    def as_dto(self) -> DTO:
 
         dto = JobDTO(
             id=self._id,
@@ -194,34 +156,11 @@ class Job(JobComponent):
         )
         return dto
 
-    # -------------------------------------------------------------------------------------------- #
-    def _start(self, task: Entity, uow: UnitOfWork) -> None:
-        task.state = STATES[2]
-        self.update_task(task)
-        self.save(uow)
-
-    # -------------------------------------------------------------------------------------------- #
-    def _end(self, task: Entity, uow: UnitOfWork) -> None:
-        task.state = STATES[4]
-        self.update_task(task)
-        self.save(uow)
-
-    # -------------------------------------------------------------------------------------------- #
-    def _failed(self, task: Entity, uow: UnitOfWork) -> None:
-        task.state = STATES[3]
-        self.update_task(task)
-        self.save(uow)
-
-    # -------------------------------------------------------------------------------------------- #
-    def save(self, uow=UnitOfWork) -> None:
-        repo = uow.get_repo("job")
-        repo.update(self)
-
 
 # ------------------------------------------------------------------------------------------------ #
 #                                          TASK                                                    #
 # ------------------------------------------------------------------------------------------------ #
-class Task(JobComponent):
+class Task(Process):
     """Task is a pipeline step or operation in execution.
 
     Args:
@@ -237,15 +176,15 @@ class Task(JobComponent):
         name: str,
         operator: Operator = None,
         description: str = None,
+        callback=Provide[Recsys.callback.task],
     ) -> None:
         super().__init__(name=name, description=description)
 
+        self._callback = callback
         self._operator = operator
         self._parent = None
         self._is_composite = False
         self._state = STATES[0]
-
-        self._validate()
 
     def __str__(self) -> str:
         return f"Task Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tState: {self._state}\n\tCreated: {self._created}\n\tModified: {self._modified}"
@@ -302,15 +241,15 @@ class Task(JobComponent):
     # -------------------------------------------------------------------------------------------- #
     def run(self, uow: UnitOfWork, data: Any = None) -> Union[None, Any]:
         """Runs the task through delegation to an operator."""
+        self._on_start()
         try:
-            self._start(uow=uow)
             data = self._operator.execute(uow=uow, data=data)
-            self._end(uow=uow)
-            return data
-
         except Exception:
-            self._failed(uow=uow)
+            self._on_fail()
             raise
+
+        self._on_end()
+        return data
 
     # -------------------------------------------------------------------------------------------- #
     def as_dto(self) -> TaskDTO:
@@ -320,43 +259,7 @@ class Task(JobComponent):
             name=self._name,
             description=self._description,
             state=self._state,
-            parent_id=self._parent.id,
+            parent_oid=self._parent.oid,
             created=self._created,
             modified=self._modified,
         )
-
-    # -------------------------------------------------------------------------------------------- #
-    def _start(self, uow: UnitOfWork) -> None:
-        eventname = "start_" + self._name
-        eventdesc = "Started " + self._description
-        event = Event(
-            name=eventname, description=eventdesc, job_oid=self._parent.oid, task_oid=self._oid
-        )
-        repo = uow.get_repo("event")
-        repo.add(event)
-        self._logger.info(eventdesc)
-
-    def _end(self, uow: UnitOfWork) -> None:
-        eventname = "completed_" + self._name
-        eventdesc = "Completed " + self._description
-        event = Event(
-            name=eventname, description=eventdesc, job_oid=self._parent.oid, task_oid=self._oid
-        )
-        repo = uow.get_repo("event")
-        repo.add(event)
-        self._logger.info(eventdesc)
-
-    def _failed(self, uow: UnitOfWork) -> None:
-        eventname = "failed_" + self._name
-        eventdesc = "Failed " + self._description
-        event = Event(
-            name=eventname, description=eventdesc, job_oid=self._parent.oid, task_oid=self._oid
-        )
-        repo = uow.get_repo("event")
-        repo.add(event)
-        self._logger.info(eventdesc)
-
-
-# ------------------------------------------------------------------------------------------------ #
-#                                          JOB                                                    #
-# ------------------------------------------------------------------------------------------------ #

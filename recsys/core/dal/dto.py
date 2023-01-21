@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Saturday January 14th 2023 05:04:00 am                                              #
+# Modified   : Saturday January 21st 2023 03:00:55 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -80,7 +80,7 @@ class ProfileDTO(DTO):
     write_time: int
     bytes_sent: int
     bytes_recv: int
-    parent_id: int
+    parent_oid: str
     created: datetime
     modified: datetime
 
@@ -100,7 +100,7 @@ class DataFrameDTO(DTO):
     ncols: int
     nulls: int
     pct_nulls: float
-    parent_id: int
+    parent_oid: str
     created: datetime
     modified: datetime
 
@@ -145,7 +145,7 @@ class TaskDTO(DTO):
     name: str
     description: str
     state: str
-    parent_id: int
+    parent_oid: str
     created: datetime
     modified: datetime
 
@@ -192,7 +192,7 @@ class DataSourceURLDTO(DTO):
     name: str
     description: str
     url: str
-    parent_id: int
+    parent_oid: str
     created: datetime
     modified: datetime
 
@@ -206,7 +206,8 @@ class EventDTO(DTO):
     oid: str
     name: str
     description: str
-    job_oid: str
-    task_oid: str
+    process_type: str
+    process_oid: str
+    parent_oid: str
     created: datetime
     modified: datetime

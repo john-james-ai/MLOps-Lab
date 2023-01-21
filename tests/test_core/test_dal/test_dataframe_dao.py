@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Saturday January 14th 2023 05:00:53 am                                              #
+# Modified   : Saturday January 21st 2023 02:49:22 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -99,7 +99,7 @@ class TestDataFrameDAO:  # pragma: no cover
         for j, (name, dataframe) in enumerate(datasets[0].dataframes.items(), start=1):
             dto = dataframe.as_dto()
             dto.datasource_oid = j
-            dto.parent_id = j  # Add this manually for unit test. Repository testing will Ensure that dataframes are added after dataset ids are are created.
+            dto.parent_oid = j  # Add this manually for unit test. Repository testing will Ensure that dataframes are added after dataset ids are are created.
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)
@@ -150,7 +150,7 @@ class TestDataFrameDAO:  # pragma: no cover
         for j, (name, dataframe) in enumerate(datasets[0].dataframes.items(), start=1):
             dto = dataframe.as_dto()
             dto.datasource_oid = j
-            dto.parent_id = j  # Add this manually for unit test. Repository testing will Ensure that dataframes are added after dataset ids are are created.
+            dto.parent_oid = j  # Add this manually for unit test. Repository testing will Ensure that dataframes are added after dataset ids are are created.
             dto = dao.create(dto)
             self.check_results(dto)
             logger.debug(dto)

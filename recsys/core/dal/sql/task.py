@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday January 13th 2023 02:27:44 pm                                                #
+# Modified   : Saturday January 21st 2023 02:59:56 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
 from recsys.core.entity.base import Entity
-from recsys.core.entity.job import Task
+from recsys.core.workflow.process import Task
 
 # ================================================================================================ #
 #                                           TASK                                                   #
@@ -36,7 +36,7 @@ from recsys.core.entity.job import Task
 @dataclass
 class CreateTaskTable(SQL):
     name: str = "task"
-    sql: str = """CREATE TABLE IF NOT EXISTS task (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), state VARCHAR(32), parent_id MEDIUMINT NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS task (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), state VARCHAR(32), parent_oid VARCHAR(128) NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
     args: tuple = ()
     description: str = "Created the task table."
 
@@ -63,7 +63,7 @@ class TaskTableExists(SQL):
     def __post_init__(self) -> None:
         dotenv.load_dotenv()
         mode = os.getenv("MODE")
-        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}' AND TABLE_NAME = 'task';"""
+        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}_events' AND TABLE_NAME = 'task';"""
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -83,7 +83,7 @@ class TaskDDL(DDL):
 @dataclass
 class InsertTask(SQL):
     dto: DTO
-    sql: str = """INSERT INTO task (oid, name, description, state, parent_id) VALUES (%s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO task (oid, name, description, state, parent_oid) VALUES (%s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -92,7 +92,7 @@ class InsertTask(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.state,
-            self.dto.parent_id,
+            self.dto.parent_oid,
         )
 
 
@@ -102,7 +102,7 @@ class InsertTask(SQL):
 @dataclass
 class UpdateTask(SQL):
     dto: DTO
-    sql: str = """UPDATE task SET oid = %s, name = %s, description = %s, state = %s, parent_id = %s WHERE id = %s;"""
+    sql: str = """UPDATE task SET oid = %s, name = %s, description = %s, state = %s, parent_oid = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -111,7 +111,7 @@ class UpdateTask(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.state,
-            self.dto.parent_id,
+            self.dto.parent_oid,
             self.dto.id,
         )
 
@@ -134,12 +134,12 @@ class SelectTask(SQL):
 
 @dataclass
 class SelectTaskByParentId(SQL):
-    parent_id: int
-    sql: str = """SELECT * FROM task WHERE parent_id = %s;"""
+    parent_oid: str
+    sql: str = """SELECT * FROM task WHERE parent_oid = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
-        self.args = (self.parent_id,)
+        self.args = (self.parent_oid,)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -196,7 +196,7 @@ class TaskDML(DML):
     update: type[SQL] = UpdateTask
     select: type[SQL] = SelectTask
     select_by_name: type[SQL] = SelectTaskByName
-    select_by_parent_id: type[SQL] = SelectTaskByParentId
+    select_by_parent_oid: type[SQL] = SelectTaskByParentId
     select_all: type[SQL] = SelectAllTasks
     exists: type[SQL] = TaskExists
     delete: type[SQL] = DeleteTask

@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/entity/profile.py                                                      #
+# Filename   : /recsys/core/workflow/profile.py                                                    #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 9th 2022 10:54:47 pm                                                #
-# Modified   : Friday January 13th 2023 02:59:01 pm                                                #
+# Modified   : Saturday January 21st 2023 02:50:20 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -52,7 +52,7 @@ class Profile(Entity):
     write_time: int = None
     bytes_sent: int = None
     bytes_recv: int = None
-    parent_id: int = None
+    parent_oid: str = None
     created: datetime = None
     modified: datetime = None
 
@@ -86,7 +86,7 @@ class Profile(Entity):
             write_time=self.write_time,
             bytes_sent=self.bytes_sent,
             bytes_recv=self.bytes_recv,
-            parent_id=self.parent_id,
+            parent_oid=self.parent_oid,
             created=self.created,
             modified=self.modified,
         )

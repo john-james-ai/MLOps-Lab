@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday January 13th 2023 02:29:21 pm                                                #
+# Modified   : Saturday January 21st 2023 02:51:21 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -36,7 +36,7 @@ from recsys.core.entity.datasource import DataSourceURL
 @dataclass
 class CreateDataSourceURLTable(SQL):
     name: str = "datasource_url"
-    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), url VARCHAR(255) NOT NULL, parent_id SMALLINT NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
+    sql: str = """CREATE TABLE IF NOT EXISTS datasource_url (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), url VARCHAR(255) NOT NULL, parent_oid VARCHAR(128) NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
     args: tuple = ()
     description: str = "Created the datasource URL table."
 
@@ -83,7 +83,7 @@ class DataSourceURLDDL(DDL):
 @dataclass
 class InsertDataSourceURL(SQL):
     dto: DTO
-    sql: str = """INSERT INTO datasource_url (oid, name, description, url, parent_id) VALUES (%s, %s, %s, %s, %s);"""
+    sql: str = """INSERT INTO datasource_url (oid, name, description, url, parent_oid) VALUES (%s, %s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -92,7 +92,7 @@ class InsertDataSourceURL(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.url,
-            self.dto.parent_id,
+            self.dto.parent_oid,
         )
 
 
@@ -102,7 +102,7 @@ class InsertDataSourceURL(SQL):
 @dataclass
 class UpdateDataSourceURL(SQL):
     dto: DTO
-    sql: str = """UPDATE datasource_url SET oid = %s, name = %s, description = %s, url = %s, parent_id = %s WHERE id = %s;"""
+    sql: str = """UPDATE datasource_url SET oid = %s, name = %s, description = %s, url = %s, parent_oid = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -111,7 +111,7 @@ class UpdateDataSourceURL(SQL):
             self.dto.name,
             self.dto.description,
             self.dto.url,
-            self.dto.parent_id,
+            self.dto.parent_oid,
             self.dto.id,
         )
 
@@ -134,12 +134,12 @@ class SelectDataSourceURL(SQL):
 
 @dataclass
 class SelectDataSourceURLByParentId(SQL):
-    parent_id: int
-    sql: str = """SELECT * FROM datasource_url WHERE parent_id = %s;"""
+    parent_oid: str
+    sql: str = """SELECT * FROM datasource_url WHERE parent_oid = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
-        self.args = (self.parent_id,)
+        self.args = (self.parent_oid,)
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -196,7 +196,7 @@ class DataSourceURLDML(DML):
     update: type[SQL] = UpdateDataSourceURL
     select: type[SQL] = SelectDataSourceURL
     select_by_name: type[SQL] = SelectDataSourceURLByName
-    select_by_parent_id: type[SQL] = SelectDataSourceURLByParentId
+    select_by_parent_oid: type[SQL] = SelectDataSourceURLByParentId
     select_all: type[SQL] = SelectAllDataSourceURL
     exists: type[SQL] = DataSourceURLExists
     delete: type[SQL] = DeleteDataSourceURL

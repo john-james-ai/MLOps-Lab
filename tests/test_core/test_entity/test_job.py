@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 10th 2023 02:21:57 am                                               #
-# Modified   : Friday January 13th 2023 08:28:41 am                                                #
+# Modified   : Friday January 20th 2023 10:16:53 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -24,7 +24,7 @@ import logging
 
 # Import modules to be tested
 from recsys.core.dal.dto import DTO
-from recsys.core.entity.job import Job, Task
+from recsys.core.workflow.process import Job, Task
 from tests.data.operator import MockOperator
 from recsys import STATES
 

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Saturday January 14th 2023 04:59:35 am                                              #
+# Modified   : Saturday January 21st 2023 03:00:37 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -60,7 +60,7 @@ class DAO(ABC):
         self._logger = logging.getLogger(
             f"{self.__module__}.{self.__class__.__name__}",
         )
-        msg = f"Instantiated {self.__class__.__name__} at {id(self)} with database {self._database.database} at {id(self._database)}."
+        msg = f"Instantiated {self.__class__.__name__} at {id(self)} with database at {id(self._database)}."
         self._logger.debug(msg)
 
     def __len__(self) -> int:
@@ -95,7 +95,7 @@ class DAO(ABC):
         """
         cmd = self._dml.insert(dto)
         dto.id = self._database.insert(cmd.sql, cmd.args)
-        msg = f"{self.__class__.__name__} inserted {self._entity.__name__}.{dto.id} - {dto.name} into {self._database.database} at {id(self._database)}."
+        msg = f"{self.__class__.__name__} inserted {self._entity.__name__}.{dto.id} - {dto.name} into database at {id(self._database)}."
         self._logger.debug(msg)
         return dto
 
@@ -136,14 +136,14 @@ class DAO(ABC):
             result = self._rows_to_dict(rows)
         return result
 
-    def read_by_parent_id(self, parent_id: int) -> Dict[int, DTO]:
+    def read_by_parent_oid(self, parent_oid: str) -> Dict[int, DTO]:
         """Returns a dictionary of entity data transfer objects with the designated parent id.
 
         Args:
-            parent_id (int): Id for the parent object.
+            parent_oid (int): Id for the parent object.
         """
         result = {}
-        cmd = self._dml.select_by_parent_id(parent_id)
+        cmd = self._dml.select_by_parent_oid(parent_oid)
         rows = self._database.select_all(cmd.sql, cmd.args)
         if rows is not None:
             result = self._rows_to_dict(rows)
@@ -225,7 +225,7 @@ class DataFrameDAO(DAO):
                 ncols=row[7],
                 nulls=row[8],
                 pct_nulls=row[9],
-                parent_id=row[10],
+                parent_oid=row[10],
                 created=row[11],
                 modified=row[12],
             )
@@ -307,7 +307,7 @@ class ProfileDAO(DAO):
                 write_time=row[21],
                 bytes_sent=row[22],
                 bytes_recv=row[23],
-                parent_id=row[24],
+                parent_oid=row[24],
                 created=row[25],
                 modified=row[26],
             )
@@ -339,7 +339,7 @@ class TaskDAO(DAO):
                 name=row[2],
                 description=row[3],
                 state=row[4],
-                parent_id=row[5],
+                parent_oid=row[5],
                 created=row[6],
                 modified=row[7],
             )
@@ -499,10 +499,11 @@ class EventDAO(DAO):
                 oid=row[1],
                 name=row[2],
                 description=row[3],
-                job_oid=row[4],
-                task_oid=row[5],
-                created=row[6],
-                modified=row[7],
+                process_type=row[4],
+                process_oid=row[5],
+                parent_oid=row[6],
+                created=row[7],
+                modified=row[8],
             )
         except TypeError:
             msg = "No data matched the query."

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday January 11th 2023 06:32:03 pm                                             #
-# Modified   : Saturday January 14th 2023 09:33:29 pm                                              #
+# Modified   : Saturday January 21st 2023 02:49:19 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -25,8 +25,8 @@ from recsys.core.services.io import IOService
 from recsys.core.entity.file import File
 from recsys.core.entity.dataset import DataFrame, Dataset
 from recsys.core.entity.datasource import DataSource
-from recsys.core.entity.profile import Profile
-from recsys.core.entity.job import Job, Task
+from recsys.core.workflow.profile import Profile
+from recsys.core.workflow.process import Job, Task
 from tests.data.operator import MockOperator, BadOperator
 
 
@@ -37,7 +37,7 @@ DATA_SOURCE_FILEPATH = "tests/data/datasources.xlsx"
 JOB_CONFIG_FILEPATH = "recsys/data/movielens25m/config.yml"
 
 # ------------------------------------------------------------------------------------------------ #
-collect_ignore_glob = ["*test_builder.py"]
+# collect_ignore_glob = ["*test_builder.py"]
 # ------------------------------------------------------------------------------------------------ #
 
 
@@ -153,7 +153,7 @@ def profiles():
             write_time=i + 16000,
             bytes_sent=i + 17000,
             bytes_recv=i + 18000,
-            parent_id=i * 20,
+            parent_oid=i * 20,
         )
         profiles.append(profile)
     return profiles
@@ -257,7 +257,10 @@ def job_config():
 def container():
     container = Recsys()
     container.init_resources()
-    container.wire(modules=[recsys.containers, "recsys.core.workflow.build.job"])
+    container.wire(
+        modules=[recsys.containers, "recsys.core.workflow.builder.job"],
+        packages=["recsys.core.workflow.operator.data"],
+    )
     return container
 
 
