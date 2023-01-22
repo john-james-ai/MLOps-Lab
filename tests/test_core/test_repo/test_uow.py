@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 10th 2023 06:03:41 pm                                               #
-# Modified   : Thursday January 12th 2023 09:52:22 pm                                              #
+# Modified   : Saturday January 21st 2023 09:14:34 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -25,7 +25,7 @@ from recsys.core.repo.uow import UnitOfWork
 from recsys.core.repo.entity import Repo
 from recsys.core.repo.dataset import DatasetRepo
 from recsys.core.repo.datasource import DataSourceRepo
-from recsys.core.repo.job import JobRepo
+from recsys.core.repo.dag import DAGRepo
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ class TestUOW:  # pragma: no cover
         assert isinstance(uow.get_repo("profile"), Repo)
         assert isinstance(uow.get_repo("dataset"), DatasetRepo)
         assert isinstance(uow.get_repo("datasource"), DataSourceRepo)
-        assert isinstance(uow.get_repo("job"), JobRepo)
+        assert isinstance(uow.get_repo("dag"), DAGRepo)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -94,7 +94,7 @@ class TestUOW:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         uow = self.test_reset(container)
         with uow as unit:
-            repo = unit.get_repo('file')
+            repo = unit.get_repo("file")
             for file in files:
                 repo.add(file)
 
@@ -115,7 +115,6 @@ class TestUOW:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -134,7 +133,7 @@ class TestUOW:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         uow = self.test_reset(container)
         with uow as unit:
-            repo = unit.get_repo('file')
+            repo = unit.get_repo("file")
             for file in files:
                 repo.add(file)
 
@@ -153,6 +152,5 @@ class TestUOW:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday January 13th 2023 08:05:33 am                                                #
-# Modified   : Friday January 20th 2023 10:16:49 pm                                                #
+# Modified   : Saturday January 21st 2023 07:54:35 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -22,7 +22,7 @@ import pytest
 import logging
 
 from recsys.core.workflow.orchestrator import Orchestrator
-from recsys.core.workflow.process import Job
+from recsys.core.workflow.dag import DAG
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ single_line = f"\n{100 * '-'}"
 class TestOrchestrator:  # pragma: no cover
     # ============================================================================================ #
     def reset_db(self, container) -> None:
-        dba = container.dba.job()
+        dba = container.dba.dag()
         dba.reset()
         dba = container.dba.task()
         dba.reset()
@@ -44,7 +44,7 @@ class TestOrchestrator:  # pragma: no cover
         dba = container.dba.object()
         dba.reset()
 
-    def test_setup(self, mockjob, container, caplog):
+    def test_setup(self, mockdag, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -59,10 +59,10 @@ class TestOrchestrator:  # pragma: no cover
         self.reset_db(container)
         uow = container.work.unit()
         o = Orchestrator(uow=uow)
-        o.job = mockjob
-        assert isinstance(o.job, Job)
-        assert o.job.id is not None
-        assert o.job.state == "LOADED"
+        o.dag = mockdag
+        assert isinstance(o.dag, DAG)
+        assert o.dag.id is not None
+        assert o.dag.state == "LOADED"
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -80,7 +80,7 @@ class TestOrchestrator:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_run(self, jobs, container, caplog):
+    def test_run(self, dags, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -95,19 +95,19 @@ class TestOrchestrator:  # pragma: no cover
         self.reset_db(container)
         uow = container.work.unit()
         o = Orchestrator(uow=uow)
-        for i, job in enumerate(jobs, start=1):
-            o.job = job
+        for i, dag in enumerate(dags, start=1):
+            o.dag = dag
             o.data = i
             assert o.data == i
             data = o.run()
             assert data == i or (5 + i)
             repo = uow.get_repo("event")
             logger.debug(repo.print())
-            repo = uow.get_repo("job")
+            repo = uow.get_repo("dag")
             logger.debug(repo.print())
-            assert isinstance(o.job, Job)
+            assert isinstance(o.dag, DAG)
             o.reset()
-            assert o.job is None
+            assert o.dag is None
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

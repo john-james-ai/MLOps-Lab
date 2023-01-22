@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday January 2nd 2023 07:33:11 pm                                                 #
-# Modified   : Saturday January 7th 2023 12:47:47 pm                                               #
+# Modified   : Saturday January 21st 2023 09:14:37 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -142,7 +142,7 @@ class TestContainers:  # pragma: no cover
         assert isinstance(dba.datasource_url(), DBA)
         assert isinstance(dba.dataframe(), DBA)
         assert isinstance(dba.dataset(), DBA)
-        assert isinstance(dba.job(), DBA)
+        assert isinstance(dba.dag(), DBA)
         assert isinstance(dba.task(), DBA)
         assert isinstance(dba.profile(), DBA)
 

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 8th 2023 05:31:06 pm                                                 #
-# Modified   : Wednesday January 11th 2023 07:30:46 pm                                             #
+# Modified   : Saturday January 21st 2023 06:28:17 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -20,6 +20,7 @@ import inspect
 from datetime import datetime
 import pytest
 import logging
+from recsys.core.database.object import ObjectDBConnection
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -76,6 +77,7 @@ class TestODB:  # pragma: no cover
         db = container.database.odb()
         db.connect()
         assert db.is_open
+        assert isinstance(db.connection, ObjectDBConnection)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -88,7 +90,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -159,7 +160,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -182,13 +182,13 @@ class TestODB:  # pragma: no cover
         for i, file in enumerate(files, start=1):
             db.insert(file)
             f2 = db.select(file.oid)
-            assert f2.task_id != i + 99
+            assert f2.task_oid != i + 99
 
         for i, file in enumerate(files, start=1):
-            file.task_id = i + 99
+            file.task_oid = i + 99
             db.update(file)
             f2 = db.select(file.oid)
-            assert f2.task_id == i + 99
+            assert f2.task_oid == i + 99
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -202,7 +202,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -225,32 +224,32 @@ class TestODB:  # pragma: no cover
         for i, file in enumerate(files, start=1):
             db.insert(file)
             f2 = db.select(file.oid)
-            assert f2.task_id != i + 99
+            assert f2.task_oid != i + 99
 
         db.begin()
         for i, file in enumerate(files, start=1):
-            file.task_id = i + 99
+            file.task_oid = i + 99
             db.update(file)
             f2 = db.select(file.oid)
-            assert f2.task_id == i + 99
+            assert f2.task_oid == i + 99
         db.close()
 
         for i, file in enumerate(files, start=1):
             f2 = db.select(file.oid)
-            assert f2.task_id != i + 99
+            assert f2.task_oid != i + 99
 
         db.begin()
         for i, file in enumerate(files, start=1):
-            file.task_id = i + 99
+            file.task_oid = i + 99
             db.update(file)
             f2 = db.select(file.oid)
-            assert f2.task_id == i + 99
+            assert f2.task_oid == i + 99
         db.save()
         db.close()
 
         for i, file in enumerate(files, start=1):
             f2 = db.select(file.oid)
-            assert f2.task_id == i + 99
+            assert f2.task_oid == i + 99
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -264,7 +263,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -304,7 +302,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -370,7 +367,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -409,7 +405,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -450,7 +445,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -468,7 +462,7 @@ class TestODB:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         db = container.database.odb()
-        result = db.select('dss')
+        result = db.select("dss")
         assert result == []
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -482,7 +476,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -523,7 +516,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -559,7 +551,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -598,7 +589,6 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -635,6 +625,5 @@ class TestODB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)

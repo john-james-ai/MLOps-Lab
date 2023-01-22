@@ -10,8 +10,8 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Friday January 20th 2023 08:48:19 pm                                                #
-# Modified   : Saturday January 21st 2023 04:45:23 am                                              #
+# Loaded    : Friday January 20th 2023 08:48:19 pm                                                #
+# Modified   : Saturday January 21st 2023 09:40:37 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -27,14 +27,14 @@ from recsys.core.workflow.event import Event
 # ------------------------------------------------------------------------------------------------ #
 #                                       JOB CALLBACK                                               #
 # ------------------------------------------------------------------------------------------------ #
-class JobCallback(Callback):
-    """Job Callback is used by job objects at creation, startup, failure and completion."""
+class DAGCallback(Callback):
+    """DAG Callback is used by dag objects at creation, startup, failure and completion."""
 
     def __init__(self) -> None:
         super().__init__()
 
-    def on_create(self, process: Process) -> None:
-        """Called at process (job, task) creation
+    def on_load(self, process: Process) -> None:
+        """Called at process (dag, task) creation
 
         May be overriden if this has utility.
 
@@ -43,17 +43,17 @@ class JobCallback(Callback):
 
         """
         event = Event(
-            name="created_" + process.name,
-            description="Created " + process.description,
+            name="loaded_" + process.name,
+            description="Loaded " + process.description,
             process_type=process.__class__.__name__,
             process_oid=process.oid,
         )
-        self._events.job().add(entity=process)
+        self._events.dag().add(entity=process)
         self._events.event().add(event)
 
     @abstractmethod
     def on_start(self, process: Process) -> None:
-        """Called when a process (job, task) begins execution.
+        """Called when a process (dag, task) begins execution.
 
         Args:
             process (Process): Process object representation of the process which has started.
@@ -65,12 +65,12 @@ class JobCallback(Callback):
             process_type=process.__class__.__name__,
             process_oid=process.oid,
         )
-        self._events.job().update(entity=process)
+        self._events.dag().update(entity=process)
         self._events.event().add(event)
 
     @abstractmethod
     def on_fail(self, process: Process) -> None:
-        """Called at process (job, task) ends either successfully or otherwise.
+        """Called at process (dag, task) ends either successfully or otherwise.
 
         Args:
             process (Process): Process object representation of the process which has ended.
@@ -82,12 +82,12 @@ class JobCallback(Callback):
             process_type=process.__class__.__name__,
             process_oid=process.oid,
         )
-        self._events.job().update(entity=process)
+        self._events.dag().update(entity=process)
         self._events.event().add(event)
 
     @abstractmethod
     def on_end(self, process: Process) -> None:
-        """Called at process (job, task) ends either successfully or otherwise.
+        """Called at process (dag, task) ends either successfully or otherwise.
 
         Args:
             process (Process): Process object representation of the process which has ended.
@@ -100,7 +100,7 @@ class JobCallback(Callback):
             process_oid=process.oid,
             parent_oid=None,
         )
-        self._events.job().update(entity=process)
+        self._events.dag().update(entity=process)
         self._events.event().add(event)
 
 
@@ -117,8 +117,8 @@ class TaskCallback(Callback):
     def __init__(self) -> None:
         super().__init__()
 
-    def on_create(self, process: Process) -> None:
-        """Called at process (job, task) creation
+    def on_load(self, process: Process) -> None:
+        """Called at process (dag, task) creation
 
         May be overriden if this has utility.
 
@@ -127,8 +127,8 @@ class TaskCallback(Callback):
 
         """
         event = Event(
-            name="created_" + process.name,
-            description="Created " + process.description,
+            name="loaded_" + process.name,
+            description="Loaded " + process.description,
             process_type=process.__class__.__name__,
             process_oid=process.oid,
         )
@@ -137,7 +137,7 @@ class TaskCallback(Callback):
 
     @abstractmethod
     def on_start(self, process: Process) -> None:
-        """Called when a process (job, task) begins execution.
+        """Called when a process (dag, task) begins execution.
 
         Args:
             process (Process): Process object representation of the process which has started.
@@ -154,7 +154,7 @@ class TaskCallback(Callback):
 
     @abstractmethod
     def on_fail(self, process: Process) -> None:
-        """Called at process (job, task) ends either successfully or otherwise.
+        """Called at process (dag, task) ends either successfully or otherwise.
 
         Args:
             process (Process): Process object representation of the process which has ended.
@@ -171,7 +171,7 @@ class TaskCallback(Callback):
 
     @abstractmethod
     def on_end(self, process: Process) -> None:
-        """Called at process (job, task) ends either successfully or otherwise.
+        """Called at process (dag, task) ends either successfully or otherwise.
 
         Args:
             process (Process): Process object representation of the process which has ended.

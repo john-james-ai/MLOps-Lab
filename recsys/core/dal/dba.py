@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Friday January 13th 2023 05:50:47 pm                                                #
+# Modified   : Saturday January 21st 2023 06:51:11 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -55,7 +55,7 @@ class AbstractDBA(ABC):
 #                                TABLE AND DATABASE ADMIN                                          #
 # ------------------------------------------------------------------------------------------------ #
 class DBA(AbstractDBA):
-    """Supports basic database and table administration.."""
+    """Supports basic database table administration.."""
 
     def __init__(self, ddl: DDL, database: Database) -> None:
         super().__init__(ddl=ddl, database=database)

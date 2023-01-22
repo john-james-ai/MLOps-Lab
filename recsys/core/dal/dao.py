@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:27:36 am                                                #
-# Modified   : Saturday January 21st 2023 03:00:37 am                                              #
+# Modified   : Sunday January 22nd 2023 02:06:10 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,22 +21,21 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 from typing import Dict, Tuple, List
 import logging
-import mysql.connector
 
 from recsys.core.database.relational import Database
-from .dto import (
+from recsys.core.dal.dto import (
     DTO,
     DataFrameDTO,
     DatasetDTO,
     ProfileDTO,
     TaskDTO,
-    JobDTO,
+    DAGDTO,
     FileDTO,
     DataSourceDTO,
     DataSourceURLDTO,
     EventDTO,
 )
-from .sql.base import DML
+from recsys.core.dal.sql.base import DML
 from recsys.core.entity.base import Entity
 
 
@@ -62,28 +61,6 @@ class DAO(ABC):
         )
         msg = f"Instantiated {self.__class__.__name__} at {id(self)} with database at {id(self._database)}."
         self._logger.debug(msg)
-
-    def __len__(self) -> int:
-        """Returns the number of rows in the underlying table."""
-        cmd = self._dml.select_all()
-        results = self._database.select_all(cmd.sql, cmd.args)
-        return len(results)
-
-    def begin(self) -> None:
-        """Starts a transaction on the underlying database."""
-        self._database.begin()
-
-    def save(self) -> None:
-        """Commits changes to the database."""
-        self._database.save()
-
-    def close(self) -> None:
-        """Commits changes to the database."""
-        self._database.close()
-
-    def rollback(self) -> None:
-        """Rollback changes to the database."""
-        self._database.rollback()
 
     def create(self, dto: DTO) -> Entity:
         """Adds an entity in the form of a data transfer object to the database.
@@ -143,7 +120,12 @@ class DAO(ABC):
             parent_oid (int): Id for the parent object.
         """
         result = {}
-        cmd = self._dml.select_by_parent_oid(parent_oid)
+        try:
+            cmd = self._dml.select_by_parent_oid(parent_oid)
+        except AttributeError:
+            msg = "Read by parent is not supported for this entity."
+            self._logger.error(msg)
+            raise NotImplementedError
         rows = self._database.select_all(cmd.sql, cmd.args)
         if rows is not None:
             result = self._rows_to_dict(rows)
@@ -165,7 +147,7 @@ class DAO(ABC):
         else:
             msg = f"{self.__class__.__name__} was unable to update {self._entity.__name__}.{dto.id}. Not found in {self._database.database}. Try insert instead."
             self._logger.error(msg)
-            raise mysql.connector.ProgrammingError(msg)
+            raise FileNotFoundError(msg)
         return rows_affected
 
     def exists(self, id: int) -> bool:
@@ -190,7 +172,16 @@ class DAO(ABC):
         else:
             msg = f"{self.__class__.__name__}  was unable to delete {self._entity.__name__}.{id}. Not found in {self._database.database}."
             self._logger.error(msg)
-            raise mysql.connector.ProgrammingError(msg)
+            raise FileNotFoundError(msg)
+
+    def load(self, filepath: str) -> None:
+        """Loads data from a csv file into the associated table.
+
+        Args:
+            filepath (str): Path to the CSV file containing data to import
+        """
+        cmd = self._dml.load(filepath)
+        self._database.load(cmd.sql, cmd.args)
 
     def _rows_to_dict(self, results: List) -> Dict:
         """Converts the results to a dictionary of DTO objects."""
@@ -307,7 +298,7 @@ class ProfileDAO(DAO):
                 write_time=row[21],
                 bytes_sent=row[22],
                 bytes_recv=row[23],
-                parent_oid=row[24],
+                task_oid=row[24],
                 created=row[25],
                 modified=row[26],
             )
@@ -339,7 +330,7 @@ class TaskDAO(DAO):
                 name=row[2],
                 description=row[3],
                 state=row[4],
-                parent_oid=row[5],
+                dag_oid=row[5],
                 created=row[6],
                 modified=row[7],
             )
@@ -357,15 +348,15 @@ class TaskDAO(DAO):
 # ------------------------------------------------------------------------------------------------ #
 #                                 JOB DATA ACCESS OBJECT                                           #
 # ------------------------------------------------------------------------------------------------ #
-class JobDAO(DAO):
-    """Job Data Access Object"""
+class DAGDAO(DAO):
+    """DAG Data Access Object"""
 
     def __init__(self, dml: DML, database: Database) -> None:
         super().__init__(dml=dml, database=database)
 
-    def _row_to_dto(self, row: Tuple) -> JobDTO:
+    def _row_to_dto(self, row: Tuple) -> DAGDTO:
         try:
-            return JobDTO(
+            return DAGDTO(
                 id=row[0],
                 oid=row[1],
                 name=row[2],

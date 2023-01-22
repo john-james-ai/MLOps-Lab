@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 9th 2022 10:54:47 pm                                                #
-# Modified   : Saturday January 21st 2023 02:50:20 am                                              #
+# Modified   : Saturday January 21st 2023 08:05:06 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -52,7 +52,7 @@ class Profile(Entity):
     write_time: int = None
     bytes_sent: int = None
     bytes_recv: int = None
-    parent_oid: str = None
+    task_oid: str = None
     created: datetime = None
     modified: datetime = None
 
@@ -86,7 +86,7 @@ class Profile(Entity):
             write_time=self.write_time,
             bytes_sent=self.bytes_sent,
             bytes_recv=self.bytes_recv,
-            parent_oid=self.parent_oid,
+            task_oid=self.task_oid,
             created=self.created,
             modified=self.modified,
         )

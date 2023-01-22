@@ -11,22 +11,22 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday January 11th 2023 06:32:03 pm                                             #
-# Modified   : Saturday January 21st 2023 02:49:19 am                                              #
+# Modified   : Sunday January 22nd 2023 01:36:04 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
 import pytest
+import pandas as pd
 from datetime import datetime
 
-import recsys
-from recsys.containers import Recsys
-from recsys.core.services.io import IOService
+from recsys.container import Recsys
+from recsys.core.service.io import IOService
 from recsys.core.entity.file import File
 from recsys.core.entity.dataset import DataFrame, Dataset
 from recsys.core.entity.datasource import DataSource
 from recsys.core.workflow.profile import Profile
-from recsys.core.workflow.process import Job, Task
+from recsys.core.workflow.dag import DAG, Task
 from tests.data.operator import MockOperator, BadOperator
 
 
@@ -35,7 +35,22 @@ TEST_LOCATION = "tests/test.sqlite3"
 RATINGS_FILEPATH = "tests/data/movielens25m/raw/ratings.pkl"
 DATA_SOURCE_FILEPATH = "tests/data/datasources.xlsx"
 JOB_CONFIG_FILEPATH = "recsys/data/movielens25m/config.yml"
-
+DAG_IMPORT = "tests/data/import/dag.csv"
+DATAFRAME_IMPORT = "tests/data/import/dataframe.csv"
+DATASET_IMPORT = "tests/data/import/dataset.csv"
+DATASOURCE_IMPORT = "tests/data/import/datasource.csv"
+DATASOURCE_URL_IMPORT = "tests/data/import/datasource_url.csv"
+EVENT_IMPORT = "tests/data/import/event.csv"
+TASK_IMPORT = "tests/data/import/task.csv"
+IMPORT_FILES = {
+    "dag": DAG_IMPORT,
+    "task": TASK_IMPORT,
+    "event": EVENT_IMPORT,
+    "dataset": DATASET_IMPORT,
+    "dataframe": DATAFRAME_IMPORT,
+    "datasource": DATASOURCE_IMPORT,
+    "datasource_url": DATASOURCE_URL_IMPORT,
+}
 # ------------------------------------------------------------------------------------------------ #
 # collect_ignore_glob = ["*test_builder.py"]
 # ------------------------------------------------------------------------------------------------ #
@@ -44,6 +59,16 @@ JOB_CONFIG_FILEPATH = "recsys/data/movielens25m/config.yml"
 @pytest.fixture(scope="module")
 def location():
     return TEST_LOCATION
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def test_data():
+    data = {}
+    for name, filepath in IMPORT_FILES.items():
+        df = pd.read_csv(filepath, index_col=[0])
+        data[name] = df.to_dict(orient="index")
+    return data
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -81,7 +106,7 @@ def file():
         datasource="movielens25m",
         stage="extract",
         uri="tests/data/movielens25m/raw/ratings.pkl",
-        task_id=55,
+        task_oid=55,
     )
     return file
 
@@ -97,7 +122,7 @@ def files():
             datasource_oid=i % 3,
             stage="extract",
             uri="tests/data/movielens25m/raw/ratings.pkl",
-            task_id=i + 22,
+            task_oid=i + 22,
         )
         files.append(file)
     return files
@@ -111,14 +136,14 @@ def dataset(ratings):
         description=f"Dataset Description {1}",
         datasource="spotify",
         stage="extract",
-        task_id=55,
+        task_oid=55,
     )
     for i in range(1, 6):
         dataframe = DataFrame(
             name=f"dataframe_name_{i}",
             description=f"Description for DataFrame {i}",
             data=ratings,
-            parent=dataset,
+            dataset=dataset,
         )
         dataset.add_dataframe(dataframe=dataframe)
 
@@ -175,7 +200,7 @@ def datasets(ratings):
             dataframe = DataFrame(
                 name=f"dataframe_{j}_dataset_{i}",
                 data=ratings,
-                parent=dataset,
+                dataset=dataset,
                 description=f"Description for dataframe {j} of dataset {i}",
                 stage="extract",
             )
@@ -185,21 +210,43 @@ def datasets(ratings):
 
 
 # ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="class")
+def dataframes(ratings):
+    dataframes = []
+    dataset = Dataset(
+        name="dataset_for_dataframe_testing",
+        description="Dataset for DataFrame Testing",
+        datasource_oid="datasource_tenrec",
+        task_oid="task_test_dataframe",
+    )
+    for i in range(1, 6):
+        dataframe = DataFrame(
+            name=f"dataframe_{i}",
+            data=ratings,
+            dataset=dataset,
+            description=f"Description for dataframe {i}",
+            stage="extract",
+        )
+        dataframes.append(dataframe)
+    return dataframes
+
+
+# ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def job(jobs):
-    return jobs[0]
+def dag(dags):
+    return dags[0]
 
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="function")
-def tasks(jobs):
+def tasks(dags):
     tasks = []
     for i in range(1, 6):
         task = Task(
             name=f"task_{i}", description=f"Description for task {i}.", operator=MockOperator()
         )
         task.id = i
-        task.parent = jobs[i - 1]
+        task.dag = dags[i - 1]
         tasks.append(task)
 
     return tasks
@@ -238,7 +285,7 @@ def dataframe_dicts():
             "description": f"Description for DataFrame {i}",
             "datasource": "movielens25m",
             "stage": "interim",
-            "task_id": i + i,
+            "task_oid": i + i,
         }
         lod.append(d)
 
@@ -247,7 +294,7 @@ def dataframe_dicts():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def job_config():
+def dag_config():
     """List of dictionaries that can be used to instantiate DataFrame."""
     return IOService.read(JOB_CONFIG_FILEPATH)
 
@@ -258,64 +305,93 @@ def container():
     container = Recsys()
     container.init_resources()
     container.wire(
-        modules=[recsys.containers, "recsys.core.workflow.builder.job"],
+        modules=["recsys.container", "recsys.core.workflow.builder"],
         packages=["recsys.core.workflow.operator.data"],
     )
+
     return container
 
 
 # ------------------------------------------------------------------------------------------------ #
-@pytest.fixture(scope="module")
-def context(container):
-    return container.repo.context()
+@pytest.fixture(scope="class", autouse=True)
+def clean_container(container):
+    container.dba.dataset().reset()
+    container.dba.dataframe().reset()
+    container.dba.datasource().reset()
+    container.dba.datasource_url().reset()
+    container.dba.file().reset()
+    container.dba.profile().reset()
+    container.dba.dag().reset()
+    container.dba.task().reset()
+    container.dba.event().reset()
+    return container
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="class", autouse=True)
+def loaded_container(clean_container):
+    clean_container.dal().dag().load(DAG_IMPORT)
+    clean_container.dal().task().load(TASK_IMPORT)
+    clean_container.dal().datasource().load(DATASOURCE_IMPORT)
+    clean_container.dal().datasource_url().load(DATASOURCE_URL_IMPORT)
+    clean_container.dal().dataset().load(DATASET_IMPORT)
+    clean_container.dal().dataframe().load(DATAFRAME_IMPORT)
+    clean_container.dal().event().load(EVENT_IMPORT)
+    return clean_container
 
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def mockjob():
-    job = Job(name="test_mockjob", description="Test Mock Job")
-    for i in range(1, 6):
-        task = Task(
-            name=f"test_mockjob_{i}", description=f"Test MockJob Task {i}", operator=MockOperator()
-        )
-        job.add_task(task)
-    return job
+def context(loaded_container):
+    return loaded_container.repo.context()
 
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def badjob():
-    job = Job(name="test_badjob", description="Test Bad Job")
+def mockdag():
+    dag = DAG(name="test_mockdag", description="Test Mock DAG")
     for i in range(1, 6):
         task = Task(
-            name=f"test_badjob_{i}", description=f"Test BadJob Task {i}", operator=BadOperator()
+            name=f"test_mockdag_{i}", description=f"Test MockDAG Task {i}", operator=MockOperator()
         )
-        job.add_task(task)
-    return job
+        dag.add_task(task)
+    return dag
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def baddag():
+    dag = DAG(name="test_baddag", description="Test Bad DAG")
+    for i in range(1, 6):
+        task = Task(
+            name=f"test_baddag_{i}", description=f"Test BadDAG Task {i}", operator=BadOperator()
+        )
+        dag.add_task(task)
+    return dag
 
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="function")
-def jobs(container):
-    jobs = []
+def dags(container):
+    dags = []
     for i in range(1, 6):
-        job = Job(
-            name=f"job_name_{i}",
-            description=f"Description for Job # {i}",
+        dag = DAG(
+            name=f"dag_name_{i}",
+            description=f"Description for DAG # {i}",
         )
         for j in range(1, 6):
             if j == 5:
                 task = Task(
-                    name=f"task_{j}_badjob_{i}",
-                    description=f"Description for task {j} of job {i}",
+                    name=f"task_{j}_baddag_{i}",
+                    description=f"Description for task {j} of dag {i}",
                     operator=BadOperator(),
                 )
             else:
                 task = Task(
-                    name=f"task_{j}_mockjob_{i}",
-                    description=f"Description for task {j} of job {i}",
+                    name=f"task_{j}_mockdag_{i}",
+                    description=f"Description for task {j} of dag {i}",
                     operator=MockOperator(),
                 )
-            job.add_task(task)
-        jobs.append(job)
-    return jobs
+            dag.add_task(task)
+        dags.append(dag)
+    return dags

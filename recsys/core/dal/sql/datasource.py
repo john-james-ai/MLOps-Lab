@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Friday January 13th 2023 02:29:45 pm                                                #
+# Modified   : Sunday January 22nd 2023 02:19:22 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -177,6 +177,18 @@ class DeleteDataSource(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
+class LoadDataSource(SQL):
+    filename: str
+    tablename: str = "datasource"
+    sql: str = None
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.sql = f"""LOAD DATA LOCAL INFILE '{self.filename}' INTO TABLE {self.tablename} FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\r\n' IGNORE 1 ROWS;"""
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
 class DataSourceDML(DML):
     entity: type[Entity] = DataSource
     insert: type[SQL] = InsertDataSource
@@ -186,3 +198,4 @@ class DataSourceDML(DML):
     select_all: type[SQL] = SelectAllDataSource
     exists: type[SQL] = DataSourceExists
     delete: type[SQL] = DeleteDataSource
+    load: type[SQL] = LoadDataSource

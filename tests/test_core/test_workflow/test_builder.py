@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 30th 2022 07:21:43 pm                                               #
-# Modified   : Friday January 20th 2023 10:54:04 pm                                                #
+# Modified   : Saturday January 21st 2023 07:54:31 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,11 +21,11 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.services.io import IOService
-from recsys.core.workflow.process import Job, Task
+from recsys.core.service.io import IOService
+from recsys.core.workflow.dag import DAG, Task
 from recsys.core.workflow.orchestrator import Orchestrator
 from recsys.core.workflow.operator.base import Operator
-from recsys.core.workflow.builder.job import Director, JobBuilder
+from recsys.core.workflow.builder import Director, DAGBuilder
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ class TestDataSourceBuilder:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dba = container.dba.job()
+        dba = container.dba.dag()
         dba.reset()
         dba = container.dba.task()
         dba.reset()
@@ -95,13 +95,13 @@ class TestDataSourceBuilder:  # pragma: no cover
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
         # Test Build
-        builder = JobBuilder()
+        builder = DAGBuilder()
         dir = Director()
         dir.builder = builder
-        job = dir.build_job(self.config())
-        assert isinstance(job, Job)
-        assert len(job) == 3
-        for task in job.tasks.values():
+        dag = dir.build_dag(self.config())
+        assert isinstance(dag, DAG)
+        assert len(dag) == 3
+        for task in dag.tasks.values():
             assert isinstance(task, Task)
             assert isinstance(task.operator, Operator)
             assert task.operator.__class__.__name__ == "DataSourceLoader"
@@ -111,10 +111,10 @@ class TestDataSourceBuilder:  # pragma: no cover
         uow = container.work.unit()
         pipe = Orchestrator(uow=uow)
         logger.debug(f"\n\n{100*'='}")
-        logger.debug(job)
-        for task in job.tasks.values():
+        logger.debug(dag)
+        for task in dag.tasks.values():
             logger.debug(task)
-        pipe.job = job
+        pipe.dag = dag
         pipe.run()
         uow.save()
         repo = uow.get_repo("datasource")
@@ -126,9 +126,9 @@ class TestDataSourceBuilder:  # pragma: no cover
         logger.debug("\n40*'='")
         # ---------------------------------------------------------------------------------------- #
         dir.builder.reset()
-        assert dir.builder.job is None
+        assert dir.builder.dag is None
         builder = dir.builder
-        assert isinstance(builder, JobBuilder)
+        assert isinstance(builder, DAGBuilder)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

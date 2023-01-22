@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday January 21st 2023 02:49:20 am                                              #
+# Modified   : Saturday January 21st 2023 07:45:50 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -128,6 +128,7 @@ class DataSource(DataSourceComponent):
 
     # -------------------------------------------------------------------------------------------- #
     def add_url(self, url: DataSourceComponent) -> None:
+        url.datasource = self
         self._urls[url.name] = url
         self._modified = datetime.now()
 
@@ -258,7 +259,7 @@ class DataSourceURL(DataSourceComponent):
             name=self._name,
             description=self._description,
             url=self._url,
-            parent_oid=self._parent.id,
+            datasource_oid=self._datasource.oid,
             created=self._created,
             modified=self._modified,
         )

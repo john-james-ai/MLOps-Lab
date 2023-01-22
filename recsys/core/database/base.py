@@ -11,48 +11,49 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 3rd 2023 12:33:25 am                                                #
-# Modified   : Friday January 13th 2023 08:39:42 pm                                                #
+# Modified   : Saturday January 21st 2023 05:52:49 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
 """Base Database and Connection Classes."""
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Union
 import mysql.connector
 import pymysql
-
-from recsys.core.services.base import Service
+import logging
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                        CONNECTION                                                #
 # ------------------------------------------------------------------------------------------------ #
-class Connection(Service):
+class Connection(ABC):
     """MySQL Database."""
 
     def __init__(
         self, connector: pymysql.connect = None, autocommit: bool = False, autoclose: bool = False
     ) -> None:
-        super().__init__()
         self._autocommit = autocommit
         self._autoclose = autoclose
         self._connector = connector
         self._is_open = False
         self._in_transaction = False
         self._connection = None
+        self._logger = logging.getLogger(
+            f"{self.__module__}.{self.__class__.__name__}",
+        )
 
     @property
     def database(self) -> str:
-        self._database
+        return self._database
 
     @property
     def autocommit(self) -> str:
-        self._autocommit
+        return self._autocommit
 
     @property
     def autoclose(self) -> str:
-        self._autoclose
+        return self._autoclose
 
     @property
     def is_open(self) -> bool:
@@ -124,9 +125,11 @@ class Connection(Service):
 # ------------------------------------------------------------------------------------------------ #
 #                                        DATABASE                                                  #
 # ------------------------------------------------------------------------------------------------ #
-class AbstractDatabase(Service):
+class AbstractDatabase(ABC):
     def __init__(self):
-        super().__init__()
+        self._logger = logging.getLogger(
+            f"{self.__module__}.{self.__class__.__name__}",
+        )
 
     @abstractmethod
     def begin(self, *args, **kwargs) -> None:

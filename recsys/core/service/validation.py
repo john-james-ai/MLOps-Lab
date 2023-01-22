@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/services/validation.py                                                 #
+# Filename   : /recsys/core/service/validation.py                                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 27th 2022 02:41:20 pm                                              #
-# Modified   : Sunday January 1st 2023 06:10:31 am                                                 #
+# Modified   : Saturday January 21st 2023 09:14:34 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -38,7 +38,7 @@ class Validator:
     @classmethod
     def datasource(cls, entity) -> Response:
         response = Response()
-        if hasattr(entity, 'datasource_name'):
+        if hasattr(entity, "datasource_name"):
             if entity.datasource_name not in SOURCES:
                 response.is_ok = False
                 response.msg = f"Error in {entity.__class__.__name__}. Variable 'datasource_name' is not valid. Must be one of {SOURCES}."
@@ -47,7 +47,7 @@ class Validator:
     @classmethod
     def mode(cls, entity) -> Response:
         response = Response()
-        if hasattr(entity, 'mode'):
+        if hasattr(entity, "mode"):
             if entity.mode not in MODES:
                 response.is_ok = False
                 response.msg = f"Error in {entity.__class__.__name__}. Variable 'mode' is not valid. Must be one of {MODES}."
@@ -56,7 +56,7 @@ class Validator:
     @classmethod
     def stage(cls, entity) -> Response:
         response = Response()
-        if hasattr(entity, 'stage'):
+        if hasattr(entity, "stage"):
             if entity.stage not in STAGES:
                 response.is_ok = False
                 response.msg = f"Error in {entity.__class__.__name__}. Variable 'stage' is not valid. Must be one of {STAGES}."
@@ -65,7 +65,7 @@ class Validator:
     @classmethod
     def data(cls, entity) -> Response:
         response = Response()
-        if hasattr(entity, 'data'):
+        if hasattr(entity, "data"):
             if not isinstance(entity.data, pd.DataFrame) and entity.data is not None:
                 response.is_ok = False
                 response.msg = f"Error in {entity.__class__.__name__}. Variable 'data' is not valid. Must be a pandas DataFrame object."
@@ -73,19 +73,19 @@ class Validator:
         return response
 
     @classmethod
-    def job_id(cls, entity) -> Response:
+    def dag_id(cls, entity) -> Response:
         response = Response()
-        if hasattr(entity, 'job_id'):
-            if not isinstance(entity.job_id, int) and entity.job_id is not None:
+        if hasattr(entity, "dag_id"):
+            if not isinstance(entity.dag_id, int) and entity.dag_id is not None:
                 response.is_ok = False
-                response.msg = f"Error in {entity.__class__.__name__}. Variable 'job_id' is not valid. Must be an integer."
+                response.msg = f"Error in {entity.__class__.__name__}. Variable 'dag_id' is not valid. Must be an integer."
                 response.exception = TypeError
         return response
 
     @classmethod
     def task_id(cls, entity) -> Response:
         response = Response()
-        if hasattr(entity, 'task_id'):
+        if hasattr(entity, "task_id"):
             if not isinstance(entity.task_id, int) and entity.task_id is not None:
                 response.is_ok = False
                 response.msg = f"Error in {entity.__class__.__name__}. Variable 'task_id' is not valid. Must be an integer."
@@ -95,14 +95,22 @@ class Validator:
     @classmethod
     def state(cls, entity) -> Response:
         response = Response()
-        if hasattr(entity, 'state'):
+        if hasattr(entity, "state"):
             if entity.state not in STATES:
                 response.is_ok = False
                 response.msg = f"Error in {entity.__class__.__name__}. Variable 'state' is not valid. Must be one of {STATES}."
         return response
 
     def validate(self, entity) -> Response:
-        validators = [self.datasource, self.mode, self.stage, self.data, self.job_id, self.task_id, self.state]
+        validators = [
+            self.datasource,
+            self.mode,
+            self.stage,
+            self.data,
+            self.dag_id,
+            self.task_id,
+            self.state,
+        ]
         response = Response()
         for validator in validators:
             response = validator(entity)

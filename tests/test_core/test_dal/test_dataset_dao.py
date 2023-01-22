@@ -10,21 +10,18 @@
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Wednesday December 28th 2022 02:38:04 pm                                            #
-# Modified   : Wednesday January 11th 2023 06:45:30 pm                                             #
+# Created    : Sunday January 22nd 2023 01:33:45 pm                                                #
+# Modified   : Sunday January 22nd 2023 02:22:45 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
-# Copyright  : (c) 2022 John James                                                                 #
+# Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
 import inspect
 from datetime import datetime
 import pytest
 import logging
-import mysql.connector
 
-from recsys.core.dal.dto import DTO
-from recsys.core.dal.dao import DAO
-
+from recsys.core.dal.dao import DatasetDTO
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -34,24 +31,12 @@ single_line = f"\n{100 * '-'}"
 
 
 @pytest.mark.dao
+@pytest.mark.dataset
 @pytest.mark.dataset_dao
 class TestDatasetDAO:  # pragma: no cover
-    # ============================================================================================ #
-    def reset_table(self, container):
-        dba = container.dba.dataset()
-        dba.reset()
-
-    # ---------------------------------------------------------------------------------------- #
-    def get_dao(self, container) -> DAO:
-        dao = container.dal.dataset()
-        return dao
-
-    # ---------------------------------------------------------------------------------------- #
-    def check_results(self, i, dto) -> None:
-        assert isinstance(dto, DTO)
 
     # ============================================================================================ #
-    def test_setup(self, container, caplog):
+    def test_load(self, loaded_container, test_data, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -63,172 +48,10 @@ class TestDatasetDAO:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        self.reset_table(container)
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\nCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-        logger.info(single_line)
-
-    # ============================================================================================ #
-    def test_create_exists(self, container, datasets, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\nStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        logger.info(double_line)
-        # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-        dao.begin()
-
-        for i, dataset in enumerate(datasets, start=1):
-            dto = dataset.as_dto()
-            dto = dao.create(dto)
-            self.check_results(i, dto)
-            logger.debug(dto)
-
-        for i in range(1, 6):
-            exists = dao.exists(i)
-            logger.debug(exists)
-            assert exists
-
-        dao.rollback()
-
-        dao.begin()
-
-        for i in range(1, 6):
-            exists = dao.exists(i)
-            assert not exists
-
-        dao.close()
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-
-        )
-        logger.info(single_line)
-
-    # ============================================================================================ #
-    def test_create_commit(self, container, datasets, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\nStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        logger.info(double_line)
-        # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-
-        for i, dataset in enumerate(datasets, start=1):
-            dto = dataset.as_dto()
-            dto = dao.create(dto)
-            self.check_results(i + 5, dto)
-
-        dao.rollback()
-
-        for i in range(6, 11):
-            assert dao.exists(i)
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-        )
-        logger.info(single_line)
-
-    # ============================================================================================ #
-    def test_read(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\nStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        logger.info(double_line)
-        # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-
-        for i in range(6, 11):
-            dto = dao.read(i)
-            assert isinstance(dto, DTO)
-            self.check_results(i, dto)
-
-        result = dao.read(99)
-        assert result == []
-
-        # ---------------------------------------------------------------------------------------- #
-        end = datetime.now()
-        duration = round((end - start).total_seconds(), 1)
-
-        logger.info(
-            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                duration,
-                end.strftime("%I:%M:%S %p"),
-                end.strftime("%m/%d/%Y"),
-            )
-
-        )
-        logger.info(single_line)
-
-    # ============================================================================================ #
-    def test_read_all(self, container, caplog):
-        start = datetime.now()
-        logger.info(
-            "\n\nStarted {} {} at {} on {}".format(
-                self.__class__.__name__,
-                inspect.stack()[0][3],
-                start.strftime("%I:%M:%S %p"),
-                start.strftime("%m/%d/%Y"),
-            )
-        )
-        logger.info(double_line)
-        # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-
+        dao = loaded_container.dal().dataset()
+        datasets = test_data["dataset"]
         dtos = dao.read_all()
-        assert isinstance(dtos, dict)
-        for i, dto in dtos.items():
-            self.check_results(i, dto)
+        assert len(dtos) == len(datasets)
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -242,12 +65,49 @@ class TestDatasetDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_read_by_name(self, container, caplog):
+
+    def test_create_datasets_success(self, clean_container, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\n\tStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        # ---------------------------------------------------------------------------------------- #
+        edb = clean_container.dal().edb()
+        dao = clean_container.dal().dataset()
+
+        for dataset in datasets:
+            dto1 = dataset.as_dto()
+            dto2 = dao.create(dto1)
+            assert dto2.id is not None
+            assert isinstance(dto2.id, int)
+            assert dto1 == dto2
+
+        edb.save()
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+
+    # ============================================================================================ #
+    def test_read_dataset_returns_dto(self, loaded_container, test_data, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -259,14 +119,17 @@ class TestDatasetDAO:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
+        dao = loaded_container.dal().dataset()
+        datasets = test_data["dataset"]
 
-        dto = dao.read_by_name(name="dataset_name_4", mode='test')
-        assert isinstance(dto, DTO)
-        self.check_results(1, dto)
-
-        dto = dao.read_by_name(name="dataset_1", mode='skdi')
-        assert dto == []
+        for idx, data in datasets.items():
+            dto = dao.read(idx)
+            assert dto.id == idx
+            assert dto.name == data["name"]
+            assert dto.description == data["description"]
+            assert dto.oid == data["oid"]
+            assert dto.datasource_oid == data["datasource_oid"]
+            assert dto.stage == data["stage"]
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -280,12 +143,11 @@ class TestDatasetDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_update(self, container, datasets, caplog):
+    def test_read_dataset_returns_empty_set(self, loaded_container, datasets, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -297,32 +159,155 @@ class TestDatasetDAO:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-        dao.begin()
+        dao = loaded_container.dal().dataset()
+        dto = dao.read(9228)
+        assert len(dto) == 0
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_read_by_name_dataset_return_dto(self, loaded_container, test_data, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        dao = loaded_container.dal().dataset()
+        datasets = test_data["dataset"]
+
+        for idx, data in datasets.items():
+            dto = dao.read_by_name(name=data["name"])
+            assert dto.id == idx
+            assert dto.name == data["name"]
+            assert dto.description == data["description"]
+            assert dto.oid == data["oid"]
+            assert dto.datasource_oid == data["datasource_oid"]
+            assert dto.stage == data["stage"]
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_read_all_datasets(self, loaded_container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        dao = loaded_container.dal().dataset()
         dtos = dao.read_all()
-        for i, dto in dtos.items():
-            dto.task_id = 292
+        for dto in dtos.values():
+            assert isinstance(dto, DatasetDTO)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_update_dataset_exists_success(self, loaded_container, test_data, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        dao = loaded_container.dal().dataset()
+        dtos = dao.read_all()
+        for id, dto in dtos.items():
+            dto.datasource_oid = "datasource_update_" + str(id)
+            rows_affected = dao.update(dto)
+            assert rows_affected == 1
+            dto2 = dao.read(id)
+            assert dto2.datasource_oid == "datasource_update_" + str(id)
+
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_update_dataset_fail(self, clean_container, datasets, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        dao = clean_container.dal().dataset()
+        dataset = datasets[0]
+        dto = dataset.as_dto()
+        dto.id == 9999
+        with pytest.raises(FileNotFoundError):
             dao.update(dto)
 
-        dao.rollback()
-
-        dtos = dao.read_all()
-        for i, dto in dtos.items():
-            assert not dto.task_id == 292
-
-        dao.begin()
-        for i, dto in dtos.items():
-            dto.task_id = 292
-            dao.update(dto)
-        dao.save()
-
-        dtos = dao.read_all()
-        for i, dto in dtos.items():
-            assert dto.task_id == 292
-            dto.id = 8938
-            with pytest.raises(mysql.connector.ProgrammingError):
-                dao.update(dto)
-
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -335,12 +320,11 @@ class TestDatasetDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_delete(self, container, caplog):
+    def test_exists_true(self, loaded_container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -352,17 +336,71 @@ class TestDatasetDAO:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        dao = self.get_dao(container)
-        dao.begin()
-        dao.delete(6)
-        assert not dao.exists(6)
+        dao = loaded_container.dal().dataset()
+        assert dao.exists(3)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
 
-        dao.rollback()
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
 
-        assert dao.exists(6)
+    # ============================================================================================ #
+    def test_exists_false(self, loaded_container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        dao = loaded_container.dal().dataset()
+        exists = dao.exists(3837)
+        assert not exists
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
 
-        with pytest.raises(mysql.connector.ProgrammingError):
-            dao.delete(8743)
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_delete_existing_dataset(self, loaded_container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        dao = loaded_container.dal().dataset()
+        dao.delete(3)
+        dto = dao.read(3)
+        assert len(dto) == 0
 
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -376,6 +414,36 @@ class TestDatasetDAO:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+        )
+        logger.info(single_line)
 
+    # ============================================================================================ #
+    def test_delete_non_existing_dataset(self, loaded_container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        dao = loaded_container.dal().dataset()
+        with pytest.raises(FileNotFoundError):
+            dao.delete(4567)
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
         )
         logger.info(single_line)

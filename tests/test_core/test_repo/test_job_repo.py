@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Jobname   : /tests/test_core/test_repo/test_job_repo.py                                  #
+# DAGname   : /tests/test_core/test_repo/test_dag_repo.py                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 1st 2023 02:21:02 pm                                                 #
-# Modified   : Friday January 20th 2023 10:16:46 pm                                                #
+# Modified   : Saturday January 21st 2023 07:54:25 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -21,8 +21,8 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.workflow.process import Job, Task
-from recsys.core.repo.job import JobRepo
+from recsys.core.workflow.dag import DAG, Task
+from recsys.core.repo.dag import DAGRepo
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -32,10 +32,10 @@ single_line = f"\n{100 * '-'}\n"
 
 
 @pytest.mark.repo
-@pytest.mark.job_repo
-class TestJobRepo:  # pragma: no cover
+@pytest.mark.dag_repo
+class TestDAGRepo:  # pragma: no cover
     def reset_db(self, container) -> None:
-        dba = container.dba.job()
+        dba = container.dba.dag()
         dba.reset()
         dba = container.dba.task()
         dba.reset()
@@ -70,7 +70,7 @@ class TestJobRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_xaction_insert_no_commit(self, container, context, jobs, caplog):
+    def test_xaction_insert_no_commit(self, container, context, dags, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -82,9 +82,9 @@ class TestJobRepo:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        repo = JobRepo(context)
+        repo = DAGRepo(context)
         context.begin()
-        for j1 in jobs.copy():
+        for j1 in dags.copy():
             j2 = repo.add(j1)
             assert repo.exists(j2.id)
         context.close()
@@ -109,7 +109,7 @@ class TestJobRepo:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_xaction_insert_commit(self, container, context, jobs, caplog):
+    def test_xaction_insert_commit(self, container, context, dags, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -121,10 +121,10 @@ class TestJobRepo:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        repo = JobRepo(context)
+        repo = DAGRepo(context)
         context.begin()
         ids = []
-        for j3 in jobs.copy():
+        for j3 in dags.copy():
             j4 = repo.add(j3)
             assert repo.exists(j4.id)
             ids.append(j4.id)
@@ -150,7 +150,7 @@ class TestJobRepo:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_xaction_update(self, container, context, jobs, caplog):
+    def test_xaction_update(self, container, context, dags, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -162,13 +162,13 @@ class TestJobRepo:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        repo = JobRepo(context)
+        repo = DAGRepo(context)
 
-        for job in jobs:
-            repo.add(job)
+        for dag in dags:
+            repo.add(dag)
 
         context.begin()
-        for i, job in enumerate(jobs, start=1):
+        for i, dag in enumerate(dags, start=1):
             j1 = repo.get(i)
             j1.state = "IN-PROGRESS"
             repo.update(j1)
@@ -211,7 +211,7 @@ class TestJobRepo:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_xaction_delete(self, container, context, jobs, caplog):
+    def test_xaction_delete(self, container, context, dags, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -223,10 +223,10 @@ class TestJobRepo:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
-        repo = JobRepo(context)
+        repo = DAGRepo(context)
 
-        for job in jobs:
-            repo.add(job)
+        for dag in dags:
+            repo.add(dag)
 
         context.begin()
         for i in range(1, 6):
@@ -265,7 +265,7 @@ class TestJobRepo:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_add_get(self, context, container, jobs, caplog):
+    def test_add_get(self, context, container, dags, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -276,12 +276,12 @@ class TestJobRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = JobRepo(context)
-        for i, job in enumerate(jobs, start=1):
-            job = repo.add(job)
-            assert job.id == i
+        repo = DAGRepo(context)
+        for i, dag in enumerate(dags, start=1):
+            dag = repo.add(dag)
+            assert dag.id == i
             j2 = repo.get(i)
-            assert job == j2
+            assert dag == j2
             for df in j2.tasks.values():
                 assert isinstance(df, Task)
                 assert df.parent == j2
@@ -302,7 +302,7 @@ class TestJobRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_get_by_name(self, container, jobs, context, caplog):
+    def test_get_by_name(self, container, dags, context, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -313,18 +313,18 @@ class TestJobRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = JobRepo(context)
+        repo = DAGRepo(context)
 
-        for job in jobs:
-            repo.add(job)
+        for dag in dags:
+            repo.add(dag)
 
-        job = repo.get_by_name(name="job_name_2")
-        assert isinstance(job, Job)
-        assert job.id == 2
-        assert job.name == "job_name_2"
-        for df in job.tasks.values():
+        dag = repo.get_by_name(name="dag_name_2")
+        assert isinstance(dag, DAG)
+        assert dag.id == 2
+        assert dag.name == "dag_name_2"
+        for df in dag.tasks.values():
             assert isinstance(df, Task)
-            assert df.parent == job
+            assert df.parent == dag
 
         self.reset_db(container)
         # ---------------------------------------------------------------------------------------- #
@@ -342,7 +342,7 @@ class TestJobRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_update(self, container, context, jobs, caplog):
+    def test_update(self, container, context, dags, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -353,19 +353,19 @@ class TestJobRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = JobRepo(context)
+        repo = DAGRepo(context)
 
-        for job in jobs:
-            repo.add(job)
-
-        for i in range(1, 6):
-            job = repo.get(i)
-            job.state = 1234
-            repo.update(job)
+        for dag in dags:
+            repo.add(dag)
 
         for i in range(1, 6):
-            job = repo.get(i)
-            assert job.state == 1234
+            dag = repo.get(i)
+            dag.state = 1234
+            repo.update(dag)
+
+        for i in range(1, 6):
+            dag = repo.get(i)
+            assert dag.state == 1234
 
         self.reset_db(container)
         # ---------------------------------------------------------------------------------------- #
@@ -383,7 +383,7 @@ class TestJobRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_remove_exists(self, container, jobs, context, caplog):
+    def test_remove_exists(self, container, dags, context, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -394,10 +394,10 @@ class TestJobRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = JobRepo(context)
+        repo = DAGRepo(context)
 
-        for job in jobs:
-            repo.add(job)
+        for dag in dags:
+            repo.add(dag)
 
         for i in range(1, 6):
             if i % 2 == 0:
@@ -427,7 +427,7 @@ class TestJobRepo:  # pragma: no cover
         )
 
     # ============================================================================================ #
-    def test_print(self, context, jobs, caplog):
+    def test_print(self, context, dags, caplog):
         start = datetime.now()
         logger.info(
             "\n\n\tStarted {} {} at {} on {}".format(
@@ -438,10 +438,10 @@ class TestJobRepo:  # pragma: no cover
             )
         )
         # ---------------------------------------------------------------------------------------- #
-        repo = JobRepo(context)
+        repo = DAGRepo(context)
 
-        for job in jobs:
-            repo.add(job)
+        for dag in dags:
+            repo.add(dag)
 
         repo.print()
         # ---------------------------------------------------------------------------------------- #

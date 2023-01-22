@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 25th 2022 12:55:35 pm                                               #
-# Modified   : Friday January 20th 2023 09:43:49 pm                                                #
+# Modified   : Saturday January 21st 2023 09:14:34 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -69,9 +69,9 @@ class UnitOfWork(UnitOfWorkABC):
         entities (providers.Container): A container of entity repositories that share a common context.
 
     Release Notes:
-    1. job, event, and profile repositories were removed as they contain non-entities which
+    1. dag, event, and profile repositories were removed as they contain non-entities which
         are subject to a different persistence and lifetime regimes. Entity repositories
-        are included for transaction isolation. Events, jobs, and job profiles are not
+        are included for transaction isolation. Events, dags, and dag profiles are not
         transaction isolated.
 
     """
@@ -84,7 +84,7 @@ class UnitOfWork(UnitOfWorkABC):
         self._repos["datasource"] = entities.datasource()
         self._repos["dataset"] = entities.dataset()
         self._in_transaction = False
-        self._job = None
+        self._dag = None
         msg = f"Instantiated UoW at {id(self)}."
         self._logger.debug(msg)
 

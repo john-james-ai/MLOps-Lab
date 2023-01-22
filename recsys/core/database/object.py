@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 24th 2022 07:01:02 am                                             #
-# Modified   : Friday January 13th 2023 06:48:27 pm                                                #
+# Modified   : Saturday January 21st 2023 06:21:21 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,15 +23,16 @@ import dotenv
 import shelve
 from typing import Union
 from glob import glob
+import logging
 
-from .base import Connection, AbstractDatabase, Service
+from recsys.core.database.base import Connection, AbstractDatabase
 from recsys.core.entity.base import Entity
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                          CURSOR                                                  #
 # ------------------------------------------------------------------------------------------------ #
-class Cursor(Service):
+class Cursor:
     """Abstract base class for object database cursors.
 
     Args:
@@ -39,9 +40,11 @@ class Cursor(Service):
     """
 
     def __init__(self, location) -> None:
-        super().__init__()
         self._location = location
         self._cursor = None
+        self._logger = logging.getLogger(
+            f"{self.__module__}.{self.__class__.__name__}",
+        )
         self.open()
 
     def open(self) -> None:
