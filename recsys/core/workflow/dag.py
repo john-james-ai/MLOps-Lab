@@ -4,6 +4,24 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
+# Filename   : /recsys/core/workflow/dag.py                                                        #
+# ------------------------------------------------------------------------------------------------ #
+# Author     : John James                                                                          #
+# Email      : john.james.ai.studio@gmail.com                                                      #
+# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# ------------------------------------------------------------------------------------------------ #
+# Created    : Saturday January 21st 2023 05:09:50 am                                              #
+# Modified   : Saturday January 21st 2023 07:50:18 pm                                              #
+# ------------------------------------------------------------------------------------------------ #
+# License    : MIT License                                                                         #
+# Copyright  : (c) 2023 John James                                                                 #
+# ================================================================================================ #
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+# ================================================================================================ #
+# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Version    : 0.1.0                                                                               #
+# Python     : 3.10.6                                                                              #
 # Filename   : /recsys/core/workflow/process.py                                                    #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
@@ -11,53 +29,62 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday January 21st 2023 05:07:09 am                                              #
+# Modified   : Saturday January 21st 2023 08:50:57 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Process Module"""
-from typing import Union, Any
 import pandas as pd
 from datetime import datetime
+from collections import OrderedDict
+
 
 from dependency_injector.wiring import Provide, inject
 
 from recsys.core.workflow.base import Process
-from recsys.core.workflow.callback import JobCallback, TaskCallback
+from recsys.core.workflow.callback import Callback
+from recsys.core.workflow.container import CallbackContainer
 from recsys.core.workflow.operator.base import Operator
-from recsys.core.dal.dao import DTO, JobDTO, TaskDTO
-from recsys.core.repo.uow import UnitOfWork
+from recsys.core.dal.dao import DTO, DAGDTO, TaskDTO
 from recsys import STATES
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                          JOB                                                     #
 # ------------------------------------------------------------------------------------------------ #
-class Job(Process):
-    """Collection of Task objects.
+class DAG(Process):
+    """Directed Acyclic Graph of Tasks to be executed within a sync, async, or parallel orchestration context.
 
     Args:
-        name (str): Job name
-        description (str): Job Description
+        name (str): DAG name
+        description (str): DAG Description
     """
 
     @inject
-    def __init__(self, name: str, description: str = None, callback=Callback) -> None:
+    def __init__(
+        self,
+        name: str,
+        description: str = None,
+        callback: Callback = Provide[CallbackContainer.dag],
+    ) -> None:
         super().__init__(name=name, description=description)
+        self._callback = callback()
 
-        self._callback = callback
-        self._tasks = {}
+        self._tasks = OrderedDict()
+        self._task_no = 0
         self._state = STATES[0]
         self._is_composite = True
-        self._on_create()
 
+    # -------------------------------------------------------------------------------------------- #
     def __str__(self) -> str:
-        return f"Job Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tState: {self._state}\n\tCreated: {self._created}\n\tModified: {self._modified}"
+        return f"DAG Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tState: {self._state}\n\tCreated: {self._created}\n\tModified: {self._modified}"
 
+    # -------------------------------------------------------------------------------------------- #
     def __repr__(self) -> str:
         return f"{self._id}, {self._name}, {self._description}, {self._state}, {self._created}, {self._modified}"
 
+    # -------------------------------------------------------------------------------------------- #
     def __eq__(self, other: Process) -> bool:
         if self.__class__.__name__ == other.__class__.__name__:
             return (
@@ -69,27 +96,27 @@ class Job(Process):
         else:
             return False
 
+    # -------------------------------------------------------------------------------------------- #
     def __len__(self) -> int:
-        return len(self._tasks.values())
+        return len(self._tasks)
+
+    # -------------------------------------------------------------------------------------------- #
+    def __aiter__(self):
+        return self
+
+    # -------------------------------------------------------------------------------------------- #
+    async def __anext__(self):
+        n_tasks = len(self._tasks)
+        if self._task_no >= n_tasks - 1:
+            raise StopIteration
+        task = self._tasks.popitem()
+        self._task_no += 1
+        return task
 
     # -------------------------------------------------------------------------------------------- #
     @property
     def is_composite(self) -> str:
         return self._is_composite
-
-    # -------------------------------------------------------------------------------------------- #
-    def run(self, uow: UnitOfWork, data: Any = None) -> None:
-        self._on_start()
-
-        for task in self._tasks.values():
-            try:
-                data = task.run(uow=uow, data=data)
-            except Exception:
-                self._on_fail()
-                raise
-
-        self._on_end()
-        return data
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -98,7 +125,7 @@ class Job(Process):
 
     # -------------------------------------------------------------------------------------------- #
     def add_task(self, task: Process) -> None:
-        task.parent = self
+        task.dag = self
         self._tasks[task.name] = task
         self._modified = datetime.now()
         self._logger.debug(f"just added task {task.name} to {self._name}")
@@ -108,12 +135,12 @@ class Job(Process):
         try:
             return self._tasks[name]
         except KeyError:
-            msg = f"Job {self._name} has no task with name = {name}."
+            msg = f"DAG {self._name} has no task with name = {name}."
             self._logger.error(msg)
             raise FileNotFoundError(msg)
 
     # -------------------------------------------------------------------------------------------- #
-    def get_tasks(self) -> pd.DataFrame:
+    def show_tasks(self) -> pd.DataFrame:
         d = {}
         for name, task in self._tasks.items():
             d[name] = task.as_dto().as_dict()
@@ -123,12 +150,12 @@ class Job(Process):
     # -------------------------------------------------------------------------------------------- #
     def update_task(self, task: Process) -> None:
         if task.name in self._tasks.keys():
-            task.parent = self
+            task.dag = self
             self._tasks[task.name] = task
             self._modified = datetime.now()
             self._logger.debug(f"just updated task {task.name} in {self._name}")
         else:
-            msg = f"Task {task.name} does not exist in job {self._name}. Did you mean add_task?"
+            msg = f"Task {task.name} does not exist in dag {self._name}. Did you mean add_task?"
             self._logger.error(msg)
             raise KeyError(msg)
 
@@ -138,14 +165,14 @@ class Job(Process):
             del self._tasks[name]
             self._modified = datetime.now()
         except KeyError:
-            msg = f"Unable to delete task. Task {name} does not exist in job {self._name}."
+            msg = f"Unable to delete task. Task {name} does not exist in dag {self._name}."
             self._logger.error(msg)
             raise KeyError(msg)
 
     # -------------------------------------------------------------------------------------------- #
     def as_dto(self) -> DTO:
 
-        dto = JobDTO(
+        dto = DAGDTO(
             id=self._id,
             oid=self._oid,
             name=self._name,
@@ -165,9 +192,9 @@ class Task(Process):
 
     Args:
         name (str): Short, yet descriptive lowercase name for Task object.
-        description (str): Describes the Task object. Default's to job's description if None.
+        description (str): Describes the Task object. Default's to dag's description if None.
         operator (Operator): An instance of an operator object.
-        job (Job): The parent Job instance.
+        dag (DAG): The dag DAG instance.
 
     """
 
@@ -176,13 +203,13 @@ class Task(Process):
         name: str,
         operator: Operator = None,
         description: str = None,
-        callback=Provide[Recsys.callback.task],
+        callback: Callback = Provide[CallbackContainer.task],
     ) -> None:
         super().__init__(name=name, description=description)
 
-        self._callback = callback
+        self._callback = callback()
         self._operator = operator
-        self._parent = None
+        self._dag = None
         self._is_composite = False
         self._state = STATES[0]
 
@@ -193,8 +220,8 @@ class Task(Process):
         return f"{self._id}, {self._name}, {self._description}, {self._state}, {self._created}, {self._modified}"
 
     def __eq__(self, other) -> bool:
-        """Compares two Job for equality.
-        Job are considered equal solely if their underlying data are equal.
+        """Compares two DAG for equality.
+        DAG are considered equal solely if their underlying data are equal.
 
         Args:
             other (Task): The Task object to compare.
@@ -205,7 +232,7 @@ class Task(Process):
                 self._name == other.name
                 and self._operator == other._operator
                 and self._description == other.description
-                and self._parent == other.parent
+                and self._dag == other.dag
             )
         else:
             return False
@@ -220,13 +247,13 @@ class Task(Process):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def parent(self) -> Job:
-        return self._parent
+    def dag(self) -> DAG:
+        return self._dag
 
     # -------------------------------------------------------------------------------------------- #
-    @parent.setter
-    def parent(self, parent: Job) -> None:
-        self._parent = parent
+    @dag.setter
+    def dag(self, dag: DAG) -> None:
+        self._dag = dag
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -239,19 +266,6 @@ class Task(Process):
         self._operator = operator
 
     # -------------------------------------------------------------------------------------------- #
-    def run(self, uow: UnitOfWork, data: Any = None) -> Union[None, Any]:
-        """Runs the task through delegation to an operator."""
-        self._on_start()
-        try:
-            data = self._operator.execute(uow=uow, data=data)
-        except Exception:
-            self._on_fail()
-            raise
-
-        self._on_end()
-        return data
-
-    # -------------------------------------------------------------------------------------------- #
     def as_dto(self) -> TaskDTO:
         return TaskDTO(
             id=self._id,
@@ -259,7 +273,7 @@ class Task(Process):
             name=self._name,
             description=self._description,
             state=self._state,
-            parent_oid=self._parent.oid,
+            dag_oid=self._dag.oid,
             created=self._created,
             modified=self._modified,
         )

@@ -23,14 +23,14 @@ from recsys.core.dal.dto import EventDTO
 
 # ------------------------------------------------------------------------------------------------ #
 class Event:
-    """Event encapsulates a single execution of a process (job or task).
+    """Event encapsulates a single execution of a process (dag or task).
 
     Args:
         id (int): Database assigned unique identifier for an event
         name (str): Name for the event or process
         description (str): The description for event or process
-        process_oid (int): The id for the job or task for which the event is published. Required.
-        parent_oid (int): The id for the parent job from which a task has spawned. None allowed.
+        process_oid (int): The id for the dag or task for which the event is published. Required.
+        parent_oid (int): The id for the parent dag from which a task has spawned. None allowed.
         state (str): One of the valid states in which a process may assume, defined in the application init module. Required.
 
     """

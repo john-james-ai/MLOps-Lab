@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday January 21st 2023 03:07:56 am                                              #
-# Modified   : Saturday January 21st 2023 03:09:25 am                                              #
+# Modified   : Saturday January 21st 2023 07:53:53 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -23,14 +23,14 @@ import importlib
 from dependency_injector.wiring import Provide, inject
 from dependency_injector import containers
 
-from recsys.containers import Recsys
-from recsys.core.workflow.process import Job, Task
+from recsys.container import Recsys
+from recsys.core.workflow.dag import DAG, Task
 from recsys.core.workflow.operator.base import Operator
 
 
 # ------------------------------------------------------------------------------------------------ #
 class Builder(ABC):
-    """Abstract Base Class for Job Builders"""
+    """Abstract Base Class for DAG Builders"""
 
     def __init__(self) -> None:
         self._logger = logging.getLogger(
@@ -39,12 +39,12 @@ class Builder(ABC):
 
     @property
     @abstractmethod
-    def job(self) -> None:
-        """Returns a Job object."""
+    def dag(self) -> None:
+        """Returns a DAG object."""
 
     @abstractmethod
-    def build_job(self) -> None:
-        """Builds the Job object"""
+    def build_dag(self) -> None:
+        """Builds the DAG object"""
 
     @abstractmethod
     def build_task(self) -> None:
@@ -60,8 +60,8 @@ class Builder(ABC):
 # ------------------------------------------------------------------------------------------------ #
 
 
-class JobBuilder(Builder):
-    """Constructs a DataSource Job"""
+class DAGBuilder(Builder):
+    """Constructs a DataSource DAG"""
 
     @inject
     def __init__(self, factory: containers.DeclarativeContainer = Provide[Recsys.factory]) -> None:
@@ -71,8 +71,8 @@ class JobBuilder(Builder):
 
     # ------------------------------------------------------------------------------------------------ #
     @property
-    def job(self) -> Job:
-        return self._job
+    def dag(self) -> DAG:
+        return self._dag
 
     # ------------------------------------------------------------------------------------------------ #
     @property
@@ -86,14 +86,14 @@ class JobBuilder(Builder):
 
     # ------------------------------------------------------------------------------------------------ #
     def reset(self) -> None:
-        self._job = None
+        self._dag = None
 
     # ------------------------------------------------------------------------------------------------ #
-    def build_job(self) -> None:
-        self._job = self._factory.job()(self._config["job"])
+    def build_dag(self) -> None:
+        self._dag = self._factory.dag()(self._config["dag"])
         for config in self._config["tasks"]:
             task = self.build_task(config)
-            self._job.add_task(task)
+            self._dag.add_task(task)
 
     # ------------------------------------------------------------------------------------------------ #
     def build_task(self, config: dict) -> Task:
@@ -119,19 +119,19 @@ class Director:
         self._builder = None
 
     @property
-    def builder(self) -> JobBuilder:
+    def builder(self) -> DAGBuilder:
         return self._builder
 
     @builder.setter
-    def builder(self, builder: JobBuilder) -> None:
+    def builder(self, builder: DAGBuilder) -> None:
         """The Director works with any builder instance.
 
         Args:
-            builder (JobBuilder): Builder instance.
+            builder (DAGBuilder): Builder instance.
         """
         self._builder = builder
 
-    def build_job(self, config: dict) -> Job:
+    def build_dag(self, config: dict) -> DAG:
         self._builder.config = config
-        self._builder.build_job()
-        return self._builder.job
+        self._builder.build_dag()
+        return self._builder.dag

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday November 22nd 2022 02:25:42 am                                              #
-# Modified   : Friday January 20th 2023 06:10:46 pm                                                #
+# Modified   : Sunday January 22nd 2023 01:27:26 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -35,7 +35,9 @@ class MySQLConnection(Connection):
     def __init__(
         self, connector: pymysql.connect, autocommit: bool = False, autoclose: bool = False
     ) -> None:
-        super().__init__(connector=connector, autocommit=autocommit, autoclose=autoclose)
+        super().__init__(
+            connector=connector, autocommit=autocommit, autoclose=autoclose
+        )  # pragma: no cover
         self._database = "MySQL"
 
     def open(self) -> None:
@@ -99,6 +101,7 @@ class DatabaseConnection(Connection):
                 password=password,
                 database=self._database,
                 autocommit=self._autocommit,
+                local_infile=True,
             )
             self._is_open = True
             self._logger.debug(
@@ -170,9 +173,9 @@ class Database(AbstractDatabase):
 
     def rollback(self) -> None:
         """Rolls back the database to state as of last save or commit."""
-        if self._in_transaction:
+        if self._connection.is_open:
             self._connection.rollback()
-            self._in_transaction = False
+        self._in_transaction = False
 
     def query(self, sql: str, args: tuple = None) -> Connection.cursor:
         """Executes a query on the database and returns a cursor object."""
@@ -189,6 +192,11 @@ class Database(AbstractDatabase):
 
         self._close_session()
         return cursor
+
+    def load(self, sql: str, args: tuple = None) -> None:
+        """Loads data into the database table."""
+        cursor = self.query(sql, args)
+        cursor.close()
 
     def create(self, sql: str, args: tuple = None) -> None:
         """Executes create DDL statements for databases and tables."""
@@ -248,18 +256,17 @@ class Database(AbstractDatabase):
         cursor = self.query(sql, args)
         result = cursor.fetchone()
         cursor.close()
-        self._logger.debug(result)
-        if result == []:
-            return False
-        else:
+        try:
             return result[0] == 1
+        except IndexError:  # pragma: no cover
+            return False
 
-    def _open_session(self) -> None:
+    def _open_session(self) -> None:  # pragma: no cover
         """Opens a database connection if not already open."""
         if not self._is_open:
             self.connect()
 
-    def _close_session(self) -> None:
+    def _close_session(self) -> None:  # pragma: no cover
         """Saves and closes the connection, if not in transaction."""
         if not self._in_transaction and self._autocommit:
             self.save()

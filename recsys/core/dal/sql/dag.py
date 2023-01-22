@@ -4,14 +4,14 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/dal/sql/job.py                                                         #
+# Filename   : /recsys/core/dal/sql/dag.py                                                         #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 06:37:18 am                                                #
-# Modified   : Saturday January 21st 2023 02:59:45 am                                              #
+# Modified   : Sunday January 22nd 2023 02:19:22 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from recsys.core.dal.sql.base import SQL, DDL, DML
 from recsys.core.dal.dto import DTO
 from recsys.core.entity.base import Entity
-from recsys.core.workflow.process import Job
+from recsys.core.workflow.dag import DAG
 
 # ================================================================================================ #
 #                                         JOB                                                      #
@@ -34,45 +34,45 @@ from recsys.core.workflow.process import Job
 #                                          DDL                                                     #
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class CreateJobTable(SQL):
-    name: str = "job"
-    sql: str = """CREATE TABLE IF NOT EXISTS job (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), state VARCHAR(32), created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
+class CreateDAGTable(SQL):
+    name: str = "dag"
+    sql: str = """CREATE TABLE IF NOT EXISTS dag (id MEDIUMINT PRIMARY KEY AUTO_INCREMENT, oid VARCHAR(255) NOT NULL, name VARCHAR(128) NOT NULL, description VARCHAR(255), state VARCHAR(32), created DATETIME DEFAULT CURRENT_TIMESTAMP, modified DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE(name));"""
     args: tuple = ()
-    description: str = "Created the job table."
+    description: str = "Created the dag table."
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DropJobTable(SQL):
-    name: str = "job"
-    sql: str = """DROP TABLE IF EXISTS job;"""
+class DropDAGTable(SQL):
+    name: str = "dag"
+    sql: str = """DROP TABLE IF EXISTS dag;"""
     args: tuple = ()
-    description: str = "Dropped the job table."
+    description: str = "Dropped the dag table."
 
 
 # ------------------------------------------------------------------------------------------------ #
 
 
 @dataclass
-class JobTableExists(SQL):
-    name: str = "job"
+class DAGTableExists(SQL):
+    name: str = "dag"
     sql: str = None
     args: tuple = ()
-    description: str = "Checked existence of job table."
+    description: str = "Checked existence of dag table."
 
     def __post_init__(self) -> None:
         dotenv.load_dotenv()
         mode = os.getenv("MODE")
-        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}_events' AND TABLE_NAME = 'job';"""
+        self.sql = f"""SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA LIKE 'recsys_{mode}_events' AND TABLE_NAME = 'dag';"""
 
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class JobDDL(DDL):
-    entity: type[Entity] = Job
-    create: SQL = CreateJobTable()
-    drop: SQL = DropJobTable()
-    exists: SQL = JobTableExists()
+class DAGDDL(DDL):
+    entity: type[Entity] = DAG
+    create: SQL = CreateDAGTable()
+    drop: SQL = DropDAGTable()
+    exists: SQL = DAGTableExists()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -81,10 +81,10 @@ class JobDDL(DDL):
 
 
 @dataclass
-class InsertJob(SQL):
+class InsertDAG(SQL):
     dto: DTO
 
-    sql: str = """INSERT INTO job (oid, name, description, state) VALUES (%s, %s, %s, %s);"""
+    sql: str = """INSERT INTO dag (oid, name, description, state) VALUES (%s, %s, %s, %s);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -100,9 +100,9 @@ class InsertJob(SQL):
 
 
 @dataclass
-class UpdateJob(SQL):
+class UpdateDAG(SQL):
     dto: DTO
-    sql: str = """UPDATE job SET oid = %s, name = %s, description = %s, state = %s WHERE id = %s;"""
+    sql: str = """UPDATE dag SET oid = %s, name = %s, description = %s, state = %s WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -119,9 +119,9 @@ class UpdateJob(SQL):
 
 
 @dataclass
-class SelectJob(SQL):
+class SelectDAG(SQL):
     id: int
-    sql: str = """SELECT * FROM job WHERE id = %s;"""
+    sql: str = """SELECT * FROM dag WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -132,9 +132,9 @@ class SelectJob(SQL):
 
 
 @dataclass
-class SelectJobByName(SQL):
+class SelectDAGByName(SQL):
     name: str
-    sql: str = """SELECT * FROM job WHERE name = %s;"""
+    sql: str = """SELECT * FROM dag WHERE name = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -145,8 +145,8 @@ class SelectJobByName(SQL):
 
 
 @dataclass
-class SelectAllJob(SQL):
-    sql: str = """SELECT * FROM job;"""
+class SelectAllDAG(SQL):
+    sql: str = """SELECT * FROM dag;"""
     args: tuple = ()
 
 
@@ -154,9 +154,9 @@ class SelectAllJob(SQL):
 
 
 @dataclass
-class JobExists(SQL):
+class DAGExists(SQL):
     id: int
-    sql: str = """SELECT EXISTS(SELECT 1 FROM job WHERE id = %s LIMIT 1);"""
+    sql: str = """SELECT EXISTS(SELECT 1 FROM dag WHERE id = %s LIMIT 1);"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -165,9 +165,9 @@ class JobExists(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class DeleteJob(SQL):
+class DeleteDAG(SQL):
     id: int
-    sql: str = """DELETE FROM job WHERE id = %s;"""
+    sql: str = """DELETE FROM dag WHERE id = %s;"""
     args: tuple = ()
 
     def __post_init__(self) -> None:
@@ -176,12 +176,25 @@ class DeleteJob(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
-class JobDML(DML):
-    entity: type[Entity] = Job
-    insert: type[SQL] = InsertJob
-    update: type[SQL] = UpdateJob
-    select: type[SQL] = SelectJob
-    select_by_name: type[SQL] = SelectJobByName
-    select_all: type[SQL] = SelectAllJob
-    exists: type[SQL] = JobExists
-    delete: type[SQL] = DeleteJob
+class LoadDAG(SQL):
+    filename: str
+    tablename: str = "dag"
+    sql: str = None
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.sql = f"""LOAD DATA LOCAL INFILE '{self.filename}' INTO TABLE {self.tablename} FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\r\n' IGNORE 1 ROWS;"""
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
+class DAGDML(DML):
+    entity: type[Entity] = DAG
+    insert: type[SQL] = InsertDAG
+    update: type[SQL] = UpdateDAG
+    select: type[SQL] = SelectDAG
+    select_by_name: type[SQL] = SelectDAGByName
+    select_all: type[SQL] = SelectAllDAG
+    exists: type[SQL] = DAGExists
+    delete: type[SQL] = DeleteDAG
+    load: type[SQL] = LoadDAG

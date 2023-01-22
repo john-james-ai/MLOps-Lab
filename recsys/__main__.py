@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 3rd 2022 02:32:23 pm                                              #
-# Modified   : Friday January 13th 2023 06:03:43 pm                                                #
+# Modified   : Saturday January 21st 2023 05:04:40 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,7 +21,7 @@ from dependency_injector.wiring import Provide, inject
 from dependency_injector.providers import Factory
 
 from recsys.core.dal.dba import DBA, ODBA
-from recsys.containers import Recsys
+from recsys.container import Recsys
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -91,9 +91,9 @@ def build_dataset_table(dataset_table: Factory[DBA] = Provide[Recsys.dba.dataset
 
 # ------------------------------------------------------------------------------------------------ #
 @inject
-def build_job_table(job_table: Factory[DBA] = Provide[Recsys.dba.job]) -> None:
-    job_table.create()
-    assert job_table.exists()
+def build_dag_table(dag_table: Factory[DBA] = Provide[Recsys.dba.dag]) -> None:
+    dag_table.create()
+    assert dag_table.exists()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -133,7 +133,7 @@ def rebuild():
     build_datasource_url_table()
     build_dataframe_table()
     build_dataset_table()
-    build_job_table()
+    build_dag_table()
     build_task_table()
     build_object_db()
 

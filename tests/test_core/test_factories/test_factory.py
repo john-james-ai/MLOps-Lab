@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday January 14th 2023 09:22:14 pm                                              #
-# Modified   : Saturday January 14th 2023 09:52:26 pm                                              #
+# Modified   : Saturday January 21st 2023 09:14:36 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -139,7 +139,7 @@ class TestFactory:  # pragma: no cover
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_job(self, container, caplog):
+    def test_dag(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -156,8 +156,8 @@ class TestFactory:  # pragma: no cover
             "name": "somedataset",
             "description": "somedesc",
         }
-        job = factory.job()(config)
-        assert isinstance(job, entity.job.Job)
+        dag = factory.dag()(config)
+        assert isinstance(dag, entity.dag.DAG)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -192,7 +192,7 @@ class TestFactory:  # pragma: no cover
             "description": "somedesc",
         }
         task = factory.task()(config)
-        assert isinstance(task, entity.job.Task)
+        assert isinstance(task, entity.dag.Task)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)

@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Saturday January 21st 2023 03:00:55 am                                              #
+# Modified   : Sunday January 22nd 2023 02:15:27 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -54,7 +54,7 @@ class DTO(ABC):  # pragma: no cover
 # ------------------------------------------------------------------------------------------------ #
 #                               PROFILE DATA TRANSFER OBJECT                                       #
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
+@dataclass(eq=False)
 class ProfileDTO(DTO):
     id: int
     oid: str
@@ -80,15 +80,25 @@ class ProfileDTO(DTO):
     write_time: int
     bytes_sent: int
     bytes_recv: int
-    parent_oid: str
+    task_oid: str
     created: datetime
     modified: datetime
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, ProfileDTO):
+            return (
+                self.task_oid == other.task_oid
+                and self.start == other.start
+                and self.end == other.end
+            )
+        else:
+            return False
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                               DATASET DATA TRANSFER OBJECT                                       #
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
+@dataclass(eq=False)
 class DataFrameDTO(DTO):
     id: int
     oid: str
@@ -104,11 +114,25 @@ class DataFrameDTO(DTO):
     created: datetime
     modified: datetime
 
+    def __eq__(self, other) -> bool:
+        if isinstance(other, DataFrameDTO):
+            return (
+                self.oid == other.oid
+                and self.stage == other.stage
+                and self.size == other.size
+                and self.nrows == other.nrows
+                and self.ncols == other.ncols
+                and self.nulls == other.nulls
+                and self.parent_oid == other.parent_oid
+            )
+        else:
+            return False
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                               DATASETS DATA TRANSFER OBJECT                                      #
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
+@dataclass(eq=False)
 class DatasetDTO(DTO):
     id: int
     oid: str
@@ -120,12 +144,22 @@ class DatasetDTO(DTO):
     created: datetime
     modified: datetime
 
+    def __eq__(self, other) -> bool:
+        if isinstance(other, DatasetDTO):
+            return (
+                self.oid == other.oid
+                and self.stage == other.stage
+                and self.datasource_oid == other.datasource_oid
+            )
+        else:
+            return False
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                                   JOB DATA TRANSFER OBJECT                                       #
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
-class JobDTO(DTO):
+@dataclass(eq=False)
+class DAGDTO(DTO):
     id: int
     oid: str
     name: str
@@ -134,26 +168,38 @@ class JobDTO(DTO):
     created: datetime
     modified: datetime
 
+    def __eq__(self, other) -> bool:
+        if isinstance(other, DAGDTO):
+            return self.oid == other.oid
+        else:
+            return False
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                               TASK DATA TRANSFER OBJECT                                          #
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
+@dataclass(eq=False)
 class TaskDTO(DTO):
     id: int
     oid: str
     name: str
     description: str
     state: str
-    parent_oid: str
+    dag_oid: str
     created: datetime
     modified: datetime
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, TaskDTO):
+            return self.oid == other.oid and self.dag_oid == other.dag_oid
+        else:
+            return False
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                               FILE DATA TRANSFER OBJECT                                          #
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
+@dataclass(eq=False)
 class FileDTO(DTO):
     id: int
     oid: str
@@ -167,11 +213,17 @@ class FileDTO(DTO):
     created: datetime
     modified: datetime
 
+    def __eq__(self, other) -> bool:
+        if isinstance(other, FileDTO):
+            return self.oid == other.oid and self.uri == other.uri and self.size == other.size
+        else:
+            return False
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                               DATA SOURCE TRANSFER OBJECT                                        #
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
+@dataclass(eq=False)
 class DataSourceDTO(DTO):
     id: int
     oid: str
@@ -181,26 +233,42 @@ class DataSourceDTO(DTO):
     created: datetime
     modified: datetime
 
+    def __eq__(self, other) -> bool:
+        if isinstance(other, DataSourceDTO):
+            return self.oid == other.oid and self.website == other.website
+        else:
+            return False
+
 
 # ------------------------------------------------------------------------------------------------ #
 #                             DATA SOURCE URL TRANSFER OBJECT                                      #
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
+@dataclass(eq=False)
 class DataSourceURLDTO(DTO):
     id: int
     oid: str
     name: str
     description: str
     url: str
-    parent_oid: str
+    datasource_oid: str
     created: datetime
     modified: datetime
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, DataSourceURLDTO):
+            return (
+                self.oid == other.oid
+                and self.url == other.url
+                and self.datasource_oid == other.datasource_oid
+            )
+        else:
+            return False
 
 
 # ------------------------------------------------------------------------------------------------ #
 #                                EVENT DATA TRANSFER OBJECT                                        #
 # ------------------------------------------------------------------------------------------------ #
-@dataclass
+@dataclass(eq=False)
 class EventDTO(DTO):
     id: int
     oid: str
@@ -211,3 +279,14 @@ class EventDTO(DTO):
     parent_oid: str
     created: datetime
     modified: datetime
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, EventDTO):
+            return (
+                self.oid == other.oid
+                and self.process_type == other.process_type
+                and self.process_oid == other.process_oid
+                and self.parent_oid == other.parent_oid
+            )
+        else:
+            return False

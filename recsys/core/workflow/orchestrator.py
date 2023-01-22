@@ -11,85 +11,139 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday January 12th 2023 09:09:55 pm                                              #
-# Modified   : Friday January 20th 2023 10:53:48 pm                                                #
+# Modified   : Saturday January 21st 2023 07:54:03 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
 # ================================================================================================ #
 """Orchestrator Module"""
+from abc import ABC, abstractmethod
 from typing import Any
+import logging
+import asyncio
 
-from recsys.core.services.base import Service
+from dependency_injector.wiring import Provide, inject
+
 from recsys.core.repo.uow import UnitOfWork
-from recsys.core.workflow.process import Job
-from recsys import STATES
+from recsys.core.repo.container import WorkContainer
+from recsys.core.workflow.dag import DAG
 
 
 # ------------------------------------------------------------------------------------------------ #
-class Orchestrator(Service):
-    def __init__(self, uow: UnitOfWork) -> None:
-        super().__init__()
-        self._job = None
+#                                ORCHESTRATOR ABSTRACT BASE CLASS                                  #
+# ------------------------------------------------------------------------------------------------ #
+class Orchestrator(ABC):
+    """Orchestrator abstract base class
+
+    Args:
+        uow (UnitOfWork): Unit of Work class containing all entity repos.
+    """
+
+    @inject
+    def __init__(self, uow: UnitOfWork = Provide[WorkContainer.unit]) -> None:
         self._uow = uow
-        self._data = None
+        self._logger = logging.getLogger(
+            f"{self.__module__}.{self.__class__.__name__}",
+        )
 
     @property
-    def job(self) -> Job:
-        return self._job
+    def dag(self) -> DAG:
+        return self._dag
 
-    @job.setter
-    def job(self, job: Job) -> None:
-        self._job = job
-        self._load()
-
-    @property
-    def data(self) -> Any:
-        return self._data
-
-    @data.setter
-    def data(self, data: Any) -> None:
-        self._data = data
+    @dag.setter
+    def dag(self, dag: DAG) -> None:
+        self._dag = dag
+        self.on_load()
 
     def reset(self) -> None:
-        self._job = None
+        self._dag = None
 
-    def run(self) -> None:
-        """Runs the jobs in the orchestrator in the order in which they were added."""
+    @abstractmethod
+    def run(self) -> Any:
+        """Runs the dag."""
+
+    def on_load(self) -> None:
+        self._dag.on_load()
+        msg = f"DAG {self._dag.name} has been loaded into the orchestrator."
+        self._logger.info(msg)
+
+    def on_start(self) -> None:
+        self._dag.on_start()
+        msg = f"DAG {self._dag.name} has started."
+        self._logger.info(msg)
+
+    def on_end(self) -> None:
+        self._dag.on_end()
+        msg = f"DAG {self._dag.name} has ended."
+        self._logger.info(msg)
+
+    def on_fail(self) -> None:
+        self._dag.on_fail()
+        msg = f"DAG {self._dag.name} failed."
+        self._logger.info(msg)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                SYNCHRONOUS ORCHESTRATOR CLASS                                    #
+# ------------------------------------------------------------------------------------------------ #
+class SyncOrchestrator(Orchestrator):
+    """Executes a DAG in task sequence order."""
+
+    def __init__(self, uow: UnitOfWork = Provide[WorkContainer.unit]) -> None:
+        super().__init__(uow=uow)
+
+    def run(self) -> Any:
+        self.on_start()
+        data = None
+
         with self._uow as uow:
+            task = next(self._dag)
             try:
-                self._start(uow=uow)
-                self._data = self._job.run(uow=uow, data=self._data)
-                self._end(uow=uow)
+                task.on_start()
+                data = task.run(uow=uow, data=data)
+                task.on_end()
             except Exception:  # pragma: no cover
-                self._failed(uow=uow)
+                task.on_fail()
+                self.on_fail()
                 raise
 
-        return self._data
+        self.on_end()
+        return data
 
-    def _load(self) -> None:
-        self._job.state = STATES[1]
-        repo = self._uow.get_repo("job")
-        self._job = repo.add(self._job)
-        msg = f"Job {self._job.name} has been loaded into the orchestrator."
-        self._logger.info(msg)
 
-    def _start(self, uow=UnitOfWork) -> None:
-        self._job.state = STATES[2]
-        repo = uow.get_repo("job")
-        repo.update(self._job)
-        msg = f"Job {self._job.name} has started."
-        self._logger.info(msg)
+# ------------------------------------------------------------------------------------------------ #
+#                                ASYNCHRONOUS ORCHESTRATOR CLASS                                   #
+# ------------------------------------------------------------------------------------------------ #
+class AsyncOrchestrator(Orchestrator):
+    """Executes a DAG asyncronously."""
 
-    def _end(self, uow=UnitOfWork) -> None:
-        self._job.state = STATES[4]
-        repo = uow.get_repo("job")
-        repo.update(self._job)
-        msg = f"Job {self._job.name} has ended."
-        self._logger.info(msg)
+    def __init__(self, uow: UnitOfWork = Provide[WorkContainer.unit]) -> None:
+        super().__init__(uow=uow)
 
-    def _failed(self, uow=UnitOfWork) -> None:
-        self._job.state = STATES[3]
-        repo = uow.get_repo("job")
-        repo.update(self._job)
-        msg = f"Job {self._job.name} failed."
-        self._logger.info(msg)
+    def run(self) -> Any:
+        self.on_start()
+        data = None
+
+        async def run_dag():
+            with self._uow as uow:
+                for task in asyncio.as_completed(next(self._dag)):
+                    try:
+                        task.on_start()
+                        await task.run(uow=uow, data=data)
+                        task.on_end()
+                    except Exception:
+                        task.on_fail()
+                        self.on_fail()
+                        raise
+
+        asyncio.run(run_dag())
+
+        self.on_end()
+        return data
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                PARALLEL ORCHESTRATOR CLASS                                       #
+# ------------------------------------------------------------------------------------------------ #
+class ParallelOrchestrator(Orchestrator):
+    """Executes DAG tasks in parallel."""

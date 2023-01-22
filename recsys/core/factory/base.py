@@ -11,12 +11,12 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday December 19th 2022 03:34:43 pm                                               #
-# Modified   : Saturday January 14th 2023 09:49:14 pm                                              #
+# Modified   : Saturday January 21st 2023 09:12:13 am                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-"""Job Module"""
+"""DAG Module"""
 from abc import ABC, abstractmethod
 import logging
 

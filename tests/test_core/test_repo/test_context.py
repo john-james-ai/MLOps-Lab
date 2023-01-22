@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday January 4th 2023 11:14:20 pm                                              #
-# Modified   : Friday January 20th 2023 10:16:41 pm                                                #
+# Modified   : Saturday January 21st 2023 07:54:21 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -24,14 +24,14 @@ import logging
 from recsys.core.entity.dataset import Dataset
 from recsys.core.entity.dataset import DataFrame
 from recsys.core.entity.datasource import DataSource, DataSourceURL
-from recsys.core.workflow.process import Job, Task
+from recsys.core.workflow.dag import DAG, Task
 from recsys.core.entity.file import File
 from recsys.core.workflow.profile import Profile
 from recsys.core.dal.dao import (
     DatasetDAO,
     DataFrameDAO,
     FileDAO,
-    JobDAO,
+    DAGDAO,
     TaskDAO,
     DataSourceDAO,
     DataSourceURLDAO,
@@ -115,8 +115,8 @@ class TestContext:  # pragma: no cover
         dao = cntx.get_dao(Profile)
         assert isinstance(dao, ProfileDAO)
 
-        dao = cntx.get_dao(Job)
-        assert isinstance(dao, JobDAO)
+        dao = cntx.get_dao(DAG)
+        assert isinstance(dao, DAGDAO)
 
         dao = cntx.get_dao(Task)
         assert isinstance(dao, TaskDAO)

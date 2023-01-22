@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday January 3rd 2023 03:04:52 pm                                                #
-# Modified   : Wednesday January 11th 2023 07:24:39 pm                                             #
+# Modified   : Saturday January 21st 2023 06:14:13 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -96,12 +96,55 @@ class TestConnection:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
     # ============================================================================================ #
-    def test_connection(self, container, caplog):
+    def test_dbms_connection(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        cnx = container.connection.dbms_connection()
+        cnx.open()
+        assert cnx.is_open
+        assert not cnx.in_transaction
+
+        cnx.close()
+        assert not cnx.is_open
+        assert not cnx.in_transaction
+        assert cnx.database == "MySQL"
+
+        with pytest.raises(pymysql.err.InterfaceError):
+            cnx.rollback()
+
+        cnx.open()
+        cnx.rollback()
+        cnx.close()
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(single_line)
+
+    # ============================================================================================ #
+    def test_rdb_connection(self, container, caplog):
         start = datetime.now()
         logger.info(
             "\n\nStarted {} {} at {} on {}".format(
@@ -140,13 +183,17 @@ class TestConnection:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
 
 @pytest.mark.rdb
 class TestRDB:  # pragma: no cover
+    # ============================================================================================ #
+    def reset_table(self, container):
+        dba = container.dba.file()
+        dba.reset()
+
     # ============================================================================================ #
     def test_connection(self, container, caplog):
         start = datetime.now()
@@ -160,14 +207,21 @@ class TestRDB:  # pragma: no cover
         )
         logger.info(double_line)
         # ---------------------------------------------------------------------------------------- #
+        self.reset_table(container=container)
         db = container.database.rdb()
         assert not db.is_open
         assert not db.in_transaction
 
+        db.begin()
+        assert db.is_open
+        assert db.in_transaction
+
+        db.close()
+
         db.connect()
         assert db.is_open
         assert not db.in_transaction
-
+        assert db.database == "recsys_test"
         db.close()
         assert not db.is_open
         # ---------------------------------------------------------------------------------------- #
@@ -182,7 +236,38 @@ class TestRDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
+        )
+        logger.info(single_line)
 
+    # ============================================================================================ #
+    def test_not_exists(self, container, caplog):
+        start = datetime.now()
+        logger.info(
+            "\n\nStarted {} {} at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                start.strftime("%I:%M:%S %p"),
+                start.strftime("%m/%d/%Y"),
+            )
+        )
+        logger.info(double_line)
+        # ---------------------------------------------------------------------------------------- #
+        db = container.database.rdb()
+        cmd = FileDML.exists(837)
+        exists = db.exists(cmd.sql, cmd.args)
+        assert not exists
+        # ---------------------------------------------------------------------------------------- #
+        end = datetime.now()
+        duration = round((end - start).total_seconds(), 1)
+
+        logger.info(
+            "\n\tCompleted {} {} in {} seconds at {} on {}".format(
+                self.__class__.__name__,
+                inspect.stack()[0][3],
+                duration,
+                end.strftime("%I:%M:%S %p"),
+                end.strftime("%m/%d/%Y"),
+            )
         )
         logger.info(single_line)
 
@@ -209,15 +294,15 @@ class TestRDB:  # pragma: no cover
 
         for i in range(1, 6):
             cmd = FileDML.exists(i)
-            response = db.exists(sql=cmd.sql, args=cmd.args)
-            assert response
+            r1 = db.exists(sql=cmd.sql, args=cmd.args)
+            assert r1
 
         db.rollback()
 
         for i in range(1, 6):
             cmd = FileDML.exists(i)
-            response = db.exists(sql=cmd.sql, args=cmd.args)
-            assert not response
+            r2 = db.exists(sql=cmd.sql, args=cmd.args)
+            assert not r2
 
         db.close()
         assert not db.is_open
@@ -259,10 +344,11 @@ class TestRDB:  # pragma: no cover
             assert file.id == i
             dto = file.as_dto()
             dml = FileDML.exists(i)
-            logger.debug(dto)
-            logger.debug(dml)
             result = db.exists(sql=dml.sql, args=dml.args)
             assert result is True
+            dml = FileDML.exists(99)
+            result = db.exists(sql=dml.sql, args=dml.args)
+            assert result is False
         db.save()
         db.close()
         # ---------------------------------------------------------------------------------------- #
@@ -277,7 +363,6 @@ class TestRDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -296,9 +381,10 @@ class TestRDB:  # pragma: no cover
         # ---------------------------------------------------------------------------------------- #
         db = container.database.rdb()
         db.connect()
-        for i in range(6, 10):
+        for i in range(6, 11):
             dml = FileDML.select(id=i)
             row = db.select(sql=dml.sql, args=dml.args)
+            assert len(row) > 0
             assert isinstance(row, tuple)
 
         dml = FileDML.select_all()
@@ -339,14 +425,14 @@ class TestRDB:  # pragma: no cover
         db.connect()
         for i, file in enumerate(files, start=6):
             file.id = i
-            file.task_id = i + 55
+            file.task_oid = i + 55
             dto = file.as_dto()
             dml = FileDML.update(dto)
             rowcount = db.update(sql=dml.sql, args=dml.args)
             assert rowcount == 1
             dml = FileDML.select(i)
             row = db.select(sql=dml.sql, args=dml.args)
-            assert row[8] == i + 55
+            assert row[8] == str(i + 55)
 
         db.save()
         db.close()
@@ -363,7 +449,6 @@ class TestRDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -402,7 +487,6 @@ class TestRDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -438,7 +522,6 @@ class TestRDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -480,7 +563,6 @@ class TestRDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -539,7 +621,6 @@ class TestRDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -572,6 +653,5 @@ class TestRDB:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)

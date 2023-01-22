@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday January 21st 2023 02:49:20 am                                              #
+# Modified   : Saturday January 21st 2023 07:49:01 pm                                              #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -157,6 +157,7 @@ class Dataset(DataComponent):
 
     # -------------------------------------------------------------------------------------------- #
     def add_dataframe(self, dataframe: DataComponent) -> None:
+        dataframe.dataset = self
         self._dataframes[dataframe.name] = dataframe
         self._modified = datetime.now()
 
@@ -216,7 +217,7 @@ class Dataset(DataComponent):
         dataframe = DataFrame(
             name=self._name,
             data=data,
-            parent=self,
+            dataset=self,
             stage=self._stage,
             description=self._description,
         )
@@ -234,7 +235,7 @@ class DataFrame(DataComponent):
         description (str): Describes the DataFrame object. Default's to dataset's description if None.
         data (pd.DataFrame): Payload in pandas DataFrame format.
         stage (str): The data processing stage for which the Dataframe is created.
-        parent (Dataset): The parent Dataset object in which this DataFrame is composed.
+        dataset (Dataset): The dataset Dataset object in which this DataFrame is composed.
 
     """
 
@@ -242,14 +243,14 @@ class DataFrame(DataComponent):
         self,
         name: str,
         stage: str,
-        parent: Dataset = None,
+        dataset: Dataset = None,
         description: str = None,
         data: pd.DataFrame = None,
     ) -> None:
         super().__init__(name=name, description=description)
 
         self._data = data
-        self._parent = parent
+        self._dataset = dataset
         self._is_composite = False
 
         # Possibly inherited from dataset and assigned in set_metadata if and when dataset is set.
@@ -302,13 +303,13 @@ class DataFrame(DataComponent):
 
     # -------------------------------------------------------------------------------------------- #
     @property
-    def parent(self) -> Dataset:
-        return self._parent
+    def dataset(self) -> Dataset:
+        return self._dataset
 
     # -------------------------------------------------------------------------------------------- #
-    @parent.setter
-    def parent(self, parent: Dataset) -> None:
-        self._parent = parent
+    @dataset.setter
+    def dataset(self, dataset: Dataset) -> None:
+        self._datase = dataset
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -356,21 +357,21 @@ class DataFrame(DataComponent):
             ncols=self._ncols,
             nulls=self._nulls,
             pct_nulls=self._pct_nulls,
-            parent_oid=self._parent.id,
+            dataset_oid=self._dataset.oid,
             created=self._created,
             modified=self._modified,
         )
 
     # ------------------------------------------------------------------------------------------------ #
     def _set_metadata(self) -> None:
-        self._set_parent_metadata()
+        self._set_dataset_metadata()
         self._set_data_metadata()
 
-    def _set_parent_metadata(self) -> None:
-        if self._parent is not None:
-            self._name = self._name or self._parent.name
-            self._description = self._description or self._parent.description
-            self._stage = self._stage or self._parent.stage
+    def _set_dataset_metadata(self) -> None:
+        if self._dataset is not None:
+            self._name = self._name or self._dataset.name
+            self._description = self._description or self._dataset.description
+            self._stage = self._stage or self._dataset.stage
 
     def _set_data_metadata(self) -> None:
         if self._data is not None:

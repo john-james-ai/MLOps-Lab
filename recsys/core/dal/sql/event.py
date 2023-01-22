@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Thursday December 8th 2022 02:06:04 pm                                              #
-# Modified   : Saturday January 21st 2023 03:41:53 am                                              #
+# Modified   : Sunday January 22nd 2023 02:19:22 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -179,6 +179,18 @@ class DeleteEvent(SQL):
 
 # ------------------------------------------------------------------------------------------------ #
 @dataclass
+class LoadEvent(SQL):
+    filename: str
+    tablename: str = "event"
+    sql: str = None
+    args: tuple = ()
+
+    def __post_init__(self) -> None:
+        self.sql = f"""LOAD DATA LOCAL INFILE '{self.filename}' INTO TABLE {self.tablename} FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\r\n' IGNORE 1 ROWS;"""
+
+
+# ------------------------------------------------------------------------------------------------ #
+@dataclass
 class EventDML(DML):
     entity: type[Entity] = Event
     insert: type[SQL] = InsertEvent
@@ -188,3 +200,4 @@ class EventDML(DML):
     select_all: type[SQL] = SelectAllEvents
     exists: type[SQL] = EventExists
     delete: type[SQL] = DeleteEvent
+    load: type[SQL] = LoadEvent
