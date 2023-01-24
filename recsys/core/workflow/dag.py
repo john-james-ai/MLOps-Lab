@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday January 21st 2023 05:09:50 am                                              #
-# Modified   : Saturday January 21st 2023 07:50:18 pm                                              #
+# Modified   : Sunday January 22nd 2023 04:25:14 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -47,7 +47,7 @@ from recsys.core.workflow.callback import Callback
 from recsys.core.workflow.container import CallbackContainer
 from recsys.core.workflow.operator.base import Operator
 from recsys.core.dal.dao import DTO, DAGDTO, TaskDTO
-from recsys import STATES
+from recsys.core.workflow import STATES
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -69,12 +69,14 @@ class DAG(Process):
         callback: Callback = Provide[CallbackContainer.dag],
     ) -> None:
         super().__init__(name=name, description=description)
-        self._callback = callback()
+        self._callback = callback
 
         self._tasks = OrderedDict()
         self._task_no = 0
         self._state = STATES[0]
         self._is_composite = True
+
+        self.on_create()
 
     # -------------------------------------------------------------------------------------------- #
     def __str__(self) -> str:
@@ -207,7 +209,7 @@ class Task(Process):
     ) -> None:
         super().__init__(name=name, description=description)
 
-        self._callback = callback()
+        self._callback = callback
         self._operator = operator
         self._dag = None
         self._is_composite = False

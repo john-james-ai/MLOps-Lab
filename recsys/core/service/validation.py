@@ -11,109 +11,85 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Tuesday December 27th 2022 02:41:20 pm                                              #
-# Modified   : Saturday January 21st 2023 09:14:34 am                                              #
+# Modified   : Monday January 23rd 2023 05:54:43 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 """Validation Module."""
-from dataclasses import dataclass
-import pandas as pd
+from abc import ABC, abstractmethod
+import logging
 
-from recsys import SOURCES, MODES, STAGES, STATES
-
-
-# ------------------------------------------------------------------------------------------------ #
-@dataclass
-class Response:
-    is_ok: bool = True
-    msg: str = None
-    exception: type(Exception) = ValueError
+from recsys.core.entity.dataset import STAGES
+from recsys.core.workflow import STATES
 
 
 # ------------------------------------------------------------------------------------------------ #
-class Validator:
-    """Provides validates entities."""
+#                                    VALIDATOR ABC DESCRIPTOR                                      #
+# ------------------------------------------------------------------------------------------------ #
+class Validator(ABC):
+    """Abstract base class for validation descriptors."""
 
-    @classmethod
-    def datasource(cls, entity) -> Response:
-        response = Response()
-        if hasattr(entity, "datasource_name"):
-            if entity.datasource_name not in SOURCES:
-                response.is_ok = False
-                response.msg = f"Error in {entity.__class__.__name__}. Variable 'datasource_name' is not valid. Must be one of {SOURCES}."
-        return response
+    def __set_name__(self, owner, name):
+        self.property_name = name
+        self.private_name = "_" + name
+        self._logger = logging.getLogger(
+            f"{owner.__module__}.{owner.__class__.__name__}",
+        )
 
-    @classmethod
-    def mode(cls, entity) -> Response:
-        response = Response()
-        if hasattr(entity, "mode"):
-            if entity.mode not in MODES:
-                response.is_ok = False
-                response.msg = f"Error in {entity.__class__.__name__}. Variable 'mode' is not valid. Must be one of {MODES}."
-        return response
+    def __get__(self, obj, objtype=None):
+        return getattr(obj, self.private_name)
 
-    @classmethod
-    def stage(cls, entity) -> Response:
-        response = Response()
-        if hasattr(entity, "stage"):
-            if entity.stage not in STAGES:
-                response.is_ok = False
-                response.msg = f"Error in {entity.__class__.__name__}. Variable 'stage' is not valid. Must be one of {STAGES}."
-        return response
+    def __set__(self, obj, value):
+        self.validate(value)
+        setattr(obj, self.private_name, value)
 
-    @classmethod
-    def data(cls, entity) -> Response:
-        response = Response()
-        if hasattr(entity, "data"):
-            if not isinstance(entity.data, pd.DataFrame) and entity.data is not None:
-                response.is_ok = False
-                response.msg = f"Error in {entity.__class__.__name__}. Variable 'data' is not valid. Must be a pandas DataFrame object."
-                response.exception = TypeError
-        return response
+    @abstractmethod
+    def validate(self, value):
+        pass
 
-    @classmethod
-    def dag_id(cls, entity) -> Response:
-        response = Response()
-        if hasattr(entity, "dag_id"):
-            if not isinstance(entity.dag_id, int) and entity.dag_id is not None:
-                response.is_ok = False
-                response.msg = f"Error in {entity.__class__.__name__}. Variable 'dag_id' is not valid. Must be an integer."
-                response.exception = TypeError
-        return response
 
-    @classmethod
-    def task_id(cls, entity) -> Response:
-        response = Response()
-        if hasattr(entity, "task_id"):
-            if not isinstance(entity.task_id, int) and entity.task_id is not None:
-                response.is_ok = False
-                response.msg = f"Error in {entity.__class__.__name__}. Variable 'task_id' is not valid. Must be an integer."
-                response.exception = TypeError
-        return response
+# ------------------------------------------------------------------------------------------------ #
+#                                   STAGE VALIDATOR                                                #
+# ------------------------------------------------------------------------------------------------ #
+class ValidStage(Validator):
+    """Validates the data processing stage for datasets."""
 
-    @classmethod
-    def state(cls, entity) -> Response:
-        response = Response()
-        if hasattr(entity, "state"):
-            if entity.state not in STATES:
-                response.is_ok = False
-                response.msg = f"Error in {entity.__class__.__name__}. Variable 'state' is not valid. Must be one of {STATES}."
-        return response
+    def validate(self, value) -> None:
+        if value is None:
+            msg = f"The {self.property_name!r} must not be None."
+            self._logger.error(msg)
+            raise ValueError(msg)
 
-    def validate(self, entity) -> Response:
-        validators = [
-            self.datasource,
-            self.mode,
-            self.stage,
-            self.data,
-            self.dag_id,
-            self.task_id,
-            self.state,
-        ]
-        response = Response()
-        for validator in validators:
-            response = validator(entity)
-            if not response.is_ok:
-                return response
-        return response
+        if not isinstance(value, str):
+            msg = f"The {self.property_name!r} must a string."
+            self._logger.error(msg)
+            raise TypeError(msg)
+
+        if value not in STAGES:
+            msg = f"Expected {value!r} to be one of {STAGES!r}"
+            self._logger.error(msg)
+            raise ValueError(msg)
+
+
+# ------------------------------------------------------------------------------------------------ #
+#                                   STATE VALIDATOR                                                #
+# ------------------------------------------------------------------------------------------------ #
+class ValidState(Validator):
+    """Validates the value of state for Process and Event objects."""
+
+    def validate(self, value) -> None:
+        if value is None:
+            msg = f"The {self.property_name!r} must not be None."
+            self._logger.error(msg)
+            raise ValueError(msg)
+
+        if not isinstance(value, str):
+            msg = f"The {self.property_name!r} must a string."
+            self._logger.error(msg)
+            raise TypeError(msg)
+
+        if value not in STATES:
+            msg = f"Expected {value!r} to be one of {STATES!r}"
+            self._logger.error(msg)
+            raise ValueError(msg)
