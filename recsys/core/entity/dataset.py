@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 07:32:54 pm                                                #
-# Modified   : Saturday January 21st 2023 07:49:01 pm                                              #
+# Modified   : Monday January 23rd 2023 06:47:58 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -24,6 +24,11 @@ from typing import Union, Dict
 
 from recsys.core.entity.base import Entity
 from recsys.core.dal.dto import DataFrameDTO, DatasetDTO
+
+# ------------------------------------------------------------------------------------------------ #
+#                                         STAGES                                                   #
+# ------------------------------------------------------------------------------------------------ #
+STAGES = ["extract", "raw", "split", "interim", "final"]
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -38,12 +43,6 @@ class DataComponent(Entity):
     # -------------------------------------------------------------------------------------------- #
     @property
     @abstractmethod
-    def stage(self) -> str:
-        """Data processing stage in which the Dataset Component is created."""
-
-    # -------------------------------------------------------------------------------------------- #
-    @property
-    @abstractmethod
     def is_composite(self) -> str:
         """True for Datasets and False for DataFrames."""
 
@@ -51,10 +50,6 @@ class DataComponent(Entity):
     @abstractmethod
     def as_dto(self) -> Union[DataFrameDTO, Dict[int, DataFrameDTO]]:
         """Creates a dto representation of the Dataset Component."""
-
-    # -------------------------------------------------------------------------------------------- #
-    def _validate(self) -> None:
-        super()._validate()
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -218,7 +213,6 @@ class Dataset(DataComponent):
             name=self._name,
             data=data,
             dataset=self,
-            stage=self._stage,
             description=self._description,
         )
         self.add_dataframe(dataframe)
@@ -242,19 +236,15 @@ class DataFrame(DataComponent):
     def __init__(
         self,
         name: str,
-        stage: str,
-        dataset: Dataset = None,
         description: str = None,
         data: pd.DataFrame = None,
+        dataset: Dataset = None,
     ) -> None:
         super().__init__(name=name, description=description)
 
         self._data = data
-        self._dataset = dataset
         self._is_composite = False
-
-        # Possibly inherited from dataset and assigned in set_metadata if and when dataset is set.
-        self._stage = stage
+        self._dataset = dataset
 
         self._size = None
         self._nrows = None
@@ -263,7 +253,6 @@ class DataFrame(DataComponent):
         self._pct_nulls = None
 
         self._set_metadata()
-        self._validate()
 
     def __str__(self) -> str:
         return f"DataFrame Id: {self._id}\n\tName: {self._name}\n\tDescription: {self._description}\n\tStage: {self._stage}\n\tSize: {self._size}\n\tRows: {self._nrows}\n\tColumns: {self._ncols}\n\tNulls: {self._nulls}\n\tPct Nulls: {self._pct_nulls}\n\tCreated: {self._created}\n\tModified: {self._modified}"
@@ -289,12 +278,6 @@ class DataFrame(DataComponent):
     @property
     def is_composite(self) -> str:
         return self._is_composite
-
-    # -------------------------------------------------------------------------------------------- #
-    @property
-    def stage(self) -> str:
-        """Data processing stage in which the Dataset Component is created."""
-        return self._stage
 
     # -------------------------------------------------------------------------------------------- #
     @property
@@ -351,7 +334,6 @@ class DataFrame(DataComponent):
             oid=self._oid,
             name=self._name,
             description=self._description,
-            stage=self._stage,
             size=self._size,
             nrows=self._nrows,
             ncols=self._ncols,

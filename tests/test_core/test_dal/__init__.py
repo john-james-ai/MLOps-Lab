@@ -4,19 +4,15 @@
 # Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
-# Filename   : /recsys/core/workflow/__init__.py                                                   #
+# Filename   : /__init__.py                                                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
-# Created    : Thursday November 10th 2022 04:03:29 pm                                             #
-# Modified   : Sunday January 22nd 2023 04:24:34 pm                                                #
+# Created    : Sunday November 20th 2022 10:55:22 pm                                               #
+# Modified   : Wednesday November 23rd 2022 07:22:24 pm                                            #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
-# ------------------------------------------------------------------------------------------------ #
-#                                         STATES                                                   #
-# ------------------------------------------------------------------------------------------------ #
-STATES = ["CREATED", "LOADED", "IN-PROGRESS", "FAILED", "COMPLETE"]

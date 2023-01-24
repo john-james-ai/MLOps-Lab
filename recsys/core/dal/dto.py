@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday December 4th 2022 01:09:22 pm                                                #
-# Modified   : Sunday January 22nd 2023 02:15:27 pm                                                #
+# Modified   : Sunday January 22nd 2023 02:42:24 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -110,7 +110,7 @@ class DataFrameDTO(DTO):
     ncols: int
     nulls: int
     pct_nulls: float
-    parent_oid: str
+    dataset_oid: str
     created: datetime
     modified: datetime
 
@@ -123,7 +123,7 @@ class DataFrameDTO(DTO):
                 and self.nrows == other.nrows
                 and self.ncols == other.ncols
                 and self.nulls == other.nulls
-                and self.parent_oid == other.parent_oid
+                and self.dataset_oid == other.dataset_oid
             )
         else:
             return False

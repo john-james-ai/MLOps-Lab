@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday January 20th 2023 10:23:12 pm                                                #
-# Modified   : Saturday January 21st 2023 03:50:42 am                                              #
+# Modified   : Sunday January 22nd 2023 04:32:30 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -52,13 +52,12 @@ class Event:
         self._process_oid = process_oid
         self._parent_oid = parent_oid
         self._state = state
-        self._validate()
 
     def __str__(self) -> str:
-        return f"Event Id:{self._id}\n\tProcess Type: {self._process_type}\n\tProcess Id: {self._process_oid}\n\tName: {self._name}\n\tDescription: {self._description}\n\tParent Id: {self._parent_oid}\n\tCreated: {self._created}\n\tModified: {self._modified}\n\t"
+        return f"Event Id:{self._id}\n\tProcess Type: {self._process_type}\n\tProcess Id: {self._process_oid}\n\tName: {self._name}\n\tDescription: {self._description}\n\tState: {self._state}\n\tParent Id: {self._parent_oid}"
 
     def __repr__(self) -> str:
-        return f"{self._id},{self._process_type}, ,{self._process_oid}, {self._name},{self._description},{self._parent_oid},{self._created},{self._modified}"
+        return f"{self._id},{self._process_type}, ,{self._process_oid}, {self._name},{self._description}, {self._state}, {self._parent_oid}"
 
     def __eq__(self, other) -> bool:
         """Compares two Event for equality.

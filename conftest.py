@@ -11,7 +11,7 @@
 # URL        : https://github.com/john-james-ai/Recommender-Systems                                #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday January 11th 2023 06:32:03 pm                                             #
-# Modified   : Sunday January 22nd 2023 01:36:04 pm                                                #
+# Modified   : Sunday January 22nd 2023 04:10:12 pm                                                #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -28,7 +28,7 @@ from recsys.core.entity.datasource import DataSource
 from recsys.core.workflow.profile import Profile
 from recsys.core.workflow.dag import DAG, Task
 from tests.data.operator import MockOperator, BadOperator
-
+from recsys.core.workflow.callback import DAGCallback, TaskCallback
 
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
@@ -79,7 +79,7 @@ def ratings():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="module")
-def datasource(ratings):
+def datasource():
     datasource = DataSource(
         name=f"datasource_name_{1}",
         description=f"Datasource Description {1}",
@@ -94,6 +94,26 @@ def datasource(ratings):
         datasource.add_url(url)
 
     return datasource
+
+
+# ------------------------------------------------------------------------------------------------ #
+@pytest.fixture(scope="module")
+def datasource_urls():
+    urls = []
+    datasource = DataSource(
+        name=f"datasource_name_{1}",
+        description=f"Datasource Description {1}",
+        website="www.spotify.com",
+    )
+    for i in range(1, 6):
+        url = datasource.create_url(
+            url=f"www.spotify.resource_{i}.com",
+            name=f"datasource_url_name_{i}",
+            description=f"Description for DataFrame {i}",
+        )
+        urls.append(url)
+
+    return urls
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -216,6 +236,7 @@ def dataframes(ratings):
     dataset = Dataset(
         name="dataset_for_dataframe_testing",
         description="Dataset for DataFrame Testing",
+        stage="extract",
         datasource_oid="datasource_tenrec",
         task_oid="task_test_dataframe",
     )
@@ -305,8 +326,8 @@ def container():
     container = Recsys()
     container.init_resources()
     container.wire(
-        modules=["recsys.container", "recsys.core.workflow.builder"],
-        packages=["recsys.core.workflow.operator.data"],
+        modules=["recsys.container"],
+        packages=["recsys.core.workflow"],
     )
 
     return container
@@ -372,26 +393,22 @@ def baddag():
 
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="function")
-def dags(container):
+def dags():
     dags = []
     for i in range(1, 6):
         dag = DAG(
-            name=f"dag_name_{i}",
-            description=f"Description for DAG # {i}",
+            name=f"dag_name_{i}", description=f"Description for DAG # {i}", callback=DAGCallback()
         )
         for j in range(1, 6):
+            task = Task(
+                name=f"task_{j}_baddag_{i}",
+                description=f"Description for task {j} of dag {i}",
+                callback=TaskCallback(),
+            )
             if j == 5:
-                task = Task(
-                    name=f"task_{j}_baddag_{i}",
-                    description=f"Description for task {j} of dag {i}",
-                    operator=BadOperator(),
-                )
+                task.operator = BadOperator()
             else:
-                task = Task(
-                    name=f"task_{j}_mockdag_{i}",
-                    description=f"Description for task {j} of dag {i}",
-                    operator=MockOperator(),
-                )
+                task.operator = MockOperator()
             dag.add_task(task)
         dags.append(dag)
     return dags
