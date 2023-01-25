@@ -1,4 +1,4 @@
-name: recsys
+name: mlops_lab
 channels:
   - conda-forge
   - defaults
@@ -291,4 +291,4 @@ dependencies:
     - urllib3==1.26.12
     - werkzeug==2.2.2
     - wrapt==1.14.1
-prefix: /home/john/anaconda3/envs/recsys
+prefix: /home/john/anaconda3/envs/mlops_lab

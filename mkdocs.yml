@@ -1,5 +1,5 @@
 site_name: Recommender Systems
-repo_url: https://github.com/john-james-ai/recsys
+repo_url: https://github.com/john-james-ai/mlops_lab
 
 theme:
   name: material
@@ -32,4 +32,4 @@ plugins:
             show_signature_annotations: true
             show_source: true
       watch:
-        - src/recsys
+        - src/mlops_lab

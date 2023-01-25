@@ -19,6 +19,6 @@
 # Database Configuration for Development Environment
 database:
   sqlite:
-    location: data/dev/recsys.sqlite3
+    location: data/dev/mlops_lab.sqlite3
   shelve:
-    location: data/dev/recsys.object_db
+    location: data/dev/mlops_lab.object_db

@@ -17,8 +17,8 @@
 # Copyright  : (c) 2022 John James                                                                 #
 # ================================================================================================ #
 databases:
-  recsys: recsys_${MODE}
-  events: recsys_${MODE}_events
+  mlops_lab: mlops_lab_${MODE}
+  events: mlops_lab_${MODE}_events
 logging:
   version: 1
   formatters:
@@ -41,7 +41,7 @@ logging:
       interval: 1
       backupCount: 0
       level: "DEBUG"
-      filename: logs/${MODE}/recsys.log
+      filename: logs/${MODE}/mlops_lab.log
   root:
     level: "DEBUG"
     handlers: ["console", "file"]

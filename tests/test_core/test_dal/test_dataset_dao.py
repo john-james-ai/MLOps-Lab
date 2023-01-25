@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Project    : Enter Project Name in Workspace Settings                                            #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
 # Filename   : /tests/test_core/test_dal/test_dataset_dao.py                                       #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
-# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# URL        : Enter URL in Workspace Settings                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 22nd 2023 01:33:45 pm                                                #
-# Modified   : Sunday January 22nd 2023 02:22:45 pm                                                #
+# Modified   : Tuesday January 24th 2023 08:13:54 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -21,7 +21,7 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.dal.dao import DatasetDTO
+from mlops_lab.core.dal.dao import DatasetDTO
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)

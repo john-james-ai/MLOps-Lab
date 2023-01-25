@@ -19,6 +19,6 @@
 # Database Configuration for Production Environment
 database:
   sqlite:
-    location: tests/data/recsys.sqlite3
+    location: tests/data/mlops_lab.sqlite3
   shelve:
-    location: tests/data/recsys.object_db
+    location: tests/data/mlops_lab.object_db

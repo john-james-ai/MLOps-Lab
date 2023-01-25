@@ -1,16 +1,16 @@
 [tool.poetry]
-name = "recsys"
+name = "mlops_lab"
 version = "0.0.1"
-description = "Recommender Systems from recsys.collaborative Filtering to Deep Learning State-of-the-Art"
+description = "Recommender Systems from mlops_lab.collaborative Filtering to Deep Learning State-of-the-Art"
 authors = [
     "John James <john.james.ai.studio@gmail.com>",
 ]
 license = "MIT"
 readme = "README.md"
 
-documentation = "https://john-james-ai.github.io/recsys"
-homepage = "https://john-james-ai.github.io/recsys"
-repository = "https://github.com/john-james-ai/recsys"
+documentation = "https://john-james-ai.github.io/mlops_lab"
+homepage = "https://john-james-ai.github.io/mlops_lab"
+repository = "https://github.com/john-james-ai/mlops_lab"
 
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -26,7 +26,7 @@ classifiers = [
 ]
 
 packages = [
-    { include = "recsys", from = "src" }
+    { include = "mlops_lab", from = "src" }
 ]
 
 [tool.poetry.dependencies]
@@ -62,7 +62,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
-src_paths = ["recsys", "tests"]
+src_paths = ["mlops_lab", "tests"]
 
 [tool.black]
 target-version = ["py37", "py38", "py39"]
@@ -72,7 +72,7 @@ include = '\.pyi?$'
 addopts = """\
     -s \
     --cache-clear \
-    --cov recsys \
+    --cov mlops_lab \
     --cov tests \
     --cov-report term-missing \
     --no-cov-on-fail \

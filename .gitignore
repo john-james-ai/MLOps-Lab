@@ -19,7 +19,7 @@ version_control
 
 # SQL Credentials
 root_pwd.sql
-recsys/core/database/restart.sh
+mlops_lab/core/database/restart.sh
 
 # Logs
 *.log

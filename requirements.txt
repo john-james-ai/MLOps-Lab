@@ -141,7 +141,7 @@ statsmodels @ file:///home/conda/feedstock_root/build_artifacts/statsmodels_1667
 tensorboard==2.8.0
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.1
-tensorflow @ file:///home/john/smartify/recsys/tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl
+tensorflow @ file:///home/john/smartify/mlops_lab/tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl
 tensorflow-io-gcs-filesystem==0.27.0
 termcolor==2.1.0
 text-unidecode==1.3

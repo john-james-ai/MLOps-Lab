@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Project    : Enter Project Name in Workspace Settings                                            #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
 # Filename   : /tests/test_di/test_containers.py                                                   #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
-# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# URL        : Enter URL in Workspace Settings                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Monday January 2nd 2023 07:33:11 pm                                                 #
-# Modified   : Saturday January 21st 2023 09:14:37 am                                              #
+# Modified   : Tuesday January 24th 2023 08:13:48 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -21,9 +21,9 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.database.relational import MySQLConnection, Database
-from recsys.core.database.object import ObjectDB, ObjectDBConnection
-from recsys.core.dal.dba import DBA
+from mlops_lab.core.database.relational import MySQLConnection, Database
+from mlops_lab.core.database.object import ObjectDB, ObjectDBConnection
+from mlops_lab.core.dal.dba import DBA
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -47,10 +47,10 @@ class TestContainers:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         config = container.config
-        assert config.database.shelve.location() == "data/prod/recsys.object_db"
+        assert config.database.shelve.location() == "data/prod/mlops_lab.object_db"
         assert config.database.host() == "localhost"
         assert config.database.user() == "root"
-        assert config.database.dbname() == "recsys"
+        assert config.database.dbname() == "mlops_lab"
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
         duration = round((end - start).total_seconds(), 1)
@@ -78,7 +78,7 @@ class TestContainers:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         connection = container.connection
-        assert isinstance(connection.recsys_connection(), MySQLConnection)
+        assert isinstance(connection.mlops_lab_connection(), MySQLConnection)
         assert isinstance(connection.object_db_connection(), ObjectDBConnection)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()
@@ -107,7 +107,7 @@ class TestContainers:  # pragma: no cover
         )
         # ---------------------------------------------------------------------------------------- #
         database = container.database()
-        assert isinstance(database.recsys(), Database)
+        assert isinstance(database.mlops_lab(), Database)
         assert isinstance(database.object_db(), ObjectDB)
         # ---------------------------------------------------------------------------------------- #
         end = datetime.now()

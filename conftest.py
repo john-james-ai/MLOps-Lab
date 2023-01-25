@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Project    : Enter Project Name in Workspace Settings                                            #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
 # Filename   : /conftest.py                                                                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
-# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# URL        : Enter URL in Workspace Settings                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday January 11th 2023 06:32:03 pm                                             #
-# Modified   : Sunday January 22nd 2023 04:10:12 pm                                                #
+# Modified   : Tuesday January 24th 2023 08:13:40 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -20,21 +20,21 @@ import pytest
 import pandas as pd
 from datetime import datetime
 
-from recsys.container import Recsys
-from recsys.core.service.io import IOService
-from recsys.core.entity.file import File
-from recsys.core.entity.dataset import DataFrame, Dataset
-from recsys.core.entity.datasource import DataSource
-from recsys.core.workflow.profile import Profile
-from recsys.core.workflow.dag import DAG, Task
+from mlops_lab.container import mlops_lab
+from mlops_lab.core.service.io import IOService
+from mlops_lab.core.entity.file import File
+from mlops_lab.core.entity.dataset import DataFrame, Dataset
+from mlops_lab.core.entity.datasource import DataSource
+from mlops_lab.core.workflow.profile import Profile
+from mlops_lab.core.workflow.dag import DAG, Task
 from tests.data.operator import MockOperator, BadOperator
-from recsys.core.workflow.callback import DAGCallback, TaskCallback
+from mlops_lab.core.workflow.callback import DAGCallback, TaskCallback
 
 # ------------------------------------------------------------------------------------------------ #
 TEST_LOCATION = "tests/test.sqlite3"
 RATINGS_FILEPATH = "tests/data/movielens25m/raw/ratings.pkl"
 DATA_SOURCE_FILEPATH = "tests/data/datasources.xlsx"
-JOB_CONFIG_FILEPATH = "recsys/data/movielens25m/config.yml"
+JOB_CONFIG_FILEPATH = "mlops_lab/data/movielens25m/config.yml"
 DAG_IMPORT = "tests/data/import/dag.csv"
 DATAFRAME_IMPORT = "tests/data/import/dataframe.csv"
 DATASET_IMPORT = "tests/data/import/dataset.csv"
@@ -323,11 +323,11 @@ def dag_config():
 # ------------------------------------------------------------------------------------------------ #
 @pytest.fixture(scope="class", autouse=True)
 def container():
-    container = Recsys()
+    container = mlops_lab()
     container.init_resources()
     container.wire(
-        modules=["recsys.container"],
-        packages=["recsys.core.workflow"],
+        modules=["mlops_lab.container"],
+        packages=["mlops_lab.core.workflow"],
     )
 
     return container

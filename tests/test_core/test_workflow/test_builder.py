@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Project    : Enter Project Name in Workspace Settings                                            #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
 # Filename   : /tests/test_core/test_workflow/test_builder.py                                      #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
-# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# URL        : Enter URL in Workspace Settings                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Friday December 30th 2022 07:21:43 pm                                               #
-# Modified   : Saturday January 21st 2023 07:54:31 pm                                              #
+# Modified   : Tuesday January 24th 2023 08:13:53 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,11 +21,11 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.service.io import IOService
-from recsys.core.workflow.dag import DAG, Task
-from recsys.core.workflow.orchestrator import Orchestrator
-from recsys.core.workflow.operator.base import Operator
-from recsys.core.workflow.builder import Director, DAGBuilder
+from mlops_lab.core.service.io import IOService
+from mlops_lab.core.workflow.dag import DAG, Task
+from mlops_lab.core.workflow.orchestrator import Orchestrator
+from mlops_lab.core.workflow.operator.base import Operator
+from mlops_lab.core.workflow.builder import Director, DAGBuilder
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)

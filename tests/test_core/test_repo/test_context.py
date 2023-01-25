@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Project    : Enter Project Name in Workspace Settings                                            #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
 # Filename   : /tests/test_core/test_repo/test_context.py                                          #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
-# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# URL        : Enter URL in Workspace Settings                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday January 4th 2023 11:14:20 pm                                              #
-# Modified   : Saturday January 21st 2023 07:54:21 pm                                              #
+# Modified   : Tuesday January 24th 2023 08:13:50 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -21,13 +21,13 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.entity.dataset import Dataset
-from recsys.core.entity.dataset import DataFrame
-from recsys.core.entity.datasource import DataSource, DataSourceURL
-from recsys.core.workflow.dag import DAG, Task
-from recsys.core.entity.file import File
-from recsys.core.workflow.profile import Profile
-from recsys.core.dal.dao import (
+from mlops_lab.core.entity.dataset import Dataset
+from mlops_lab.core.entity.dataset import DataFrame
+from mlops_lab.core.entity.datasource import DataSource, DataSourceURL
+from mlops_lab.core.workflow.dag import DAG, Task
+from mlops_lab.core.entity.file import File
+from mlops_lab.core.workflow.profile import Profile
+from mlops_lab.core.dal.dao import (
     DatasetDAO,
     DataFrameDAO,
     FileDAO,
@@ -37,8 +37,8 @@ from recsys.core.dal.dao import (
     DataSourceURLDAO,
     ProfileDAO,
 )
-from recsys.core.dal.dto import DataFrameDTO
-from recsys.core.repo.context import Context
+from mlops_lab.core.dal.dto import DataFrameDTO
+from mlops_lab.core.repo.context import Context
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)

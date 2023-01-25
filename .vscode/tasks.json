@@ -6,7 +6,7 @@
         {
             "label": "mysql",
             "type": "shell",
-            "command": "recsys/core/database/restart.sh"
+            "command": "mlops_lab/core/database/restart.sh"
         }
     ]
 }
