@@ -1,4 +1,4 @@
-# Recommender Systems
+# ML Ops Lab
 
 [![PyPI](https://img.shields.io/pypi/v/mlops_lab?style=flat-square)](https://pypi.python.org/pypi/mlops_lab/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mlops_lab?style=flat-square)](https://pypi.python.org/pypi/mlops_lab/)
@@ -12,7 +12,7 @@
 
 ---
 
-Recommender Systems from Collaborative Filtering to Deep Learning State-of-the-Art
+ML Ops Lab
 
 ## Installation
 
