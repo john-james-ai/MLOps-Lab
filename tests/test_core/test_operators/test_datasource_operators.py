@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Project    : Enter Project Name in Workspace Settings                                            #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
 # Filename   : /tests/test_core/test_operators/test_datasource_operators.py                        #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
-# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# URL        : Enter URL in Workspace Settings                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Wednesday January 11th 2023 02:45:58 am                                             #
-# Modified   : Wednesday January 11th 2023 03:03:41 pm                                             #
+# Modified   : Tuesday January 24th 2023 08:13:53 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -21,7 +21,7 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.entity.datasource import DataSource, DataSourceURL
+from mlops_lab.core.entity.datasource import DataSource, DataSourceURL
 
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ class TestDataSourceBuilder:  # pragma: no cover
         movielens = builder.execute()
 
         assert isinstance(movielens, DataSource)
-        assert movielens.name == 'movielens25m'
+        assert movielens.name == "movielens25m"
 
         urls = movielens.get_urls()
         for url in urls.values():

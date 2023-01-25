@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Project    : Enter Project Name in Workspace Settings                                            #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
 # Filename   : /tests/test_core/test_repo/test_entity_repo.py                                      #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
-# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# URL        : Enter URL in Workspace Settings                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Sunday January 1st 2023 02:21:02 pm                                                 #
-# Modified   : Wednesday January 11th 2023 07:59:13 pm                                             #
+# Modified   : Tuesday January 24th 2023 08:13:53 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2023 John James                                                                 #
@@ -21,8 +21,9 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.entity.file import File
-from recsys.core.repo.entity import Repo
+from mlops_lab.core.entity.file import File
+from mlops_lab.core.repo.entity import Repo
+
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
@@ -33,7 +34,6 @@ single_line = f"\n{100 * '-'}\n"
 @pytest.mark.repo
 @pytest.mark.entity_repo
 class TestEntityRepo:  # pragma: no cover
-
     def reset_db(self, container) -> None:
         dba = container.dba.file()
         dba.reset()
@@ -103,7 +103,6 @@ class TestEntityRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -145,7 +144,6 @@ class TestEntityRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -207,7 +205,6 @@ class TestEntityRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -262,7 +259,6 @@ class TestEntityRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 

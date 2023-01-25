@@ -38,7 +38,7 @@ logging:
       interval: 1
       backupCount: 0
       level: "DEBUG"
-      filename: logs/prod/recsys.log
+      filename: logs/prod/mlops_lab.log
   root:
     level: "DEBUG"
     handlers: ["console", "file"]

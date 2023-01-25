@@ -8,9 +8,9 @@
       "author_email": "john.james.ai.studio@gmail.com",
       "github_username": "john-james-ai",
       "project_name": "Recommender Systems",
-      "project_slug": "recsys",
-      "package_name": "recsys",
-      "project_short_description": "Recommender Systems from recsys.collaborative Filtering to Deep Learning State-of-the-Art",
+      "project_slug": "mlops_lab",
+      "package_name": "mlops_lab",
+      "project_short_description": "Recommender Systems from mlops_lab.collaborative Filtering to Deep Learning State-of-the-Art",
       "_template": "https://github.com/woltapp/wolt-python-package-cookiecutter"
     }
   },

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # ================================================================================================ #
-# Project    : Recommender Systems: Towards Deep Learning State-of-the-Art                         #
+# Project    : Enter Project Name in Workspace Settings                                            #
 # Version    : 0.1.0                                                                               #
 # Python     : 3.10.6                                                                              #
 # Filename   : /tests/test_core/test_repo/test_datasource_repo.py                                  #
 # ------------------------------------------------------------------------------------------------ #
 # Author     : John James                                                                          #
 # Email      : john.james.ai.studio@gmail.com                                                      #
-# URL        : https://github.com/john-james-ai/Recommender-Systems                                #
+# URL        : Enter URL in Workspace Settings                                                     #
 # ------------------------------------------------------------------------------------------------ #
 # Created    : Saturday December 31st 2022 11:58:21 pm                                             #
-# Modified   : Wednesday January 11th 2023 07:58:44 pm                                             #
+# Modified   : Tuesday January 24th 2023 08:13:51 pm                                               #
 # ------------------------------------------------------------------------------------------------ #
 # License    : MIT License                                                                         #
 # Copyright  : (c) 2022 John James                                                                 #
@@ -21,8 +21,9 @@ from datetime import datetime
 import pytest
 import logging
 
-from recsys.core.entity.datasource import DataSource, DataSourceURL
-from recsys.core.repo.datasource import DataSourceRepo
+from mlops_lab.core.entity.datasource import DataSource, DataSourceURL
+from mlops_lab.core.repo.datasource import DataSourceRepo
+
 # ------------------------------------------------------------------------------------------------ #
 logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------------ #
@@ -33,7 +34,6 @@ single_line = f"\n{100 * '-'}\n"
 @pytest.mark.repo
 @pytest.mark.datasource_repo
 class TestDataSourceRepo:  # pragma: no cover
-
     def reset_db(self, container) -> None:
         dba = container.dba.datasource()
         dba.reset()
@@ -105,7 +105,6 @@ class TestDataSourceRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -147,7 +146,6 @@ class TestDataSourceRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -209,7 +207,6 @@ class TestDataSourceRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
@@ -264,7 +261,6 @@ class TestDataSourceRepo:  # pragma: no cover
                 end.strftime("%I:%M:%S %p"),
                 end.strftime("%m/%d/%Y"),
             )
-
         )
         logger.info(single_line)
 
